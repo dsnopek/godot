@@ -1,6 +1,6 @@
 import os
 
-from emscripten_helpers import run_closure_compiler, create_engine_file, add_js_libraries
+from emscripten_helpers import parse_config, run_closure_compiler, create_engine_file, add_js_libraries, add_js_pre, add_js_externs
 from SCons.Util import WhereIs
 
 
@@ -100,6 +100,11 @@ def configure(env):
 
     # Add helper method for adding libraries.
     env.AddMethod(add_js_libraries, "AddJSLibraries")
+<<<<<<< HEAD
+=======
+    env.AddMethod(add_js_pre, "AddJSPre")
+    env.AddMethod(add_js_externs, "AddJSExterns")
+>>>>>>> Add support for WebXR
 
     # Add method that joins/compiles our Engine files.
     env.AddMethod(create_engine_file, "CreateEngineFile")

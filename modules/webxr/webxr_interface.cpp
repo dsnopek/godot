@@ -68,6 +68,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void _webxr_request_frame() {
 
 		Module['webxr_frame'] = null;
 		let onFrame = function (time, frame) {
+			console.log('got a frame');
 			Module['webxr_frame'] = frame;
 		};
 		session.requestAnimationFrame(onFrame);
@@ -102,7 +103,7 @@ bool WebXRInterface::initialize() {
 					Module['webxr_session'] = session;
 					// @todo Find a way to get access to the existing context rather than getting a new one
 					// I know this is stored in GL.contexts[id] from Emscripten's LibraryGL, but I don't know how to actually access that...
-					let ctx = engine.canvas.getContext('webgl');
+					let ctx = Module['webxr_ctx'] = engine.canvas.getContext('webgl');
 					ctx.makeXRCompatible().then(function () {
 						console.log('made compatible');
 						session.updateRenderState({
@@ -146,6 +147,8 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 
 	Transform transform_for_eye;
 
+	// @todo Maybe this is pose.views[idx].transform?
+
 	return transform_for_eye;
 };
 
@@ -154,12 +157,39 @@ CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, r
 
 	CameraMatrix eye;
 
+	// @todo Maybe this is pose.views[idx].projectionMatrix?
+
 	return eye;
 };
 
 void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_target, const Rect2 &p_screen_rect) {
 	_THREAD_SAFE_METHOD_
 
+	EM_ASM({
+		if (!Module['webxr_session']) {
+			return;
+		}
+
+		// Wait until we have a frame.
+		while (Module['webxr_frame'] === null) {
+		}
+
+		let frame = Module['webxr_frame'];
+		let session = frame.session;
+
+		let pose = frame.getViewerPose(Module['space']);
+
+		if (pose) {
+			let glLayer = session.renderState.baseLayer;
+
+			for (let view of pose.views) {
+				// @todo Somehow draw the p_render_target from Godot on to glLayer (inside the view's viewport)
+			}
+		}
+
+		// @todo When this is all done, we want to request a new frame.
+		//ccall("_webxr_request_frame", "void", [], []);
+	});
 };
 
 void WebXRInterface::process() {

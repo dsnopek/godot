@@ -165,13 +165,19 @@ CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, r
 void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_target, const Rect2 &p_screen_rect) {
 	_THREAD_SAFE_METHOD_
 
-	EM_ASM({
-		if (!Module['webxr_session']) {
-			return;
-		}
+	bool have_frame = EM_ASM_INT({
+		return !!Module['webxr_session'] && !!Module['webxr_frame'];
+	})
+	if (!have_frame) {
+		return;
+	}
 
+	EM_ASM({
 		// Wait until we have a frame.
-		while (Module['webxr_frame'] === null) {
+		//while (Module['webxr_frame'] === null) {
+		//}
+		if (!Module['webxr_frame']) {
+			return;
 		}
 
 		let frame = Module['webxr_frame'];
@@ -182,14 +188,17 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 		if (pose) {
 			let glLayer = session.renderState.baseLayer;
 
-			for (let view of pose.views) {
-				// @todo Somehow draw the p_render_target from Godot on to glLayer (inside the view's viewport)
-			}
+			let view = pose[$0];
+			// @todo Bind to correct framebuffer for eye
 		}
 
-		// @todo When this is all done, we want to request a new frame.
-		//ccall("_webxr_request_frame", "void", [], []);
-	});
+	}, p_eye);
+
+	// Now, draw the render target to screen (hopefully, affected by the binding we did above)
+	VSG::rasterizer->blit_render_target_to_screen(p_render_target, screen_rect, 0);
+
+	// @todo When this is all done (check eye to see if we're done), we want to request a new frame.
+	//ccall("_webxr_request_frame", "void", [], []);
 };
 
 void WebXRInterface::process() {

@@ -56,6 +56,24 @@ bool WebXRInterface::is_initialized() const {
 	return (initialized);
 };
 
+extern "C" EMSCRIPTEN_KEEPALIVE void _webxr_request_frame() {
+	EM_ASM({
+		let session = Module['webxr_session'];
+		if (!session) {
+			console.log('no session - cannot request frame');
+			return;
+		}
+
+		console.log('request frame');
+
+		Module['webxr_frame'] = null;
+		let onFrame = function (time, frame) {
+			Module['webxr_frame'] = frame;
+		};
+		session.requestAnimationFrame(onFrame);
+	});
+}
+
 bool WebXRInterface::initialize() {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL_V(arvr_server, false);
@@ -75,6 +93,30 @@ bool WebXRInterface::initialize() {
 		arvr_server->set_primary_interface(this);
 
 		initialized = true;
+
+		EM_ASM({
+			navigator.xr.isSessionSupported('immersive-vr').then(function () {
+				console.log('immersive-vr is supported');
+				navigator.xr.requestSession('immersive-vr').then(function (session) {
+					console.log('got session');
+					Module['webxr_session'] = session;
+					// @todo Find a way to get access to the existing context rather than getting a new one
+					// I know this is stored in GL.contexts[id] from Emscripten's LibraryGL, but I don't know how to actually access that...
+					let ctx = engine.canvas.getContext('webgl');
+					ctx.makeXRCompatible().then(function () {
+						console.log('made compatible');
+						session.updateRenderState({
+							baseLayer: new XRWebGLLayer(session, ctx)
+						});
+						session.requestReferenceSpace('local').then(function (refSpace) {
+							console.log('requested space');
+							Module['webxr_space'] = refSpace;
+							ccall("_webxr_request_frame", "void", [], []);
+						});
+					});
+				});
+			});
+		});
 	};
 
 	return true;

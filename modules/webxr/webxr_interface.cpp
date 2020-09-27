@@ -60,6 +60,20 @@ bool WebXRInterface::initialize() {
 	ERR_FAIL_NULL_V(arvr_server, false);
 
 	if (!initialized) {
+		/* clang-format off */
+		/*
+		bool vr_supported = EM_ASM_INT({
+			return !!navigator.xr;
+		});
+		*/
+		/* clang-format on */
+
+		bool vr_supported = false;
+
+		if (!vr_supported) {
+			return false;
+		}
+
 		// make this our primary interface
 		arvr_server->set_primary_interface(this);
 

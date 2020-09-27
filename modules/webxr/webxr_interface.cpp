@@ -56,25 +56,6 @@ bool WebXRInterface::is_initialized() const {
 	return (initialized);
 };
 
-extern "C" EMSCRIPTEN_KEEPALIVE void _webxr_request_frame() {
-	EM_ASM({
-		let session = Module['webxr_session'];
-		if (!session) {
-			console.log('no session - cannot request frame');
-			return;
-		}
-
-		console.log('request frame');
-
-		Module['webxr_frame'] = null;
-		let onFrame = function (time, frame) {
-			console.log('got a frame');
-			Module['webxr_frame'] = frame;
-		};
-		session.requestAnimationFrame(onFrame);
-	});
-}
-
 bool WebXRInterface::initialize() {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL_V(arvr_server, false);
@@ -112,7 +93,21 @@ bool WebXRInterface::initialize() {
 						session.requestReferenceSpace('local').then(function (refSpace) {
 							console.log('requested space');
 							Module['webxr_space'] = refSpace;
-							ccall("_webxr_request_frame", "void", [], []);
+
+							// Monkey patch window.requestAnimationFrame so we can replace it with the WebXR equivalent.
+							// This is called via emscripten_set_main_loop().
+							Module['webxr_frame'] = null;
+							Module['webxr_orig_requestAnimationFrame'] = window.requestAnimationFrame;
+							window.requestAnimationFrame = function (callback) {
+								//console.log('request frame');
+
+								let onFrame = function (time, frame) {
+									//console.log('got a frame');
+									Module['webxr_frame'] = frame;
+									callback(time);
+								};
+								session.requestAnimationFrame(onFrame);
+							};
 						});
 					});
 				});
@@ -130,6 +125,8 @@ void WebXRInterface::uninitialize() {
 			// no longer our primary interface
 			arvr_server->clear_primary_interface_if(this);
 		}
+
+		// @todo Unmonkey-patch window.requestAnimationFrame() to restore the non-XR mainloop.
 
 		initialized = false;
 	};
@@ -166,36 +163,38 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 	_THREAD_SAFE_METHOD_
 
 	bool have_frame = EM_ASM_INT({
-		return !!Module['webxr_session'] && !!Module['webxr_frame'];
-	})
+		// Wait until we have a frame.
+		//while (Module['webxr_frame'] === null) {
+		//}
+		var have_frame = !!Module['webxr_session'] && !!Module['webxr_frame'];
+		console.log('have frame in commit: ' + have_frame);
+		return have_frame;
+	});
 	if (!have_frame) {
 		return;
 	}
 
-	EM_ASM({
-		// Wait until we have a frame.
-		//while (Module['webxr_frame'] === null) {
-		//}
-		if (!Module['webxr_frame']) {
-			return;
-		}
+	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
 
+	EM_ASM({
 		let frame = Module['webxr_frame'];
 		let session = frame.session;
 
 		let pose = frame.getViewerPose(Module['space']);
 
 		if (pose) {
+			console.log('have pose');
 			let glLayer = session.renderState.baseLayer;
 
-			let view = pose[$0];
-			// @todo Bind to correct framebuffer for eye
+			let view = pose.views[$0];
+			let viewport = glLayer.getViewport(view);
+			Module['webxr_ctx'].viewport(viewport.x, viewport.y, viewport.width, viewport.height);
 		}
 
-	}, p_eye);
+	}, view_index);
 
 	// Now, draw the render target to screen (hopefully, affected by the binding we did above)
-	VSG::rasterizer->blit_render_target_to_screen(p_render_target, screen_rect, 0);
+	VSG::rasterizer->blit_render_target_to_screen(p_render_target, p_screen_rect, 0);
 
 	// @todo When this is all done (check eye to see if we're done), we want to request a new frame.
 	//ccall("_webxr_request_frame", "void", [], []);

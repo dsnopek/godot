@@ -151,7 +151,14 @@ Size2 WebXRInterface::get_render_targetsize() {
 Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const Transform &p_cam_transform) {
 	_THREAD_SAFE_METHOD_
 
+	// @todo Get this from Module['webxr_pose'].views[idx].transform
+
 	Transform transform_for_eye;
+
+	// Temporary hack: move the right eye to the right.
+	if (p_eye == ARVRInterface::EYE_RIGHT) {
+		transform_for_eye.translate(1.0, 0.0, 0.0);
+	}
 
 	// @todo Maybe this is pose.views[idx].transform?
 
@@ -161,12 +168,15 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, real_t p_aspect, real_t p_z_near, real_t p_z_far) {
 	_THREAD_SAFE_METHOD_
 
+	// @todo Get this from Module['webxr_pose'].views[idx].projectionMatrix
+
 	CameraMatrix eye;
 
-	// @todo Maybe this is pose.views[idx].projectionMatrix?
+	// Copied from MobileVRInterface::get_projection_for_eye().
+	eye.set_perspective(60.0, p_aspect, p_z_near, p_z_far, false);
 
 	return eye;
-};
+}
 
 void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_target, const Rect2 &p_screen_rect) {
 	_THREAD_SAFE_METHOD_
@@ -191,14 +201,24 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 
 			let view = pose.views[$0];
 			let viewport = glLayer.getViewport(view);
-			Module['webxr_ctx'].viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+			let gl = Module['webxr_ctx'];
+
+			gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+
+			if ($0 == 1) {
+				gl.clearColor(1.0, 0.0, 0.0, 1.0);
+				gl.clear(gl.COLOR_BUFFER_BIT);
+			}
+			else {
+				gl.clearColor(0.0, 0.0, 1.0, 1.0);
+				gl.clear(gl.COLOR_BUFFER_BIT);
+			}
 		}
 
 	}, view_index);
 
 	// Now, draw the render target to screen (hopefully, affected by the binding we did above)
 	//VSG::rasterizer->blit_render_target_to_screen(p_render_target, p_screen_rect, 0);
-
 };
 
 void WebXRInterface::process() {

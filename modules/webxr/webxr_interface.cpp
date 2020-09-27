@@ -34,6 +34,7 @@
 #include "core/os/input.h"
 #include "core/os/os.h"
 #include "servers/visual/visual_server_globals.h"
+#include "emscripten.h"
 
 StringName WebXRInterface::get_name() const {
 	return "WebXR";
@@ -61,14 +62,10 @@ bool WebXRInterface::initialize() {
 
 	if (!initialized) {
 		/* clang-format off */
-		/*
 		bool vr_supported = EM_ASM_INT({
 			return !!navigator.xr;
 		});
-		*/
 		/* clang-format on */
-
-		bool vr_supported = false;
 
 		if (!vr_supported) {
 			return false;

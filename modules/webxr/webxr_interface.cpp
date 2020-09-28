@@ -30,6 +30,7 @@
 
 #ifdef JAVASCRIPT_ENABLED
 
+#include <stdlib.h>
 #include "webxr_interface.h"
 #include "core/os/input.h"
 #include "core/os/os.h"
@@ -151,7 +152,30 @@ bool WebXRInterface::_have_frame() {
 Size2 WebXRInterface::get_render_targetsize() {
 	_THREAD_SAFE_METHOD_
 
-	Size2 target_size = OS::get_singleton()->get_window_size();
+	// @todo This method is untested!
+
+	Size2 target_size;
+
+	if (!initialized || !_have_frame()) {
+		return target_size;
+	}
+
+	int32_t* js_size = (int32_t*) EM_ASM_INT({
+		let glLayer = Module['webxr_frame'].session.renderState.baseLayer;
+		let view = Module['webxr_pose'].views[0];
+		let viewport = glLayer.getViewport(view);
+
+		let buf = Module._malloc(2 * 4);
+		setValue(buf + 0, viewport.width, 'i32');
+		setValue(buf + 4, viewport.height, 'i32');
+		return buf;
+	});
+
+	target_size.width = js_size[0];
+	target_size.height = js_size[1];
+
+	free(js_size);
+
 	return target_size;
 };
 
@@ -199,12 +223,33 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, real_t p_aspect, real_t p_z_near, real_t p_z_far) {
 	_THREAD_SAFE_METHOD_
 
-	// @todo Get this from Module['webxr_pose'].views[idx].projectionMatrix
-
 	CameraMatrix eye;
 
+	if (!initialized || !_have_frame()) {
+		return eye;
+	}
+
+	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
+
+	float* js_matrix = (float*) EM_ASM_INT({
+		const matrix = Module['webxr_pose'].views[$0].projectionMatrix;
+		let buf = Module._malloc(16 * 4);
+		for (let i = 0; i < 16; i++) {
+			setValue(buf + (i * 4), matrix[i], 'float')
+		}
+		return buf;
+	}, view_index);
+
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			eye.matrix[i][j] = js_matrix[(i * 4) + j];
+		}
+	}
+
+	free(js_matrix);
+
 	// Copied from MobileVRInterface::get_projection_for_eye().
-	eye.set_perspective(60.0, p_aspect, p_z_near, p_z_far, false);
+	//eye.set_perspective(60.0, p_aspect, p_z_near, p_z_far, false);
 
 	return eye;
 }

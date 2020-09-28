@@ -161,6 +161,7 @@ Size2 WebXRInterface::get_render_targetsize() {
 	//EM_ASM({ console.log("get_render_targetsize()"); });
 
 	if (!initialized || !_have_frame()) {
+		// As a default, use half the window size.
 		target_size = OS::get_singleton()->get_window_size();
 		target_size.width /= 2.0;
 		return target_size;

@@ -191,14 +191,6 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 	transform_for_eye.origin.y = -js_matrix[13];
 	transform_for_eye.origin.z = -js_matrix[14];
 
-	// Temporary hack: set the left eye position manually, to see what happens.
-	//transform_for_eye.translate(0.0, 27.0, 0.0);
-
-	// Temporary hack: move the right eye to the right.
-	//if (p_eye == ARVRInterface::EYE_RIGHT) {
-	//	transform_for_eye.translate(1.0, 0.0, 0.0);
-	//}
-
 	return transform_for_eye;
 };
 

@@ -48,6 +48,7 @@ class WebXRInterface : public ARVRInterface {
 private:
 	bool initialized;
 
+	bool _have_frame();
 protected:
 	static void _bind_methods();
 

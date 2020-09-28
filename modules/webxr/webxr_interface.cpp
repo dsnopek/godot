@@ -140,6 +140,14 @@ void WebXRInterface::uninitialize() {
 	};
 };
 
+bool WebXRInterface::_have_frame() {
+	_THREAD_SAFE_METHOD_
+
+	return (bool) EM_ASM_INT({
+		return !!Module['webxr_session'] && !!Module['webxr_frame'];
+	});
+}
+
 Size2 WebXRInterface::get_render_targetsize() {
 	_THREAD_SAFE_METHOD_
 
@@ -150,21 +158,46 @@ Size2 WebXRInterface::get_render_targetsize() {
 Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const Transform &p_cam_transform) {
 	_THREAD_SAFE_METHOD_
 
-	// @todo Get this from Module['webxr_pose'].views[idx].transform
-
 	Transform transform_for_eye;
 
-	// @todo A transform is basically 4 vector3's right? Can we allocate those in JS?
+	// @todo In 3DOF where we only have rotation, we should take the position from the p_cam_transform, I think?
 
-	// Temporary hack: set the left eye position manually, to see what happens.
-	transform_for_eye.translate(0.0, 27.0, 0.0);
-
-	// Temporary hack: move the right eye to the right.
-	if (p_eye == ARVRInterface::EYE_RIGHT) {
-		transform_for_eye.translate(1.0, 0.0, 0.0);
+	if (!initialized || !_have_frame()) {
+		transform_for_eye = p_cam_transform;
+		return transform_for_eye;
 	}
 
-	// @todo Maybe this is pose.views[idx].transform?
+	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
+
+	float* js_matrix = (float*) EM_ASM_INT({
+		const matrix = Module['webxr_pose'].views[$0].transform.inverse.matrix;
+		let buf = Module._malloc(16 * 4);
+		for (let i = 0; i < 16; i++) {
+			setValue(buf + (i * 4), matrix[i], 'float')
+		}
+		return buf;
+	}, view_index);
+
+	transform_for_eye.basis.elements[0].x = js_matrix[0];
+	transform_for_eye.basis.elements[0].y = js_matrix[1];
+	transform_for_eye.basis.elements[0].z = js_matrix[2];
+	transform_for_eye.basis.elements[1].x = js_matrix[4];
+	transform_for_eye.basis.elements[1].y = js_matrix[5];
+	transform_for_eye.basis.elements[1].z = js_matrix[6];
+	transform_for_eye.basis.elements[2].x = js_matrix[8];
+	transform_for_eye.basis.elements[2].y = js_matrix[9];
+	transform_for_eye.basis.elements[2].z = js_matrix[10];
+	transform_for_eye.origin.x = -js_matrix[12];
+	transform_for_eye.origin.y = -js_matrix[13];
+	transform_for_eye.origin.z = -js_matrix[14];
+
+	// Temporary hack: set the left eye position manually, to see what happens.
+	//transform_for_eye.translate(0.0, 27.0, 0.0);
+
+	// Temporary hack: move the right eye to the right.
+	//if (p_eye == ARVRInterface::EYE_RIGHT) {
+	//	transform_for_eye.translate(1.0, 0.0, 0.0);
+	//}
 
 	return transform_for_eye;
 };
@@ -185,10 +218,7 @@ CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, r
 void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_target, const Rect2 &p_screen_rect) {
 	_THREAD_SAFE_METHOD_
 
-	bool have_frame = EM_ASM_INT({
-		return !!Module['webxr_session'] && !!Module['webxr_frame'];
-	});
-	if (!have_frame) {
+	if (!initialized || !_have_frame()) {
 		return;
 	}
 

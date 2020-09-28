@@ -432,7 +432,7 @@ void RasterizerGLES2::blit_render_target_to_screen(RID p_render_target, const Re
 
 void RasterizerGLES2::blit_render_target_to_current_framebuffer(RID p_render_target, const Rect2 &p_screen_rect) {
 
-	//ERR_FAIL_COND(storage->frame.current_rt);
+	ERR_FAIL_COND(storage->frame.current_rt);
 
 	RasterizerStorageGLES2::RenderTarget *rt = storage->render_target_owner.getornull(p_render_target);
 	ERR_FAIL_COND(!rt);

@@ -266,6 +266,9 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 		return;
 	}
 
+	// Change current render target to the main screen.
+	VSG::rasterizer->set_current_render_target(RID());
+
 	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
 
 	int32_t* js_viewport = (int32_t*) EM_ASM_INT({
@@ -302,7 +305,8 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 	// Now, draw the render target to screen (hopefully, affected by the binding we did above)
 	// @todo Adjust p_screen_rect based on the viewport for the eye
 	//VSG::rasterizer->blit_render_target_to_screen(p_render_target, p_screen_rect, 0);
-	VSG::rasterizer->blit_render_target_to_current_framebuffer(p_render_target, viewport);
+	VSG::rasterizer->blit_render_target_to_screen(p_render_target, viewport, 0);
+	//VSG::rasterizer->blit_render_target_to_current_framebuffer(p_render_target, viewport);
 };
 
 void WebXRInterface::process() {

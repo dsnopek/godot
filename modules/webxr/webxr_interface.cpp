@@ -61,6 +61,8 @@ bool WebXRInterface::initialize() {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL_V(arvr_server, false);
 
+	//printf("My own little debugging\n");
+
 	if (!initialized) {
 		/* clang-format off */
 		bool vr_supported = EM_ASM_INT({
@@ -145,7 +147,7 @@ bool WebXRInterface::_have_frame() {
 	_THREAD_SAFE_METHOD_
 
 	return (bool) EM_ASM_INT({
-		return !!Module['webxr_session'] && !!Module['webxr_frame'];
+		return !!Module['webxr_session'] && !!Module['webxr_pose'];
 	});
 }
 
@@ -156,7 +158,11 @@ Size2 WebXRInterface::get_render_targetsize() {
 
 	Size2 target_size;
 
+	//EM_ASM({ console.log("get_render_targetsize()"); });
+
 	if (!initialized || !_have_frame()) {
+		target_size = OS::get_singleton()->get_window_size();
+		target_size.width /= 2.0;
 		return target_size;
 	}
 
@@ -164,6 +170,9 @@ Size2 WebXRInterface::get_render_targetsize() {
 		let glLayer = Module['webxr_frame'].session.renderState.baseLayer;
 		let view = Module['webxr_pose'].views[0];
 		let viewport = glLayer.getViewport(view);
+
+		//console.log("targetsize javascript viewport:");
+		//console.log(viewport.width + " " + viewport.height);
 
 		let buf = Module._malloc(2 * 4);
 		setValue(buf + 0, viewport.width, 'i32');
@@ -175,6 +184,11 @@ Size2 WebXRInterface::get_render_targetsize() {
 	target_size.height = js_size[1];
 
 	free(js_size);
+
+	EM_ASM({
+		//console.log("targetsize C++ viewport:");
+		//console.log($0 + " " + $1);
+	}, target_size.width, target_size.height);
 
 	return target_size;
 };
@@ -263,28 +277,41 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 
 	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
 
-	EM_ASM({
-		let frame = Module['webxr_frame'];
-		let session = frame.session;
-		let pose = Module['webxr_pose'];
+	int32_t* js_viewport = (int32_t*) EM_ASM_INT({
+		let glLayer = Module['webxr_frame'].session.renderState.baseLayer;
+		let view = Module['webxr_pose'].views[$0];
+		let viewport = glLayer.getViewport(view);
+		let gl = Module['ctx'];
 
-		if (pose) {
-			//console.log('have pose');
-			let glLayer = session.renderState.baseLayer;
+		gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
+		gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
 
-			let view = pose.views[$0];
-			let viewport = glLayer.getViewport(view);
-			let gl = Module['ctx'];
+		//console.log("commit javascript viewport: " + viewport.x + " " + viewport.y + " " + viewport.width + " " + viewport.height);
 
-			gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
-			gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
-		}
-
+		let buf = Module._malloc(4 * 4);
+		setValue(buf + 0, viewport.x, 'i32');
+		setValue(buf + 4, viewport.y, 'i32');
+		setValue(buf + 8, viewport.width, 'i32');
+		setValue(buf + 12, viewport.height, 'i32');
+		return buf;
 	}, view_index);
 
+	//printf("js_viewport: %d\n", (int)js_viewport);
+
+	Rect2 viewport;
+	viewport.position.x = js_viewport[0];
+	viewport.position.y = js_viewport[1];
+	viewport.size.width = js_viewport[2];
+	viewport.size.height = js_viewport[3];
+
+	free(js_viewport);
+
+	//printf("commit c++ viewport: %f %f %f %f\n", viewport.position.x, viewport.position.y, viewport.size.width, viewport.size.height);
+
 	// Now, draw the render target to screen (hopefully, affected by the binding we did above)
+	// @todo Adjust p_screen_rect based on the viewport for the eye
 	//VSG::rasterizer->blit_render_target_to_screen(p_render_target, p_screen_rect, 0);
-	VSG::rasterizer->blit_render_target_to_current_framebuffer(p_render_target, p_screen_rect);
+	VSG::rasterizer->blit_render_target_to_current_framebuffer(p_render_target, viewport);
 };
 
 void WebXRInterface::process() {

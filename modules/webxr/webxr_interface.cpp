@@ -220,9 +220,9 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 	transform_for_eye.basis.elements[2].x = js_matrix[8];
 	transform_for_eye.basis.elements[2].y = js_matrix[9];
 	transform_for_eye.basis.elements[2].z = js_matrix[10];
-	transform_for_eye.origin.x = -js_matrix[12];
-	transform_for_eye.origin.y = -js_matrix[13];
-	transform_for_eye.origin.z = -js_matrix[14];
+	transform_for_eye.origin.x = js_matrix[12];
+	transform_for_eye.origin.y = js_matrix[13];
+	transform_for_eye.origin.z = js_matrix[14];
 
 	free(js_matrix);
 

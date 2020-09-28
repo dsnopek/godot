@@ -28,6 +28,11 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
+// Capture emscriptens internal Browser object so we can monkey-patch requestAnimationFrame.
+setTimeout(function () {
+    Module['InternalBrowser'] = Browser || {};
+}, 0);
+
 Module['copyToFS'] = function(path, buffer) {
 	var p = path.lastIndexOf("/");
 	var dir = "/";

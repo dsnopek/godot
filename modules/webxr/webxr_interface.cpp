@@ -77,18 +77,18 @@ bool WebXRInterface::initialize() {
 		initialized = true;
 
 		EM_ASM({
+			console.log(Object.keys(Module));
+			console.log(Object.keys(Module['InternalBrowser']));
 			navigator.xr.isSessionSupported('immersive-vr').then(function () {
 				console.log('immersive-vr is supported');
 				navigator.xr.requestSession('immersive-vr').then(function (session) {
 					console.log('got session');
 					Module['webxr_session'] = session;
-					// @todo Find a way to get access to the existing context rather than getting a new one
-					// I know this is stored in GL.contexts[id] from Emscripten's LibraryGL, but I don't know how to actually access that...
-					let ctx = Module['webxr_ctx'] = engine.canvas.getContext('webgl');
-					ctx.makeXRCompatible().then(function () {
+					let gl = Module['ctx'];
+					gl.makeXRCompatible().then(function () {
 						console.log('made compatible');
 						session.updateRenderState({
-							baseLayer: new XRWebGLLayer(session, ctx)
+							baseLayer: new XRWebGLLayer(session, gl)
 						});
 						session.requestReferenceSpace('local').then(function (refSpace) {
 							console.log('requested space');
@@ -98,10 +98,9 @@ bool WebXRInterface::initialize() {
 							// This is called via emscripten_set_main_loop().
 							Module['webxr_frame'] = null;
 							if (!Module['webxr_orig_requestAnimationFrame']) {
-								Module['webxr_orig_requestAnimationFrame'] = window.requestAnimationFrame;
-								window.requestAnimationFrame = function (callback) {
+								Module['webxr_orig_requestAnimationFrame'] = Module.InternalBrowser.requestAnimationFrame;
+								Module.InternalBrowser.requestAnimationFrame = function (callback) {
 									//console.log('request frame');
-
 									let onFrame = function (time, frame) {
 										//console.log('got a frame');
 										Module['webxr_frame'] = frame;
@@ -132,7 +131,7 @@ void WebXRInterface::uninitialize() {
 		// Undo monkey-patch of window.requestAnimationFrame() to restore the non-XR main loop.
 		EM_ASM({
 			if (Module['webxr_orig_requestAnimationFrame']) {
-				window.requestAnimationFrame = Module['webxr_orig_requestAnimationFrame'];
+				Module.InternalBrowser.requestAnimationFrame = Module['webxr_orig_requestAnimationFrame'];
 				delete Module['webxr_orig_requestAnimationFrame'];
 			}
 		});
@@ -201,8 +200,9 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 
 			let view = pose.views[$0];
 			let viewport = glLayer.getViewport(view);
-			let gl = Module['webxr_ctx'];
+			let gl = Module['ctx'];
 
+			gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
 			gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
 
 			if ($0 == 1) {

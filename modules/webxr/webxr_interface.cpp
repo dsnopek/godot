@@ -267,7 +267,7 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 	}
 
 	// Change current render target to the main screen.
-	VSG::rasterizer->set_current_render_target(RID());
+	//VSG::rasterizer->set_current_render_target(RID());
 
 	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
 
@@ -277,8 +277,9 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 		let viewport = glLayer.getViewport(view);
 		let gl = Module['ctx'];
 
-		gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
-		gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+		// @todo We really need to re-enable this!
+		//gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
+		//gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
 
 		//console.log("commit javascript viewport: " + viewport.x + " " + viewport.y + " " + viewport.width + " " + viewport.height);
 
@@ -302,10 +303,11 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 
 	//printf("commit c++ viewport: %f %f %f %f\n", viewport.position.x, viewport.position.y, viewport.size.width, viewport.size.height);
 
-	// Now, draw the render target to screen (hopefully, affected by the binding we did above)
-	// @todo Adjust p_screen_rect based on the viewport for the eye
-	//VSG::rasterizer->blit_render_target_to_screen(p_render_target, p_screen_rect, 0);
+	// Temporary: just get something on the screen!
+	VSG::rasterizer->set_current_render_target(RID());
 	VSG::rasterizer->blit_render_target_to_screen(p_render_target, viewport, 0);
+
+	//VSG::rasterizer->blit_render_target_to_screen(p_render_target, viewport, 0);
 	//VSG::rasterizer->blit_render_target_to_current_framebuffer(p_render_target, viewport);
 };
 

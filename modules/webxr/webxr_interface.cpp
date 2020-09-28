@@ -144,16 +144,12 @@ void WebXRInterface::uninitialize() {
 };
 
 bool WebXRInterface::_have_frame() {
-	_THREAD_SAFE_METHOD_
-
 	return (bool) EM_ASM_INT({
 		return !!Module['webxr_session'] && !!Module['webxr_pose'];
 	});
 }
 
 Size2 WebXRInterface::get_render_targetsize() {
-	_THREAD_SAFE_METHOD_
-
 	// @todo This method is untested!
 
 	Size2 target_size;
@@ -195,8 +191,6 @@ Size2 WebXRInterface::get_render_targetsize() {
 };
 
 Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const Transform &p_cam_transform) {
-	_THREAD_SAFE_METHOD_
-
 	Transform transform_for_eye;
 
 	// @todo In 3DOF where we only have rotation, we should take the position from the p_cam_transform, I think?
@@ -236,8 +230,6 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 };
 
 CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, real_t p_aspect, real_t p_z_near, real_t p_z_far) {
-	_THREAD_SAFE_METHOD_
-
 	CameraMatrix eye;
 
 	if (!initialized || !_have_frame()) {
@@ -270,8 +262,6 @@ CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, r
 }
 
 void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_target, const Rect2 &p_screen_rect) {
-	_THREAD_SAFE_METHOD_
-
 	if (!initialized || !_have_frame()) {
 		return;
 	}
@@ -316,16 +306,12 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 };
 
 void WebXRInterface::process() {
-	_THREAD_SAFE_METHOD_
-
 	if (initialized) {
 		//set_position_from_sensors();
 	};
 };
 
 void WebXRInterface::notification(int p_what){
-	_THREAD_SAFE_METHOD_
-
 	// nothing to do here, I guess we could pauze our sensors...
 }
 

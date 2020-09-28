@@ -48,7 +48,7 @@ void WebXRInterface::_bind_methods() {
 }
 
 bool WebXRInterface::is_stereo() {
-	// needs stereo...
+	// @todo WebXR can be mono! So, how do we know? Count the views in the frame?
 	return true;
 };
 

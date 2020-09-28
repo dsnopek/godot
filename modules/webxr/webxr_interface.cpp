@@ -191,6 +191,8 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 	transform_for_eye.origin.y = -js_matrix[13];
 	transform_for_eye.origin.z = -js_matrix[14];
 
+	free(js_matrix);
+
 	return transform_for_eye;
 };
 

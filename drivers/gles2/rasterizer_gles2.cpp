@@ -444,6 +444,7 @@ void RasterizerGLES2::blit_render_target_to_current_framebuffer(RID p_render_tar
 
 	canvas->canvas_begin();
 	glDisable(GL_BLEND);
+	// DRS: Get rid of this line to use the current framebuffer instead.
 	//glBindFramebuffer(GL_FRAMEBUFFER, RasterizerStorageGLES2::system_fbo);
 	glActiveTexture(GL_TEXTURE0 + storage->config.max_texture_image_units - 1);
 	if (rt->external.fbo != 0) {

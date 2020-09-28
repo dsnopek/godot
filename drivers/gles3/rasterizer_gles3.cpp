@@ -355,7 +355,15 @@ void RasterizerGLES3::blit_render_target_to_screen(RID p_render_target, const Re
 }
 
 void RasterizerGLES3::blit_render_target_to_current_framebuffer(RID p_render_target, const Rect2 &p_screen_rect) {
-	// @todo I don't know...
+	ERR_FAIL_COND(storage->frame.current_rt);
+
+	RasterizerStorageGLES3::RenderTarget *rt = storage->render_target_owner.getornull(p_render_target);
+	ERR_FAIL_COND(!rt);
+
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
+	// DRS: Get rid of this line to use the current framebuffer instead.
+	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, RasterizerStorageGLES3::system_fbo);
+	glBlitFramebuffer(0, 0, rt->width, rt->height, p_screen_rect.position.x, p_screen_rect.position.y, p_screen_rect.position.x + p_screen_rect.size.width, p_screen_rect.position.y + p_screen_rect.size.height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
 void RasterizerGLES3::output_lens_distorted_to_screen(RID p_render_target, const Rect2 &p_screen_rect, float p_k1, float p_k2, const Vector2 &p_eye_center, float p_oversample) {

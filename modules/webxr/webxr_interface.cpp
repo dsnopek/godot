@@ -154,6 +154,11 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 
 	Transform transform_for_eye;
 
+	// @todo A transform is basically 4 vector3's right? Can we allocate those in JS?
+
+	// Temporary hack: set the left eye position manually, to see what happens.
+	transform_for_eye.translate(0.0, 27.0, 0.0);
+
 	// Temporary hack: move the right eye to the right.
 	if (p_eye == ARVRInterface::EYE_RIGHT) {
 		transform_for_eye.translate(1.0, 0.0, 0.0);

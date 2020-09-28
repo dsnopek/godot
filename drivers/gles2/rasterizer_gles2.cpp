@@ -430,6 +430,36 @@ void RasterizerGLES2::blit_render_target_to_screen(RID p_render_target, const Re
 	canvas->canvas_end();
 }
 
+void RasterizerGLES2::blit_render_target_to_current_framebuffer(RID p_render_target, const Rect2 &p_screen_rect) {
+
+	//ERR_FAIL_COND(storage->frame.current_rt);
+
+	RasterizerStorageGLES2::RenderTarget *rt = storage->render_target_owner.getornull(p_render_target);
+	ERR_FAIL_COND(!rt);
+
+	canvas->state.canvas_shader.set_conditional(CanvasShaderGLES2::USE_TEXTURE_RECT, true);
+
+	canvas->state.canvas_shader.set_custom_shader(0);
+	canvas->state.canvas_shader.bind();
+
+	canvas->canvas_begin();
+	glDisable(GL_BLEND);
+	//glBindFramebuffer(GL_FRAMEBUFFER, RasterizerStorageGLES2::system_fbo);
+	glActiveTexture(GL_TEXTURE0 + storage->config.max_texture_image_units - 1);
+	if (rt->external.fbo != 0) {
+		glBindTexture(GL_TEXTURE_2D, rt->external.color);
+	} else {
+		glBindTexture(GL_TEXTURE_2D, rt->color);
+	}
+
+	// TODO normals
+
+	canvas->draw_generic_textured_rect(p_screen_rect, Rect2(0, 0, 1, -1));
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	canvas->canvas_end();
+}
+
 void RasterizerGLES2::output_lens_distorted_to_screen(RID p_render_target, const Rect2 &p_screen_rect, float p_k1, float p_k2, const Vector2 &p_eye_center, float p_oversample) {
 	ERR_FAIL_COND(storage->frame.current_rt);
 

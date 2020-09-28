@@ -354,6 +354,10 @@ void RasterizerGLES3::blit_render_target_to_screen(RID p_render_target, const Re
 	glBlitFramebuffer(0, 0, rt->width, rt->height, p_screen_rect.position.x, win_size.height - p_screen_rect.position.y - p_screen_rect.size.height, p_screen_rect.position.x + p_screen_rect.size.width, win_size.height - p_screen_rect.position.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
+void RasterizerGLES3::blit_render_target_to_current_framebuffer(RID p_render_target, const Rect2 &p_screen_rect) {
+	// @todo I don't know...
+}
+
 void RasterizerGLES3::output_lens_distorted_to_screen(RID p_render_target, const Rect2 &p_screen_rect, float p_k1, float p_k2, const Vector2 &p_eye_center, float p_oversample) {
 	ERR_FAIL_COND(storage->frame.current_rt);
 

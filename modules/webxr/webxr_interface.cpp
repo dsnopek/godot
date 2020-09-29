@@ -81,7 +81,6 @@ bool WebXRInterface::initialize() {
 
 		EM_ASM({
 			console.log(Object.keys(Module));
-			console.log(Object.keys(Module['InternalBrowser']));
 			navigator.xr.isSessionSupported('immersive-vr').then(function () {
 				console.log('immersive-vr is supported');
 				navigator.xr.requestSession('immersive-vr').then(function (session) {
@@ -94,16 +93,21 @@ bool WebXRInterface::initialize() {
 							baseLayer: new XRWebGLLayer(session, gl)
 						});
 						session.requestReferenceSpace('local').then(function (refSpace) {
-							console.log('requested space');
+							console.log('got reference space');
 							Module['webxr_space'] = refSpace;
+
+							// Now that both Module.webxr_session and Module.webxr_space are set,
+							// our monkey-patched requestAnimationFrame() should kick in.
 
 							// Monkey patch window.requestAnimationFrame so we can replace it with the WebXR equivalent.
 							// This is called via emscripten_set_main_loop().
+							/*
 							Module['webxr_frame'] = null;
 							if (!Module['webxr_orig_requestAnimationFrame']) {
+								console.log('!webxr_orig_requestAnimationFrame');
 								Module['webxr_orig_requestAnimationFrame'] = Module.InternalBrowser.requestAnimationFrame;
 								Module.InternalBrowser.requestAnimationFrame = function (callback) {
-									//console.log('request frame');
+									console.log('request frame');
 									let onFrame = function (time, frame) {
 										//console.log('got a frame');
 										Module['webxr_frame'] = frame;
@@ -113,6 +117,8 @@ bool WebXRInterface::initialize() {
 									session.requestAnimationFrame(onFrame);
 								};
 							}
+							console.log('after monkey patching');
+							*/
 						});
 					});
 				});
@@ -131,12 +137,13 @@ void WebXRInterface::uninitialize() {
 			arvr_server->clear_primary_interface_if(this);
 		}
 
-		// Undo monkey-patch of window.requestAnimationFrame() to restore the non-XR main loop.
 		EM_ASM({
-			if (Module['webxr_orig_requestAnimationFrame']) {
-				Module.InternalBrowser.requestAnimationFrame = Module['webxr_orig_requestAnimationFrame'];
-				delete Module['webxr_orig_requestAnimationFrame'];
-			}
+			Module.webxr_session.end();
+
+			Module.webxr_session = null;
+			Module.webxr_space = null;
+			Module.webxr_frame = null;
+			Module.webxr_pose = null;
 		});
 
 		initialized = false;
@@ -262,6 +269,8 @@ CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, r
 }
 
 void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_target, const Rect2 &p_screen_rect) {
+	printf("starting commit for eye\n");
+
 	if (!initialized || !_have_frame()) {
 		return;
 	}
@@ -278,8 +287,14 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 		let gl = Module['ctx'];
 
 		// Bind to WebXR's framebuffer.
-		gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
-		//gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+		// GLES2: (might work for GLES 3 too, not sure)
+		//gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
+		// GLES3:
+		gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, glLayer.framebuffer);
+		if ($0 === 0) {
+			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		}
+		gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
 
 		//console.log("commit javascript viewport: " + viewport.x + " " + viewport.y + " " + viewport.width + " " + viewport.height);
 
@@ -307,8 +322,10 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 	//VSG::rasterizer->set_current_render_target(RID());
 	//VSG::rasterizer->blit_render_target_to_screen(p_render_target, viewport, 0);
 
-	//VSG::rasterizer->blit_render_target_to_screen(p_render_target, viewport, 0);
+	// Attempt to render to the current framebuffer.
 	VSG::rasterizer->blit_render_target_to_current_framebuffer(p_render_target, viewport);
+
+	printf("rendered a frame\n");
 };
 
 void WebXRInterface::process() {

@@ -360,6 +360,11 @@ void RasterizerGLES3::blit_render_target_to_current_framebuffer(RID p_render_tar
 	RasterizerStorageGLES3::RenderTarget *rt = storage->render_target_owner.getornull(p_render_target);
 	ERR_FAIL_COND(!rt);
 
+	if (rt->external.fbo != 0) {
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, rt->external.fbo);
+	} else {
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, rt->fbo);
+	}
 	glReadBuffer(GL_COLOR_ATTACHMENT0);
 	// DRS: Get rid of this line to use the current framebuffer instead.
 	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, RasterizerStorageGLES3::system_fbo);

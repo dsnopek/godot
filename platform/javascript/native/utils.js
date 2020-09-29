@@ -29,8 +29,34 @@
 /*************************************************************************/
 
 // Capture emscriptens internal Browser object so we can monkey-patch requestAnimationFrame.
+// @todo move all this to a new webxr.js file
 setTimeout(function () {
-    Module['InternalBrowser'] = Browser || {};
+    Module.LibraryBrowser = Browser || {};
+
+    Module.webxr_session = null;
+    Module.webxr_space = null;
+    Module.webxr_frame = null;
+    Module.webxr_pose = null;
+
+    Module.webxr_orig_requestAnimationFrame = Module.LibraryBrowser.requestAnimationFrame;
+    Module.LibraryBrowser.requestAnimationFrame = function (callback) {
+        if (Module.webxr_session && Module.webxr_space) {
+            console.log('request frame');
+            let onFrame = function (time, frame) {
+                //console.log('got a frame');
+                Module.webxr_frame = frame;
+                Module.webxr_pose = frame.getViewerPose(Module.webxr_space);
+                callback(time);
+                Module.webxr_frame = null;
+                Module.webxr_pose = null;
+            };
+            Module.webxr_session.requestAnimationFrame(onFrame);
+        }
+        else {
+            Module.webxr_orig_requestAnimationFrame(callback);
+        }
+    };
+
 }, 0);
 
 Module['copyToFS'] = function(path, buffer) {

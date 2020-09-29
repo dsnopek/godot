@@ -98,6 +98,9 @@ bool WebXRInterface::initialize() {
 
 							// Now that both Module.webxr_session and Module.webxr_space are set,
 							// our monkey-patched requestAnimationFrame() should kick in.
+							// @todo Can we stop and restart the mainloop?
+							Module.LibraryBrowserMainLoop.pause();
+							window.setTimeout(function () { Module.LibraryBrowserMainLoop.resume(); });
 
 							// Monkey patch window.requestAnimationFrame so we can replace it with the WebXR equivalent.
 							// This is called via emscripten_set_main_loop().

@@ -32,6 +32,7 @@
 // @todo move all this to a new webxr.js file
 setTimeout(function () {
     Module.LibraryBrowser = Browser || {};
+    Module.LibraryBrowserMainLoop = Module.LibraryBrowser.mainLoop || {};
 
     Module.webxr_session = null;
     Module.webxr_space = null;
@@ -40,9 +41,12 @@ setTimeout(function () {
 
     Module.webxr_orig_requestAnimationFrame = Module.LibraryBrowser.requestAnimationFrame;
     Module.LibraryBrowser.requestAnimationFrame = function (callback) {
+        console.log('requestAnimationFrame');
         if (Module.webxr_session && Module.webxr_space) {
             console.log('request frame');
             let onFrame = function (time, frame) {
+                // Do we need to refresh this?
+                Module.webxr_session = frame.session;
                 //console.log('got a frame');
                 Module.webxr_frame = frame;
                 Module.webxr_pose = frame.getViewerPose(Module.webxr_space);

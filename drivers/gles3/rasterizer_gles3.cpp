@@ -354,7 +354,7 @@ void RasterizerGLES3::blit_render_target_to_screen(RID p_render_target, const Re
 	glBlitFramebuffer(0, 0, rt->width, rt->height, p_screen_rect.position.x, win_size.height - p_screen_rect.position.y - p_screen_rect.size.height, p_screen_rect.position.x + p_screen_rect.size.width, win_size.height - p_screen_rect.position.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
-void RasterizerGLES3::blit_render_target_to_current_framebuffer(RID p_render_target, const Rect2 &p_screen_rect) {
+void RasterizerGLES3::blit_render_target_to_framebuffer(RID p_render_target, const Rect2 &p_screen_rect, unsigned int p_framebuffer) {
 	ERR_FAIL_COND(storage->frame.current_rt);
 
 	RasterizerStorageGLES3::RenderTarget *rt = storage->render_target_owner.getornull(p_render_target);
@@ -362,12 +362,14 @@ void RasterizerGLES3::blit_render_target_to_current_framebuffer(RID p_render_tar
 
 	if (rt->external.fbo != 0) {
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, rt->external.fbo);
+		//printf("read external fbo: %d\n", rt->external.fbo);
 	} else {
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, rt->fbo);
+		//printf("read fbo: %d\n", rt->fbo);
 	}
 	glReadBuffer(GL_COLOR_ATTACHMENT0);
-	// DRS: Get rid of this line to use the current framebuffer instead.
-	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, RasterizerStorageGLES3::system_fbo);
+	//printf("draw buffer: %d\n", p_framebuffer);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, p_framebuffer);
 	glBlitFramebuffer(0, 0, rt->width, rt->height, p_screen_rect.position.x, p_screen_rect.position.y, p_screen_rect.position.x + p_screen_rect.size.width, p_screen_rect.position.y + p_screen_rect.size.height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 

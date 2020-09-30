@@ -81,6 +81,7 @@ bool WebXRInterface::initialize() {
 
 		EM_ASM({
 			console.log(Object.keys(Module));
+			console.log(Object.keys(Module.Library_GL));
 			navigator.xr.isSessionSupported('immersive-vr').then(function () {
 				console.log('immersive-vr is supported');
 				navigator.xr.requestSession('immersive-vr').then(function (session) {
@@ -99,8 +100,8 @@ bool WebXRInterface::initialize() {
 							// Now that both Module.webxr_session and Module.webxr_space are set,
 							// our monkey-patched requestAnimationFrame() should kick in.
 							// @todo Can we stop and restart the mainloop?
-							Module.LibraryBrowserMainLoop.pause();
-							window.setTimeout(function () { Module.LibraryBrowserMainLoop.resume(); });
+							Module.Library_Browser_mainLoop.pause();
+							window.setTimeout(function () { Module.Library_Browser_mainLoop.resume(); });
 
 							// Monkey patch window.requestAnimationFrame so we can replace it with the WebXR equivalent.
 							// This is called via emscripten_set_main_loop().
@@ -272,7 +273,7 @@ CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, r
 }
 
 void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_target, const Rect2 &p_screen_rect) {
-	printf("starting commit for eye\n");
+	//printf("starting commit for eye\n");
 
 	if (!initialized || !_have_frame()) {
 		return;
@@ -293,11 +294,18 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 		// GLES2: (might work for GLES 3 too, not sure)
 		//gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
 		// GLES3:
-		gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, glLayer.framebuffer);
+		//console.log("Framebuffer name: " + glLayer.framebuffer.name);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
 		if ($0 === 0) {
+			gl.clearColor(1.0, 0.0, 0.0, 1.0);
 			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		}
-		gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+		//gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+		gl.viewport(0, 0, viewport.width * 2, viewport.height);
+
+		// Assign the framebuffer to our reserved name, so that we can use it from C++.
+		Module.Library_GL.framebuffers[Module.webxr_destination_framebuffer] = glLayer.framebuffer;
+		//console.log('js destination: ' + Module.webxr_destination_framebuffer);
 
 		//console.log("commit javascript viewport: " + viewport.x + " " + viewport.y + " " + viewport.width + " " + viewport.height);
 
@@ -325,10 +333,15 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 	//VSG::rasterizer->set_current_render_target(RID());
 	//VSG::rasterizer->blit_render_target_to_screen(p_render_target, viewport, 0);
 
-	// Attempt to render to the current framebuffer.
-	VSG::rasterizer->blit_render_target_to_current_framebuffer(p_render_target, viewport);
+	unsigned int destination_framebuffer = EM_ASM_INT({
+		return Module.webxr_destination_framebuffer;
+	});
+	//printf("C++ destination: %d\n", destination_framebuffer);
 
-	printf("rendered a frame\n");
+	// Attempt to render to the current framebuffer.
+	VSG::rasterizer->blit_render_target_to_framebuffer(p_render_target, viewport, destination_framebuffer);
+
+	//printf("rendered a frame\n");
 };
 
 void WebXRInterface::process() {

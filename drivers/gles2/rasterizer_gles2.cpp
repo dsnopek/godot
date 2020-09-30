@@ -430,7 +430,7 @@ void RasterizerGLES2::blit_render_target_to_screen(RID p_render_target, const Re
 	canvas->canvas_end();
 }
 
-void RasterizerGLES2::blit_render_target_to_current_framebuffer(RID p_render_target, const Rect2 &p_screen_rect) {
+void RasterizerGLES2::blit_render_target_to_framebuffer(RID p_render_target, const Rect2 &p_screen_rect, unsigned int p_framebuffer) {
 
 	ERR_FAIL_COND(storage->frame.current_rt);
 
@@ -444,8 +444,7 @@ void RasterizerGLES2::blit_render_target_to_current_framebuffer(RID p_render_tar
 
 	canvas->canvas_begin();
 	glDisable(GL_BLEND);
-	// DRS: Get rid of this line to use the current framebuffer instead.
-	//glBindFramebuffer(GL_FRAMEBUFFER, RasterizerStorageGLES2::system_fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, p_framebuffer);
 	glActiveTexture(GL_TEXTURE0 + storage->config.max_texture_image_units - 1);
 	if (rt->external.fbo != 0) {
 		glBindTexture(GL_TEXTURE_2D, rt->external.color);

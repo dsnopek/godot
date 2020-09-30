@@ -186,6 +186,7 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 		return transform_for_eye;
 	}
 
+	// @todo This isn't right for this function. Apparently, Godot uses EYE_MONO to get the headset position.
 	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
 
 	float* js_matrix = (float*) EM_ASM_INT({
@@ -233,16 +234,18 @@ CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, r
 		return buf;
 	}, view_index);
 
+	int k = 0;
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
-			eye.matrix[i][j] = js_matrix[(i * 4) + j];
+			eye.matrix[i][j] = js_matrix[k++];
 		}
 	}
 
 	free(js_matrix);
 
-	// Copied from MobileVRInterface::get_projection_for_eye().
-	//eye.set_perspective(60.0, p_aspect, p_z_near, p_z_far, false);
+	// Copied from godot_oculus_mobile's ovr_mobile_session.cpp
+	//eye.matrix[2][2] = -(p_z_far + p_z_near) / (p_z_far - p_z_near);
+	//eye.matrix[2][3] = -(2.0f * p_z_far * p_z_near) / (p_z_far - p_z_near);
 
 	return eye;
 }

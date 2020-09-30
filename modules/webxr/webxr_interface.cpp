@@ -78,8 +78,6 @@ bool WebXRInterface::initialize() {
 		initialized = true;
 
 		EM_ASM({
-			console.log(Object.keys(Module));
-			console.log(Object.keys(Module.Library_GL));
 			navigator.xr.isSessionSupported('immersive-vr').then(function () {
 				navigator.xr.requestSession('immersive-vr').then(function (session) {
 					Module['webxr_session'] = session;
@@ -119,6 +117,8 @@ void WebXRInterface::uninitialize() {
 		EM_ASM({
 			Module.webxr_session.end();
 
+			// Resetting these will switch back to window.requestAnimationFrame() for the main loop.
+			// @todo Do we need to pause/resume the main loop here too?
 			Module.webxr_session = null;
 			Module.webxr_space = null;
 			Module.webxr_frame = null;
@@ -300,7 +300,6 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 		return Module.webxr_destination_framebuffer;
 	});
 
-	// Attempt to render to the current framebuffer.
 	VSG::rasterizer->blit_render_target_to_framebuffer(p_render_target, viewport, destination_framebuffer);
 };
 

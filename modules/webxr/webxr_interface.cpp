@@ -273,6 +273,7 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 			gl.clearColor(1.0, 0.0, 0.0, 1.0);
 			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		}
+		// @todo Use glLayer.framebufferwidth and glLayer.framebufferheight instead
 		gl.viewport(0, 0, viewport.width * 2, viewport.height);
 
 		// Assign the framebuffer to our reserved name, so that we can use it from C++.

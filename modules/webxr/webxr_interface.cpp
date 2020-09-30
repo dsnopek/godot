@@ -61,8 +61,6 @@ bool WebXRInterface::initialize() {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL_V(arvr_server, false);
 
-	//printf("My own little debugging\n");
-
 	if (!initialized) {
 		/* clang-format off */
 		bool vr_supported = EM_ASM_INT({
@@ -83,46 +81,23 @@ bool WebXRInterface::initialize() {
 			console.log(Object.keys(Module));
 			console.log(Object.keys(Module.Library_GL));
 			navigator.xr.isSessionSupported('immersive-vr').then(function () {
-				console.log('immersive-vr is supported');
 				navigator.xr.requestSession('immersive-vr').then(function (session) {
-					console.log('got session');
 					Module['webxr_session'] = session;
 					let gl = Module['ctx'];
 					gl.makeXRCompatible().then(function () {
-						console.log('made compatible');
 						session.updateRenderState({
 							baseLayer: new XRWebGLLayer(session, gl)
 						});
 						session.requestReferenceSpace('local').then(function (refSpace) {
-							console.log('got reference space');
 							Module['webxr_space'] = refSpace;
 
 							// Now that both Module.webxr_session and Module.webxr_space are set,
 							// our monkey-patched requestAnimationFrame() should kick in.
-							// @todo Can we stop and restart the mainloop?
+							// When using the WebXR API Emulator, this gets picked up automatically,
+							// however, in the Oculus Browser on the Quest, we need to pause and
+							// resume the main loop.
 							Module.Library_Browser_mainLoop.pause();
 							window.setTimeout(function () { Module.Library_Browser_mainLoop.resume(); });
-
-							// Monkey patch window.requestAnimationFrame so we can replace it with the WebXR equivalent.
-							// This is called via emscripten_set_main_loop().
-							/*
-							Module['webxr_frame'] = null;
-							if (!Module['webxr_orig_requestAnimationFrame']) {
-								console.log('!webxr_orig_requestAnimationFrame');
-								Module['webxr_orig_requestAnimationFrame'] = Module.InternalBrowser.requestAnimationFrame;
-								Module.InternalBrowser.requestAnimationFrame = function (callback) {
-									console.log('request frame');
-									let onFrame = function (time, frame) {
-										//console.log('got a frame');
-										Module['webxr_frame'] = frame;
-										Module['webxr_pose'] = frame.getViewerPose(Module['webxr_space']);
-										callback(time);
-									};
-									session.requestAnimationFrame(onFrame);
-								};
-							}
-							console.log('after monkey patching');
-							*/
 						});
 					});
 				});
@@ -273,8 +248,6 @@ CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, r
 }
 
 void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_target, const Rect2 &p_screen_rect) {
-	//printf("starting commit for eye\n");
-
 	if (!initialized || !_have_frame()) {
 		return;
 	}
@@ -291,23 +264,16 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 		let gl = Module['ctx'];
 
 		// Bind to WebXR's framebuffer.
-		// GLES2: (might work for GLES 3 too, not sure)
-		//gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
-		// GLES3:
-		//console.log("Framebuffer name: " + glLayer.framebuffer.name);
 		gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
 		if ($0 === 0) {
+			// Clear to red to make it really obvious where we didn't draw.
 			gl.clearColor(1.0, 0.0, 0.0, 1.0);
 			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		}
-		//gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
 		gl.viewport(0, 0, viewport.width * 2, viewport.height);
 
 		// Assign the framebuffer to our reserved name, so that we can use it from C++.
 		Module.Library_GL.framebuffers[Module.webxr_destination_framebuffer] = glLayer.framebuffer;
-		//console.log('js destination: ' + Module.webxr_destination_framebuffer);
-
-		//console.log("commit javascript viewport: " + viewport.x + " " + viewport.y + " " + viewport.width + " " + viewport.height);
 
 		let buf = Module._malloc(4 * 4);
 		setValue(buf + 0, viewport.x, 'i32');
@@ -317,8 +283,6 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 		return buf;
 	}, view_index);
 
-	//printf("js_viewport: %d\n", (int)js_viewport);
-
 	Rect2 viewport;
 	viewport.position.x = js_viewport[0];
 	viewport.position.y = js_viewport[1];
@@ -327,21 +291,17 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 
 	free(js_viewport);
 
-	//printf("commit c++ viewport: %f %f %f %f\n", viewport.position.x, viewport.position.y, viewport.size.width, viewport.size.height);
-
 	// Temporary: just get something on the screen!
 	//VSG::rasterizer->set_current_render_target(RID());
 	//VSG::rasterizer->blit_render_target_to_screen(p_render_target, viewport, 0);
 
+	// @todo We don't need to do this every frame - we can grab it when we initialize.
 	unsigned int destination_framebuffer = EM_ASM_INT({
 		return Module.webxr_destination_framebuffer;
 	});
-	//printf("C++ destination: %d\n", destination_framebuffer);
 
 	// Attempt to render to the current framebuffer.
 	VSG::rasterizer->blit_render_target_to_framebuffer(p_render_target, viewport, destination_framebuffer);
-
-	//printf("rendered a frame\n");
 };
 
 void WebXRInterface::process() {

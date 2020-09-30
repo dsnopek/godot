@@ -28,44 +28,6 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-// Capture emscriptens internal Browser object so we can monkey-patch requestAnimationFrame.
-// @todo move all this to a new webxr.js file
-setTimeout(function () {
-	Module.Library_GL = GL || {};
-	// Allocate a special name for the destination framebuffer.
-	Module.webxr_destination_framebuffer = Module.Library_GL.getNewId(Module.Library_GL.framebuffers);
-
-    Module.Library_Browser = Browser || {};
-	Module.Library_Browser_mainLoop = Module.Library_Browser.mainLoop || {};
-	
-    Module.webxr_session = null;
-    Module.webxr_space = null;
-    Module.webxr_frame = null;
-    Module.webxr_pose = null;
-
-    Module.webxr_orig_requestAnimationFrame = Module.Library_Browser.requestAnimationFrame;
-    Module.Library_Browser.requestAnimationFrame = function (callback) {
-        //console.log('requestAnimationFrame');
-        if (Module.webxr_session && Module.webxr_space) {
-            //console.log('request frame');
-            let onFrame = function (time, frame) {
-                // Do we need to refresh this?
-                Module.webxr_session = frame.session;
-                //console.log('got a frame');
-                Module.webxr_frame = frame;
-                Module.webxr_pose = frame.getViewerPose(Module.webxr_space);
-                callback(time);
-                Module.webxr_frame = null;
-                Module.webxr_pose = null;
-            };
-            Module.webxr_session.requestAnimationFrame(onFrame);
-        }
-        else {
-            Module.webxr_orig_requestAnimationFrame(callback);
-        }
-    };
-}, 0);
-
 Module['copyToFS'] = function(path, buffer) {
 	var p = path.lastIndexOf("/");
 	var dir = "/";

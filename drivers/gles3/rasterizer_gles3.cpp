@@ -362,13 +362,10 @@ void RasterizerGLES3::blit_render_target_to_framebuffer(RID p_render_target, con
 
 	if (rt->external.fbo != 0) {
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, rt->external.fbo);
-		//printf("read external fbo: %d\n", rt->external.fbo);
 	} else {
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, rt->fbo);
-		//printf("read fbo: %d\n", rt->fbo);
 	}
 	glReadBuffer(GL_COLOR_ATTACHMENT0);
-	//printf("draw buffer: %d\n", p_framebuffer);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, p_framebuffer);
 	glBlitFramebuffer(0, 0, rt->width, rt->height, p_screen_rect.position.x, p_screen_rect.position.y, p_screen_rect.position.x + p_screen_rect.size.width, p_screen_rect.position.y + p_screen_rect.size.height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }

@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  rasterizer_gles2.h                                                   */
+/*  webxr.js                                                             */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
@@ -28,52 +28,42 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#ifndef RASTERIZERGLES2_H
-#define RASTERIZERGLES2_H
+// Uses setTimeout() so that we can access library objects from Emscripten
+// after they have been initialized.
+setTimeout(function () {
+    Module.Library_GL = GL || {};
+    // Allocate a special name for the destination framebuffer, so that we can
+    // reference it from C++.
+    Module.webxr_destination_framebuffer = Module.Library_GL.getNewId(Module.Library_GL.framebuffers);
 
-#include "rasterizer_canvas_gles2.h"
-#include "rasterizer_scene_gles2.h"
-#include "rasterizer_storage_gles2.h"
-#include "servers/visual/rasterizer.h"
+    Module.Library_Browser = Browser || {};
+    Module.Library_Browser_mainLoop = Module.Library_Browser.mainLoop || {};
 
-class RasterizerGLES2 : public Rasterizer {
+    Module.webxr_session = null;
+    Module.webxr_space = null;
+    Module.webxr_frame = null;
+    Module.webxr_pose = null;
 
-	static Rasterizer *_create_current();
+    // Monkey-patch the requestAnimationFrame() used by Emscripten for the main
+    // loop, so that we can swap it out for XRSession.requestAnimationFrame()
+    // when an XR session is started.
+    Module.webxr_orig_requestAnimationFrame = Module.Library_Browser.requestAnimationFrame;
+    Module.Library_Browser.requestAnimationFrame = function (callback) {
+        if (Module.webxr_session && Module.webxr_space) {
+            let onFrame = function (time, frame) {
+                // @todo Do we actually need to do this?
+                Module.webxr_session = frame.session;
 
-	RasterizerStorageGLES2 *storage;
-	RasterizerCanvasGLES2 *canvas;
-	RasterizerSceneGLES2 *scene;
-
-	double time_total;
-	float time_scale;
-
-public:
-	virtual RasterizerStorage *get_storage();
-	virtual RasterizerCanvas *get_canvas();
-	virtual RasterizerScene *get_scene();
-
-	virtual void set_boot_image(const Ref<Image> &p_image, const Color &p_color, bool p_scale, bool p_use_filter = true);
-	virtual void set_shader_time_scale(float p_scale);
-
-	virtual void initialize();
-	virtual void begin_frame(double frame_step);
-	virtual void set_current_render_target(RID p_render_target);
-	virtual void restore_render_target(bool p_3d_was_drawn);
-	virtual void clear_render_target(const Color &p_color);
-	virtual void blit_render_target_to_screen(RID p_render_target, const Rect2 &p_screen_rect, int p_screen = 0);
-	virtual void blit_render_target_to_framebuffer(RID p_render_target, const Rect2 &p_screen_rect, unsigned int p_framebuffer);
-	virtual void output_lens_distorted_to_screen(RID p_render_target, const Rect2 &p_screen_rect, float p_k1, float p_k2, const Vector2 &p_eye_center, float p_oversample);
-	virtual void end_frame(bool p_swap_buffers);
-	virtual void finalize();
-
-	static Error is_viable();
-	static void make_current();
-	static void register_config();
-
-	virtual bool is_low_end() const { return true; }
-
-	RasterizerGLES2();
-	~RasterizerGLES2();
-};
-
-#endif // RASTERIZERGLES2_H
+                Module.webxr_frame = frame;
+                Module.webxr_pose = frame.getViewerPose(Module.webxr_space);
+                callback(time);
+                Module.webxr_frame = null;
+                Module.webxr_pose = null;
+            };
+            Module.webxr_session.requestAnimationFrame(onFrame);
+        }
+        else {
+            Module.webxr_orig_requestAnimationFrame(callback);
+        }
+    };
+}, 0);

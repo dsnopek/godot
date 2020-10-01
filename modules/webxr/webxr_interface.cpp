@@ -138,11 +138,7 @@ bool WebXRInterface::_have_frame() {
 }
 
 Size2 WebXRInterface::get_render_targetsize() {
-	// @todo This method is untested!
-
 	Size2 target_size;
-
-	//EM_ASM({ console.log("get_render_targetsize()"); });
 
 	if (!initialized || !_have_frame()) {
 		// As a default, use half the window size.
@@ -182,9 +178,6 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 		transform_for_eye = p_cam_transform;
 		return transform_for_eye;
 	}
-
-	// @todo This isn't right for this function. Apparently, Godot uses EYE_MONO to get the headset position.
-	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
 
 	float* js_matrix = (float*) EM_ASM_INT({
 		const views = Module['webxr_pose'].views;

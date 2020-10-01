@@ -78,6 +78,7 @@ bool WebXRInterface::initialize() {
 		initialized = true;
 
 		EM_ASM({
+			// @todo Calling session supported and getting the callback should be up to the developer using this interface
 			navigator.xr.isSessionSupported('immersive-vr').then(function () {
 				navigator.xr.requestSession('immersive-vr').then(function (session) {
 					Module['webxr_session'] = session;
@@ -86,6 +87,7 @@ bool WebXRInterface::initialize() {
 						session.updateRenderState({
 							baseLayer: new XRWebGLLayer(session, gl)
 						});
+						// @todo Reference space type needs to be configurable, and have automatic fallbacks.
 						session.requestReferenceSpace('local').then(function (refSpace) {
 							Module['webxr_space'] = refSpace;
 
@@ -168,11 +170,6 @@ Size2 WebXRInterface::get_render_targetsize() {
 
 	free(js_size);
 
-	EM_ASM({
-		//console.log("targetsize C++ viewport:");
-		//console.log($0 + " " + $1);
-	}, target_size.width, target_size.height);
-
 	return target_size;
 };
 
@@ -190,13 +187,20 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
 
 	float* js_matrix = (float*) EM_ASM_INT({
-		const matrix = Module['webxr_pose'].views[$0].transform.inverse.matrix;
+		const views = Module['webxr_pose'].views;
+		let matrix;
+		if ($0 === 0) {
+			matrix = Module['webxr_pose'].transform.matrix;
+		}
+		else {
+			matrix = views[$0 - 1].transform.inverse.matrix;
+		}
 		let buf = Module._malloc(16 * 4);
 		for (let i = 0; i < 16; i++) {
 			setValue(buf + (i * 4), matrix[i], 'float')
 		}
 		return buf;
-	}, view_index);
+	}, p_eye);
 
 	transform_for_eye.basis.elements[0].x = js_matrix[0];
 	transform_for_eye.basis.elements[0].y = js_matrix[1];
@@ -273,8 +277,7 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 			gl.clearColor(1.0, 0.0, 0.0, 1.0);
 			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		}
-		// @todo Use glLayer.framebufferwidth and glLayer.framebufferheight instead
-		gl.viewport(0, 0, viewport.width * 2, viewport.height);
+		gl.viewport(0, 0, glLayer.framebufferWidth, glLayer.framebufferHeight);
 
 		// Assign the framebuffer to our reserved name, so that we can use it from C++.
 		Module.Library_GL.framebuffers[Module.webxr_destination_framebuffer] = glLayer.framebuffer;

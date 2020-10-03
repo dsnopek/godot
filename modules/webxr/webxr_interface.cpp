@@ -157,7 +157,7 @@ bool WebXRInterface::initialize() {
 							vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
 						},
 						uniformLocations: {
-							uSampler: gl.getUniformLocation(shaderProgram, 'uSampler'),   
+							uSampler: gl.getUniformLocation(shaderProgram, 'uSampler'),
 						},
 					};
 

@@ -280,6 +280,9 @@ Size2 WebXRInterface::get_render_targetsize() {
 Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const Transform &p_cam_transform) {
 	Transform transform_for_eye;
 
+	ARVRServer *arvr_server = ARVRServer::get_singleton();
+	ERR_FAIL_NULL_V(arvr_server, transform_for_eye);
+
 	// @todo In 3DOF where we only have rotation, we should take the position from the p_cam_transform, I think?
 
 	if (!initialized || !_have_frame()) {
@@ -294,7 +297,7 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 			matrix = Module['webxr_pose'].transform.matrix;
 		}
 		else {
-			matrix = views[$0 - 1].transform.inverse.matrix;
+			matrix = views[$0 - 1].transform.matrix;
 		}
 		let buf = Module._malloc(16 * 4);
 		for (let i = 0; i < 16; i++) {
@@ -303,28 +306,26 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 		return buf;
 	}, p_eye);
 
+	//printf("Transform for eye: %f %f %f %f | %f %f %f %f | %f %f %f %f | %f %f %f %f\n", 
+	//	js_matrix[0], js_matrix[1], js_matrix[2], js_matrix[3],
+	//	js_matrix[4], js_matrix[5], js_matrix[6], js_matrix[7],
+	//	js_matrix[8], js_matrix[9], js_matrix[10], js_matrix[11],
+	//	js_matrix[12], js_matrix[13], js_matrix[14], js_matrix[15]);
+
 	transform_for_eye.basis.elements[0].x = js_matrix[0];
-	transform_for_eye.basis.elements[0].y = js_matrix[1];
-	transform_for_eye.basis.elements[0].z = js_matrix[2];
-	transform_for_eye.basis.elements[1].x = js_matrix[4];
+	transform_for_eye.basis.elements[1].x = js_matrix[1];
+	transform_for_eye.basis.elements[2].x = js_matrix[2];
+	transform_for_eye.basis.elements[0].y = js_matrix[4];
 	transform_for_eye.basis.elements[1].y = js_matrix[5];
-	transform_for_eye.basis.elements[1].z = js_matrix[6];
-	transform_for_eye.basis.elements[2].x = js_matrix[8];
-	transform_for_eye.basis.elements[2].y = js_matrix[9];
+	transform_for_eye.basis.elements[2].y = js_matrix[6];
+	transform_for_eye.basis.elements[0].z = js_matrix[8];
+	transform_for_eye.basis.elements[1].z = js_matrix[9];
 	transform_for_eye.basis.elements[2].z = js_matrix[10];
 	transform_for_eye.origin.x = js_matrix[12];
 	transform_for_eye.origin.y = js_matrix[13];
 	transform_for_eye.origin.z = js_matrix[14];
 
-	if (p_eye != ARVRInterface::EYE_MONO) {
-		transform_for_eye.origin.x *= -1.0;
-		transform_for_eye.origin.y *= -1.0;
-		transform_for_eye.origin.z *= -1.0;
-	}
-
 	free(js_matrix);
-
-	ARVRServer *arvr_server = ARVRServer::get_singleton();
 
 	return p_cam_transform * arvr_server->get_reference_frame() * transform_for_eye;
 };

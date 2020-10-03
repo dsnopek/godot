@@ -78,6 +78,111 @@ bool WebXRInterface::initialize() {
 		initialized = true;
 
 		EM_ASM({
+			// Initialize our webxr_blit_texture function.
+			if (!Module.webxr_blit_texture) {
+				Module.webxr_blit_texture = (function (gl) {
+					function initShaderProgram(gl, vsSource, fsSource) {
+						const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+						const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+
+						const shaderProgram = gl.createProgram();
+						gl.attachShader(shaderProgram, vertexShader);
+						gl.attachShader(shaderProgram, fragmentShader);
+						gl.linkProgram(shaderProgram);
+
+						if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+							alert('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
+							return null;
+						}
+
+						return shaderProgram;
+					}
+
+					function loadShader(gl, type, source) {
+						const shader = gl.createShader(type);
+						gl.shaderSource(shader, source);
+						gl.compileShader(shader);
+
+						if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+							alert('An error occurred compiling the shader: ' + gl.getShaderInfoLog(shader));
+							gl.deleteShader(shader);
+							return null;
+						}
+
+						return shader;
+					}
+
+					function initBuffer(gl) {
+						const positionBuffer = gl.createBuffer();
+						gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+						const positions = [
+							-1.0, -1.0,
+							 1.0, -1.0,
+							-1.0,  1.0,
+							 1.0,  1.0,
+						];
+						gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+						return positionBuffer;
+					}
+
+				    // Vertex shader source.
+					const vsSource = `
+						const vec2 scale = vec2(0.5, 0.5);
+						attribute vec4 aVertexPosition;
+
+						varying highp vec2 vTextureCoord;
+
+						void main () {
+							gl_Position = aVertexPosition;
+							vTextureCoord = aVertexPosition.xy * scale + scale;
+						}
+					`;
+
+					// Fragment shader source.
+					const fsSource = `
+						varying highp vec2 vTextureCoord;
+
+						uniform sampler2D uSampler;
+
+						void main() {
+							gl_FragColor = texture2D(uSampler, vTextureCoord);
+						}
+					`;
+
+					const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+
+					const programInfo = {
+						program: shaderProgram,
+						attribLocations: {
+							vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+						},
+						uniformLocations: {
+							uSampler: gl.getUniformLocation(shaderProgram, 'uSampler'),
+						},
+					};
+
+					const buffer = initBuffer(gl);
+
+					// The Module.webxr_blit_texture() function.
+					return function (texture) {
+						gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+						gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
+						gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+
+						gl.useProgram(programInfo.program);
+
+						gl.activeTexture(gl.TEXTURE0);
+						gl.bindTexture(gl.TEXTURE_2D, texture);
+						gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
+
+						gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+						gl.bindTexture(gl.TEXTURE_2D, null);
+
+					};
+				})(Module.ctx);
+			}
+
 			// @todo Calling session supported and getting the callback should be up to the developer using this interface
 			navigator.xr.isSessionSupported('immersive-vr').then(function () {
 				navigator.xr.requestSession('immersive-vr').then(function (session) {
@@ -125,6 +230,8 @@ void WebXRInterface::uninitialize() {
 			Module.webxr_space = null;
 			Module.webxr_frame = null;
 			Module.webxr_pose = null;
+
+			// @todo Clean-up the textures we allocated for each view
 		});
 
 		initialized = false;
@@ -247,17 +354,45 @@ CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, r
 	return eye;
 }
 
+unsigned int WebXRInterface::get_external_texture_for_eye(ARVRInterface::Eyes p_eye) {
+	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
+
+	return EM_ASM_INT({
+		if (Module.webxr_texture_ids[$0]) {
+			return Module.webxr_texture_ids[$0];
+		}
+
+		const glLayer = Module['webxr_frame'].session.renderState.baseLayer;
+		const view = Module['webxr_pose'].views[$0];
+		const viewport = glLayer.getViewport(view);
+		const gl = Module['ctx'];
+
+		const texture = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, viewport.width, viewport.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+		gl.bindTexture(gl.TEXTURE_2D, null);
+
+		const texture_id = Module.Library_GL.getNewId(Module.Library_GL.textures);
+		Module.Library_GL.textures[texture_id] = texture;
+		Module.webxr_textures[$0] = texture;
+		Module.webxr_texture_ids[$0] = texture_id;
+		return texture_id;
+	}, view_index);
+}
+
 void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_target, const Rect2 &p_screen_rect) {
 	if (!initialized || !_have_frame()) {
 		return;
 	}
 
-	// Change current render target to the main screen.
-	VSG::rasterizer->set_current_render_target(RID());
-
 	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
 
-	int32_t* js_viewport = (int32_t*) EM_ASM_INT({
+	EM_ASM({
 		let glLayer = Module['webxr_frame'].session.renderState.baseLayer;
 		let view = Module['webxr_pose'].views[$0];
 		let viewport = glLayer.getViewport(view);
@@ -265,42 +400,11 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 
 		// Bind to WebXR's framebuffer.
 		gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
-		if ($0 === 0) {
-			// Clear to red to make it really obvious where we didn't draw.
-			gl.clearColor(1.0, 0.0, 0.0, 1.0);
-			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		}
-		gl.viewport(0, 0, glLayer.framebufferWidth, glLayer.framebufferHeight);
+		gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
 
-		// Assign the framebuffer to our reserved name, so that we can use it from C++.
-		Module.Library_GL.framebuffers[Module.webxr_destination_framebuffer] = glLayer.framebuffer;
+		Module.webxr_blit_texture(Module.webxr_textures[$0]);
 
-		let buf = Module._malloc(4 * 4);
-		setValue(buf + 0, viewport.x, 'i32');
-		setValue(buf + 4, viewport.y, 'i32');
-		setValue(buf + 8, viewport.width, 'i32');
-		setValue(buf + 12, viewport.height, 'i32');
-		return buf;
 	}, view_index);
-
-	Rect2 viewport;
-	viewport.position.x = js_viewport[0];
-	viewport.position.y = js_viewport[1];
-	viewport.size.width = js_viewport[2];
-	viewport.size.height = js_viewport[3];
-
-	free(js_viewport);
-
-	// Temporary: just get something on the screen!
-	//VSG::rasterizer->set_current_render_target(RID());
-	//VSG::rasterizer->blit_render_target_to_screen(p_render_target, viewport, 0);
-
-	// @todo We don't need to do this every frame - we can grab it when we initialize.
-	unsigned int destination_framebuffer = EM_ASM_INT({
-		return Module.webxr_destination_framebuffer;
-	});
-
-	VSG::rasterizer->blit_render_target_to_framebuffer(p_render_target, viewport, destination_framebuffer);
 };
 
 void WebXRInterface::process() {

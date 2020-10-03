@@ -32,12 +32,11 @@
 // after they have been initialized.
 setTimeout(function () {
     Module.Library_GL = GL || {};
-    // Allocate a special name for the destination framebuffer, so that we can
-    // reference it from C++.
-    Module.webxr_destination_framebuffer = Module.Library_GL.getNewId(Module.Library_GL.framebuffers);
-
     Module.Library_Browser = Browser || {};
     Module.Library_Browser_mainLoop = Module.Library_Browser.mainLoop || {};
+
+    Module.webxr_texture_ids = [null, null];
+    Module.webxr_textures = [null, null];
 
     Module.webxr_session = null;
     Module.webxr_space = null;

@@ -78,6 +78,7 @@ bool WebXRInterface::initialize() {
 		initialized = true;
 
 		EM_ASM({
+			// Initialize our webxr_blit_texture function.
 			if (!Module.webxr_blit_texture) {
 				Module.webxr_blit_texture = (function (gl) {
 					function initShaderProgram(gl, vsSource, fsSource) {
@@ -389,12 +390,9 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 		return;
 	}
 
-	// Change current render target to the main screen.
-	VSG::rasterizer->set_current_render_target(RID());
-
 	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
 
-	int32_t* js_viewport = (int32_t*) EM_ASM_INT({
+	EM_ASM({
 		let glLayer = Module['webxr_frame'].session.renderState.baseLayer;
 		let view = Module['webxr_pose'].views[$0];
 		let viewport = glLayer.getViewport(view);
@@ -402,49 +400,11 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 
 		// Bind to WebXR's framebuffer.
 		gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
-		if ($0 === 0) {
-			// Clear to red to make it really obvious where we didn't draw.
-			gl.clearColor(1.0, 0.0, 0.0, 1.0);
-			//gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-			gl.clear(gl.COLOR_BUFFER_BIT);
-		}
 		gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
-
-		// Assign the framebuffer to our reserved name, so that we can use it from C++.
-		/*
-		Module.Library_GL.framebuffers[Module.webxr_destination_framebuffer] = glLayer.framebuffer;
-		*/
 
 		Module.webxr_blit_texture(Module.webxr_textures[$0]);
 
-		let buf = Module._malloc(4 * 4);
-		setValue(buf + 0, viewport.x, 'i32');
-		setValue(buf + 4, viewport.y, 'i32');
-		setValue(buf + 8, viewport.width, 'i32');
-		setValue(buf + 12, viewport.height, 'i32');
-		return buf;
 	}, view_index);
-
-	Rect2 viewport;
-	viewport.position.x = js_viewport[0];
-	viewport.position.y = js_viewport[1];
-	viewport.size.width = js_viewport[2];
-	viewport.size.height = js_viewport[3];
-
-	free(js_viewport);
-
-	// Temporary: just get something on the screen!
-	//VSG::rasterizer->set_current_render_target(RID());
-	//VSG::rasterizer->blit_render_target_to_screen(p_render_target, viewport, 0);
-
-	// @todo We don't need to do this every frame - we can grab it when we initialize.
-	/*
-	unsigned int destination_framebuffer = EM_ASM_INT({
-		return Module.webxr_destination_framebuffer;
-	});
-	*/
-
-	//VSG::rasterizer->blit_render_target_to_framebuffer(p_render_target, viewport, destination_framebuffer);
 };
 
 void WebXRInterface::process() {

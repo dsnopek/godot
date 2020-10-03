@@ -78,6 +78,217 @@ bool WebXRInterface::initialize() {
 		initialized = true;
 
 		EM_ASM({
+			if (!Module.webxr_blit_texture) {
+				Module.webxr_blit_texture = (function (gl) {
+					function initShaderProgram(gl, vsSource, fsSource) {
+						const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+						const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+
+						const shaderProgram = gl.createProgram();
+						gl.attachShader(shaderProgram, vertexShader);
+						gl.attachShader(shaderProgram, fragmentShader);
+						gl.linkProgram(shaderProgram);
+
+						if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+							alert('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
+							return null;
+						}
+
+						return shaderProgram;
+					}
+
+					function loadShader(gl, type, source) {
+						const shader = gl.createShader(type);
+						gl.shaderSource(shader, source);
+						gl.compileShader(shader);
+
+						if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+							alert('An error occurred compiling the shader: ' + gl.getShaderInfoLog(shader));
+							gl.deleteShader(shader);
+							return null;
+						}
+
+						return shader;
+					}
+
+					function initBuffers(gl) {
+						//
+						// Create a buffer for the squares position.
+						//
+
+						const positionBuffer = gl.createBuffer();
+
+						// Select the positionBuffer as the one to apply buffer operations to from here out.
+						gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+						// Now create an array of positions for the square.
+						const positions = [
+							-1.0, -1.0,
+							 1.0, -1.0,
+							-1.0,  1.0,
+							 1.0,  1.0,
+						];
+
+						// Now pass the list of positions into WebGL to build the shape.
+						// We do this by creating a Float32Array from the Javascript array,
+						// then use it to fill the current buffer.
+						gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+						//
+						// Create a buffer of texture coordinates.
+						//
+
+						const textureCoordBuffer = gl.createBuffer();
+						gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
+						const textureCoordinates = [
+							0.0, 1.0,
+							1.0, 1.0,
+							0.0, 0.0,
+							1.0, 0.0,
+						];
+						gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), gl.STATIC_DRAW);
+
+						return {
+							position: positionBuffer,
+							textureCoord: textureCoordBuffer,
+						};
+					}
+
+					function loadTexture(gl, url) {
+						const texture = gl.createTexture();
+						gl.bindTexture(gl.TEXTURE_2D, texture);
+
+						// Because images have to be download over the internet
+						// they might take a moment until they are ready.
+						// Until then put a single pixel in the texture so we can
+						// use it immediately. When the image has finished downloading
+						// we'll update the texture with the contents of the image.
+						const level = 0;
+						const internalFormat = gl.RGBA;
+						const width = 1;
+						const height = 1;
+						const border = 0;
+						const srcFormat = gl.RGBA;
+						const srcType = gl.UNSIGNED_BYTE;
+						const pixel = new Uint8Array([0, 0, 255, 255]);  // opaque blue
+						gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+									width, height, border, srcFormat, srcType,
+									pixel);
+
+						const image = new Image();
+						image.onload = function() {
+							gl.bindTexture(gl.TEXTURE_2D, texture);
+							gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+										srcFormat, srcType, image);
+
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+						};
+						image.src = url;
+
+						return texture;
+					}
+ 
+				    // Vertex shader source.
+					const vsSource = `
+						//const vec2 scale = vec2(0.5, 0.5);
+						attribute vec4 aVertexPosition;
+						attribute vec2 aTextureCoord;
+
+						varying highp vec2 vTextureCoord;
+
+						void main () {
+							gl_Position = aVertexPosition;
+							//vTextureCoord = aVertexPosition.xy * scale + scale;
+							vTextureCoord = aTextureCoord;
+						}
+					`;
+
+					// Fragment shader source.
+					const fsSource = `
+						varying highp vec2 vTextureCoord;
+
+						uniform sampler2D uSampler;
+
+						void main() {
+							gl_FragColor = texture2D(uSampler, vTextureCoord);
+						}
+					`;
+
+					const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+
+					const programInfo = {
+						program: shaderProgram,
+						attribLocations: {
+							vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+							textureCoord: gl.getAttribLocation(shaderProgram, 'aTextureCoord'),
+						},
+						uniformLocations: {
+							uSampler: gl.getUniformLocation(shaderProgram, 'uSampler'),   
+						},
+					};
+
+					const buffers = initBuffers(gl);
+
+					const testTexture = loadTexture(gl, 'godot.png');
+	
+					return function (texture) {
+						// TEMP: for testing
+						texture = testTexture;
+
+						// Tell WebGL how to pull out the positions from the position
+						// buffer into the vertexPosition attribute.
+						{
+							const numComponents = 2;
+							const type = gl.FLOAT;
+							const normalize = false;
+							const stride = 0;
+							const offset = 0;
+
+							gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+							gl.vertexAttribPointer(
+								programInfo.attribLocations.vertexPosition,
+								numComponents,
+								type,
+								normalize,
+								stride,
+								offset);
+							gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+						}
+
+						// Tell WebGL how to pull out the texture coordinates from the buffer.
+						{
+							const num = 2;
+							const type = gl.FLOAT;
+							const normalize = false;
+							const stride = 0;
+							const offset = 0;
+							gl.bindBuffer(gl.ARRAY_BUFFER, buffers.textureCoord);
+							gl.vertexAttribPointer(programInfo.attribLocations.textureCoord, num, type, normalize, stride, offset);
+							gl.enableVertexAttribArray(programInfo.attribLocations.textureCoord);
+						}
+
+						gl.useProgram(programInfo.program);
+
+						gl.activeTexture(gl.TEXTURE0);
+						gl.bindTexture(gl.TEXTURE_2D, texture);
+						gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
+
+						// The actual drawing
+						{
+							const offset = 0;
+							const vertexCount = 4;
+							gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
+						}
+
+						gl.bindTexture(gl.TEXTURE_2D, null);
+
+					};
+				})(Module.ctx);
+			}
+
 			// @todo Calling session supported and getting the callback should be up to the developer using this interface
 			navigator.xr.isSessionSupported('immersive-vr').then(function () {
 				navigator.xr.requestSession('immersive-vr').then(function (session) {
@@ -268,12 +479,17 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 		if ($0 === 0) {
 			// Clear to red to make it really obvious where we didn't draw.
 			gl.clearColor(1.0, 0.0, 0.0, 1.0);
-			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+			//gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+			gl.clear(gl.COLOR_BUFFER_BIT);
 		}
-		gl.viewport(0, 0, glLayer.framebufferWidth, glLayer.framebufferHeight);
+		gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
 
 		// Assign the framebuffer to our reserved name, so that we can use it from C++.
+		/*
 		Module.Library_GL.framebuffers[Module.webxr_destination_framebuffer] = glLayer.framebuffer;
+		*/
+
+		Module.webxr_blit_texture(null);
 
 		let buf = Module._malloc(4 * 4);
 		setValue(buf + 0, viewport.x, 'i32');
@@ -296,11 +512,13 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 	//VSG::rasterizer->blit_render_target_to_screen(p_render_target, viewport, 0);
 
 	// @todo We don't need to do this every frame - we can grab it when we initialize.
+	/*
 	unsigned int destination_framebuffer = EM_ASM_INT({
 		return Module.webxr_destination_framebuffer;
 	});
+	*/
 
-	VSG::rasterizer->blit_render_target_to_framebuffer(p_render_target, viewport, destination_framebuffer);
+	//VSG::rasterizer->blit_render_target_to_framebuffer(p_render_target, viewport, destination_framebuffer);
 };
 
 void WebXRInterface::process() {

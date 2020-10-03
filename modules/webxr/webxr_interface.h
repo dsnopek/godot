@@ -70,6 +70,8 @@ public:
 	virtual void process();
 	virtual void notification(int p_what);
 
+	void print_debug() const;
+
 	WebXRInterface();
 	~WebXRInterface();
 };

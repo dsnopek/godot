@@ -46,6 +46,7 @@ int WebXRInterface::get_capabilities() const {
 };
 
 void WebXRInterface::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("print_debug"), &WebXRInterface::print_debug);
 }
 
 bool WebXRInterface::is_stereo() {
@@ -311,13 +312,21 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 	transform_for_eye.basis.elements[2].x = js_matrix[8];
 	transform_for_eye.basis.elements[2].y = js_matrix[9];
 	transform_for_eye.basis.elements[2].z = js_matrix[10];
-	transform_for_eye.origin.x = -js_matrix[12];
-	transform_for_eye.origin.y = -js_matrix[13];
-	transform_for_eye.origin.z = -js_matrix[14];
+	transform_for_eye.origin.x = js_matrix[12];
+	transform_for_eye.origin.y = js_matrix[13];
+	transform_for_eye.origin.z = js_matrix[14];
+
+	if (p_eye != ARVRInterface::EYE_MONO) {
+		transform_for_eye.origin.x *= -1.0;
+		transform_for_eye.origin.y *= -1.0;
+		transform_for_eye.origin.z *= -1.0;
+	}
 
 	free(js_matrix);
 
-	return transform_for_eye;
+	ARVRServer *arvr_server = ARVRServer::get_singleton();
+
+	return p_cam_transform * arvr_server->get_reference_frame() * transform_for_eye;
 };
 
 CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, real_t p_aspect, real_t p_z_near, real_t p_z_far) {
@@ -415,6 +424,18 @@ void WebXRInterface::process() {
 
 void WebXRInterface::notification(int p_what){
 	// nothing to do here, I guess we could pauze our sensors...
+}
+
+void WebXRInterface::print_debug() const {
+	EM_ASM({
+		console.log('-- WebXRInterface debug --');
+		console.log('Headset transform');
+		console.log(Module['webxr_pose'].transform);
+		console.log('View 1 transform');
+		console.log(Module['webxr_pose'].views[0].transform.inverse);
+		console.log('View 2 transform');
+		console.log(Module['webxr_pose'].views[1].transform.inverse);
+	});
 }
 
 WebXRInterface::WebXRInterface() {

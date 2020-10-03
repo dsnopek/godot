@@ -187,7 +187,7 @@ bool WebXRInterface::initialize() {
 			navigator.xr.isSessionSupported('immersive-vr').then(function () {
 				navigator.xr.requestSession('immersive-vr').then(function (session) {
 					Module['webxr_session'] = session;
-					let gl = Module['ctx'];
+					const gl = Module['ctx'];
 					gl.makeXRCompatible().then(function () {
 						session.updateRenderState({
 							baseLayer: new XRWebGLLayer(session, gl)
@@ -255,9 +255,9 @@ Size2 WebXRInterface::get_render_targetsize() {
 	}
 
 	int32_t* js_size = (int32_t*) EM_ASM_INT({
-		let glLayer = Module['webxr_frame'].session.renderState.baseLayer;
-		let view = Module['webxr_pose'].views[0];
-		let viewport = glLayer.getViewport(view);
+		const glLayer = Module['webxr_frame'].session.renderState.baseLayer;
+		const view = Module['webxr_pose'].views[0];
+		const viewport = glLayer.getViewport(view);
 
 		//console.log("targetsize javascript viewport:");
 		//console.log(viewport.width + " " + viewport.height);
@@ -393,10 +393,10 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
 
 	EM_ASM({
-		let glLayer = Module['webxr_frame'].session.renderState.baseLayer;
-		let view = Module['webxr_pose'].views[$0];
-		let viewport = glLayer.getViewport(view);
-		let gl = Module['ctx'];
+		const glLayer = Module['webxr_frame'].session.renderState.baseLayer;
+		const view = Module['webxr_pose'].views[$0];
+		const viewport = glLayer.getViewport(view);
+		const gl = Module['ctx'];
 
 		// Bind to WebXR's framebuffer.
 		gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);

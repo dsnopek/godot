@@ -111,32 +111,17 @@ bool WebXRInterface::initialize() {
 						return shader;
 					}
 
-					function initBuffers(gl) {
-						//
-						// Create a buffer for the squares position.
-						//
-
+					function initBuffer(gl) {
 						const positionBuffer = gl.createBuffer();
-
-						// Select the positionBuffer as the one to apply buffer operations to from here out.
 						gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
-						// Now create an array of positions for the square.
 						const positions = [
 							-1.0, -1.0,
 							 1.0, -1.0,
 							-1.0,  1.0,
 							 1.0,  1.0,
 						];
-
-						// Now pass the list of positions into WebGL to build the shape.
-						// We do this by creating a Float32Array from the Javascript array,
-						// then use it to fill the current buffer.
 						gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
-						return {
-							position: positionBuffer,
-						};
+						return positionBuffer;
 					}
 
 				    // Vertex shader source.
@@ -175,28 +160,13 @@ bool WebXRInterface::initialize() {
 						},
 					};
 
-					const buffers = initBuffers(gl);
+					const buffer = initBuffer(gl);
 
+					// The Module.webxr_blit_texture() function.
 					return function (texture) {
-						// Tell WebGL how to pull out the positions from the position
-						// buffer into the vertexPosition attribute.
-						{
-							const numComponents = 2;
-							const type = gl.FLOAT;
-							const normalize = false;
-							const stride = 0;
-							const offset = 0;
-
-							gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-							gl.vertexAttribPointer(
-								programInfo.attribLocations.vertexPosition,
-								numComponents,
-								type,
-								normalize,
-								stride,
-								offset);
-							gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
-						}
+						gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+						gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
+						gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
 
 						gl.useProgram(programInfo.program);
 
@@ -204,12 +174,7 @@ bool WebXRInterface::initialize() {
 						gl.bindTexture(gl.TEXTURE_2D, texture);
 						gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
 
-						// The actual drawing
-						{
-							const offset = 0;
-							const vertexCount = 4;
-							gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
-						}
+						gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
 						gl.bindTexture(gl.TEXTURE_2D, null);
 

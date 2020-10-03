@@ -35,6 +35,8 @@ setTimeout(function () {
     // Allocate a special name for the destination framebuffer, so that we can
     // reference it from C++.
     Module.webxr_destination_framebuffer = Module.Library_GL.getNewId(Module.Library_GL.framebuffers);
+    Module.webxr_texture_ids = [null, null];
+    Module.webxr_textures = [null, null];
 
     Module.Library_Browser = Browser || {};
     Module.Library_Browser_mainLoop = Module.Library_Browser.mainLoop || {};

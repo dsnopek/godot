@@ -193,7 +193,7 @@ bool WebXRInterface::initialize() {
  
 				    // Vertex shader source.
 					const vsSource = `
-						//const vec2 scale = vec2(0.5, 0.5);
+						const vec2 scale = vec2(0.5, 0.5);
 						attribute vec4 aVertexPosition;
 						attribute vec2 aTextureCoord;
 
@@ -201,8 +201,8 @@ bool WebXRInterface::initialize() {
 
 						void main () {
 							gl_Position = aVertexPosition;
-							//vTextureCoord = aVertexPosition.xy * scale + scale;
-							vTextureCoord = aTextureCoord;
+							vTextureCoord = aVertexPosition.xy * scale + scale;
+							//vTextureCoord = aTextureCoord;
 						}
 					`;
 
@@ -236,7 +236,7 @@ bool WebXRInterface::initialize() {
 	
 					return function (texture) {
 						// TEMP: for testing
-						texture = testTexture;
+						//texture = testTexture;
 
 						// Tell WebGL how to pull out the positions from the position
 						// buffer into the vertexPosition attribute.
@@ -336,6 +336,8 @@ void WebXRInterface::uninitialize() {
 			Module.webxr_space = null;
 			Module.webxr_frame = null;
 			Module.webxr_pose = null;
+
+			// @todo Clean-up the textures we allocated for each view
 		});
 
 		initialized = false;
@@ -458,6 +460,37 @@ CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, r
 	return eye;
 }
 
+unsigned int WebXRInterface::get_external_texture_for_eye(ARVRInterface::Eyes p_eye) {
+	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
+
+	return EM_ASM_INT({
+		if (Module.webxr_texture_ids[$0]) {
+			return Module.webxr_texture_ids[$0];
+		}
+
+		const glLayer = Module['webxr_frame'].session.renderState.baseLayer;
+		const view = Module['webxr_pose'].views[$0];
+		const viewport = glLayer.getViewport(view);
+		const gl = Module['ctx'];
+
+		const texture = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, viewport.width, viewport.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+		gl.bindTexture(gl.TEXTURE_2D, null);
+
+		const texture_id = Module.Library_GL.getNewId(Module.Library_GL.textures);
+		Module.Library_GL.textures[texture_id] = texture;
+		Module.webxr_textures[$0] = texture;
+		Module.webxr_texture_ids[$0] = texture_id;
+		return texture_id;
+	}, view_index);
+}
+
 void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_target, const Rect2 &p_screen_rect) {
 	if (!initialized || !_have_frame()) {
 		return;
@@ -489,7 +522,7 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 		Module.Library_GL.framebuffers[Module.webxr_destination_framebuffer] = glLayer.framebuffer;
 		*/
 
-		Module.webxr_blit_texture(null);
+		Module.webxr_blit_texture(Module.webxr_textures[$0]);
 
 		let buf = Module._malloc(4 * 4);
 		setValue(buf + 0, viewport.x, 'i32');

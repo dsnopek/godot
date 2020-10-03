@@ -134,75 +134,21 @@ bool WebXRInterface::initialize() {
 						// then use it to fill the current buffer.
 						gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-						//
-						// Create a buffer of texture coordinates.
-						//
-
-						const textureCoordBuffer = gl.createBuffer();
-						gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
-						const textureCoordinates = [
-							0.0, 1.0,
-							1.0, 1.0,
-							0.0, 0.0,
-							1.0, 0.0,
-						];
-						gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), gl.STATIC_DRAW);
-
 						return {
 							position: positionBuffer,
-							textureCoord: textureCoordBuffer,
 						};
 					}
 
-					function loadTexture(gl, url) {
-						const texture = gl.createTexture();
-						gl.bindTexture(gl.TEXTURE_2D, texture);
-
-						// Because images have to be download over the internet
-						// they might take a moment until they are ready.
-						// Until then put a single pixel in the texture so we can
-						// use it immediately. When the image has finished downloading
-						// we'll update the texture with the contents of the image.
-						const level = 0;
-						const internalFormat = gl.RGBA;
-						const width = 1;
-						const height = 1;
-						const border = 0;
-						const srcFormat = gl.RGBA;
-						const srcType = gl.UNSIGNED_BYTE;
-						const pixel = new Uint8Array([0, 0, 255, 255]);  // opaque blue
-						gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
-									width, height, border, srcFormat, srcType,
-									pixel);
-
-						const image = new Image();
-						image.onload = function() {
-							gl.bindTexture(gl.TEXTURE_2D, texture);
-							gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
-										srcFormat, srcType, image);
-
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-						};
-						image.src = url;
-
-						return texture;
-					}
- 
 				    // Vertex shader source.
 					const vsSource = `
 						const vec2 scale = vec2(0.5, 0.5);
 						attribute vec4 aVertexPosition;
-						attribute vec2 aTextureCoord;
 
 						varying highp vec2 vTextureCoord;
 
 						void main () {
 							gl_Position = aVertexPosition;
 							vTextureCoord = aVertexPosition.xy * scale + scale;
-							//vTextureCoord = aTextureCoord;
 						}
 					`;
 
@@ -223,7 +169,6 @@ bool WebXRInterface::initialize() {
 						program: shaderProgram,
 						attribLocations: {
 							vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
-							textureCoord: gl.getAttribLocation(shaderProgram, 'aTextureCoord'),
 						},
 						uniformLocations: {
 							uSampler: gl.getUniformLocation(shaderProgram, 'uSampler'),   
@@ -232,12 +177,7 @@ bool WebXRInterface::initialize() {
 
 					const buffers = initBuffers(gl);
 
-					const testTexture = loadTexture(gl, 'godot.png');
-	
 					return function (texture) {
-						// TEMP: for testing
-						//texture = testTexture;
-
 						// Tell WebGL how to pull out the positions from the position
 						// buffer into the vertexPosition attribute.
 						{
@@ -256,18 +196,6 @@ bool WebXRInterface::initialize() {
 								stride,
 								offset);
 							gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
-						}
-
-						// Tell WebGL how to pull out the texture coordinates from the buffer.
-						{
-							const num = 2;
-							const type = gl.FLOAT;
-							const normalize = false;
-							const stride = 0;
-							const offset = 0;
-							gl.bindBuffer(gl.ARRAY_BUFFER, buffers.textureCoord);
-							gl.vertexAttribPointer(programInfo.attribLocations.textureCoord, num, type, normalize, stride, offset);
-							gl.enableVertexAttribArray(programInfo.attribLocations.textureCoord);
 						}
 
 						gl.useProgram(programInfo.program);

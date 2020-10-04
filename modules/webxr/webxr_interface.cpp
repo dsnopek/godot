@@ -37,6 +37,17 @@
 #include "servers/visual/visual_server_globals.h"
 #include <stdlib.h>
 
+extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_end() {
+	ARVRServer *arvr_server = ARVRServer::get_singleton();
+	ERR_FAIL_NULL(arvr_server);
+
+	Ref<ARVRInterface> interface = arvr_server->find_interface("WebXR");
+	ERR_FAIL_COND(interface.is_null());
+
+	interface->uninitialize();
+	interface->emit_signal("session_ended");
+}
+
 StringName WebXRInterface::get_name() const {
 	return "WebXR";
 };
@@ -47,6 +58,8 @@ int WebXRInterface::get_capabilities() const {
 
 void WebXRInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("print_debug"), &WebXRInterface::print_debug);
+
+	ADD_SIGNAL(MethodInfo("session_ended"));
 }
 
 bool WebXRInterface::is_stereo() {
@@ -167,11 +180,11 @@ bool WebXRInterface::initialize() {
 
 					// The Module.webxr_blit_texture() function.
 					return function (texture) {
+						gl.useProgram(programInfo.program);
+
 						gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 						gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
 						gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
-
-						gl.useProgram(programInfo.program);
 
 						gl.activeTexture(gl.TEXTURE0);
 						gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -189,6 +202,11 @@ bool WebXRInterface::initialize() {
 			navigator.xr.isSessionSupported('immersive-vr').then(function () {
 				navigator.xr.requestSession('immersive-vr').then(function (session) {
 					Module['webxr_session'] = session;
+
+					session.addEventListener('end', function (evt) {
+						ccall('_emwebxr_on_session_end', 'void', [], []);
+					});
+
 					const gl = Module['ctx'];
 					gl.makeXRCompatible().then(function () {
 						session.updateRenderState({
@@ -226,16 +244,30 @@ void WebXRInterface::uninitialize() {
 
 		/* clang-format off */
 		EM_ASM({
-			Module.webxr_session.end();
+			if (Module.webxr_session) {
+				Module.webxr_session.end();
+			}
+
+			// Clean-up the textures we allocated for each view.
+			const gl = Module.ctx;
+			for (let i = 0; i < Module.webxr_textures.length; i++) {
+				const texture = Module.webxr_textures[i];
+				if (texture !== null) {
+					gl.deleteTexture(texture);
+				}
+				Module.webxr_textures[i] = null;
+				Module.webxr_texture_ids[i] = null;
+			}
 
 			// Resetting these will switch back to window.requestAnimationFrame() for the main loop.
-			// @todo Do we need to pause/resume the main loop here too?
 			Module.webxr_session = null;
 			Module.webxr_space = null;
 			Module.webxr_frame = null;
 			Module.webxr_pose = null;
 
-			// @todo Clean-up the textures we allocated for each view
+			// Pause and restart main loop to activate it on all platforms.
+			Module.Library_Browser_mainLoop.pause();
+			window.setTimeout(function () { Module.Library_Browser_mainLoop.resume(); });
 		});
 		/* clang-format on */
 

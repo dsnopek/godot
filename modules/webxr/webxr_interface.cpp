@@ -30,12 +30,12 @@
 
 #ifdef JAVASCRIPT_ENABLED
 
-#include <stdlib.h>
 #include "webxr_interface.h"
 #include "core/os/input.h"
 #include "core/os/os.h"
-#include "servers/visual/visual_server_globals.h"
 #include "emscripten.h"
+#include "servers/visual/visual_server_globals.h"
+#include <stdlib.h>
 
 StringName WebXRInterface::get_name() const {
 	return "WebXR";
@@ -78,6 +78,7 @@ bool WebXRInterface::initialize() {
 
 		initialized = true;
 
+		/* clang-format off */
 		EM_ASM({
 			// Initialize our webxr_blit_texture function.
 			if (!Module.webxr_blit_texture) {
@@ -209,6 +210,7 @@ bool WebXRInterface::initialize() {
 				});
 			});
 		});
+		/* clang-format on */
 	};
 
 	return true;
@@ -222,6 +224,7 @@ void WebXRInterface::uninitialize() {
 			arvr_server->clear_primary_interface_if(this);
 		}
 
+		/* clang-format off */
 		EM_ASM({
 			Module.webxr_session.end();
 
@@ -234,15 +237,18 @@ void WebXRInterface::uninitialize() {
 
 			// @todo Clean-up the textures we allocated for each view
 		});
+		/* clang-format on */
 
 		initialized = false;
 	};
 };
 
 bool WebXRInterface::_have_frame() {
+	/* clang-format off */
 	return (bool) EM_ASM_INT({
 		return !!Module['webxr_session'] && !!Module['webxr_pose'];
 	});
+	/* clang-format on */
 }
 
 Size2 WebXRInterface::get_render_targetsize() {
@@ -255,6 +261,7 @@ Size2 WebXRInterface::get_render_targetsize() {
 		return target_size;
 	}
 
+	/* clang-format off */
 	int32_t* js_size = (int32_t*) EM_ASM_INT({
 		const glLayer = Module['webxr_frame'].session.renderState.baseLayer;
 		const view = Module['webxr_pose'].views[0];
@@ -268,6 +275,7 @@ Size2 WebXRInterface::get_render_targetsize() {
 		setValue(buf + 4, viewport.height, 'i32');
 		return buf;
 	});
+	/* clang-format on */
 
 	target_size.width = js_size[0];
 	target_size.height = js_size[1];
@@ -290,6 +298,7 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 		return transform_for_eye;
 	}
 
+	/* clang-format off */
 	float* js_matrix = (float*) EM_ASM_INT({
 		const views = Module['webxr_pose'].views;
 		let matrix;
@@ -305,8 +314,9 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 		}
 		return buf;
 	}, p_eye);
+	/* clang-format on */
 
-	//printf("Transform for eye: %f %f %f %f | %f %f %f %f | %f %f %f %f | %f %f %f %f\n", 
+	//printf("Transform for eye: %f %f %f %f | %f %f %f %f | %f %f %f %f | %f %f %f %f\n",
 	//	js_matrix[0], js_matrix[1], js_matrix[2], js_matrix[3],
 	//	js_matrix[4], js_matrix[5], js_matrix[6], js_matrix[7],
 	//	js_matrix[8], js_matrix[9], js_matrix[10], js_matrix[11],
@@ -339,6 +349,7 @@ CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, r
 
 	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
 
+	/* clang-format off */
 	float* js_matrix = (float*) EM_ASM_INT({
 		const matrix = Module['webxr_pose'].views[$0].projectionMatrix;
 		let buf = Module._malloc(16 * 4);
@@ -347,6 +358,7 @@ CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, r
 		}
 		return buf;
 	}, view_index);
+	/* clang-format on */
 
 	int k = 0;
 	for (int i = 0; i < 4; i++) {
@@ -367,6 +379,7 @@ CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, r
 unsigned int WebXRInterface::get_external_texture_for_eye(ARVRInterface::Eyes p_eye) {
 	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
 
+	/* clang-format off */
 	return EM_ASM_INT({
 		if (Module.webxr_texture_ids[$0]) {
 			return Module.webxr_texture_ids[$0];
@@ -393,6 +406,7 @@ unsigned int WebXRInterface::get_external_texture_for_eye(ARVRInterface::Eyes p_
 		Module.webxr_texture_ids[$0] = texture_id;
 		return texture_id;
 	}, view_index);
+	/* clang-format on */
 }
 
 void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_target, const Rect2 &p_screen_rect) {
@@ -402,6 +416,7 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 
 	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
 
+	/* clang-format off */
 	EM_ASM({
 		const glLayer = Module['webxr_frame'].session.renderState.baseLayer;
 		const view = Module['webxr_pose'].views[$0];
@@ -415,6 +430,7 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 		Module.webxr_blit_texture(Module.webxr_textures[$0]);
 
 	}, view_index);
+	/* clang-format on */
 };
 
 void WebXRInterface::process() {
@@ -423,11 +439,12 @@ void WebXRInterface::process() {
 	};
 };
 
-void WebXRInterface::notification(int p_what){
+void WebXRInterface::notification(int p_what) {
 	// nothing to do here, I guess we could pauze our sensors...
 }
 
 void WebXRInterface::print_debug() const {
+	/* clang-format off */
 	EM_ASM({
 		console.log('-- WebXRInterface debug --');
 		console.log('Headset transform');
@@ -437,6 +454,7 @@ void WebXRInterface::print_debug() const {
 		console.log('View 2 transform');
 		console.log(Module['webxr_pose'].views[1].transform.inverse);
 	});
+	/* clang-format on */
 }
 
 WebXRInterface::WebXRInterface() {
@@ -451,4 +469,3 @@ WebXRInterface::~WebXRInterface() {
 };
 
 #endif // JAVASCRIPT_ENABLED
-

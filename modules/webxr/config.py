@@ -1,5 +1,5 @@
 def can_build(env, platform):
-    return platform == 'javascript'
+    return platform == "javascript"
 
 
 def configure(env):
@@ -7,8 +7,7 @@ def configure(env):
 
 
 def get_doc_classes():
-    return [
-    ]
+    return []
 
 
 def get_doc_path():

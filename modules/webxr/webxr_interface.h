@@ -48,6 +48,7 @@ class WebXRInterface : public ARVRInterface {
 private:
 	bool initialized;
 
+	bool _have_vr_support();
 	bool _have_frame();
 
 protected:
@@ -70,6 +71,8 @@ public:
 
 	virtual void process();
 	virtual void notification(int p_what);
+
+	void is_session_supported(const String &p_session_mode);
 
 	void print_debug() const;
 

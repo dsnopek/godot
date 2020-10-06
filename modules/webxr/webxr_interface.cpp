@@ -37,6 +37,17 @@
 #include "servers/visual/visual_server_globals.h"
 #include <stdlib.h>
 
+extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_supported(char *p_session_mode, bool supported) {
+	ARVRServer *arvr_server = ARVRServer::get_singleton();
+	ERR_FAIL_NULL(arvr_server);
+
+	Ref<ARVRInterface> interface = arvr_server->find_interface("WebXR");
+	ERR_FAIL_COND(interface.is_null());
+
+	String session_mode = String(p_session_mode);
+	interface->emit_signal("session_supported", session_mode, supported);
+}
+
 extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_end() {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL(arvr_server);
@@ -57,8 +68,10 @@ int WebXRInterface::get_capabilities() const {
 };
 
 void WebXRInterface::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("is_session_supported", "session_mode"), &WebXRInterface::is_session_supported);
 	ClassDB::bind_method(D_METHOD("print_debug"), &WebXRInterface::print_debug);
 
+	ADD_SIGNAL(MethodInfo("session_supported"));
 	ADD_SIGNAL(MethodInfo("session_ended"));
 }
 
@@ -76,13 +89,7 @@ bool WebXRInterface::initialize() {
 	ERR_FAIL_NULL_V(arvr_server, false);
 
 	if (!initialized) {
-		/* clang-format off */
-		bool vr_supported = EM_ASM_INT({
-			return !!navigator.xr;
-		});
-		/* clang-format on */
-
-		if (!vr_supported) {
+		if (!_have_vr_support()) {
 			return false;
 		}
 
@@ -274,6 +281,14 @@ void WebXRInterface::uninitialize() {
 		initialized = false;
 	};
 };
+
+bool WebXRInterface::_have_vr_support() {
+	/* clang-format off */
+	return EM_ASM_INT({
+		return !!navigator.xr;
+	});
+	/* clang-format on */
+}
 
 bool WebXRInterface::_have_frame() {
 	/* clang-format off */
@@ -473,6 +488,21 @@ void WebXRInterface::process() {
 
 void WebXRInterface::notification(int p_what) {
 	// nothing to do here, I guess we could pauze our sensors...
+}
+
+void WebXRInterface::is_session_supported(const String &p_session_mode) {
+	if (!_have_vr_support()) {
+		emit_signal("session_supported", p_session_mode, false);
+	} else {
+		/* clang-format off */
+		EM_ASM({
+			const session_mode = UTF8ToString($0);
+			navigator.xr.isSessionSupported(session_mode).then(function (supported) {
+				ccall('_emwebxr_on_session_supported', 'void', ["string", "number"], [session_mode, supported]);
+			});
+		}, p_session_mode.utf8().get_data());
+		/* clang-format on */
+	}
 }
 
 void WebXRInterface::print_debug() const {

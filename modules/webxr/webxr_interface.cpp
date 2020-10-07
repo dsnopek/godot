@@ -105,6 +105,22 @@ String WebXRInterface::get_session_mode() const {
 	return session_mode;
 }
 
+void WebXRInterface::set_required_features(String p_required_features) {
+	required_features = p_required_features;
+}
+
+String WebXRInterface::get_required_features() const {
+	return required_features;
+}
+
+void WebXRInterface::set_optional_features(String p_optional_features) {
+	optional_features = p_optional_features;
+}
+
+String WebXRInterface::get_optional_features() const {
+	return optional_features;
+}
+
 void WebXRInterface::set_requested_reference_space_types(String p_requested_reference_space_types) {
 	requested_reference_space_types = p_requested_reference_space_types;
 }
@@ -298,9 +314,20 @@ bool WebXRInterface::initialize() {
 			}
 
 			const session_mode = UTF8ToString($0);
-			const requested_reference_space_types = UTF8ToString($1).split(",").map((s) => { return s.trim() });
+			const required_features = UTF8ToString($1).split(",").map((s) => { return s.trim() }).filter((s) => { return s !== "" });
+			const optional_features = UTF8ToString($2).split(",").map((s) => { return s.trim() }).filter((s) => { return s !== "" });
+			const requested_reference_space_types = UTF8ToString($3).split(",").map((s) => { return s.trim() });
 
-			navigator.xr.requestSession(session_mode).then(function (session) {
+			const session_init = {};
+			if (required_features.length > 0) {
+				session_init['requiredFeatures'] = required_features;
+			}
+			if (optional_features.length > 0) {
+				session_init['optionalFeatures'] = optional_features;
+			}
+			console.log(session_init);
+
+			navigator.xr.requestSession(session_mode, session_init).then(function (session) {
 				Module['webxr_session'] = session;
 
 				session.addEventListener('end', function (evt) {
@@ -350,7 +377,7 @@ bool WebXRInterface::initialize() {
 			}).catch(function (error) {
 				ccall('_emwebxr_on_session_failed', 'void', ['string'], ['Unable to start session: ' + error]);
 			});
-		}, session_mode.utf8().get_data(), requested_reference_space_types.utf8().get_data());
+		}, session_mode.utf8().get_data(), required_features.utf8().get_data(), optional_features.utf8().get_data(), requested_reference_space_types.utf8().get_data());
 		/* clang-format on */
 	};
 
@@ -368,7 +395,10 @@ void WebXRInterface::uninitialize() {
 		/* clang-format off */
 		EM_ASM({
 			if (Module.webxr_session) {
-				Module.webxr_session.end();
+				try {
+					Module.webxr_session.end();
+				}
+				catch() { }
 			}
 
 			// Clean-up the textures we allocated for each view.

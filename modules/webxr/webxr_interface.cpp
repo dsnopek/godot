@@ -190,9 +190,9 @@ bool WebXRInterface::initialize() {
 
 		initialized = true;
 
-		char **c_reference_space_types = new char *[requested_reference_space_types.size()];
+		char **c_requested_reference_space_types = new char *[requested_reference_space_types.size()];
 		for (int i = 0; i < requested_reference_space_types.size(); i++) {
-			c_reference_space_types[i] = (char *)requested_reference_space_types[i].utf8().get_data();
+			c_requested_reference_space_types[i] = (char *)requested_reference_space_types[i].utf8().get_data();
 		}
 
 		/* clang-format off */
@@ -302,7 +302,6 @@ bool WebXRInterface::initialize() {
 				})(Module.ctx);
 			}
 
-
 			const session_mode = UTF8ToString($0);
 
 			let requested_reference_space_types = [];
@@ -311,6 +310,8 @@ bool WebXRInterface::initialize() {
 				const c_str = getValue($1 + (i * 4), 'i32');
 				requested_reference_space_types.push(UTF8ToString(c_str));
 			}
+			console.log("JS requested reference space types");
+			console.log(requested_reference_space_types);
 
 			navigator.xr.requestSession(session_mode).then(function (session) {
 				Module['webxr_session'] = session;
@@ -338,7 +339,7 @@ bool WebXRInterface::initialize() {
 					}
 					
 					function onReferenceSpaceFailure() {
-						if (request_reference_space_types.length === 0) {
+						if (requested_reference_space_types.length === 0) {
 							ccall('_emwebxr_on_session_failed', 'void', ['string'], ['Unable to get any of the requested reference space types']);
 						}
 						else {
@@ -347,7 +348,7 @@ bool WebXRInterface::initialize() {
 					}
 
 					function requestReferenceSpace() {
-						let reference_space_type = requested_reference_space_type.shift();
+						let reference_space_type = requested_reference_space_types.shift();
 						session.requestReferenceSpace(reference_space_type)
 							.then((refSpace) => { onReferenceSpaceSuccess(refSpace, reference_space_type); })
 							.catch(onReferenceSpaceFailure);
@@ -358,8 +359,10 @@ bool WebXRInterface::initialize() {
 					ccall('_emwebxr_on_session_failed', 'void', ['string'], ['Unable to make WebGL context compatible with WebXR: ' + error]);
 				});
 			});
-		}, session_mode.utf8().get_data(), c_reference_space_types, requested_reference_space_types.size());
+		}, session_mode.utf8().get_data(), c_requested_reference_space_types, requested_reference_space_types.size());
 		/* clang-format on */
+
+		free(c_requested_reference_space_types);
 	};
 
 	return true;
@@ -550,6 +553,10 @@ CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, r
 }
 
 unsigned int WebXRInterface::get_external_texture_for_eye(ARVRInterface::Eyes p_eye) {
+	if (!_have_frame()) {
+		return 0;
+	}
+
 	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
 
 	/* clang-format off */

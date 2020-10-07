@@ -298,9 +298,7 @@ bool WebXRInterface::initialize() {
 			}
 
 			const session_mode = UTF8ToString($0);
-			console.log(session_mode);
 			const requested_reference_space_types = UTF8ToString($1).split(",").map((s) => { return s.trim() });
-			console.log(requested_reference_space_types);
 
 			navigator.xr.requestSession(session_mode).then(function (session) {
 				Module['webxr_session'] = session;
@@ -340,7 +338,6 @@ bool WebXRInterface::initialize() {
 
 					function requestReferenceSpace() {
 						let reference_space_type = requested_reference_space_types.shift();
-						console.log("Requesting: " + reference_space_type);
 						session.requestReferenceSpace(reference_space_type)
 							.then((refSpace) => { onReferenceSpaceSuccess(refSpace, reference_space_type); })
 							.catch(onReferenceSpaceFailure);

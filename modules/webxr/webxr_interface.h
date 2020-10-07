@@ -48,12 +48,36 @@ class WebXRInterface : public ARVRInterface {
 private:
 	bool initialized;
 
+	// @todo Should these really use enums instead of strings?
+	String session_mode;
+	String required_features;
+	String optional_features;
+	String requested_reference_space_types;
+	String reference_space_type;
+
+	bool _have_vr_support();
 	bool _have_frame();
+	void _reset_reference_space_types();
 
 protected:
 	static void _bind_methods();
 
 public:
+	// @todo Should these really use enums instead of strings?
+	void is_session_supported(const String &p_session_mode);
+	void set_session_mode(String p_session_mode);
+	String get_session_mode() const;
+	void set_required_features(String p_required_features);
+	String get_required_features() const;
+	void set_optional_features(String p_optional_features);
+	String get_optional_features() const;
+	void set_requested_reference_space_types(String p_requested_reference_space_types);
+	String get_requested_reference_space_types() const;
+	void _set_reference_space_type(String p_reference_space_type);
+	String get_reference_space_type() const;
+
+	void print_debug() const;
+
 	virtual StringName get_name() const;
 	virtual int get_capabilities() const;
 
@@ -70,8 +94,6 @@ public:
 
 	virtual void process();
 	virtual void notification(int p_what);
-
-	void print_debug() const;
 
 	WebXRInterface();
 	~WebXRInterface();

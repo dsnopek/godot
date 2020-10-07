@@ -105,11 +105,11 @@ String WebXRInterface::get_session_mode() const {
 	return session_mode;
 }
 
-void WebXRInterface::set_requested_reference_space_types(const Vector<String> &p_requested_reference_space_types) {
+void WebXRInterface::set_requested_reference_space_types(String p_requested_reference_space_types) {
 	requested_reference_space_types = p_requested_reference_space_types;
 }
 
-Vector<String> WebXRInterface::get_requested_reference_space_types() const {
+String WebXRInterface::get_requested_reference_space_types() const {
 	return requested_reference_space_types;
 }
 
@@ -144,7 +144,7 @@ void WebXRInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_requested_reference_space_types"), &WebXRInterface::get_requested_reference_space_types);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "session_mode", PROPERTY_HINT_NONE), "set_session_mode", "get_session_mode");
-	ADD_PROPERTY(PropertyInfo(Variant::POOL_STRING_ARRAY, "requested_reference_space_types", PROPERTY_HINT_NONE), "set_requested_reference_space_types", "get_requested_reference_space_types");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "requested_reference_space_types", PROPERTY_HINT_NONE), "set_requested_reference_space_types", "get_requested_reference_space_types");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "reference_space_type", PROPERTY_HINT_NONE), "", "get_reference_space_type");
 
 	ClassDB::bind_method(D_METHOD("print_debug"), &WebXRInterface::print_debug);
@@ -189,11 +189,6 @@ bool WebXRInterface::initialize() {
 		arvr_server->set_primary_interface(this);
 
 		initialized = true;
-
-		char **c_requested_reference_space_types = new char *[requested_reference_space_types.size()];
-		for (int i = 0; i < requested_reference_space_types.size(); i++) {
-			c_requested_reference_space_types[i] = (char *)requested_reference_space_types[i].utf8().get_data();
-		}
 
 		/* clang-format off */
 		EM_ASM({
@@ -303,14 +298,7 @@ bool WebXRInterface::initialize() {
 			}
 
 			const session_mode = UTF8ToString($0);
-
-			let requested_reference_space_types = [];
-			for (let i = 0; i < $2; i++) {
-				// WebAssembly uses 32-bit pointers (until WASM64 is a thing).
-				const c_str = getValue($1 + (i * 4), 'i32');
-				requested_reference_space_types.push(UTF8ToString(c_str));
-			}
-			console.log("JS requested reference space types");
+			const requested_reference_space_types = UTF8ToString($1).split(",").map((s) => { return s.trim() });
 			console.log(requested_reference_space_types);
 
 			navigator.xr.requestSession(session_mode).then(function (session) {
@@ -359,10 +347,8 @@ bool WebXRInterface::initialize() {
 					ccall('_emwebxr_on_session_failed', 'void', ['string'], ['Unable to make WebGL context compatible with WebXR: ' + error]);
 				});
 			});
-		}, session_mode.utf8().get_data(), c_requested_reference_space_types, requested_reference_space_types.size());
+		}, session_mode.utf8().get_data(), requested_reference_space_types.utf8().get_data());
 		/* clang-format on */
-
-		free(c_requested_reference_space_types);
 	};
 
 	return true;
@@ -405,7 +391,7 @@ void WebXRInterface::uninitialize() {
 		});
 		/* clang-format on */
 
-		_reset_reference_space_types();
+		reference_space_type = "";
 
 		initialized = false;
 	};
@@ -623,16 +609,10 @@ void WebXRInterface::notification(int p_what) {
 	// nothing to do here, I guess we could pauze our sensors...
 }
 
-void WebXRInterface::_reset_reference_space_types() {
-	reference_space_type = String("");
-	requested_reference_space_types.clear();
-	requested_reference_space_types.push_back(String("local"));
-}
-
 WebXRInterface::WebXRInterface() {
 	initialized = false;
-	session_mode = String("inline");
-	_reset_reference_space_types();
+	session_mode = "inline";
+	requested_reference_space_types = "local";
 };
 
 WebXRInterface::~WebXRInterface() {

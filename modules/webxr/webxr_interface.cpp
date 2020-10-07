@@ -155,11 +155,17 @@ void WebXRInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_session_supported", "session_mode"), &WebXRInterface::is_session_supported);
 	ClassDB::bind_method(D_METHOD("set_session_mode"), &WebXRInterface::set_session_mode);
 	ClassDB::bind_method(D_METHOD("get_session_mode"), &WebXRInterface::get_session_mode);
+	ClassDB::bind_method(D_METHOD("set_required_features"), &WebXRInterface::set_required_features);
+	ClassDB::bind_method(D_METHOD("get_required_features"), &WebXRInterface::get_required_features);
+	ClassDB::bind_method(D_METHOD("set_optional_features"), &WebXRInterface::set_optional_features);
+	ClassDB::bind_method(D_METHOD("get_optional_features"), &WebXRInterface::get_optional_features);
 	ClassDB::bind_method(D_METHOD("get_reference_space_type"), &WebXRInterface::get_reference_space_type);
 	ClassDB::bind_method(D_METHOD("set_requested_reference_space_types"), &WebXRInterface::set_requested_reference_space_types);
 	ClassDB::bind_method(D_METHOD("get_requested_reference_space_types"), &WebXRInterface::get_requested_reference_space_types);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "session_mode", PROPERTY_HINT_NONE), "set_session_mode", "get_session_mode");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "required_features", PROPERTY_HINT_NONE), "set_required_features", "get_required_features");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "optional_features", PROPERTY_HINT_NONE), "set_optional_features", "get_optional_features");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "requested_reference_space_types", PROPERTY_HINT_NONE), "set_requested_reference_space_types", "get_requested_reference_space_types");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "reference_space_type", PROPERTY_HINT_NONE), "", "get_reference_space_type");
 
@@ -325,7 +331,6 @@ bool WebXRInterface::initialize() {
 			if (optional_features.length > 0) {
 				session_init['optionalFeatures'] = optional_features;
 			}
-			console.log(session_init);
 
 			navigator.xr.requestSession(session_mode, session_init).then(function (session) {
 				Module['webxr_session'] = session;
@@ -398,7 +403,9 @@ void WebXRInterface::uninitialize() {
 				try {
 					Module.webxr_session.end();
 				}
-				catch() { }
+				catch(e) {
+					// Session has already ended. Don't do anything, just continue to clean-up.
+				}
 			}
 
 			// Clean-up the textures we allocated for each view.

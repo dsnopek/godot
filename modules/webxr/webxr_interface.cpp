@@ -48,7 +48,19 @@ extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_supported(char *p_sessi
 	interface->emit_signal("session_supported", session_mode, supported);
 }
 
-extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_end() {
+extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_started(char *p_reference_space_type) {
+	ARVRServer *arvr_server = ARVRServer::get_singleton();
+	ERR_FAIL_NULL(arvr_server);
+
+	Ref<ARVRInterface> interface = arvr_server->find_interface("WebXR");
+	ERR_FAIL_COND(interface.is_null());
+
+	String reference_space_type = String(p_reference_space_type);
+	((WebXRInterface *)interface.ptr())->_set_reference_space_type(reference_space_type);
+	interface->emit_signal("session_started");
+}
+
+extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_ended() {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL(arvr_server);
 
@@ -59,6 +71,90 @@ extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_end() {
 	interface->emit_signal("session_ended");
 }
 
+extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_failed(char *p_message) {
+	ARVRServer *arvr_server = ARVRServer::get_singleton();
+	ERR_FAIL_NULL(arvr_server);
+
+	Ref<ARVRInterface> interface = arvr_server->find_interface("WebXR");
+	ERR_FAIL_COND(interface.is_null());
+
+	String message = String(p_message);
+	interface->emit_signal("session_failed", message);
+}
+
+void WebXRInterface::is_session_supported(const String &p_session_mode) {
+	if (!_have_vr_support()) {
+		emit_signal("session_supported", p_session_mode, false);
+	} else {
+		/* clang-format off */
+		EM_ASM({
+			const session_mode = UTF8ToString($0);
+			navigator.xr.isSessionSupported(session_mode).then(function (supported) {
+				ccall('_emwebxr_on_session_supported', 'void', ["string", "number"], [session_mode, supported]);
+			});
+		}, p_session_mode.utf8().get_data());
+		/* clang-format on */
+	}
+}
+
+void WebXRInterface::set_session_mode(String p_session_mode) {
+	session_mode = p_session_mode;
+}
+
+String WebXRInterface::get_session_mode() const {
+	return session_mode;
+}
+
+void WebXRInterface::set_requested_reference_space_types(const Vector<String> &p_requested_reference_space_types) {
+	requested_reference_space_types = p_requested_reference_space_types;
+}
+
+Vector<String> WebXRInterface::get_requested_reference_space_types() const {
+	return requested_reference_space_types;
+}
+
+void WebXRInterface::_set_reference_space_type(String p_reference_space_type) {
+	reference_space_type = p_reference_space_type;
+}
+
+String WebXRInterface::get_reference_space_type() const {
+	return reference_space_type;
+}
+
+void WebXRInterface::print_debug() const {
+	/* clang-format off */
+	EM_ASM({
+		console.log('-- WebXRInterface debug --');
+		console.log('Headset transform');
+		console.log(Module['webxr_pose'].transform);
+		console.log('View 1 transform');
+		console.log(Module['webxr_pose'].views[0].transform.inverse);
+		console.log('View 2 transform');
+		console.log(Module['webxr_pose'].views[1].transform.inverse);
+	});
+	/* clang-format on */
+}
+
+void WebXRInterface::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("is_session_supported", "session_mode"), &WebXRInterface::is_session_supported);
+	ClassDB::bind_method(D_METHOD("set_session_mode"), &WebXRInterface::set_session_mode);
+	ClassDB::bind_method(D_METHOD("get_session_mode"), &WebXRInterface::get_session_mode);
+	ClassDB::bind_method(D_METHOD("get_reference_space_type"), &WebXRInterface::get_reference_space_type);
+	ClassDB::bind_method(D_METHOD("set_requested_reference_space_types"), &WebXRInterface::set_requested_reference_space_types);
+	ClassDB::bind_method(D_METHOD("get_requested_reference_space_types"), &WebXRInterface::get_requested_reference_space_types);
+
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "session_mode", PROPERTY_HINT_NONE), "set_session_mode", "get_session_mode");
+	ADD_PROPERTY(PropertyInfo(Variant::POOL_STRING_ARRAY, "requested_reference_space_types", PROPERTY_HINT_NONE), "set_requested_reference_space_types", "get_requested_reference_space_types");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "reference_space_type", PROPERTY_HINT_NONE), "", "get_reference_space_type");
+
+	ClassDB::bind_method(D_METHOD("print_debug"), &WebXRInterface::print_debug);
+
+	ADD_SIGNAL(MethodInfo("session_supported", PropertyInfo(Variant::STRING, "session_mode"), PropertyInfo(Variant::BOOL, "supported")));
+	ADD_SIGNAL(MethodInfo("session_started"));
+	ADD_SIGNAL(MethodInfo("session_ended"));
+	ADD_SIGNAL(MethodInfo("session_failed", PropertyInfo(Variant::STRING, "message")));
+}
+
 StringName WebXRInterface::get_name() const {
 	return "WebXR";
 };
@@ -66,14 +162,6 @@ StringName WebXRInterface::get_name() const {
 int WebXRInterface::get_capabilities() const {
 	return ARVRInterface::ARVR_STEREO;
 };
-
-void WebXRInterface::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("is_session_supported", "session_mode"), &WebXRInterface::is_session_supported);
-	ClassDB::bind_method(D_METHOD("print_debug"), &WebXRInterface::print_debug);
-
-	ADD_SIGNAL(MethodInfo("session_supported"));
-	ADD_SIGNAL(MethodInfo("session_ended"));
-}
 
 bool WebXRInterface::is_stereo() {
 	// @todo WebXR can be mono! So, how do we know? Count the views in the frame?
@@ -93,10 +181,19 @@ bool WebXRInterface::initialize() {
 			return false;
 		}
 
+		if (requested_reference_space_types.size() == 0) {
+			return false;
+		}
+
 		// make this our primary interface
 		arvr_server->set_primary_interface(this);
 
 		initialized = true;
+
+		char **c_reference_space_types = new char *[requested_reference_space_types.size()];
+		for (int i = 0; i < requested_reference_space_types.size(); i++) {
+			c_reference_space_types[i] = (char *)requested_reference_space_types[i].utf8().get_data();
+		}
 
 		/* clang-format off */
 		EM_ASM({
@@ -205,36 +302,63 @@ bool WebXRInterface::initialize() {
 				})(Module.ctx);
 			}
 
-			// @todo Calling session supported and getting the callback should be up to the developer using this interface
-			navigator.xr.isSessionSupported('immersive-vr').then(function () {
-				navigator.xr.requestSession('immersive-vr').then(function (session) {
-					Module['webxr_session'] = session;
 
-					session.addEventListener('end', function (evt) {
-						ccall('_emwebxr_on_session_end', 'void', [], []);
+			const session_mode = UTF8ToString($0);
+
+			let requested_reference_space_types = [];
+			for (let i = 0; i < $2; i++) {
+				// WebAssembly uses 32-bit pointers (until WASM64 is a thing).
+				const c_str = getValue($1 + (i * 4), 'i32');
+				requested_reference_space_types.push(UTF8ToString(c_str));
+			}
+
+			navigator.xr.requestSession(session_mode).then(function (session) {
+				Module['webxr_session'] = session;
+
+				session.addEventListener('end', function (evt) {
+					ccall('_emwebxr_on_session_ended', 'void', [], []);
+				});
+
+				const gl = Module['ctx'];
+				gl.makeXRCompatible().then(function () {
+					session.updateRenderState({
+						baseLayer: new XRWebGLLayer(session, gl)
 					});
 
-					const gl = Module['ctx'];
-					gl.makeXRCompatible().then(function () {
-						session.updateRenderState({
-							baseLayer: new XRWebGLLayer(session, gl)
-						});
-						// @todo Reference space type needs to be configurable, and have automatic fallbacks.
-						session.requestReferenceSpace('local').then(function (refSpace) {
-							Module['webxr_space'] = refSpace;
+					function onReferenceSpaceSuccess(refSpace) {
+						Module['webxr_space'] = refSpace;
 
-							// Now that both Module.webxr_session and Module.webxr_space are set,
-							// our monkey-patched requestAnimationFrame() should kick in.
-							// When using the WebXR API Emulator, this gets picked up automatically,
-							// however, in the Oculus Browser on the Quest, we need to pause and
-							// resume the main loop.
-							Module.Library_Browser_mainLoop.pause();
-							window.setTimeout(function () { Module.Library_Browser_mainLoop.resume(); });
-						});
-					});
+						// Now that both Module.webxr_session and Module.webxr_space are set,
+						// our monkey-patched requestAnimationFrame() should kick in.
+						// When using the WebXR API Emulator, this gets picked up automatically,
+						// however, in the Oculus Browser on the Quest, we need to pause and
+						// resume the main loop.
+						Module.Library_Browser_mainLoop.pause();
+						window.setTimeout(function () { Module.Library_Browser_mainLoop.resume(); });
+					}
+					
+					function onReferenceSpaceFailure() {
+						if (request_reference_space_types.length === 0) {
+							ccall('_emwebxr_on_session_failed', 'void', ['string'], ['Unable to get any of the requested reference space types']);
+						}
+						else {
+							requestReferenceSpace();
+						}
+					}
+
+					function requestReferenceSpace() {
+						let reference_space_type = requested_reference_space_type.shift();
+						session.requestReferenceSpace(reference_space_type)
+							.then((refSpace) => { onReferenceSpaceSuccess(refSpace, reference_space_type); })
+							.catch(onReferenceSpaceFailure);
+					}
+
+					requestReferenceSpace();
+				}).catch(function (error) {
+					ccall('_emwebxr_on_session_failed', 'void', ['string'], ['Unable to make WebGL context compatible with WebXR: ' + error]);
 				});
 			});
-		});
+		}, session_mode.utf8().get_data(), c_reference_space_types, requested_reference_space_types.size());
 		/* clang-format on */
 	};
 
@@ -278,6 +402,8 @@ void WebXRInterface::uninitialize() {
 		});
 		/* clang-format on */
 
+		_reset_reference_space_types();
+
 		initialized = false;
 	};
 };
@@ -310,7 +436,7 @@ Size2 WebXRInterface::get_render_targetsize() {
 
 	/* clang-format off */
 	int32_t* js_size = (int32_t*) EM_ASM_INT({
-		const glLayer = Module['webxr_frame'].session.renderState.baseLayer;
+		const glLayer = Module['webxr_session'].renderState.baseLayer;
 		const view = Module['webxr_pose'].views[0];
 		const viewport = glLayer.getViewport(view);
 
@@ -432,7 +558,7 @@ unsigned int WebXRInterface::get_external_texture_for_eye(ARVRInterface::Eyes p_
 			return Module.webxr_texture_ids[$0];
 		}
 
-		const glLayer = Module['webxr_frame'].session.renderState.baseLayer;
+		const glLayer = Module['webxr_session'].renderState.baseLayer;
 		const view = Module['webxr_pose'].views[$0];
 		const viewport = glLayer.getViewport(view);
 		const gl = Module['ctx'];
@@ -465,7 +591,7 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 
 	/* clang-format off */
 	EM_ASM({
-		const glLayer = Module['webxr_frame'].session.renderState.baseLayer;
+		const glLayer = Module['webxr_session'].renderState.baseLayer;
 		const view = Module['webxr_pose'].views[$0];
 		const viewport = glLayer.getViewport(view);
 		const gl = Module['ctx'];
@@ -490,37 +616,16 @@ void WebXRInterface::notification(int p_what) {
 	// nothing to do here, I guess we could pauze our sensors...
 }
 
-void WebXRInterface::is_session_supported(const String &p_session_mode) {
-	if (!_have_vr_support()) {
-		emit_signal("session_supported", p_session_mode, false);
-	} else {
-		/* clang-format off */
-		EM_ASM({
-			const session_mode = UTF8ToString($0);
-			navigator.xr.isSessionSupported(session_mode).then(function (supported) {
-				ccall('_emwebxr_on_session_supported', 'void', ["string", "number"], [session_mode, supported]);
-			});
-		}, p_session_mode.utf8().get_data());
-		/* clang-format on */
-	}
-}
-
-void WebXRInterface::print_debug() const {
-	/* clang-format off */
-	EM_ASM({
-		console.log('-- WebXRInterface debug --');
-		console.log('Headset transform');
-		console.log(Module['webxr_pose'].transform);
-		console.log('View 1 transform');
-		console.log(Module['webxr_pose'].views[0].transform.inverse);
-		console.log('View 2 transform');
-		console.log(Module['webxr_pose'].views[1].transform.inverse);
-	});
-	/* clang-format on */
+void WebXRInterface::_reset_reference_space_types() {
+	reference_space_type = String("");
+	requested_reference_space_types.clear();
+	requested_reference_space_types.push_back(String("local"));
 }
 
 WebXRInterface::WebXRInterface() {
 	initialized = false;
+	session_mode = String("inline");
+	_reset_reference_space_types();
 };
 
 WebXRInterface::~WebXRInterface() {

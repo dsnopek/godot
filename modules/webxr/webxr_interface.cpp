@@ -298,6 +298,7 @@ bool WebXRInterface::initialize() {
 			}
 
 			const session_mode = UTF8ToString($0);
+			console.log(session_mode);
 			const requested_reference_space_types = UTF8ToString($1).split(",").map((s) => { return s.trim() });
 			console.log(requested_reference_space_types);
 
@@ -314,8 +315,8 @@ bool WebXRInterface::initialize() {
 						baseLayer: new XRWebGLLayer(session, gl)
 					});
 
-					function onReferenceSpaceSuccess(refSpace) {
-						Module['webxr_space'] = refSpace;
+					function onReferenceSpaceSuccess(reference_space, reference_space_type) {
+						Module['webxr_space'] = reference_space;
 
 						// Now that both Module.webxr_session and Module.webxr_space are set,
 						// our monkey-patched requestAnimationFrame() should kick in.
@@ -324,6 +325,8 @@ bool WebXRInterface::initialize() {
 						// resume the main loop.
 						Module.Library_Browser_mainLoop.pause();
 						window.setTimeout(function () { Module.Library_Browser_mainLoop.resume(); });
+
+						ccall('_emwebxr_on_session_started', 'void', ['string'], [reference_space_type]);
 					}
 					
 					function onReferenceSpaceFailure() {
@@ -337,6 +340,7 @@ bool WebXRInterface::initialize() {
 
 					function requestReferenceSpace() {
 						let reference_space_type = requested_reference_space_types.shift();
+						console.log("Requesting: " + reference_space_type);
 						session.requestReferenceSpace(reference_space_type)
 							.then((refSpace) => { onReferenceSpaceSuccess(refSpace, reference_space_type); })
 							.catch(onReferenceSpaceFailure);
@@ -346,6 +350,8 @@ bool WebXRInterface::initialize() {
 				}).catch(function (error) {
 					ccall('_emwebxr_on_session_failed', 'void', ['string'], ['Unable to make WebGL context compatible with WebXR: ' + error]);
 				});
+			}).catch(function (error) {
+				ccall('_emwebxr_on_session_failed', 'void', ['string'], ['Unable to start session: ' + error]);
 			});
 		}, session_mode.utf8().get_data(), requested_reference_space_types.utf8().get_data());
 		/* clang-format on */

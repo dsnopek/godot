@@ -408,6 +408,8 @@ void WebXRInterface::uninitialize() {
 				}
 			}
 
+			console.log('got passed try/catch - on to the rest of the clean-up');
+
 			// Clean-up the textures we allocated for each view.
 			const gl = Module.ctx;
 			for (let i = 0; i < Module.webxr_textures.length; i++) {

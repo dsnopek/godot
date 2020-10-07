@@ -400,15 +400,10 @@ void WebXRInterface::uninitialize() {
 		/* clang-format off */
 		EM_ASM({
 			if (Module.webxr_session) {
-				try {
-					Module.webxr_session.end();
-				}
-				catch(e) {
-					// Session has already ended. Don't do anything, just continue to clean-up.
-				}
+				Module.webxr_session.end()
+					// Prevent exception when session has already ended.
+					.catch((e) => { });
 			}
-
-			console.log('got passed try/catch - on to the rest of the clean-up');
 
 			// Clean-up the textures we allocated for each view.
 			const gl = Module.ctx;

@@ -493,9 +493,6 @@ Size2 WebXRInterface::get_render_targetsize() {
 		const view = Module['webxr_pose'].views[0];
 		const viewport = glLayer.getViewport(view);
 
-		//console.log("targetsize javascript viewport:");
-		//console.log(viewport.width + " " + viewport.height);
-
 		let buf = Module._malloc(2 * 4);
 		setValue(buf + 0, viewport.width, 'i32');
 		setValue(buf + 4, viewport.height, 'i32');
@@ -657,11 +654,8 @@ void WebXRInterface::process() {
 			// We want to construct a 0-2 item array, where the left hand (or sole tracker)
 			// is the first element, and the right hand is the second element.
 			const trackers = [];
-			//console.log('input sources');
 			for (let input_source of session.inputSources) {
-				//console.log(input_source);
 				if (input_source.targetRayMode !== 'tracked-pointer' && input_source.gripSpace) {
-					//console.log('skip');
 					continue;
 				}
 				if (input_source.handedness === 'right') {
@@ -676,8 +670,6 @@ void WebXRInterface::process() {
 			for (let i = 0; i < trackers.length; i++) {
 				let gripPose = frame.getPose(trackers[i].gripSpace, space);
 				if (gripPose) {
-					//console.log('has grip pose');
-					//console.log(gripPose.transform.matrix);
 					for (let j = 0; j < 16; j++) {
 						setValue(buf + 4 + (i * 4 * 16) + (j * 4), gripPose.transform.matrix[j], 'float')
 					}

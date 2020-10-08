@@ -445,15 +445,42 @@ bool WebXRInterface::_have_vr_support() {
 bool WebXRInterface::_have_frame() {
 	/* clang-format off */
 	return (bool) EM_ASM_INT({
+		return !!Module['webxr_session'] && !!Module['webxr_frame'];
+	});
+	/* clang-format on */
+}
+
+bool WebXRInterface::_have_pose() {
+	/* clang-format off */
+	return (bool) EM_ASM_INT({
 		return !!Module['webxr_session'] && !!Module['webxr_pose'];
 	});
 	/* clang-format on */
 }
 
+Transform WebXRInterface::_js_matrix_to_transform(float *p_js_matrix) {
+	Transform transform;
+
+	transform.basis.elements[0].x = p_js_matrix[0];
+	transform.basis.elements[1].x = p_js_matrix[1];
+	transform.basis.elements[2].x = p_js_matrix[2];
+	transform.basis.elements[0].y = p_js_matrix[4];
+	transform.basis.elements[1].y = p_js_matrix[5];
+	transform.basis.elements[2].y = p_js_matrix[6];
+	transform.basis.elements[0].z = p_js_matrix[8];
+	transform.basis.elements[1].z = p_js_matrix[9];
+	transform.basis.elements[2].z = p_js_matrix[10];
+	transform.origin.x = p_js_matrix[12];
+	transform.origin.y = p_js_matrix[13];
+	transform.origin.z = p_js_matrix[14];
+
+	return transform;
+}
+
 Size2 WebXRInterface::get_render_targetsize() {
 	Size2 target_size;
 
-	if (!initialized || !_have_frame()) {
+	if (!initialized || !_have_pose()) {
 		// As a default, use half the window size.
 		target_size = OS::get_singleton()->get_window_size();
 		target_size.width /= 2.0;
@@ -492,7 +519,7 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 
 	// @todo In 3DOF where we only have rotation, we should take the position from the p_cam_transform, I think?
 
-	if (!initialized || !_have_frame()) {
+	if (!initialized || !_have_pose()) {
 		transform_for_eye = p_cam_transform;
 		return transform_for_eye;
 	}
@@ -515,24 +542,7 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 	}, p_eye);
 	/* clang-format on */
 
-	//printf("Transform for eye: %f %f %f %f | %f %f %f %f | %f %f %f %f | %f %f %f %f\n",
-	//	js_matrix[0], js_matrix[1], js_matrix[2], js_matrix[3],
-	//	js_matrix[4], js_matrix[5], js_matrix[6], js_matrix[7],
-	//	js_matrix[8], js_matrix[9], js_matrix[10], js_matrix[11],
-	//	js_matrix[12], js_matrix[13], js_matrix[14], js_matrix[15]);
-
-	transform_for_eye.basis.elements[0].x = js_matrix[0];
-	transform_for_eye.basis.elements[1].x = js_matrix[1];
-	transform_for_eye.basis.elements[2].x = js_matrix[2];
-	transform_for_eye.basis.elements[0].y = js_matrix[4];
-	transform_for_eye.basis.elements[1].y = js_matrix[5];
-	transform_for_eye.basis.elements[2].y = js_matrix[6];
-	transform_for_eye.basis.elements[0].z = js_matrix[8];
-	transform_for_eye.basis.elements[1].z = js_matrix[9];
-	transform_for_eye.basis.elements[2].z = js_matrix[10];
-	transform_for_eye.origin.x = js_matrix[12];
-	transform_for_eye.origin.y = js_matrix[13];
-	transform_for_eye.origin.z = js_matrix[14];
+	transform_for_eye = _js_matrix_to_transform(js_matrix);
 
 	free(js_matrix);
 
@@ -542,7 +552,7 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, real_t p_aspect, real_t p_z_near, real_t p_z_far) {
 	CameraMatrix eye;
 
-	if (!initialized || !_have_frame()) {
+	if (!initialized || !_have_pose()) {
 		return eye;
 	}
 
@@ -576,7 +586,7 @@ CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, r
 }
 
 unsigned int WebXRInterface::get_external_texture_for_eye(ARVRInterface::Eyes p_eye) {
-	if (!_have_frame()) {
+	if (!_have_pose()) {
 		return 0;
 	}
 
@@ -613,7 +623,7 @@ unsigned int WebXRInterface::get_external_texture_for_eye(ARVRInterface::Eyes p_
 }
 
 void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_target, const Rect2 &p_screen_rect) {
-	if (!initialized || !_have_frame()) {
+	if (!initialized || !_have_pose()) {
 		return;
 	}
 
@@ -637,10 +647,73 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 };
 
 void WebXRInterface::process() {
-	if (initialized) {
-		//set_position_from_sensors();
+	if (initialized && _have_frame()) {
+		/* clang-format off */
+		int* tracker_data = (int *)EM_ASM_INT({
+			const session = Module.webxr_session;
+			const frame = Module.webxr_frame;
+			const space = Module.webxr_space;
+
+			// We want to construct a 0-2 item array, where the left hand (or sole tracker)
+			// is the first element, and the right hand is the second element.
+			const trackers = [];
+			for (let input_source of session.inputSources) {
+				if (input_source.targetRayMode !== 'tracked-pointer' && input_source.gripSpace) {
+					continue;
+				}
+				if (input_source.handedness === 'right') {
+					trackers[1] = input_source;
+				}
+				else if (input_source.handedness === 'left' || !trackers[0]) {
+					trackers[0] = input_source;
+				}
+			}
+
+			let buf = Module._malloc(4 + ((16 * 4) * trackers.length));
+			setValue(buf, trackers.length, 'i32');
+			for (let i = 0; i < trackers.length; i++) {
+				let gripPose = frame.getPose(trackers[i].gripSpace, space);
+				if (gripPose) {
+					for (let j = 0; j < 16; j++) {
+						setValue(buf + 4 + (i * 16) + j, gripPose.transform.matrix[j], 'float')
+					}
+				}
+			}
+			return buf;
+		});
+		/* clang-format on */
+
+		int tracker_count = tracker_data[0];
+		if (tracker_count == 0) {
+			return;
+		}
+
+		float *tracker_matrices = (float *)(tracker_data + 4);
+		for (int i = 0; i < tracker_count; i++) {
+			_update_tracker(i + 1, _js_matrix_to_transform(tracker_matrices + (i * 16)));
+		}
+
+		free(tracker_data);
 	};
 };
+
+void WebXRInterface::_update_tracker(int p_tracker_id, Transform p_transform) {
+	ARVRServer *arvr_server = ARVRServer::get_singleton();
+	ERR_FAIL_NULL(arvr_server);
+
+	ARVRPositionalTracker *tracker = arvr_server->get_tracker(p_tracker_id);
+	if (tracker == nullptr) {
+		tracker = memnew(ARVRPositionalTracker);
+		tracker->set_name(p_tracker_id == 1 ? "Left" : "Right");
+		tracker->set_type(ARVRServer::TRACKER_CONTROLLER);
+		tracker->set_hand(p_tracker_id == 1 ? ARVRPositionalTracker::TRACKER_LEFT_HAND : ARVRPositionalTracker::TRACKER_RIGHT_HAND);
+		// @todo Set joy id?
+		arvr_server->add_tracker(tracker);
+	}
+
+	tracker->set_position(p_transform.origin);
+	tracker->set_orientation(p_transform.basis);
+}
 
 void WebXRInterface::notification(int p_what) {
 	// nothing to do here, I guess we could pauze our sensors...
@@ -654,7 +727,7 @@ WebXRInterface::WebXRInterface() {
 
 WebXRInterface::~WebXRInterface() {
 	// and make sure we cleanup if we haven't already
-	if (is_initialized()) {
+	if (initialized) {
 		uninitialize();
 	};
 };

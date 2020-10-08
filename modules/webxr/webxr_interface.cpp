@@ -655,6 +655,7 @@ void WebXRInterface::process() {
 			// is the first element, and the right hand is the second element.
 			const trackers = [];
 			for (let input_source of session.inputSources) {
+				// @todo Are there pointers which Godot would make into controllers which don't have a gripSpace?
 				if (input_source.targetRayMode !== 'tracked-pointer' && input_source.gripSpace) {
 					continue;
 				}
@@ -665,10 +666,13 @@ void WebXRInterface::process() {
 					trackers[0] = input_source;
 				}
 			}
+
+			// Fill out this buffer with the size, and then each transform matrix.
 			let buf = Module._malloc(4 + ((16 * 4) * trackers.length));
 			setValue(buf, trackers.length, 'i32');
 			for (let i = 0; i < trackers.length; i++) {
 				let gripPose = frame.getPose(trackers[i].gripSpace, space);
+				// @todo I think if we don't get a grip pose, it can mean that tracking has been lost - if so flag that!
 				if (gripPose) {
 					for (let j = 0; j < 16; j++) {
 						setValue(buf + 4 + (i * 4 * 16) + (j * 4), gripPose.transform.matrix[j], 'float')
@@ -685,15 +689,7 @@ void WebXRInterface::process() {
 		}
 
 		float *tracker_matrices = (float *)(tracker_data + 1);
-		float *js_matrix;
 		for (int i = 0; i < tracker_count; i++) {
-			js_matrix = tracker_matrices + (i * 16);
-			//printf("controller: %f %f %f %f | %f %f %f %f | %f %f %f %f | %f %f %f %f\n",
-			//      js_matrix[0], js_matrix[1], js_matrix[2], js_matrix[3],
-			//      js_matrix[4], js_matrix[5], js_matrix[6], js_matrix[7],
-			//      js_matrix[8], js_matrix[9], js_matrix[10], js_matrix[11],
-			//      js_matrix[12], js_matrix[13], js_matrix[14], js_matrix[15]);
-
 			_update_tracker(i + 1, _js_matrix_to_transform(tracker_matrices + (i * 16)));
 		}
 

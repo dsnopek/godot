@@ -60,7 +60,7 @@ private:
 	bool _have_pose();
 
 	Transform _js_matrix_to_transform(float *p_js_matrix);
-	void _update_tracker(int p_tracker_id, Transform p_transform);
+	void _update_tracker(int p_tracker_id, Transform p_transform, int p_joy_id);
 
 protected:
 	static void _bind_methods();

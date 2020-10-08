@@ -657,8 +657,11 @@ void WebXRInterface::process() {
 			// We want to construct a 0-2 item array, where the left hand (or sole tracker)
 			// is the first element, and the right hand is the second element.
 			const trackers = [];
+			//console.log('input sources');
 			for (let input_source of session.inputSources) {
+				//console.log(input_source);
 				if (input_source.targetRayMode !== 'tracked-pointer' && input_source.gripSpace) {
+					//console.log('skip');
 					continue;
 				}
 				if (input_source.handedness === 'right') {
@@ -668,14 +671,15 @@ void WebXRInterface::process() {
 					trackers[0] = input_source;
 				}
 			}
-
 			let buf = Module._malloc(4 + ((16 * 4) * trackers.length));
 			setValue(buf, trackers.length, 'i32');
 			for (let i = 0; i < trackers.length; i++) {
 				let gripPose = frame.getPose(trackers[i].gripSpace, space);
 				if (gripPose) {
+					//console.log('has grip pose');
+					//console.log(gripPose.transform.matrix);
 					for (let j = 0; j < 16; j++) {
-						setValue(buf + 4 + (i * 16) + j, gripPose.transform.matrix[j], 'float')
+						setValue(buf + 4 + (i * 4 * 16) + (j * 4), gripPose.transform.matrix[j], 'float')
 					}
 				}
 			}
@@ -688,8 +692,16 @@ void WebXRInterface::process() {
 			return;
 		}
 
-		float *tracker_matrices = (float *)(tracker_data + 4);
+		float *tracker_matrices = (float *)(tracker_data + 1);
+		float *js_matrix;
 		for (int i = 0; i < tracker_count; i++) {
+			js_matrix = tracker_matrices + (i * 16);
+			//printf("controller: %f %f %f %f | %f %f %f %f | %f %f %f %f | %f %f %f %f\n",
+			//      js_matrix[0], js_matrix[1], js_matrix[2], js_matrix[3],
+			//      js_matrix[4], js_matrix[5], js_matrix[6], js_matrix[7],
+			//      js_matrix[8], js_matrix[9], js_matrix[10], js_matrix[11],
+			//      js_matrix[12], js_matrix[13], js_matrix[14], js_matrix[15]);
+
 			_update_tracker(i + 1, _js_matrix_to_transform(tracker_matrices + (i * 16)));
 		}
 
@@ -701,7 +713,7 @@ void WebXRInterface::_update_tracker(int p_tracker_id, Transform p_transform) {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL(arvr_server);
 
-	ARVRPositionalTracker *tracker = arvr_server->get_tracker(p_tracker_id);
+	ARVRPositionalTracker *tracker = arvr_server->find_by_type_and_id(ARVRServer::TRACKER_CONTROLLER, p_tracker_id);
 	if (tracker == nullptr) {
 		tracker = memnew(ARVRPositionalTracker);
 		tracker->set_name(p_tracker_id == 1 ? "Left" : "Right");

@@ -707,7 +707,10 @@ void WebXRInterface::_update_tracker(int p_tracker_id, Transform p_transform) {
 		tracker->set_name(p_tracker_id == 1 ? "Left" : "Right");
 		tracker->set_type(ARVRServer::TRACKER_CONTROLLER);
 		tracker->set_hand(p_tracker_id == 1 ? ARVRPositionalTracker::TRACKER_LEFT_HAND : ARVRPositionalTracker::TRACKER_RIGHT_HAND);
-		// @todo Set joy id?
+		// Unfortunately, we can't just use tracker->set_joy_id() because WebXR gamepads aren't
+		// registered with the normal Gamepad API per the WebXR spec.
+		//
+		// See: https://immersive-web.github.io/webxr-gamepads-module/#navigator-differences
 		arvr_server->add_tracker(tracker);
 	}
 

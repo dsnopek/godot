@@ -683,6 +683,8 @@ void WebXRInterface::process() {
 		});
 		/* clang-format on */
 
+		// @todo This is so much data to pass back - we should really be using some kind of struct!
+
 		int tracker_count = tracker_data[0];
 		if (tracker_count == 0) {
 			return;

@@ -668,15 +668,14 @@ void WebXRInterface::process() {
 			}
 
 			// Fill out this buffer with the size, and then each transform matrix.
-			let buf = Module._malloc(4 + ((17 * 4) * trackers.length));
+			let buf = Module._malloc(4 + ((16 * 4) * trackers.length));
 			setValue(buf, trackers.length, 'i32');
 			for (let i = 0; i < trackers.length; i++) {
-				setValue(buf + 4 + (i * 4 * 17), trackers[i].gamepad ? trackers[i].gamepad.index : -1, 'i32');
 				let gripPose = frame.getPose(trackers[i].gripSpace, space);
 				// @todo I think if we don't get a grip pose, it can mean that tracking has been lost - if so flag that!
 				if (gripPose) {
 					for (let j = 0; j < 16; j++) {
-						setValue(buf + 4 + (i * 4 * 17) + ((j + 1) * 4), gripPose.transform.matrix[j], 'float')
+						setValue(buf + 4 + (i * 4 * 16) + (j * 4), gripPose.transform.matrix[j], 'float')
 					}
 				}
 			}
@@ -684,25 +683,21 @@ void WebXRInterface::process() {
 		});
 		/* clang-format on */
 
-		// @todo We really need to use a struct to pass all this data!
-
 		int tracker_count = tracker_data[0];
 		if (tracker_count == 0) {
 			return;
 		}
 
+		float *tracker_matrices = (float *)(tracker_data + 1);
 		for (int i = 0; i < tracker_count; i++) {
-			int *tracker_joy_id = (int *)(tracker_data + 1 + (i * 17));
-			float *tracker_matrix = (float *)(tracker_data + 1 + (i * 17) + 1);
-
-			_update_tracker(i + 1, _js_matrix_to_transform(tracker_matrix), *tracker_joy_id);
+			_update_tracker(i + 1, _js_matrix_to_transform(tracker_matrices + (i * 16)));
 		}
 
 		free(tracker_data);
 	};
 };
 
-void WebXRInterface::_update_tracker(int p_tracker_id, Transform p_transform, int p_joy_id) {
+void WebXRInterface::_update_tracker(int p_tracker_id, Transform p_transform) {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL(arvr_server);
 
@@ -712,10 +707,7 @@ void WebXRInterface::_update_tracker(int p_tracker_id, Transform p_transform, in
 		tracker->set_name(p_tracker_id == 1 ? "Left" : "Right");
 		tracker->set_type(ARVRServer::TRACKER_CONTROLLER);
 		tracker->set_hand(p_tracker_id == 1 ? ARVRPositionalTracker::TRACKER_LEFT_HAND : ARVRPositionalTracker::TRACKER_RIGHT_HAND);
-		if (p_joy_id != -1) {
-			printf("joy id: %d\n", p_joy_id);
-			tracker->set_joy_id(p_joy_id);
-		}
+		// @todo Set joy id?
 		arvr_server->add_tracker(tracker);
 	}
 

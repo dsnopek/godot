@@ -39,6 +39,9 @@ extern "C" {
 
 extern int godot_webxr_is_supported();
 
+extern void godot_webxr_initialize(char *p_session_mode, char *p_required_features, char *p_optional_features, char *p_requested_reference_space_types);
+extern void godot_webxr_uninitialize();
+
 #ifdef __cplusplus
 }
 #endif

@@ -27,8 +27,6 @@ env.Depends(build, js_libraries)
 js_pre = [
     "native/id_handler.js",
     "native/utils.js",
-    # @todo Only add this if the webxr module is enabled
-    "native/webxr.js",
 ]
 for js in js_pre:
     env.Append(LINKFLAGS=["--pre-js", env.File(js).path])

@@ -37,6 +37,8 @@ extern "C" {
 
 #include "stddef.h"
 
+extern int godot_webxr_is_supported();
+
 #ifdef __cplusplus
 }
 #endif

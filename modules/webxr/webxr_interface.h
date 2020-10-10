@@ -55,7 +55,6 @@ private:
 	String requested_reference_space_types;
 	String reference_space_type;
 
-	bool _have_vr_support();
 	bool _have_frame();
 	bool _have_pose();
 

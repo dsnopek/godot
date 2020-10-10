@@ -34,6 +34,7 @@
 #include "core/os/input.h"
 #include "core/os/os.h"
 #include "emscripten.h"
+#include "godot_webxr.h"
 #include "servers/visual/visual_server_globals.h"
 #include <stdlib.h>
 
@@ -83,7 +84,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_failed(char *p_message)
 }
 
 void WebXRInterface::is_session_supported(const String &p_session_mode) {
-	if (!_have_vr_support()) {
+	if (!godot_webxr_is_supported()) {
 		emit_signal("session_supported", p_session_mode, false);
 	} else {
 		/* clang-format off */
@@ -199,7 +200,7 @@ bool WebXRInterface::initialize() {
 	ERR_FAIL_NULL_V(arvr_server, false);
 
 	if (!initialized) {
-		if (!_have_vr_support()) {
+		if (!godot_webxr_is_supported()) {
 			return false;
 		}
 
@@ -433,14 +434,6 @@ void WebXRInterface::uninitialize() {
 		initialized = false;
 	};
 };
-
-bool WebXRInterface::_have_vr_support() {
-	/* clang-format off */
-	return EM_ASM_INT({
-		return !!navigator.xr;
-	});
-	/* clang-format on */
-}
 
 bool WebXRInterface::_have_frame() {
 	/* clang-format off */

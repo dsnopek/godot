@@ -31,6 +31,15 @@ var GodotWebXR = {
 
 	$GodotWebXR: {
 	},
+
+	godot_webxr_is_supported__proxy: 'sync',
+	godot_webxr_is_supported: function () {
+		if (navigator.xr) {
+			return 1;
+		}
+		return 0;
+	},
+
 };
 
 autoAddDeps(GodotWebXR, "$GodotWebXR");

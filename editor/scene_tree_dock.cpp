@@ -371,7 +371,7 @@ void SceneTreeDock::_tool_selected(int p_tool, bool p_confirm_override) {
 				if (preferred_types.empty()) {
 					preferred_types.push_back("Control");
 					preferred_types.push_back("Node2D");
-					preferred_types.push_back("Node3D");
+					preferred_types.push_back("Spatial");
 				}
 
 				for (int i = 0; i < preferred_types.size(); i++) {
@@ -1163,7 +1163,7 @@ void SceneTreeDock::_notification(int p_what) {
 			button_create_script->set_icon(get_icon("ScriptCreate", "EditorIcons"));
 			button_detach_script->set_icon(get_icon("ScriptRemove", "EditorIcons"));
 			button_2d->set_icon(get_icon("Node2D", "EditorIcons"));
-			button_3d->set_icon(get_icon("Node3D", "EditorIcons"));
+			button_3d->set_icon(get_icon("Spatial", "EditorIcons"));
 			button_ui->set_icon(get_icon("Control", "EditorIcons"));
 			button_custom->set_icon(get_icon("Add", "EditorIcons"));
 
@@ -1229,8 +1229,6 @@ void SceneTreeDock::_node_selected() {
 	Node *node = scene_tree->get_selected();
 
 	if (!node) {
-
-		editor->push_item(NULL);
 		return;
 	}
 
@@ -1933,11 +1931,10 @@ void SceneTreeDock::_selection_changed() {
 	if (selection_size > 1) {
 		//automatically turn on multi-edit
 		_tool_selected(TOOL_MULTI_EDIT);
-	} else if (selection_size == 1) {
-		editor->push_item(EditorNode::get_singleton()->get_editor_selection()->get_selected_node_list()[0]);
-	} else {
+	} else if (selection_size == 0) {
 		editor->push_item(NULL);
 	}
+
 	_update_script_button();
 }
 

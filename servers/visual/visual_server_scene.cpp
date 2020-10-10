@@ -260,6 +260,7 @@ RID VisualServerScene::scenario_create() {
 	RID scenario_rid = scenario_owner.make_rid(scenario);
 	scenario->self = scenario_rid;
 
+	scenario->octree.set_balance(GLOBAL_GET("rendering/quality/spatial_partitioning/render_tree_balance"));
 	scenario->octree.set_pair_callback(_instance_pair, this);
 	scenario->octree.set_unpair_callback(_instance_unpair, this);
 	scenario->reflection_probe_shadow_atlas = VSG::scene_render->shadow_atlas_create();
@@ -661,6 +662,18 @@ void VisualServerScene::instance_set_visible(RID p_instance, bool p_visible) {
 		return;
 
 	instance->visible = p_visible;
+
+	// when showing or hiding geometry, lights must be kept up to date to show / hide shadows
+	if ((1 << instance->base_type) & VS::INSTANCE_GEOMETRY_MASK) {
+		InstanceGeometryData *geom = static_cast<InstanceGeometryData *>(instance->base_data);
+
+		if (geom->can_cast_shadows) {
+			for (List<Instance *>::Element *E = geom->lighting.front(); E; E = E->next()) {
+				InstanceLightData *light = static_cast<InstanceLightData *>(E->get()->base_data);
+				light->shadow_dirty = true;
+			}
+		}
+	}
 
 	switch (instance->base_type) {
 		case VS::INSTANCE_LIGHT: {

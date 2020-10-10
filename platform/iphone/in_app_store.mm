@@ -32,13 +32,12 @@
 
 #include "in_app_store.h"
 
-extern "C" {
 #import <Foundation/Foundation.h>
 #import <StoreKit/StoreKit.h>
-};
 
 bool auto_finish_transactions = true;
 NSMutableDictionary *pending_transactions = [NSMutableDictionary dictionary];
+static NSArray *latestProducts;
 
 @interface SKProduct (LocalizedPrice)
 @property(nonatomic, readonly) NSString *localizedPrice;
@@ -54,7 +53,6 @@ NSMutableDictionary *pending_transactions = [NSMutableDictionary dictionary];
 	[numberFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
 	[numberFormatter setLocale:self.priceLocale];
 	NSString *formattedString = [numberFormatter stringFromNumber:self.price];
-	[numberFormatter release];
 	return formattedString;
 }
 @end
@@ -82,6 +80,8 @@ void InAppStore::_bind_methods() {
 - (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response {
 
 	NSArray *products = response.products;
+	latestProducts = products;
+
 	Dictionary ret;
 	ret["type"] = "product_info";
 	ret["result"] = "ok";
@@ -122,8 +122,6 @@ void InAppStore::_bind_methods() {
 	ret["invalid_ids"] = invalid_ids;
 
 	InAppStore::get_singleton()->_post_event(ret);
-
-	[request release];
 };
 
 @end
@@ -136,14 +134,14 @@ Error InAppStore::request_product_info(Variant p_params) {
 	PoolStringArray pids = params["product_ids"];
 	printf("************ request product info! %i\n", pids.size());
 
-	NSMutableArray *array = [[[NSMutableArray alloc] initWithCapacity:pids.size()] autorelease];
+	NSMutableArray *array = [[NSMutableArray alloc] initWithCapacity:pids.size()];
 	for (int i = 0; i < pids.size(); i++) {
 		printf("******** adding %ls to product list\n", pids[i].c_str());
-		NSString *pid = [[[NSString alloc] initWithUTF8String:pids[i].utf8().get_data()] autorelease];
+		NSString *pid = [[NSString alloc] initWithUTF8String:pids[i].utf8().get_data()];
 		[array addObject:pid];
 	};
 
-	NSSet *products = [[[NSSet alloc] initWithArray:array] autorelease];
+	NSSet *products = [[NSSet alloc] initWithArray:array];
 	SKProductsRequest *request = [[SKProductsRequest alloc] initWithProductIdentifiers:products];
 
 	ProductsDelegate *delegate = [[ProductsDelegate alloc] init];
@@ -186,34 +184,17 @@ Error InAppStore::restore_purchases() {
 				ret["transaction_id"] = transactionId;
 
 				NSData *receipt = nil;
-				int sdk_version = 6;
+				int sdk_version = [[[UIDevice currentDevice] systemVersion] intValue];
 
-				if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 7.0) {
+				NSBundle *bundle = [NSBundle mainBundle];
+				// Get the transaction receipt file path location in the app bundle.
+				NSURL *receiptFileURL = [bundle appStoreReceiptURL];
 
-					NSURL *receiptFileURL = nil;
-					NSBundle *bundle = [NSBundle mainBundle];
-					if ([bundle respondsToSelector:@selector(appStoreReceiptURL)]) {
-
-						// Get the transaction receipt file path location in the app bundle.
-						receiptFileURL = [bundle appStoreReceiptURL];
-
-						// Read in the contents of the transaction file.
-						receipt = [NSData dataWithContentsOfURL:receiptFileURL];
-						sdk_version = 7;
-
-					} else {
-						// Fall back to deprecated transaction receipt,
-						// which is still available in iOS 7.
-
-						// Use SKPaymentTransaction's transactionReceipt.
-						receipt = transaction.transactionReceipt;
-					}
-
-				} else {
-					receipt = transaction.transactionReceipt;
-				}
+				// Read in the contents of the transaction file.
+				receipt = [NSData dataWithContentsOfURL:receiptFileURL];
 
 				NSString *receipt_to_send = nil;
+
 				if (receipt != nil) {
 					receipt_to_send = [receipt base64EncodedStringWithOptions:0];
 				}
@@ -272,8 +253,24 @@ Error InAppStore::purchase(Variant p_params) {
 	Dictionary params = p_params;
 	ERR_FAIL_COND_V(!params.has("product_id"), ERR_INVALID_PARAMETER);
 
-	NSString *pid = [[[NSString alloc] initWithUTF8String:String(params["product_id"]).utf8().get_data()] autorelease];
-	SKPayment *payment = [SKPayment paymentWithProductIdentifier:pid];
+	NSString *pid = [[NSString alloc] initWithUTF8String:String(params["product_id"]).utf8().get_data()];
+
+	SKProduct *product = nil;
+
+	if (latestProducts) {
+		for (SKProduct *storedProduct in latestProducts) {
+			if ([storedProduct.productIdentifier isEqualToString:pid]) {
+				product = storedProduct;
+				break;
+			}
+		}
+	}
+
+	if (!product) {
+		return ERR_INVALID_PARAMETER;
+	}
+
+	SKPayment *payment = [SKPayment paymentWithProduct:product];
 	SKPaymentQueue *defq = [SKPaymentQueue defaultQueue];
 	[defq addPayment:payment];
 	printf("purchase sent!\n");
@@ -301,7 +298,7 @@ void InAppStore::_post_event(Variant p_event) {
 void InAppStore::_record_purchase(String product_id) {
 
 	String skey = "purchased/" + product_id;
-	NSString *key = [[[NSString alloc] initWithUTF8String:skey.utf8().get_data()] autorelease];
+	NSString *key = [[NSString alloc] initWithUTF8String:skey.utf8().get_data()];
 	[[NSUserDefaults standardUserDefaults] setBool:YES forKey:key];
 	[[NSUserDefaults standardUserDefaults] synchronize];
 };

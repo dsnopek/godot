@@ -332,7 +332,7 @@ var GodotWebXR = {
 	godot_webxr_get_projection_for_eye__proxy: 'sync',
 	godot_webxr_get_projection_for_eye__sig: 'ii',
 	godot_webxr_get_projection_for_eye: function (p_eye) {
-		const view_index = (p_eye == 1) ? 1 : 0;
+		const view_index = (p_eye == 2 /* ARVRInterface::EYE_RIGHT */) ? 1 : 0;
 		const matrix = GodotWebXR.pose.views[view_index].projectionMatrix;
 		let buf = Module._malloc(16 * 4);
 		for (let i = 0; i < 16; i++) {
@@ -344,7 +344,7 @@ var GodotWebXR = {
 	godot_webxr_get_external_texture_for_eye__proxy: 'sync',
 	godot_webxr_get_external_texture_for_eye__sig: 'ii',
 	godot_webxr_get_external_texture_for_eye: function (p_eye) {
-		const view_index = (p_eye == 1) ? 1 : 0;
+		const view_index = (p_eye == 2 /* ARVRInterface::EYE_RIGHT */) ? 1 : 0;
 		if (GodotWebXR.texture_ids[view_index]) {
 			return GodotWebXR.texture_ids[view_index];
 		}
@@ -374,7 +374,7 @@ var GodotWebXR = {
 	godot_webxr_commit_for_eye__proxy: 'sync',
 	godot_webxr_commit_for_eye__sig: 'vi',
 	godot_webxr_commit_for_eye: function (p_eye) {
-		const view_index = (p_eye == 1) ? 1 : 0;
+		const view_index = (p_eye == 2 /* ARVRInterface::EYE_RIGHT */) ? 1 : 0;
 		const glLayer = GodotWebXR.session.renderState.baseLayer;
 		const view = GodotWebXR.pose.views[view_index];
 		const viewport = glLayer.getViewport(view);

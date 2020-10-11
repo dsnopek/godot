@@ -132,20 +132,6 @@ String WebXRInterface::get_reference_space_type() const {
 	return reference_space_type;
 }
 
-void WebXRInterface::print_debug() const {
-	/* clang-format off */
-	EM_ASM({
-		console.log('-- WebXRInterface debug --');
-		console.log('Headset transform');
-		console.log(Module['webxr_pose'].transform);
-		console.log('View 1 transform');
-		console.log(Module['webxr_pose'].views[0].transform.inverse);
-		console.log('View 2 transform');
-		console.log(Module['webxr_pose'].views[1].transform.inverse);
-	});
-	/* clang-format on */
-}
-
 void WebXRInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_session_supported", "session_mode"), &WebXRInterface::is_session_supported);
 	ClassDB::bind_method(D_METHOD("set_session_mode"), &WebXRInterface::set_session_mode);
@@ -163,8 +149,6 @@ void WebXRInterface::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "optional_features", PROPERTY_HINT_NONE), "set_optional_features", "get_optional_features");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "requested_reference_space_types", PROPERTY_HINT_NONE), "set_requested_reference_space_types", "get_requested_reference_space_types");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "reference_space_type", PROPERTY_HINT_NONE), "", "get_reference_space_type");
-
-	ClassDB::bind_method(D_METHOD("print_debug"), &WebXRInterface::print_debug);
 
 	ADD_SIGNAL(MethodInfo("session_supported", PropertyInfo(Variant::STRING, "session_mode"), PropertyInfo(Variant::BOOL, "supported")));
 	ADD_SIGNAL(MethodInfo("session_started"));

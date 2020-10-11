@@ -182,9 +182,9 @@ var GodotWebXR = {
 		return !!navigator.xr;
 	},
 
-	godot_webxr_is_supported__proxy: 'sync',
-	godot_webxr_is_supported__sig: 'vi',
-	godot_webxr_is_supported: function (p_session_mode) {
+	godot_webxr_is_session_supported__proxy: 'sync',
+	godot_webxr_is_session_supported__sig: 'vi',
+	godot_webxr_is_session_supported: function (p_session_mode) {
 		const session_mode = UTF8ToString(p_session_mode);
 		navigator.xr.isSessionSupported(session_mode).then(function (supported) {
 			ccall('_emwebxr_on_session_supported', 'void', ["string", "number"], [session_mode, supported]);
@@ -208,6 +208,8 @@ var GodotWebXR = {
 		if (optional_features.length > 0) {
 			session_init['optionalFeatures'] = optional_features;
 		}
+
+		console.log('hello from the library');
 
 		navigator.xr.requestSession(session_mode, session_init).then(function (session) {
 			GodotWebXR.session = session;
@@ -400,7 +402,7 @@ var GodotWebXR = {
 		const trackers = [];
 		for (let input_source of session.inputSources) {
 			// @todo Are there pointers which Godot would make into controllers which don't have a gripSpace?
-			if (input_source.targetRayMode !== 'tracked-pointer' && input_source.gripSpace) {
+			if (input_source.targetRayMode !== 'tracked-pointer' || !input_source.gripSpace) {
 				continue;
 			}
 			if (input_source.handedness === 'right') {

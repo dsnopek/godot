@@ -38,9 +38,9 @@ extern "C" {
 #include "stddef.h"
 
 extern int godot_webxr_is_supported();
-extern void godot_webxr_is_session_supported(char *p_session_mode);
+extern void godot_webxr_is_session_supported(const char *p_session_mode);
 
-extern void godot_webxr_initialize(char *p_session_mode, char *p_required_features, char *p_optional_features, char *p_requested_reference_space_types);
+extern void godot_webxr_initialize(const char *p_session_mode, const char *p_required_features, const char *p_optional_features, const char *p_requested_reference_space_types);
 extern void godot_webxr_uninitialize();
 
 // @todo Should we even have these? They are pretty internal.

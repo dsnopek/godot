@@ -105,8 +105,8 @@ var GodotWebXR = {
 			}
 		`,
 		initShaderProgram: (gl, vsSource, fsSource) => {
-			const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
-			const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+			const vertexShader = GodotWebXR.loadShader(gl, gl.VERTEX_SHADER, vsSource);
+			const fragmentShader = GodotWebXR.loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
 
 			const shaderProgram = gl.createProgram();
 			gl.attachShader(shaderProgram, vertexShader);
@@ -146,29 +146,29 @@ var GodotWebXR = {
 			return positionBuffer;
 		},
 		blitTexture: (gl, texture) => {
-			if (this.shaderProgram === null) {
-				this.shaderProgram = initShaderProgram(gl, vsSource, fsSource),
-				this.programInfo = {
-					program: this.shaderProgram,
+			if (GodotWebXR.shaderProgram === null) {
+				GodotWebXR.shaderProgram = GodotWebXR.initShaderProgram(gl, GodotWebXR.vsSource, GodotWebXR.fsSource),
+				GodotWebXR.programInfo = {
+					program: GodotWebXR.shaderProgram,
 					attribLocations: {
-						vertexPosition: gl.getAttribLocation(this.shaderProgram, 'aVertexPosition'),
+						vertexPosition: gl.getAttribLocation(GodotWebXR.shaderProgram, 'aVertexPosition'),
 					},
 					uniformLocations: {
-						uSampler: gl.getUniformLocation(this.shaderProgram, 'uSampler'),
+						uSampler: gl.getUniformLocation(GodotWebXR.shaderProgram, 'uSampler'),
 					},
 				};
-				this.buffer = initBuffer(gl);
+				GodotWebXR.buffer = GodotWebXR.initBuffer(gl);
 			}
 
-			gl.useProgram(this.shaderProgram);
+			gl.useProgram(GodotWebXR.shaderProgram);
 
-			gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-			gl.vertexAttribPointer(this.programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
-			gl.enableVertexAttribArray(this.programInfo.attribLocations.vertexPosition);
+			gl.bindBuffer(gl.ARRAY_BUFFER, GodotWebXR.buffer);
+			gl.vertexAttribPointer(GodotWebXR.programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
+			gl.enableVertexAttribArray(GodotWebXR.programInfo.attribLocations.vertexPosition);
 
 			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture(gl.TEXTURE_2D, texture);
-			gl.uniform1i(this.programInfo.uniformLocations.uSampler, 0);
+			gl.uniform1i(GodotWebXR.programInfo.uniformLocations.uSampler, 0);
 
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 

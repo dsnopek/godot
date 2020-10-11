@@ -209,8 +209,6 @@ var GodotWebXR = {
 			session_init['optionalFeatures'] = optional_features;
 		}
 
-		console.log('hello from the library');
-
 		navigator.xr.requestSession(session_mode, session_init).then(function (session) {
 			GodotWebXR.session = session;
 

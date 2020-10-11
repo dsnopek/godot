@@ -193,8 +193,6 @@ bool WebXRInterface::initialize() {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL_V(arvr_server, false);
 
-	printf("hello from the interface\n");
-
 	if (!initialized) {
 		if (!godot_webxr_is_supported()) {
 			return false;
@@ -334,8 +332,7 @@ void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_targ
 	godot_webxr_commit_for_eye(p_eye);
 };
 
-void WebXRInterface::process(){
-	/*
+void WebXRInterface::process() {
 	if (initialized && godot_webxr_have_frame()) {
 		// @todo This is so much data to pass back - we should really be using some kind of struct!
 		int *tracker_data = godot_webxr_get_tracker_data();
@@ -352,7 +349,6 @@ void WebXRInterface::process(){
 
 		free(tracker_data);
 	};
-	*/
 };
 
 void WebXRInterface::_update_tracker(int p_tracker_id, Transform p_transform) {

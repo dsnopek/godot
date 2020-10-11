@@ -43,10 +43,21 @@
 class WebXRInterface : public ARVRInterface {
 	GDCLASS(WebXRInterface, ARVRInterface);
 
-protected:
-	static void _bind_methods();
-
 public:
+	enum SessionMode {
+		SESSION_INLINE,
+		SESSION_IMMERSIVE_VR,
+		SESSION_IMMERSIVE_AR,
+	};
+
+	enum ReferenceSpaceType {
+		REFERENCE_SPACE_VIEWER,
+		REFERENCE_SPACE_LOCAL,
+		REFERENCE_SPACE_LOCAL_FLOOR,
+		REFERENCE_SPACE_BOUNDED_FLOOR,
+		REFERENCE_SPACE_UNBOUNDED,
+	};
+
 	// @todo Should these really use enums instead of strings?
 	virtual void is_session_supported(const String &p_session_mode) = 0;
 	virtual void set_session_mode(String p_session_mode) = 0;
@@ -58,6 +69,12 @@ public:
 	virtual void set_requested_reference_space_types(String p_requested_reference_space_types) = 0;
 	virtual String get_requested_reference_space_types() const = 0;
 	virtual String get_reference_space_type() const = 0;
+
+protected:
+	static void _bind_methods();
 };
+
+VARIANT_ENUM_CAST(WebXRInterface::SessionMode);
+VARIANT_ENUM_CAST(WebXRInterface::ReferenceSpaceType);
 
 #endif // WEBXR_INTERFACE_H

@@ -174,6 +174,28 @@ var GodotWebXR = {
 
 			gl.bindTexture(gl.TEXTURE_2D, null);
 		},
+
+		sessionModeEnum: {
+			0: 'inline',
+			1: 'immersive-vr',
+			2: 'immersive-ar',
+		},
+		referenceSpaceTypeEnum: {
+			0: 'viewer',
+			1: 'local',
+			2: 'local-floor',
+			3: 'bounded-floor',
+			4: 'unbounded',
+		},
+		covertEnumArray: (arr, enum_lookup) => {
+			const ret = [];
+			for (let val of arr) {
+				if (enum_lookup[val]) {
+					ret.push(enum_lookup[val]);
+				}
+			}
+			return ret;
+		},
 	},
 
 	godot_webxr_is_supported__proxy: 'sync',
@@ -198,23 +220,22 @@ var GodotWebXR = {
 
 	godot_webxr_initialize__proxy: 'sync',
 	godot_webxr_initialize__sig: 'viiii',
-	godot_webxr_initialize: function (p_session_mode, p_required_features, p_optional_features, p_requested_reference_spaces) {
+	godot_webxr_initialize: function (p_json_config) {
 		GodotWebXR.monkeyPatchRequestAnimationFrame();
 
-		const session_mode = UTF8ToString(p_session_mode);
-		const required_features = UTF8ToString(p_required_features).split(",").map((s) => { return s.trim() }).filter((s) => { return s !== "" });
-		const optional_features = UTF8ToString(p_optional_features).split(",").map((s) => { return s.trim() }).filter((s) => { return s !== "" });
-		const requested_reference_space_types = UTF8ToString(p_requested_reference_spaces).split(",").map((s) => { return s.trim() });
+		const json_config = UTF8ToString(p_json_config);
+		const config = JSON.parse(json_config);
+		config.requested_reference_space_types = GodotWebXR.convertEnumArray(config.requested_reference_space_types, GodotWebXR.referenceSpaceTypeEnum);
 
 		const session_init = {};
-		if (required_features.length > 0) {
-			session_init['requiredFeatures'] = required_features;
+		if (config.required_features.length > 0) {
+			session_init['requiredFeatures'] = GodotWebXR.covertEnumArray(config.required_features, GodotWebXR.referenceSpaceTypeEnum);
 		}
-		if (optional_features.length > 0) {
-			session_init['optionalFeatures'] = optional_features;
+		if (config.optional_features.length > 0) {
+			session_init['optionalFeatures'] = GodotWebXR.convertEnumArray(config.optional_features, GodotWebXR.referenceSpaceTypeEnum);
 		}
 
-		navigator.xr.requestSession(session_mode, session_init).then(function (session) {
+		navigator.xr.requestSession(GodotWebXR.sessionModeEnum[config.session_mode], session_init).then(function (session) {
 			GodotWebXR.session = session;
 
 			session.addEventListener('end', function (evt) {
@@ -237,7 +258,7 @@ var GodotWebXR = {
 				}
 
 				function onReferenceSpaceFailure() {
-					if (requested_reference_space_types.length === 0) {
+					if (config.requested_reference_space_types.length === 0) {
 						ccall('_emwebxr_on_session_failed', 'void', ['string'], ['Unable to get any of the requested reference space types']);
 					}
 					else {
@@ -246,7 +267,7 @@ var GodotWebXR = {
 				}
 
 				function requestReferenceSpace() {
-					let reference_space_type = requested_reference_space_types.shift();
+					let reference_space_type = config.requested_reference_space_types.shift();
 					session.requestReferenceSpace(reference_space_type)
 						.then((refSpace) => { onReferenceSpaceSuccess(refSpace, reference_space_type); })
 						.catch(onReferenceSpaceFailure);

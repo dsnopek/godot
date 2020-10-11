@@ -332,7 +332,7 @@ void WebXRInterfaceJS::notification(int p_what) {
 
 WebXRInterfaceJS::WebXRInterfaceJS() {
 	initialized = false;
-	session_mode = "inline";
+	session_mode = WebXRInterface::SESSION_MODE_INLINE;
 	requested_reference_space_types = "local";
 };
 

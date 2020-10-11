@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  webxr.js                                                             */
+/*  godot_webxr.h                                                        */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
@@ -28,41 +28,32 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-// Uses setTimeout() so that we can access library objects from Emscripten
-// after they have been initialized.
-setTimeout(function () {
-    Module.Library_GL = GL || {};
-    Module.Library_Browser = Browser || {};
-    Module.Library_Browser_mainLoop = Module.Library_Browser.mainLoop || {};
+#ifndef GODOT_WEBXR_H
+#define GODOT_WEBXR_H
 
-    Module.webxr_texture_ids = [null, null];
-    Module.webxr_textures = [null, null];
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-    Module.webxr_session = null;
-    Module.webxr_space = null;
-    Module.webxr_frame = null;
-    Module.webxr_pose = null;
+#include "stddef.h"
 
-    // Monkey-patch the requestAnimationFrame() used by Emscripten for the main
-    // loop, so that we can swap it out for XRSession.requestAnimationFrame()
-    // when an XR session is started.
-    Module.webxr_orig_requestAnimationFrame = Module.Library_Browser.requestAnimationFrame;
-    Module.Library_Browser.requestAnimationFrame = function (callback) {
-        if (Module.webxr_session && Module.webxr_space) {
-            let onFrame = function (time, frame) {
-                // @todo Do we actually need to do this?
-                Module.webxr_session = frame.session;
+extern int godot_webxr_is_supported();
+extern void godot_webxr_is_session_supported(const char *p_session_mode);
 
-                Module.webxr_frame = frame;
-                Module.webxr_pose = frame.getViewerPose(Module.webxr_space);
-                callback(time);
-                Module.webxr_frame = null;
-                Module.webxr_pose = null;
-            };
-            Module.webxr_session.requestAnimationFrame(onFrame);
-        }
-        else {
-            Module.webxr_orig_requestAnimationFrame(callback);
-        }
-    };
-}, 0);
+extern void godot_webxr_initialize(const char *p_session_mode, const char *p_required_features, const char *p_optional_features, const char *p_requested_reference_space_types);
+extern void godot_webxr_uninitialize();
+
+extern int *godot_webxr_get_render_targetsize();
+extern float *godot_webxr_get_transform_for_eye(int p_eye);
+extern float *godot_webxr_get_projection_for_eye(int p_eye);
+extern int godot_webxr_get_external_texture_for_eye(int p_eye);
+extern void godot_webxr_commit_for_eye(int p_eye);
+
+// @todo Switch to passing back a struct?
+extern int *godot_webxr_get_tracker_data();
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* GODOT_WEBXR_H */

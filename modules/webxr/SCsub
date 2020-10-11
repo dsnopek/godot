@@ -3,17 +3,18 @@
 Import("env")
 Import("env_modules")
 
-# Copied from platform/javascript/SCsub so we can add dependencies.
-javascript_build_targets = ["#bin/godot${PROGSUFFIX}.js", "#bin/godot${PROGSUFFIX}.wasm"]
-if env["threads_enabled"]:
-    javascript_build_targets.append("#bin/godot${PROGSUFFIX}.worker.js")
+if env["platform"] == "javascript":
+    # Copied from platform/javascript/SCsub so we can add dependencies.
+    javascript_build_targets = ["#bin/godot${PROGSUFFIX}.js", "#bin/godot${PROGSUFFIX}.wasm"]
+    if env["threads_enabled"]:
+        javascript_build_targets.append("#bin/godot${PROGSUFFIX}.worker.js")
 
-js_libraries = [
-    "native/library_godot_webxr.js",
-]
-for lib in js_libraries:
-    env.Append(LINKFLAGS=["--js-library", env.File(lib).path])
-env.Depends(javascript_build_targets, js_libraries)
+    js_libraries = [
+        "native/library_godot_webxr.js",
+    ]
+    for lib in js_libraries:
+        env.Append(LINKFLAGS=["--js-library", env.File(lib).path])
+    env.Depends(javascript_build_targets, js_libraries)
 
 env_webxr = env_modules.Clone()
 env_webxr.add_source_files(env.modules_sources, "*.cpp")

@@ -55,9 +55,6 @@ private:
 	String requested_reference_space_types;
 	String reference_space_type;
 
-	bool _have_frame();
-	bool _have_pose();
-
 	Transform _js_matrix_to_transform(float *p_js_matrix);
 	void _update_tracker(int p_tracker_id, Transform p_transform);
 

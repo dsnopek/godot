@@ -145,9 +145,7 @@ var GodotWebXR = {
 			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 			return positionBuffer;
 		},
-		blitTexture: (texture) => {
-			const gl = Module.gl;
-
+		blitTexture: (gl, texture) => {
 			if (this.shaderProgram === null) {
 				this.shaderProgram = initShaderProgram(gl, vsSource, fsSource),
 				this.programInfo = {
@@ -181,10 +179,16 @@ var GodotWebXR = {
 	godot_webxr_is_supported__proxy: 'sync',
 	godot_webxr_is_supported__sig: 'i',
 	godot_webxr_is_supported: function () {
-		if (navigator.xr) {
-			return 1;
-		}
-		return 0;
+		return !!navigator.xr;
+	},
+
+	godot_webxr_is_supported__proxy: 'sync',
+	godot_webxr_is_supported__sig: 'vi',
+	godot_webxr_is_supported: function (p_session_mode) {
+		const session_mode = UTF8ToString(p_session_mode);
+		navigator.xr.isSessionSupported(session_mode).then(function (supported) {
+			ccall('_emwebxr_on_session_supported', 'void', ["string", "number"], [session_mode, supported]);
+		});
 	},
 
 	godot_webxr_initialize__proxy: 'sync',
@@ -205,9 +209,8 @@ var GodotWebXR = {
 			session_init['optionalFeatures'] = optional_features;
 		}
 
-		const self = this;
 		navigator.xr.requestSession(session_mode, session_init).then(function (session) {
-			self.session = session;
+			GodotWebXR.session = session;
 
 			session.addEventListener('end', function (evt) {
 				ccall('_emwebxr_on_session_ended', 'void', [], []);
@@ -220,10 +223,10 @@ var GodotWebXR = {
 				});
 
 				function onReferenceSpaceSuccess(reference_space, reference_space_type) {
-					self.space = reference_space;
-					// Now that both self.session and self.space are set, we
-					// need to pause and resume the main loop for the XR main
-					// loop to kick in.
+					GodotWebXR.space = reference_space;
+					// Now that both GodotWebXR.session and GodotWebXR.space are
+					// set, we need to pause and resume the main loop for the XR
+					// main loop to kick in.
 					GodotWebXR.pauseResumeMainLoop();
 					ccall('_emwebxr_on_session_started', 'void', ['string'], [reference_space_type]);
 				}
@@ -253,6 +256,175 @@ var GodotWebXR = {
 		});
 	},
 
+	godot_webxr_uninitialize__proxy: 'sync',
+	godot_webxr_uninitialize__sig: 'v',
+	godot_webxr_uninitialize: function () {
+		if (GodotWebXR.session) {
+			GodotWebXR.session.end()
+				// Prevent exception when session has already ended.
+				.catch((e) => { });
+		}
+
+		// Clean-up the textures we allocated for each view.
+		const gl = Module.ctx;
+		for (let i = 0; i < GodotWebXR.textures.length; i++) {
+			const texture = GodotWebXR.textures[i];
+			if (texture !== null) {
+				gl.deleteTexture(texture);
+			}
+			GodotWebXR.textures[i] = null;
+			GodotWebXR.texture_ids[i] = null;
+		}
+
+		// Resetting these will switch back to window.requestAnimationFrame() for the main loop.
+		GodotWebXR.session = null;
+		GodotWebXR.space = null;
+		GodotWebXR.frame = null;
+		GodotWebXR.pose = null;
+
+		// Pause and restart main loop to activate it on all platforms.
+		GodotWebXR.pauseResumeMainLoop();
+	},
+
+	godot_webxr_have_pose__proxy: 'sync',
+	godot_webxr_have_pose__sig: 'i',
+	godot_webxr_have_pose: function () {
+		return !!GodotWebXR.session && !!GodotWebXR.pose;
+	},
+
+	godot_webxr_have_frame__proxy: 'sync',
+	godot_webxr_have_frame__sig: 'i',
+	godot_webxr_have_frame: function () {
+		return !!GodotWebXR.session && !!GodotWebXR.frame
+	},
+
+	godot_webxr_get_render_targetsize__proxy: 'sync',
+	godot_webxr_get_render_targetsize__sig: 'i',
+	godot_webxr_get_render_targetsize: function () {
+		const glLayer = GodotWebXR.session.renderState.baseLayer;
+		const view = GodotWebXR.pose.views[0];
+		const viewport = glLayer.getViewport(view);
+
+		let buf = Module._malloc(2 * 4);
+		setValue(buf + 0, viewport.width, 'i32');
+		setValue(buf + 4, viewport.height, 'i32');
+		return buf;
+	},
+
+	godot_webxr_get_transform_for_eye__proxy: 'sync',
+	godot_webxr_get_transform_for_eye__sig: 'ii',
+	godot_webxr_get_transform_for_eye: function (p_eye) {
+		const views = GodotWebXR.pose.views;
+		let matrix;
+		if (p_eye === 0) {
+			matrix = GodotWebXR.pose.transform.matrix;
+		}
+		else {
+			matrix = views[p_eye - 1].transform.matrix;
+		}
+		let buf = Module._malloc(16 * 4);
+		for (let i = 0; i < 16; i++) {
+			setValue(buf + (i * 4), matrix[i], 'float')
+		}
+		return buf;
+	},
+
+	godot_webxr_get_projection_for_eye__proxy: 'sync',
+	godot_webxr_get_projection_for_eye__sig: 'ii',
+	godot_webxr_get_projection_for_eye: function (p_eye) {
+		const view_index = (p_eye == 1) ? 1 : 0;
+		const matrix = GodotWebXR.pose.views[view_index].projectionMatrix;
+		let buf = Module._malloc(16 * 4);
+		for (let i = 0; i < 16; i++) {
+			setValue(buf + (i * 4), matrix[i], 'float')
+		}
+		return buf;
+	},
+
+	godot_webxr_get_external_texture_for_eye__proxy: 'sync',
+	godot_webxr_get_external_texture_for_eye__sig: 'ii',
+	godot_webxr_get_external_texture_for_eye: function (p_eye) {
+		const view_index = (p_eye == 1) ? 1 : 0;
+		if (GodotWebXR.texture_ids[view_index]) {
+			return GodotWebXR.texture_ids[view_index];
+		}
+
+		const glLayer = GodotWebXR.session.renderState.baseLayer;
+		const view = GodotWebXR.pose.views[view_index];
+		const viewport = glLayer.getViewport(view);
+		const gl = Module.ctx;
+
+		const texture = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, viewport.width, viewport.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+		gl.bindTexture(gl.TEXTURE_2D, null);
+
+		const texture_id = GL.getNewId(GL.textures);
+		GL.textures[texture_id] = texture;
+		GodotWebXR.textures[view_index] = texture;
+		GodotWebXR.texture_ids[view_index] = texture_id;
+		return texture_id;
+	},
+
+	godot_webxr_commit_for_eye__proxy: 'sync',
+	godot_webxr_commit_for_eye__sig: 'vi',
+	godot_webxr_commit_for_eye: function (p_eye) {
+		const view_index = (p_eye == 1) ? 1 : 0;
+		const glLayer = GodotWebXR.session.renderState.baseLayer;
+		const view = GodotWebXR.pose.views[view_index];
+		const viewport = glLayer.getViewport(view);
+		const gl = Module.ctx;
+
+		// Bind to WebXR's framebuffer.
+		gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
+		gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+
+		GodotWebXR.blitTexture(gl, GodotWebXR.textures[view_index]);
+	},
+
+	// @todo This is too much data! Pass back a struct.
+	godot_webxr_get_tracker_data__proxy: 'sync',
+	godot_webxr_get_tracker_data__sig: 'i',
+	godot_webxr_get_tracker_data: function () {
+		const session = GodotWebXR.session;
+		const frame = GodotWebXR.frame;
+		const space = GodotWebXR.space;
+
+		// We want to construct a 0-2 item array, where the left hand (or sole tracker)
+		// is the first element, and the right hand is the second element.
+		const trackers = [];
+		for (let input_source of session.inputSources) {
+			// @todo Are there pointers which Godot would make into controllers which don't have a gripSpace?
+			if (input_source.targetRayMode !== 'tracked-pointer' && input_source.gripSpace) {
+				continue;
+			}
+			if (input_source.handedness === 'right') {
+				trackers[1] = input_source;
+			}
+			else if (input_source.handedness === 'left' || !trackers[0]) {
+				trackers[0] = input_source;
+			}
+		}
+
+		// Fill out this buffer with the size, and then each transform matrix.
+		let buf = Module._malloc(4 + ((16 * 4) * trackers.length));
+		setValue(buf, trackers.length, 'i32');
+		for (let i = 0; i < trackers.length; i++) {
+			let gripPose = frame.getPose(trackers[i].gripSpace, space);
+			// @todo I think if we don't get a grip pose, it can mean that tracking has been lost - if so flag that!
+			if (gripPose) {
+				for (let j = 0; j < 16; j++) {
+					setValue(buf + 4 + (i * 4 * 16) + (j * 4), gripPose.transform.matrix[j], 'float')
+				}
+			}
+		}
+		return buf;
+	}
 };
 
 autoAddDeps(GodotWebXR, "$GodotWebXR");

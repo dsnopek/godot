@@ -85,16 +85,10 @@ extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_failed(char *p_message)
 
 void WebXRInterface::is_session_supported(const String &p_session_mode) {
 	if (!godot_webxr_is_supported()) {
+		// @todo could this just be handled in godot_webxr_is_session_supported()?
 		emit_signal("session_supported", p_session_mode, false);
 	} else {
-		/* clang-format off */
-		EM_ASM({
-			const session_mode = UTF8ToString($0);
-			navigator.xr.isSessionSupported(session_mode).then(function (supported) {
-				ccall('_emwebxr_on_session_supported', 'void', ["string", "number"], [session_mode, supported]);
-			});
-		}, p_session_mode.utf8().get_data());
-		/* clang-format on */
+		godot_webxr_is_session_supported(p_session_mode.utf8().get_data());
 	}
 }
 
@@ -213,178 +207,11 @@ bool WebXRInterface::initialize() {
 
 		initialized = true;
 
-		/* clang-format off */
-		EM_ASM({
-			// Initialize our webxr_blit_texture function.
-			if (!Module.webxr_blit_texture) {
-				Module.webxr_blit_texture = (function (gl) {
-					function initShaderProgram(gl, vsSource, fsSource) {
-						const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
-						const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
-
-						const shaderProgram = gl.createProgram();
-						gl.attachShader(shaderProgram, vertexShader);
-						gl.attachShader(shaderProgram, fragmentShader);
-						gl.linkProgram(shaderProgram);
-
-						if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-							alert('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
-							return null;
-						}
-
-						return shaderProgram;
-					}
-
-					function loadShader(gl, type, source) {
-						const shader = gl.createShader(type);
-						gl.shaderSource(shader, source);
-						gl.compileShader(shader);
-
-						if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-							alert('An error occurred compiling the shader: ' + gl.getShaderInfoLog(shader));
-							gl.deleteShader(shader);
-							return null;
-						}
-
-						return shader;
-					}
-
-					function initBuffer(gl) {
-						const positionBuffer = gl.createBuffer();
-						gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-						const positions = [
-							-1.0, -1.0,
-							 1.0, -1.0,
-							-1.0,  1.0,
-							 1.0,  1.0,
-						];
-						gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-						return positionBuffer;
-					}
-
-				    // Vertex shader source.
-					const vsSource = `
-						const vec2 scale = vec2(0.5, 0.5);
-						attribute vec4 aVertexPosition;
-
-						varying highp vec2 vTextureCoord;
-
-						void main () {
-							gl_Position = aVertexPosition;
-							vTextureCoord = aVertexPosition.xy * scale + scale;
-						}
-					`;
-
-					// Fragment shader source.
-					const fsSource = `
-						varying highp vec2 vTextureCoord;
-
-						uniform sampler2D uSampler;
-
-						void main() {
-							gl_FragColor = texture2D(uSampler, vTextureCoord);
-						}
-					`;
-
-					const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
-
-					const programInfo = {
-						program: shaderProgram,
-						attribLocations: {
-							vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
-						},
-						uniformLocations: {
-							uSampler: gl.getUniformLocation(shaderProgram, 'uSampler'),
-						},
-					};
-
-					const buffer = initBuffer(gl);
-
-					// The Module.webxr_blit_texture() function.
-					return function (texture) {
-						gl.useProgram(programInfo.program);
-
-						gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-						gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
-						gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
-
-						gl.activeTexture(gl.TEXTURE0);
-						gl.bindTexture(gl.TEXTURE_2D, texture);
-						gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
-
-						gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-						gl.bindTexture(gl.TEXTURE_2D, null);
-
-					};
-				})(Module.ctx);
-			}
-
-			const session_mode = UTF8ToString($0);
-			const required_features = UTF8ToString($1).split(",").map((s) => { return s.trim() }).filter((s) => { return s !== "" });
-			const optional_features = UTF8ToString($2).split(",").map((s) => { return s.trim() }).filter((s) => { return s !== "" });
-			const requested_reference_space_types = UTF8ToString($3).split(",").map((s) => { return s.trim() });
-
-			const session_init = {};
-			if (required_features.length > 0) {
-				session_init['requiredFeatures'] = required_features;
-			}
-			if (optional_features.length > 0) {
-				session_init['optionalFeatures'] = optional_features;
-			}
-
-			navigator.xr.requestSession(session_mode, session_init).then(function (session) {
-				Module['webxr_session'] = session;
-
-				session.addEventListener('end', function (evt) {
-					ccall('_emwebxr_on_session_ended', 'void', [], []);
-				});
-
-				const gl = Module['ctx'];
-				gl.makeXRCompatible().then(function () {
-					session.updateRenderState({
-						baseLayer: new XRWebGLLayer(session, gl)
-					});
-
-					function onReferenceSpaceSuccess(reference_space, reference_space_type) {
-						Module['webxr_space'] = reference_space;
-
-						// Now that both Module.webxr_session and Module.webxr_space are set,
-						// our monkey-patched requestAnimationFrame() should kick in.
-						// When using the WebXR API Emulator, this gets picked up automatically,
-						// however, in the Oculus Browser on the Quest, we need to pause and
-						// resume the main loop.
-						Module.Library_Browser_mainLoop.pause();
-						window.setTimeout(function () { Module.Library_Browser_mainLoop.resume(); });
-
-						ccall('_emwebxr_on_session_started', 'void', ['string'], [reference_space_type]);
-					}
-					
-					function onReferenceSpaceFailure() {
-						if (requested_reference_space_types.length === 0) {
-							ccall('_emwebxr_on_session_failed', 'void', ['string'], ['Unable to get any of the requested reference space types']);
-						}
-						else {
-							requestReferenceSpace();
-						}
-					}
-
-					function requestReferenceSpace() {
-						let reference_space_type = requested_reference_space_types.shift();
-						session.requestReferenceSpace(reference_space_type)
-							.then((refSpace) => { onReferenceSpaceSuccess(refSpace, reference_space_type); })
-							.catch(onReferenceSpaceFailure);
-					}
-
-					requestReferenceSpace();
-				}).catch(function (error) {
-					ccall('_emwebxr_on_session_failed', 'void', ['string'], ['Unable to make WebGL context compatible with WebXR: ' + error]);
-				});
-			}).catch(function (error) {
-				ccall('_emwebxr_on_session_failed', 'void', ['string'], ['Unable to start session: ' + error]);
-			});
-		}, session_mode.utf8().get_data(), required_features.utf8().get_data(), optional_features.utf8().get_data(), requested_reference_space_types.utf8().get_data());
-		/* clang-format on */
+		godot_webxr_initialize(
+				session_mode.utf8().get_data(),
+				required_features.utf8().get_data(),
+				optional_features.utf8().get_data(),
+				requested_reference_space_types.utf8().get_data());
 	};
 
 	return true;
@@ -398,58 +225,12 @@ void WebXRInterface::uninitialize() {
 			arvr_server->clear_primary_interface_if(this);
 		}
 
-		/* clang-format off */
-		EM_ASM({
-			if (Module.webxr_session) {
-				Module.webxr_session.end()
-					// Prevent exception when session has already ended.
-					.catch((e) => { });
-			}
-
-			// Clean-up the textures we allocated for each view.
-			const gl = Module.ctx;
-			for (let i = 0; i < Module.webxr_textures.length; i++) {
-				const texture = Module.webxr_textures[i];
-				if (texture !== null) {
-					gl.deleteTexture(texture);
-				}
-				Module.webxr_textures[i] = null;
-				Module.webxr_texture_ids[i] = null;
-			}
-
-			// Resetting these will switch back to window.requestAnimationFrame() for the main loop.
-			Module.webxr_session = null;
-			Module.webxr_space = null;
-			Module.webxr_frame = null;
-			Module.webxr_pose = null;
-
-			// Pause and restart main loop to activate it on all platforms.
-			Module.Library_Browser_mainLoop.pause();
-			window.setTimeout(function () { Module.Library_Browser_mainLoop.resume(); });
-		});
-		/* clang-format on */
+		godot_webxr_uninitialize();
 
 		reference_space_type = "";
-
 		initialized = false;
 	};
 };
-
-bool WebXRInterface::_have_frame() {
-	/* clang-format off */
-	return (bool) EM_ASM_INT({
-		return !!Module['webxr_session'] && !!Module['webxr_frame'];
-	});
-	/* clang-format on */
-}
-
-bool WebXRInterface::_have_pose() {
-	/* clang-format off */
-	return (bool) EM_ASM_INT({
-		return !!Module['webxr_session'] && !!Module['webxr_pose'];
-	});
-	/* clang-format on */
-}
 
 Transform WebXRInterface::_js_matrix_to_transform(float *p_js_matrix) {
 	Transform transform;
@@ -473,25 +254,14 @@ Transform WebXRInterface::_js_matrix_to_transform(float *p_js_matrix) {
 Size2 WebXRInterface::get_render_targetsize() {
 	Size2 target_size;
 
-	if (!initialized || !_have_pose()) {
+	if (!initialized || !godot_webxr_have_pose()) {
 		// As a default, use half the window size.
 		target_size = OS::get_singleton()->get_window_size();
 		target_size.width /= 2.0;
 		return target_size;
 	}
 
-	/* clang-format off */
-	int32_t* js_size = (int32_t*) EM_ASM_INT({
-		const glLayer = Module['webxr_session'].renderState.baseLayer;
-		const view = Module['webxr_pose'].views[0];
-		const viewport = glLayer.getViewport(view);
-
-		let buf = Module._malloc(2 * 4);
-		setValue(buf + 0, viewport.width, 'i32');
-		setValue(buf + 4, viewport.height, 'i32');
-		return buf;
-	});
-	/* clang-format on */
+	int *js_size = godot_webxr_get_render_targetsize();
 
 	target_size.width = js_size[0];
 	target_size.height = js_size[1];
@@ -509,31 +279,13 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 
 	// @todo In 3DOF where we only have rotation, we should take the position from the p_cam_transform, I think?
 
-	if (!initialized || !_have_pose()) {
+	if (!initialized || !godot_webxr_have_pose()) {
 		transform_for_eye = p_cam_transform;
 		return transform_for_eye;
 	}
 
-	/* clang-format off */
-	float* js_matrix = (float*) EM_ASM_INT({
-		const views = Module['webxr_pose'].views;
-		let matrix;
-		if ($0 === 0) {
-			matrix = Module['webxr_pose'].transform.matrix;
-		}
-		else {
-			matrix = views[$0 - 1].transform.matrix;
-		}
-		let buf = Module._malloc(16 * 4);
-		for (let i = 0; i < 16; i++) {
-			setValue(buf + (i * 4), matrix[i], 'float')
-		}
-		return buf;
-	}, p_eye);
-	/* clang-format on */
-
+	float *js_matrix = godot_webxr_get_transform_for_eye(p_eye);
 	transform_for_eye = _js_matrix_to_transform(js_matrix);
-
 	free(js_matrix);
 
 	return p_cam_transform * arvr_server->get_reference_frame() * transform_for_eye;
@@ -542,22 +294,11 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, real_t p_aspect, real_t p_z_near, real_t p_z_far) {
 	CameraMatrix eye;
 
-	if (!initialized || !_have_pose()) {
+	if (!initialized || !godot_webxr_have_pose()) {
 		return eye;
 	}
 
-	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
-
-	/* clang-format off */
-	float* js_matrix = (float*) EM_ASM_INT({
-		const matrix = Module['webxr_pose'].views[$0].projectionMatrix;
-		let buf = Module._malloc(16 * 4);
-		for (let i = 0; i < 16; i++) {
-			setValue(buf + (i * 4), matrix[i], 'float')
-		}
-		return buf;
-	}, view_index);
-	/* clang-format on */
+	float *js_matrix = godot_webxr_get_projection_for_eye(p_eye);
 
 	int k = 0;
 	for (int i = 0; i < 4; i++) {
@@ -576,107 +317,25 @@ CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, r
 }
 
 unsigned int WebXRInterface::get_external_texture_for_eye(ARVRInterface::Eyes p_eye) {
-	if (!_have_pose()) {
+	if (!godot_webxr_have_pose()) {
 		return 0;
 	}
 
-	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
-
-	/* clang-format off */
-	return EM_ASM_INT({
-		if (Module.webxr_texture_ids[$0]) {
-			return Module.webxr_texture_ids[$0];
-		}
-
-		const glLayer = Module['webxr_session'].renderState.baseLayer;
-		const view = Module['webxr_pose'].views[$0];
-		const viewport = glLayer.getViewport(view);
-		const gl = Module['ctx'];
-
-		const texture = gl.createTexture();
-		gl.bindTexture(gl.TEXTURE_2D, texture);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, viewport.width, viewport.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-		gl.bindTexture(gl.TEXTURE_2D, null);
-
-		const texture_id = Module.Library_GL.getNewId(Module.Library_GL.textures);
-		Module.Library_GL.textures[texture_id] = texture;
-		Module.webxr_textures[$0] = texture;
-		Module.webxr_texture_ids[$0] = texture_id;
-		return texture_id;
-	}, view_index);
-	/* clang-format on */
+	return godot_webxr_get_external_texture_for_eye(p_eye);
 }
 
 void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_target, const Rect2 &p_screen_rect) {
-	if (!initialized || !_have_pose()) {
+	if (!initialized || !godot_webxr_have_pose()) {
 		return;
 	}
 
-	int view_index = (p_eye == ARVRInterface::EYE_RIGHT) ? 1 : 0;
-
-	/* clang-format off */
-	EM_ASM({
-		const glLayer = Module['webxr_session'].renderState.baseLayer;
-		const view = Module['webxr_pose'].views[$0];
-		const viewport = glLayer.getViewport(view);
-		const gl = Module['ctx'];
-
-		// Bind to WebXR's framebuffer.
-		gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
-		gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
-
-		Module.webxr_blit_texture(Module.webxr_textures[$0]);
-
-	}, view_index);
-	/* clang-format on */
+	godot_webxr_commit_for_eye(p_eye);
 };
 
 void WebXRInterface::process() {
-	if (initialized && _have_frame()) {
-		/* clang-format off */
-		int* tracker_data = (int *)EM_ASM_INT({
-			const session = Module.webxr_session;
-			const frame = Module.webxr_frame;
-			const space = Module.webxr_space;
-
-			// We want to construct a 0-2 item array, where the left hand (or sole tracker)
-			// is the first element, and the right hand is the second element.
-			const trackers = [];
-			for (let input_source of session.inputSources) {
-				// @todo Are there pointers which Godot would make into controllers which don't have a gripSpace?
-				if (input_source.targetRayMode !== 'tracked-pointer' && input_source.gripSpace) {
-					continue;
-				}
-				if (input_source.handedness === 'right') {
-					trackers[1] = input_source;
-				}
-				else if (input_source.handedness === 'left' || !trackers[0]) {
-					trackers[0] = input_source;
-				}
-			}
-
-			// Fill out this buffer with the size, and then each transform matrix.
-			let buf = Module._malloc(4 + ((16 * 4) * trackers.length));
-			setValue(buf, trackers.length, 'i32');
-			for (let i = 0; i < trackers.length; i++) {
-				let gripPose = frame.getPose(trackers[i].gripSpace, space);
-				// @todo I think if we don't get a grip pose, it can mean that tracking has been lost - if so flag that!
-				if (gripPose) {
-					for (let j = 0; j < 16; j++) {
-						setValue(buf + 4 + (i * 4 * 16) + (j * 4), gripPose.transform.matrix[j], 'float')
-					}
-				}
-			}
-			return buf;
-		});
-		/* clang-format on */
-
+	if (initialized && godot_webxr_have_frame()) {
 		// @todo This is so much data to pass back - we should really be using some kind of struct!
+		int *tracker_data = godot_webxr_get_tracker_data();
 
 		int tracker_count = tracker_data[0];
 		if (tracker_count == 0) {

@@ -75,8 +75,6 @@ public:
 	void _set_reference_space_type(String p_reference_space_type);
 	String get_reference_space_type() const;
 
-	void print_debug() const;
-
 	virtual StringName get_name() const;
 	virtual int get_capabilities() const;
 

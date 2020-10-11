@@ -230,7 +230,7 @@ var GodotWebXR = {
 					GodotWebXR.pauseResumeMainLoop();
 					ccall('_emwebxr_on_session_started', 'void', ['string'], [reference_space_type]);
 				}
-				
+
 				function onReferenceSpaceFailure() {
 					if (requested_reference_space_types.length === 0) {
 						ccall('_emwebxr_on_session_failed', 'void', ['string'], ['Unable to get any of the requested reference space types']);

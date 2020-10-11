@@ -84,12 +84,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_failed(char *p_message)
 }
 
 void WebXRInterface::is_session_supported(const String &p_session_mode) {
-	if (!godot_webxr_is_supported()) {
-		// @todo could this just be handled in godot_webxr_is_session_supported()?
-		emit_signal("session_supported", p_session_mode, false);
-	} else {
-		godot_webxr_is_session_supported(p_session_mode.utf8().get_data());
-	}
+	godot_webxr_is_session_supported(p_session_mode.utf8().get_data());
 }
 
 void WebXRInterface::set_session_mode(String p_session_mode) {

@@ -186,9 +186,14 @@ var GodotWebXR = {
 	godot_webxr_is_session_supported__sig: 'vi',
 	godot_webxr_is_session_supported: function (p_session_mode) {
 		const session_mode = UTF8ToString(p_session_mode);
-		navigator.xr.isSessionSupported(session_mode).then(function (supported) {
-			ccall('_emwebxr_on_session_supported', 'void', ["string", "number"], [session_mode, supported]);
-		});
+		if (navigator.xr) {
+			navigator.xr.isSessionSupported(session_mode).then(function (supported) {
+				ccall('_emwebxr_on_session_supported', 'void', ["string", "number"], [session_mode, supported]);
+			});
+		}
+		else {
+			ccall('_emwebxr_on_session_supported', 'void', ["string", "number"], [session_mode, false]);
+		}
 	},
 
 	godot_webxr_initialize__proxy: 'sync',

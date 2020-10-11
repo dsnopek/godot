@@ -43,10 +43,6 @@ extern void godot_webxr_is_session_supported(const char *p_session_mode);
 extern void godot_webxr_initialize(const char *p_session_mode, const char *p_required_features, const char *p_optional_features, const char *p_requested_reference_space_types);
 extern void godot_webxr_uninitialize();
 
-// @todo Should we even have these? They are pretty internal.
-extern int godot_webxr_have_pose();
-extern int godot_webxr_have_frame();
-
 extern int *godot_webxr_get_render_targetsize();
 extern float *godot_webxr_get_transform_for_eye(int p_eye);
 extern float *godot_webxr_get_projection_for_eye(int p_eye);

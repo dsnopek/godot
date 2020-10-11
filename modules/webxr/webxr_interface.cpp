@@ -238,14 +238,13 @@ Transform WebXRInterface::_js_matrix_to_transform(float *p_js_matrix) {
 Size2 WebXRInterface::get_render_targetsize() {
 	Size2 target_size;
 
-	if (!initialized || !godot_webxr_have_pose()) {
+	int *js_size = godot_webxr_get_render_targetsize();
+	if (!initialized || js_size == nullptr) {
 		// As a default, use half the window size.
 		target_size = OS::get_singleton()->get_window_size();
 		target_size.width /= 2.0;
 		return target_size;
 	}
-
-	int *js_size = godot_webxr_get_render_targetsize();
 
 	target_size.width = js_size[0];
 	target_size.height = js_size[1];
@@ -263,12 +262,12 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 
 	// @todo In 3DOF where we only have rotation, we should take the position from the p_cam_transform, I think?
 
-	if (!initialized || !godot_webxr_have_pose()) {
+	float *js_matrix = godot_webxr_get_transform_for_eye(p_eye);
+	if (!initialized || js_matrix == nullptr) {
 		transform_for_eye = p_cam_transform;
 		return transform_for_eye;
 	}
 
-	float *js_matrix = godot_webxr_get_transform_for_eye(p_eye);
 	transform_for_eye = _js_matrix_to_transform(js_matrix);
 	free(js_matrix);
 
@@ -278,11 +277,10 @@ Transform WebXRInterface::get_transform_for_eye(ARVRInterface::Eyes p_eye, const
 CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, real_t p_aspect, real_t p_z_near, real_t p_z_far) {
 	CameraMatrix eye;
 
-	if (!initialized || !godot_webxr_have_pose()) {
+	float *js_matrix = godot_webxr_get_projection_for_eye(p_eye);
+	if (!initialized || js_matrix == nullptr) {
 		return eye;
 	}
-
-	float *js_matrix = godot_webxr_get_projection_for_eye(p_eye);
 
 	int k = 0;
 	for (int i = 0; i < 4; i++) {
@@ -301,25 +299,26 @@ CameraMatrix WebXRInterface::get_projection_for_eye(ARVRInterface::Eyes p_eye, r
 }
 
 unsigned int WebXRInterface::get_external_texture_for_eye(ARVRInterface::Eyes p_eye) {
-	if (!godot_webxr_have_pose()) {
+	if (!initialized) {
 		return 0;
 	}
-
 	return godot_webxr_get_external_texture_for_eye(p_eye);
 }
 
 void WebXRInterface::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_target, const Rect2 &p_screen_rect) {
-	if (!initialized || !godot_webxr_have_pose()) {
+	if (!initialized) {
 		return;
 	}
-
 	godot_webxr_commit_for_eye(p_eye);
 };
 
 void WebXRInterface::process() {
-	if (initialized && godot_webxr_have_frame()) {
+	if (initialized) {
 		// @todo This is so much data to pass back - we should really be using some kind of struct!
 		int *tracker_data = godot_webxr_get_tracker_data();
+		if (tracker_data == nullptr) {
+			return;
+		}
 
 		int tracker_count = tracker_data[0];
 		if (tracker_count == 0) {

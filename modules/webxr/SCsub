@@ -15,12 +15,5 @@ for lib in js_libraries:
     env.Append(LINKFLAGS=["--js-library", env.File(lib).path])
 env.Depends(javascript_build_targets, js_libraries)
 
-js_pre = [
-    "#modules/webxr/native/webxr.js",
-]
-for js in js_pre:
-    env.Append(LINKFLAGS=["--pre-js", env.File(js).path])
-env.Depends(javascript_build_targets, js_pre)
-
 env_webxr = env_modules.Clone()
 env_webxr.add_source_files(env.modules_sources, "*.cpp")

@@ -286,21 +286,13 @@ var GodotWebXR = {
 		GodotWebXR.pauseResumeMainLoop();
 	},
 
-	godot_webxr_have_pose__proxy: 'sync',
-	godot_webxr_have_pose__sig: 'i',
-	godot_webxr_have_pose: function () {
-		return !!GodotWebXR.session && !!GodotWebXR.pose;
-	},
-
-	godot_webxr_have_frame__proxy: 'sync',
-	godot_webxr_have_frame__sig: 'i',
-	godot_webxr_have_frame: function () {
-		return !!GodotWebXR.session && !!GodotWebXR.frame
-	},
-
 	godot_webxr_get_render_targetsize__proxy: 'sync',
 	godot_webxr_get_render_targetsize__sig: 'i',
 	godot_webxr_get_render_targetsize: function () {
+		if (!GodotWebXR.session || !GodotWebXR.pose) {
+			return 0;
+		}
+
 		const glLayer = GodotWebXR.session.renderState.baseLayer;
 		const view = GodotWebXR.pose.views[0];
 		const viewport = glLayer.getViewport(view);
@@ -314,6 +306,10 @@ var GodotWebXR = {
 	godot_webxr_get_transform_for_eye__proxy: 'sync',
 	godot_webxr_get_transform_for_eye__sig: 'ii',
 	godot_webxr_get_transform_for_eye: function (p_eye) {
+		if (!GodotWebXR.session || !GodotWebXR.pose) {
+			return 0;
+		}
+
 		const views = GodotWebXR.pose.views;
 		let matrix;
 		if (p_eye === 0) {
@@ -332,6 +328,10 @@ var GodotWebXR = {
 	godot_webxr_get_projection_for_eye__proxy: 'sync',
 	godot_webxr_get_projection_for_eye__sig: 'ii',
 	godot_webxr_get_projection_for_eye: function (p_eye) {
+		if (!GodotWebXR.session || !GodotWebXR.pose) {
+			return 0;
+		}
+
 		const view_index = (p_eye == 2 /* ARVRInterface::EYE_RIGHT */) ? 1 : 0;
 		const matrix = GodotWebXR.pose.views[view_index].projectionMatrix;
 		let buf = Module._malloc(16 * 4);
@@ -344,6 +344,10 @@ var GodotWebXR = {
 	godot_webxr_get_external_texture_for_eye__proxy: 'sync',
 	godot_webxr_get_external_texture_for_eye__sig: 'ii',
 	godot_webxr_get_external_texture_for_eye: function (p_eye) {
+		if (!GodotWebXR.session || !GodotWebXR.pose) {
+			return 0;
+		}
+
 		const view_index = (p_eye == 2 /* ARVRInterface::EYE_RIGHT */) ? 1 : 0;
 		if (GodotWebXR.texture_ids[view_index]) {
 			return GodotWebXR.texture_ids[view_index];
@@ -374,6 +378,10 @@ var GodotWebXR = {
 	godot_webxr_commit_for_eye__proxy: 'sync',
 	godot_webxr_commit_for_eye__sig: 'vi',
 	godot_webxr_commit_for_eye: function (p_eye) {
+		if (!GodotWebXR.session || !GodotWebXR.pose) {
+			return;
+		}
+
 		const view_index = (p_eye == 2 /* ARVRInterface::EYE_RIGHT */) ? 1 : 0;
 		const glLayer = GodotWebXR.session.renderState.baseLayer;
 		const view = GodotWebXR.pose.views[view_index];
@@ -391,6 +399,10 @@ var GodotWebXR = {
 	godot_webxr_get_tracker_data__proxy: 'sync',
 	godot_webxr_get_tracker_data__sig: 'i',
 	godot_webxr_get_tracker_data: function () {
+		if (!GodotWebXR.session || !GodotWebXR.frame) {
+			return 0;
+		}
+
 		const session = GodotWebXR.session;
 		const frame = GodotWebXR.frame;
 		const space = GodotWebXR.space;

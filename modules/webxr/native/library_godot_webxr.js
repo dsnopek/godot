@@ -415,11 +415,13 @@ var GodotWebXR = {
 		let buf = Module._malloc(4 + ((16 * 4) * trackers.length));
 		setValue(buf, trackers.length, 'i32');
 		for (let i = 0; i < trackers.length; i++) {
-			let gripPose = frame.getPose(trackers[i].gripSpace, space);
-			// @todo I think if we don't get a grip pose, it can mean that tracking has been lost - if so flag that!
-			if (gripPose) {
-				for (let j = 0; j < 16; j++) {
-					setValue(buf + 4 + (i * 4 * 16) + (j * 4), gripPose.transform.matrix[j], 'float')
+			if (trackers[i]) {
+				let gripPose = frame.getPose(trackers[i].gripSpace, space);
+				// @todo I think if we don't get a grip pose, it can mean that tracking has been lost - if so flag that!
+				if (gripPose) {
+					for (let j = 0; j < 16; j++) {
+						setValue(buf + 4 + (i * 4 * 16) + (j * 4), gripPose.transform.matrix[j], 'float')
+					}
 				}
 			}
 		}

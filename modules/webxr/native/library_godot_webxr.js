@@ -44,35 +44,35 @@ var GodotWebXR = {
 		// when an XR session is started.
 		orig_RequestAnimationFrame: null,
 		requestAnimationFrame: (callback) => {
-			if (this.session && this.space) {
+			if (GodotWebXR.session && GodotWebXR.space) {
 				let onFrame = function (time, frame) {
 					// @todo Do we actually need to do this?
-					this.session = frame.session;
+					GodotWebXR.session = frame.session;
 
-					this.frame = frame;
-					this.pose = frame.getViewerPose(this.space);
+					GodotWebXR.frame = frame;
+					GodotWebXR.pose = frame.getViewerPose(GodotWebXR.space);
 					callback(time);
-					this.frame = null;
-					this.pose = null;
+					GodotWebXR.frame = null;
+					GodotWebXR.pose = null;
 				};
-				this.session.requestAnimationFrame(onFrame);
+				GodotWebXR.session.requestAnimationFrame(onFrame);
 			}
 			else {
-				this.orig_requestAnimationFrame(callback);
+				GodotWebXR.orig_requestAnimationFrame(callback);
 			}
 		},
 		monkeyPatchRequestAnimationFrame: () => {
-			if (this.orig_RequestAnimationFrame === null) {
-				this.orig_requestAnimationFrame = Browser.requestAnimationFrame;
-				Browser.requestAnimationFrame = this.requestAnimationFrame;
+			if (GodotWebXR.orig_RequestAnimationFrame === null) {
+				GodotWebXR.orig_requestAnimationFrame = Browser.requestAnimationFrame;
+				Browser.requestAnimationFrame = GodotWebXR.requestAnimationFrame;
 			}
 		},
 		pauseResumeMainLoop: () => {
-			// Once both this.session and this.space are set or unset, our
-			// monkey-patched requestAnimationFrame() should be enabled or
-			// disabled. When using the WebXR API Emulator, this gets picked
-			// up automatically, however, in the Oculus Browser on the Quest,
-			// we need to pause and resume the main loop.
+			// Once both GodotWebXR.session and GodotWebXR.space are set or
+			// unset, our monkey-patched requestAnimationFrame() should be
+			// enabled or disabled. When using the WebXR API Emulator, this
+			// gets picked up automatically, however, in the Oculus Browser
+			// on the Quest, we need to pause and resume the main loop.
 			Browser.mainLoop.pause();
 			window.setTimeout(function () { Browser.mainLoop.resume(); });
 		},
@@ -160,15 +160,15 @@ var GodotWebXR = {
 				this.buffer = initBuffer(gl);
 			}
 
-			gl.useProgram(programInfo.program);
+			gl.useProgram(this.shaderProgram);
 
 			gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-			gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
-			gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+			gl.vertexAttribPointer(this.programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
+			gl.enableVertexAttribArray(this.programInfo.attribLocations.vertexPosition);
 
 			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture(gl.TEXTURE_2D, texture);
-			gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
+			gl.uniform1i(this.programInfo.uniformLocations.uSampler, 0);
 
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 

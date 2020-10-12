@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  webxr_interface.h                                                    */
+/*  webxr_interface_js.h                                                 */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
@@ -28,11 +28,12 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#ifndef WEBXR_INTERFACE_H
-#define WEBXR_INTERFACE_H
+#ifndef WEBXR_INTERFACE_JS_H
+#define WEBXR_INTERFACE_JS_H
 
-#include "servers/arvr/arvr_interface.h"
-#include "servers/arvr/arvr_positional_tracker.h"
+#ifdef JAVASCRIPT_ENABLED
+
+#include "webxr_interface.h"
 
 /**
 	@author David Snopek <david.snopek@snopekgames.com>
@@ -40,24 +41,56 @@
 	The WebXR interface is a VR/AR interface that can be used on the web.
 */
 
-class WebXRInterface : public ARVRInterface {
-	GDCLASS(WebXRInterface, ARVRInterface);
+class WebXRInterfaceJS : public WebXRInterface {
+	GDCLASS(WebXRInterfaceJS, WebXRInterface);
 
-protected:
-	static void _bind_methods();
+private:
+	bool initialized;
+
+	// @todo Should these really use enums instead of strings?
+	String session_mode;
+	String required_features;
+	String optional_features;
+	String requested_reference_space_types;
+	String reference_space_type;
+
+	Transform _js_matrix_to_transform(float *p_js_matrix);
+	void _update_tracker(int p_tracker_id, Transform p_transform);
 
 public:
-	// @todo Should these really use enums instead of strings?
-	virtual void is_session_supported(const String &p_session_mode) = 0;
-	virtual void set_session_mode(String p_session_mode) = 0;
-	virtual String get_session_mode() const = 0;
-	virtual void set_required_features(String p_required_features) = 0;
-	virtual String get_required_features() const = 0;
-	virtual void set_optional_features(String p_optional_features) = 0;
-	virtual String get_optional_features() const = 0;
-	virtual void set_requested_reference_space_types(String p_requested_reference_space_types) = 0;
-	virtual String get_requested_reference_space_types() const = 0;
-	virtual String get_reference_space_type() const = 0;
+	virtual void is_session_supported(const String &p_session_mode);
+	virtual void set_session_mode(String p_session_mode);
+	virtual String get_session_mode() const;
+	virtual void set_required_features(String p_required_features);
+	virtual String get_required_features() const;
+	virtual void set_optional_features(String p_optional_features);
+	virtual String get_optional_features() const;
+	virtual void set_requested_reference_space_types(String p_requested_reference_space_types);
+	virtual String get_requested_reference_space_types() const;
+	void _set_reference_space_type(String p_reference_space_type);
+	virtual String get_reference_space_type() const;
+
+	virtual StringName get_name() const;
+	virtual int get_capabilities() const;
+
+	virtual bool is_initialized() const;
+	virtual bool initialize();
+	virtual void uninitialize();
+
+	virtual Size2 get_render_targetsize();
+	virtual bool is_stereo();
+	virtual Transform get_transform_for_eye(ARVRInterface::Eyes p_eye, const Transform &p_cam_transform);
+	virtual CameraMatrix get_projection_for_eye(ARVRInterface::Eyes p_eye, real_t p_aspect, real_t p_z_near, real_t p_z_far);
+	virtual unsigned int get_external_texture_for_eye(ARVRInterface::Eyes p_eye);
+	virtual void commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_target, const Rect2 &p_screen_rect);
+
+	virtual void process();
+	virtual void notification(int p_what);
+
+	WebXRInterfaceJS();
+	~WebXRInterfaceJS();
 };
 
-#endif // WEBXR_INTERFACE_H
+#endif // JAVASCRIPT_ENABLED
+
+#endif // WEBXR_INTERFACE_JS_H

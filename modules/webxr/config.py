@@ -1,5 +1,5 @@
 def can_build(env, platform):
-    return platform == "javascript"
+    return True
 
 
 def configure(env):

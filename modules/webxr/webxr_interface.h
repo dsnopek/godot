@@ -51,6 +51,7 @@ public:
 	};
 
 	enum ReferenceSpaceType {
+		REFERENCE_SPACE_NONE,
 		REFERENCE_SPACE_VIEWER,
 		REFERENCE_SPACE_LOCAL,
 		REFERENCE_SPACE_LOCAL_FLOOR,
@@ -59,15 +60,15 @@ public:
 	};
 
 	// @todo Should these really use enums instead of strings?
-	virtual void is_session_supported(const String &p_session_mode) = 0;
-	virtual void set_session_mode(String p_session_mode) = 0;
-	virtual String get_session_mode() const = 0;
-	virtual void set_required_features(String p_required_features) = 0;
-	virtual String get_required_features() const = 0;
-	virtual void set_optional_features(String p_optional_features) = 0;
-	virtual String get_optional_features() const = 0;
-	virtual void set_requested_reference_space_types(String p_requested_reference_space_types) = 0;
-	virtual String get_requested_reference_space_types() const = 0;
+	virtual void is_session_supported(SessionMode p_session_mode) = 0;
+	virtual void set_session_mode(SessionMode p_session_mode) = 0;
+	virtual SessionMode get_session_mode() const = 0;
+	virtual void set_required_features(const PoolVector<int> &p_required_features) = 0;
+	virtual PoolVector<int> get_required_features() const = 0;
+	virtual void set_optional_features(const PoolVector<int> &p_optional_features) = 0;
+	virtual PoolVector<int> get_optional_features() const = 0;
+	virtual void set_requested_reference_space_types(const PoolVector<int> &p_requested_reference_space_types) = 0;
+	virtual PoolVector<int> get_requested_reference_space_types() const = 0;
 	virtual String get_reference_space_type() const = 0;
 
 protected:

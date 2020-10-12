@@ -48,11 +48,11 @@ private:
 	bool initialized;
 
 	// @todo Should these really use enums instead of strings?
-	String session_mode;
-	String required_features;
-	String optional_features;
-	String requested_reference_space_types;
-	String reference_space_type;
+	SessionMode session_mode;
+	PoolVector<int> required_features;
+	PoolVector<int> optional_features;
+	PoolVector<int> requested_reference_space_types;
+	ReferenceSpaceType reference_space_type;
 
 	Transform _js_matrix_to_transform(float *p_js_matrix);
 	void _update_tracker(int p_tracker_id, Transform p_transform);

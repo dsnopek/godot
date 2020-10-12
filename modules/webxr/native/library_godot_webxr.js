@@ -181,11 +181,11 @@ var GodotWebXR = {
 			2: 'immersive-ar',
 		},
 		referenceSpaceTypeEnum: {
-			0: 'viewer',
-			1: 'local',
-			2: 'local-floor',
-			3: 'bounded-floor',
-			4: 'unbounded',
+			1: 'viewer',
+			2: 'local',
+			3: 'local-floor',
+			4: 'bounded-floor',
+			5: 'unbounded',
 		},
 		covertEnumArray: (arr, enum_lookup) => {
 			const ret = [];

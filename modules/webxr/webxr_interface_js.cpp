@@ -182,7 +182,7 @@ void WebXRInterfaceJS::uninitialize() {
 
 		godot_webxr_uninitialize();
 
-		reference_space_type = "";
+		reference_space_type = WebXRInterface::REFERENCE_SPACE_NONE;
 		initialized = false;
 	};
 };
@@ -330,10 +330,15 @@ void WebXRInterfaceJS::notification(int p_what) {
 	// nothing to do here, I guess we could pauze our sensors...
 }
 
+void WebXRInterfaceJS::_reset() {
+}
+
 WebXRInterfaceJS::WebXRInterfaceJS() {
 	initialized = false;
 	session_mode = WebXRInterface::SESSION_MODE_INLINE;
-	requested_reference_space_types = "local";
+	reference_space_type = WebXRInterface::REFERENCE_SPACE_NONE;
+	requested_reference_space_types.size(1);
+	requested_reference_space_types[0] = WebXRInterface::REFERENCE_SPACE_LOCAL);
 };
 
 WebXRInterfaceJS::~WebXRInterfaceJS() {

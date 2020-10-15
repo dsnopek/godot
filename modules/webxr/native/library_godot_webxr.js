@@ -246,11 +246,11 @@ var GodotWebXR = {
 				ccall('_emwebxr_on_session_ended', 'void', [], []);
 			});
 
-			session.addEventListener('inputsourcechange', function (evt) {
+			session.addEventListener('inputsourceschange', function (evt) {
 				let controller_changed = false;
 				for (let lst of [evt.added, evt.removed]) {
 					for (let input_source of lst) {
-						if (input_source.targetRayMode === 'tracker-pointer') {
+						if (input_source.targetRayMode === 'tracked-pointer') {
 							controller_changed = true;
 						}
 					}

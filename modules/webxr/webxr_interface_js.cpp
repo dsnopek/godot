@@ -338,7 +338,6 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 }
 
 void WebXRInterfaceJS::_on_controller_changed() {
-	printf("Controller changed\n");
 	godot_webxr_sample_controller_data();
 	for (int i = 0; i < 2; i++) {
 		bool controller_connected = godot_webxr_is_controller_connected(i);

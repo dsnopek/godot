@@ -83,6 +83,16 @@ extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_failed(char *p_message)
 	interface->emit_signal("session_failed", message);
 }
 
+extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_controller_changed() {
+	ARVRServer *arvr_server = ARVRServer::get_singleton();
+	ERR_FAIL_NULL(arvr_server);
+
+	Ref<ARVRInterface> interface = arvr_server->find_interface("WebXR");
+	ERR_FAIL_COND(interface.is_null());
+
+	((WebXRInterfaceJS *)interface.ptr())->_on_controller_changed();
+}
+
 void WebXRInterfaceJS::is_session_supported(const String &p_session_mode) {
 	godot_webxr_is_session_supported(p_session_mode.utf8().get_data());
 }
@@ -308,10 +318,8 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 		tracker->set_name(p_controller_id == 0 ? "Left" : "Right");
 		tracker->set_type(ARVRServer::TRACKER_CONTROLLER);
 		tracker->set_hand(p_controller_id == 0 ? ARVRPositionalTracker::TRACKER_LEFT_HAND : ARVRPositionalTracker::TRACKER_RIGHT_HAND);
-		// Unfortunately, we can't just use tracker->set_joy_id() because WebXR gamepads aren't
-		// registered with the normal Gamepad API per the WebXR spec.
-		//
-		// See: https://immersive-web.github.io/webxr-gamepads-module/#navigator-differences
+		// Use the ids we're giving to our "virtual" gamepads.
+		tracker->set_joy_id(p_controller_id + 100);
 		arvr_server->add_tracker(tracker);
 	}
 
@@ -329,8 +337,20 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 	}
 }
 
+void WebXRInterfaceJS::_on_controller_changed() {
+	printf("Controller changed\n");
+	godot_webxr_sample_controller_data();
+	for (int i = 0; i < 2; i++) {
+		bool controller_connected = godot_webxr_is_controller_connected(i);
+		if (controllers_state[i] != controller_connected) {
+			Input::get_singleton()->joy_connection_changed(i + 100, controller_connected, i == 0 ? "Left" : "Right", "");
+			controllers_state[i] = controller_connected;
+		}
+	}
+}
+
 void WebXRInterfaceJS::notification(int p_what) {
-	// nothing to do here, I guess we could pauze our sensors...
+	// Nothing to do here.
 }
 
 WebXRInterfaceJS::WebXRInterfaceJS() {

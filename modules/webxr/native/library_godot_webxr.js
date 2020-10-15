@@ -181,8 +181,12 @@ var GodotWebXR = {
 		// Gets an array with 0-2 items, where the left hand (or sole tracker)
 		// is the first element, and the right hand is the second element.
 		getControllers: () => {
+			if (!GodotWebXR.session) {
+				return [];
+			}
+
 			const controllers = [];
-			for (let input_source of session.inputSources) {
+			for (let input_source of GodotWebXR.session.inputSources) {
 				if (input_source.targetRayMode !== 'tracked-pointer') {
 					continue;
 				}

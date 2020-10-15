@@ -285,36 +285,29 @@ void WebXRInterfaceJS::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_ta
 
 void WebXRInterfaceJS::process() {
 	if (initialized) {
-		// @todo This is so much data to pass back - we should really be using some kind of struct!
-		int *tracker_data = godot_webxr_get_tracker_data();
-		if (tracker_data == nullptr) {
+		godot_webxr_sample_controller_data();
+
+		int controller_count = godot_webxr_get_controller_count();
+		if (controller_count == 0) {
 			return;
 		}
 
-		int tracker_count = tracker_data[0];
-		if (tracker_count == 0) {
-			return;
+		for (int i = 0; i < controller_count; i++) {
+			_update_tracker(i);
 		}
-
-		float *tracker_matrices = (float *)(tracker_data + 1);
-		for (int i = 0; i < tracker_count; i++) {
-			_update_tracker(i + 1, _js_matrix_to_transform(tracker_matrices + (i * 16)));
-		}
-
-		free(tracker_data);
 	};
 };
 
-void WebXRInterfaceJS::_update_tracker(int p_tracker_id, Transform p_transform) {
+void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL(arvr_server);
 
-	ARVRPositionalTracker *tracker = arvr_server->find_by_type_and_id(ARVRServer::TRACKER_CONTROLLER, p_tracker_id);
+	ARVRPositionalTracker *tracker = arvr_server->find_by_type_and_id(ARVRServer::TRACKER_CONTROLLER, p_controller_id + 1);
 	if (tracker == nullptr) {
 		tracker = memnew(ARVRPositionalTracker);
-		tracker->set_name(p_tracker_id == 1 ? "Left" : "Right");
+		tracker->set_name(p_controller_id == 0 ? "Left" : "Right");
 		tracker->set_type(ARVRServer::TRACKER_CONTROLLER);
-		tracker->set_hand(p_tracker_id == 1 ? ARVRPositionalTracker::TRACKER_LEFT_HAND : ARVRPositionalTracker::TRACKER_RIGHT_HAND);
+		tracker->set_hand(p_controller_id == 0 ? ARVRPositionalTracker::TRACKER_LEFT_HAND : ARVRPositionalTracker::TRACKER_RIGHT_HAND);
 		// Unfortunately, we can't just use tracker->set_joy_id() because WebXR gamepads aren't
 		// registered with the normal Gamepad API per the WebXR spec.
 		//
@@ -322,8 +315,18 @@ void WebXRInterfaceJS::_update_tracker(int p_tracker_id, Transform p_transform) 
 		arvr_server->add_tracker(tracker);
 	}
 
-	tracker->set_position(p_transform.origin);
-	tracker->set_orientation(p_transform.basis);
+	float *tracker_matrix;
+	Transform transform;
+
+	if (godot_webxr_is_controller_connected(p_controller_id)) {
+		tracker_matrix = godot_webxr_get_controller_transform(p_controller_id);
+		if (tracker_matrix) {
+			transform = _js_matrix_to_transform(tracker_matrix);
+			tracker->set_position(transform.origin);
+			tracker->set_orientation(transform.basis);
+			free(tracker_matrix);
+		}
+	}
 }
 
 void WebXRInterfaceJS::notification(int p_what) {

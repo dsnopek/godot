@@ -55,7 +55,7 @@ private:
 	String reference_space_type;
 
 	Transform _js_matrix_to_transform(float *p_js_matrix);
-	void _update_tracker(int p_tracker_id, Transform p_transform);
+	void _update_tracker(int p_controller_id);
 
 public:
 	virtual void is_session_supported(const String &p_session_mode);

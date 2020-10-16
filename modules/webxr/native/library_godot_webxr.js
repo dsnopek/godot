@@ -177,27 +177,32 @@ var GodotWebXR = {
 
 		// Holds the controllers list between function calls.
 		controllers: [],
+		// Holds a list of all the other input sources.
+		otherInputSources: [],
 
 		// Gets an array with 0-2 items, where the left hand (or sole tracker)
 		// is the first element, and the right hand is the second element.
-		getControllers: () => {
+		sampleInputSources: () => {
+			GodotWebXR.controllers = [];
+			GodotWebXR.otherInputSources = [];
+
 			if (!GodotWebXR.session) {
-				return [];
+				return;
 			}
 
-			const controllers = [];
 			for (let input_source of GodotWebXR.session.inputSources) {
-				if (input_source.targetRayMode !== 'tracked-pointer') {
-					continue;
+				if (input_source.targetRayMode === 'tracked-pointer') {
+					if (input_source.handedness === 'right') {
+						GodotWebXR.controllers[1] = input_source;
+					}
+					else if (input_source.handedness === 'left' || !controllers[0]) {
+						GodotWebXR.controllers[0] = input_source;
+					}
 				}
-				if (input_source.handedness === 'right') {
-					controllers[1] = input_source;
-				}
-				else if (input_source.handedness === 'left' || !controllers[0]) {
-					controllers[0] = input_source;
+				else {
+					GodotWebXR.otherInputSources.push(input_source);
 				}
 			}
-			return controllers;
 		},
 	},
 
@@ -445,7 +450,7 @@ var GodotWebXR = {
 		if (!GodotWebXR.session || !GodotWebXR.frame) {
 			return;
 		}
-		GodotWebXR.controllers = GodotWebXR.getControllers();
+		GodotWebXR.sampleInputSources();
 	},
 
 	godot_webxr_get_controller_count__proxy: 'sync',

@@ -49,10 +49,12 @@ extern float *godot_webxr_get_projection_for_eye(int p_eye);
 extern int godot_webxr_get_external_texture_for_eye(int p_eye);
 extern void godot_webxr_commit_for_eye(int p_eye);
 
-extern void godot_webxr_sample_controller_data();
+extern void godot_webxr_sample_input_sources();
+extern int godot_webxr_get_input_source_count();
+extern int godot_webxr_is_input_source_connected(int p_input_source);
+extern int godot_webxr_get_input_source_target_ray_mode(int p_input_source);
+extern float *godot_webxr_get_input_source_matrix(int p_input_source, int p_input_pose);
 extern int godot_webxr_get_controller_count();
-extern int godot_webxr_is_controller_connected(int p_controller);
-extern float *godot_webxr_get_controller_transform(int p_controller);
 extern int *godot_webxr_get_controller_buttons(int p_controller);
 extern int *godot_webxr_get_controller_axes(int p_controller);
 

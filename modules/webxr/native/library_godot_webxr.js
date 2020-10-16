@@ -175,9 +175,14 @@ var GodotWebXR = {
 			gl.bindTexture(gl.TEXTURE_2D, null);
 		},
 
-		// Holds the controllers list between function calls.
+		targetRayModeEnum: {
+			"gaze": 1,
+			"screen": 2,
+			"tracked-pointer": 3,
+		},
+
+		// Holds the input sources between function calls.
 		controllers: [],
-		// Holds a list of all the other input sources.
 		otherInputSources: [],
 
 		// Gets an array with 0-2 items, where the left hand (or sole tracker)
@@ -444,49 +449,80 @@ var GodotWebXR = {
 		GodotWebXR.blitTexture(gl, GodotWebXR.textures[view_index]);
 	},
 
-	godot_webxr_sample_controller_data__proxy: 'sync',
-	godot_webxr_sample_controller_data__sig: 'v',
-	godot_webxr_sample_controller_data: function () {
-		if (!GodotWebXR.session || !GodotWebXR.frame) {
-			return;
-		}
+	godot_webxr_sample_input_sources__proxy: 'sync',
+	godot_webxr_sample_input_sources__sig: 'v',
+	godot_webxr_sample_input_sources: function () {
 		GodotWebXR.sampleInputSources();
 	},
 
-	godot_webxr_get_controller_count__proxy: 'sync',
-	godot_webxr_get_controller_count__sig: 'i',
-	godot_webxr_get_controller_count: function () {
+	godot_webxr_get_input_source_count__proxy: 'sync',
+	godot_webxr_get_input_source_count__sig: 'i',
+	godot_webxr_get_input_source_count: function () {
 		if (!GodotWebXR.session || !GodotWebXR.frame) {
 			return 0;
 		}
-		return GodotWebXR.controllers.length;
+		return GodotWebXR.otherInputSources.length + 2;
 	},
 
-	godot_webxr_is_controller_connected__proxy: 'sync',
-	godot_webxr_is_controller_connected__sig: 'ii',
-	godot_webxr_is_controller_connected: function (p_controller) {
+	godot_webxr_is_input_source_connected__proxy: 'sync',
+	godot_webxr_is_input_source_connected__sig: 'ii',
+	godot_webxr_is_input_source_connected: function (p_input_source) {
 		if (!GodotWebXR.session || !GodotWebXR.frame) {
 			return false;
 		}
-		return !!GodotWebXR.controllers[p_controller];
+		if (p_input_source < 2) {
+			return !!GodotWebXR.controllers[p_input_source];
+		}
+		else {
+			return !!GodotWebXR.otherInputSources[p_input_source - 2];
+		}
 	},
 
-	godot_webxr_get_controller_transform__proxy: 'sync',
-	godot_webxr_get_controller_transform__sig: 'ii',
-	godot_webxr_get_controller_transform: function (p_controller) {
+	godot_webxr_get_input_source_target_ray_mode__proxy: 'sync',
+	godot_webxr_get_input_source_target_ray_mode__sig: 'ii',
+	godot_webxr_get_input_source_target_ray_mode: function (p_input_source) {
+		if (!GodotWebXR.session || !GodotWebXR.frame) {
+			return 0;
+		}
+		if (p_input_source < 2) {
+			const controllers = GodotWebXR.controllers;
+			if (controllers[p_input_source]) {
+				return GodotWebXR.targetRayModeEnum[controllers[p_input_source].targetRayMode];
+			}
+		}
+		else {
+			const otherInputSources = GodotWebXR.otherInputSources;
+			const index = p_input_source - 2;
+			if (otherInputSources[index]) {
+				return GodotWebXR.targetRayModeEnum[otherInputSources[index].targetRayModeEnum];
+			}
+		}
+		return 0;
+	},
+
+	godot_webxr_get_input_source_matrix__proxy: 'sync',
+	godot_webxr_get_input_source_matrix__sig: 'iii',
+	godot_webxr_get_input_source_matrix: function (p_input_source, p_input_pose) {
 		if (!GodotWebXR.session || !GodotWebXR.frame) {
 			return 0;
 		}
 
-		const controller = GodotWebXR.controllers[p_controller];
-		if (!controller) {
+		const input_source = p_input_source < 2
+			? GodotWebXR.controllers[p_input_source]
+			: GodotWebXR.otherInputSources[p_input_source - 2];
+		if (!input_source) {
 			return 0;
 		}
 
 		const frame = GodotWebXR.frame;
 		const space = GodotWebXR.space;
 
-		const pose = frame.getPose(controller.targetRaySpace, space);
+		const inputSpace = (p_input_pose === 1) ? input_source.gripSpace : input_source.targetRaySpace;
+		if (!inputSpace) {
+			return 0;
+		}
+
+		const pose = frame.getPose(inputSpace, space);
 		if (!pose) {
 			// This can mean that the controller lost tracking.
 			return 0;
@@ -498,6 +534,15 @@ var GodotWebXR = {
 			setValue(buf + (i * 4), matrix[i], 'float')
 		}
 		return buf;
+	},
+
+	godot_webxr_get_controller_count__proxy: 'sync',
+	godot_webxr_get_controller_count__sig: 'i',
+	godot_webxr_get_controller_count: function () {
+		if (!GodotWebXR.session || !GodotWebXR.frame) {
+			return 0;
+		}
+		return GodotWebXR.controllers.length;
 	},
 
 	godot_webxr_get_controller_buttons__proxy: 'sync',

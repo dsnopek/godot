@@ -296,7 +296,7 @@ void WebXRInterfaceJS::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_ta
 
 void WebXRInterfaceJS::process() {
 	if (initialized) {
-		godot_webxr_sample_controller_data();
+		godot_webxr_sample_input_sources();
 
 		int controller_count = godot_webxr_get_controller_count();
 		if (controller_count == 0) {
@@ -324,10 +324,10 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 		arvr_server->add_tracker(tracker);
 	}
 
-	if (godot_webxr_is_controller_connected(p_controller_id)) {
+	if (godot_webxr_is_input_source_connected(p_controller_id)) {
 		InputDefault *input = (InputDefault *)Input::get_singleton();
 
-		float *tracker_matrix = godot_webxr_get_controller_transform(p_controller_id);
+		float *tracker_matrix = godot_webxr_get_input_source_matrix(p_controller_id, 0);
 		if (tracker_matrix) {
 			Transform transform = _js_matrix_to_transform(tracker_matrix);
 			tracker->set_position(transform.origin);
@@ -358,9 +358,9 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 
 void WebXRInterfaceJS::_on_controller_changed() {
 	// Register "virtual" gamepads with Godot for the ones we get from WebXR.
-	godot_webxr_sample_controller_data();
+	godot_webxr_sample_input_sources();
 	for (int i = 0; i < 2; i++) {
-		bool controller_connected = godot_webxr_is_controller_connected(i);
+		bool controller_connected = godot_webxr_is_input_source_connected(i);
 		if (controllers_state[i] != controller_connected) {
 			Input::get_singleton()->joy_connection_changed(i + 100, controller_connected, i == 0 ? "Left" : "Right", "");
 			controllers_state[i] = controller_connected;

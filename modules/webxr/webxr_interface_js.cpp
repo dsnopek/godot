@@ -337,10 +337,22 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 
 		int *buttons = godot_webxr_get_controller_buttons(p_controller_id);
 		if (buttons) {
+			// @todo Do we need to convert L2 and L2 to axes like in os_javascript.cpp?
 			for (int i = 0; i < buttons[0]; i++) {
 				input->joy_button(p_controller_id + 100, i, *((float *)buttons + (i + 1)));
 			}
 			free(buttons);
+		}
+
+		int *axes = godot_webxr_get_controller_axes(p_controller_id);
+		if (axes) {
+			for (int i = 0; i < axes[0]; i++) {
+				InputDefault::JoyAxis joy_axis;
+				joy_axis.min = -1;
+				joy_axis.value = *((float *)axes + (i + 1));
+				input->joy_axis(p_controller_id + 100, i, joy_axis);
+			}
+			free(axes);
 		}
 	}
 }

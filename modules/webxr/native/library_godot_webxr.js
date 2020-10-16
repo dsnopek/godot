@@ -516,6 +516,29 @@ var GodotWebXR = {
 		}
 		return buf;
 	},
+
+	godot_webxr_get_controller_axes__proxy: 'sync',
+	godot_webxr_get_controller_axes__sig: 'ii',
+	godot_webxr_get_controller_axes: function (p_controller) {
+		if (GodotWebXR.controllers.length === 0) {
+			return 0;
+		}
+
+		const controller = GodotWebXR.controllers[p_controller];
+		if (!controller || !controller.gamepad) {
+			return 0;
+		}
+
+		const axes_count = controller.gamepad.axes.length;
+
+		let buf = Module._malloc((axes_count + 1) * 4);
+		setValue(buf, axes_count, 'i32');
+		for (let i = 0; i < axes_count; i++) {
+			setValue(buf + 4 + (i * 4), controller.gamepad.axes[i], 'float')
+		}
+		return buf;
+	},
+
 };
 
 autoAddDeps(GodotWebXR, "$GodotWebXR");

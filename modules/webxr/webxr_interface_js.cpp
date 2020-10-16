@@ -35,6 +35,7 @@
 #include "core/os/os.h"
 #include "emscripten.h"
 #include "godot_webxr.h"
+#include "main/input_default.h"
 #include "servers/visual/visual_server_globals.h"
 #include <stdlib.h>
 
@@ -323,8 +324,11 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 		arvr_server->add_tracker(tracker);
 	}
 
+	InputDefault *input = (InputDefault *)Input::get_singleton();
+
 	float *tracker_matrix;
 	Transform transform;
+	int *buttons;
 
 	if (godot_webxr_is_controller_connected(p_controller_id)) {
 		tracker_matrix = godot_webxr_get_controller_transform(p_controller_id);
@@ -333,6 +337,14 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 			tracker->set_position(transform.origin);
 			tracker->set_orientation(transform.basis);
 			free(tracker_matrix);
+		}
+
+		buttons = godot_webxr_get_controller_buttons(p_controller_id);
+		if (buttons) {
+			for (int i = 0; i < buttons[0]; i++) {
+				input->joy_button(p_controller_id + 100, i, *((float *)buttons + (i + 1)));
+			}
+			free(buttons);
 		}
 	}
 }

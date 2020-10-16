@@ -53,6 +53,7 @@ extern void godot_webxr_sample_controller_data();
 extern int godot_webxr_get_controller_count();
 extern int godot_webxr_is_controller_connected(int p_controller);
 extern float *godot_webxr_get_controller_transform(int p_controller);
+extern int *godot_webxr_get_controller_buttons(int p_controller);
 
 #ifdef __cplusplus
 }

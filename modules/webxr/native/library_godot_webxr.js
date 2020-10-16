@@ -493,7 +493,29 @@ var GodotWebXR = {
 			setValue(buf + (i * 4), matrix[i], 'float')
 		}
 		return buf;
-	}
+	},
+
+	godot_webxr_get_controller_buttons__proxy: 'sync',
+	godot_webxr_get_controller_buttons__sig: 'ii',
+	godot_webxr_get_controller_buttons: function (p_controller) {
+		if (GodotWebXR.controllers.length === 0) {
+			return 0;
+		}
+
+		const controller = GodotWebXR.controllers[p_controller];
+		if (!controller || !controller.gamepad) {
+			return 0;
+		}
+
+		const button_count = controller.gamepad.buttons.length;
+
+		let buf = Module._malloc((button_count + 1) * 4);
+		setValue(buf, button_count, 'i32');
+		for (let i = 0; i < button_count; i++) {
+			setValue(buf + 4 + (i * 4), controller.gamepad.buttons[i].value, 'float')
+		}
+		return buf;
+	},
 };
 
 autoAddDeps(GodotWebXR, "$GodotWebXR");

@@ -43,6 +43,11 @@ void WebXRInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_requested_reference_space_types"), &WebXRInterface::set_requested_reference_space_types);
 	ClassDB::bind_method(D_METHOD("get_requested_reference_space_types"), &WebXRInterface::get_requested_reference_space_types);
 
+	ClassDB::bind_method(D_METHOD("get_input_source_count"), &WebXRInterface::get_input_source_count);
+	ClassDB::bind_method(D_METHOD("is_input_source_connected"), &WebXRInterface::is_input_source_connected);
+	ClassDB::bind_method(D_METHOD("get_input_source_target_ray_mode"), &WebXRInterface::get_input_source_target_ray_mode);
+	ClassDB::bind_method(D_METHOD("get_input_source_transform"), &WebXRInterface::get_input_source_target_ray_mode);
+
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "session_mode", PROPERTY_HINT_NONE), "set_session_mode", "get_session_mode");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "required_features", PROPERTY_HINT_NONE), "set_required_features", "get_required_features");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "optional_features", PROPERTY_HINT_NONE), "set_optional_features", "get_optional_features");
@@ -53,4 +58,11 @@ void WebXRInterface::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("session_started"));
 	ADD_SIGNAL(MethodInfo("session_ended"));
 	ADD_SIGNAL(MethodInfo("session_failed", PropertyInfo(Variant::STRING, "message")));
+
+	BIND_ENUM_CONSTANT(WEBXR_TARGET_RAY_MODE_GAZE);
+	BIND_ENUM_CONSTANT(WEBXR_TARGET_RAY_MODE_SCREEN);
+	BIND_ENUM_CONSTANT(WEBXR_TARGET_RAY_MODE_TRACKED_POINTER);
+
+	BIND_ENUM_CONSTANT(WEBXR_INPUT_SOURCE_TRANSFORM_TYPE_TARGET_RAY);
+	BIND_ENUM_CONSTANT(WEBXR_INPUT_SOURCE_TRANSFORM_TYPE_GRIP);
 }

@@ -47,7 +47,6 @@ protected:
 	static void _bind_methods();
 
 public:
-	// @todo Should these really use enums instead of strings?
 	virtual void is_session_supported(const String &p_session_mode) = 0;
 	virtual void set_session_mode(String p_session_mode) = 0;
 	virtual String get_session_mode() const = 0;
@@ -58,6 +57,26 @@ public:
 	virtual void set_requested_reference_space_types(String p_requested_reference_space_types) = 0;
 	virtual String get_requested_reference_space_types() const = 0;
 	virtual String get_reference_space_type() const = 0;
+
+	enum TargetRayMode {
+		WEBXR_TARGET_RAY_MODE_UNKNOWN = 0,
+		WEBXR_TARGET_RAY_MODE_GAZE = 1,
+		WEBXR_TARGET_RAY_MODE_SCREEN = 2,
+		WEBXR_TARGET_RAY_MODE_TRACKED_POINTER = 3,
+	};
+
+	enum InputSourceTransformType {
+		WEBXR_INPUT_SOURCE_TRANSFORM_TYPE_TARGET_RAY = 0,
+		WEBXR_INPUT_SOURCE_TRANSFORM_TYPE_GRIP = 1,
+	};
+
+	virtual int get_input_source_count() const = 0;
+	virtual bool is_input_source_connected(int p_input_source) const = 0;
+	virtual TargetRayMode get_input_source_target_ray_mode(int p_input_source) const = 0;
+	virtual Transform get_input_source_transform(int p_input_source, InputSourceTransformType p_transform_type = WEBXR_INPUT_SOURCE_TRANSFORM_TYPE_TARGET_RAY) const = 0;
 };
+
+VARIANT_ENUM_CAST(WebXRInterface::TargetRayMode);
+VARIANT_ENUM_CAST(WebXRInterface::InputSourceTransformType);
 
 #endif // WEBXR_INTERFACE_H

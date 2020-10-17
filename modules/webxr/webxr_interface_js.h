@@ -47,7 +47,6 @@ class WebXRInterfaceJS : public WebXRInterface {
 private:
 	bool initialized;
 
-	// @todo Should these really use enums instead of strings?
 	String session_mode;
 	String required_features;
 	String optional_features;
@@ -56,7 +55,7 @@ private:
 
 	bool controllers_state[2];
 
-	Transform _js_matrix_to_transform(float *p_js_matrix);
+	Transform _js_matrix_to_transform(float *p_js_matrix) const;
 	void _update_tracker(int p_controller_id);
 
 public:
@@ -85,6 +84,11 @@ public:
 	virtual CameraMatrix get_projection_for_eye(ARVRInterface::Eyes p_eye, real_t p_aspect, real_t p_z_near, real_t p_z_far);
 	virtual unsigned int get_external_texture_for_eye(ARVRInterface::Eyes p_eye);
 	virtual void commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_target, const Rect2 &p_screen_rect);
+
+	virtual int get_input_source_count() const;
+	virtual bool is_input_source_connected(int p_input_source) const;
+	virtual TargetRayMode get_input_source_target_ray_mode(int p_input_source) const;
+	virtual Transform get_input_source_transform(int p_input_source, WebXRInterface::InputSourceTransformType p_transform_type = WebXRInterface::WEBXR_INPUT_SOURCE_TRANSFORM_TYPE_TARGET_RAY) const;
 
 	virtual void process();
 	virtual void notification(int p_what);

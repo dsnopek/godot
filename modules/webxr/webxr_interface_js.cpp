@@ -198,7 +198,7 @@ void WebXRInterfaceJS::uninitialize() {
 	};
 };
 
-Transform WebXRInterfaceJS::_js_matrix_to_transform(float *p_js_matrix) {
+Transform WebXRInterfaceJS::_js_matrix_to_transform(float *p_js_matrix) const {
 	Transform transform;
 
 	transform.basis.elements[0].x = p_js_matrix[0];
@@ -293,6 +293,39 @@ void WebXRInterfaceJS::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_ta
 	}
 	godot_webxr_commit_for_eye(p_eye);
 };
+
+int WebXRInterfaceJS::get_input_source_count() const {
+	if (!initialized) {
+		return 0;
+	}
+	return godot_webxr_get_input_source_count();
+}
+
+bool WebXRInterfaceJS::is_input_source_connected(int p_input_source) const {
+	if (!initialized) {
+		return false;
+	}
+	return godot_webxr_is_input_source_connected(p_input_source);
+}
+
+WebXRInterface::TargetRayMode WebXRInterfaceJS::get_input_source_target_ray_mode(int p_input_source) const {
+	if (!initialized) {
+		return WebXRInterface::WEBXR_TARGET_RAY_MODE_UNKNOWN;
+	}
+	return (WebXRInterface::TargetRayMode)godot_webxr_get_input_source_target_ray_mode(p_input_source);
+}
+
+Transform WebXRInterfaceJS::get_input_source_transform(int p_input_source, WebXRInterface::InputSourceTransformType p_transform_type) const {
+	Transform transform;
+	if (initialized) {
+		float *js_matrix = godot_webxr_get_input_source_matrix(p_input_source, p_transform_type);
+		if (js_matrix) {
+			transform = _js_matrix_to_transform(js_matrix);
+			free(js_matrix);
+		}
+	}
+	return transform;
+}
 
 void WebXRInterfaceJS::process() {
 	if (initialized) {

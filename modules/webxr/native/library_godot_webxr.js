@@ -209,6 +209,19 @@ var GodotWebXR = {
 				}
 			}
 		},
+		getInputSourceId: (input_source) => {
+			let idx = GodotWebXR.controllers.indexOf(input_source);
+			if (idx === -1) {
+				idx = GodotWebXR.otherInputSources.indexOf(input_source);
+				if (idx === -1) {
+					idx = 0;
+				}
+				else {
+					idx += 2;
+				}
+			}
+			return idx;
+		},
 	},
 
 	godot_webxr_is_supported__proxy: 'sync',
@@ -269,6 +282,12 @@ var GodotWebXR = {
 					ccall('_emwebxr_on_controller_changed', 'void', [], []);
 				}
 			});
+
+			for (let input_event of ['selectstart', 'select', 'selectend', 'squeezestart', 'squeeze', 'squeezeend']) {
+				session.addEventListener(input_event, function (evt) {
+					ccall('_emwebxr_on_input_event', 'void', ['string', 'number'], [input_event, GodotWebXR.getInputSourceId(evt.inputSource)]);
+				});
+			}
 
 			const gl = Module.ctx;
 			gl.makeXRCompatible().then(function () {

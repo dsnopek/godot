@@ -94,6 +94,17 @@ extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_controller_changed() {
 	((WebXRInterfaceJS *)interface.ptr())->_on_controller_changed();
 }
 
+extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_input_event(char *p_signal_name, int p_input_source) {
+	ARVRServer *arvr_server = ARVRServer::get_singleton();
+	ERR_FAIL_NULL(arvr_server);
+
+	Ref<ARVRInterface> interface = arvr_server->find_interface("WebXR");
+	ERR_FAIL_COND(interface.is_null());
+
+	String signal_name = String(p_signal_name);
+	interface->emit_signal(signal_name, p_input_source);
+}
+
 void WebXRInterfaceJS::is_session_supported(const String &p_session_mode) {
 	godot_webxr_is_session_supported(p_session_mode.utf8().get_data());
 }

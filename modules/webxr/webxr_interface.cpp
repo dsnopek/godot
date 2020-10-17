@@ -59,6 +59,13 @@ void WebXRInterface::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("session_ended"));
 	ADD_SIGNAL(MethodInfo("session_failed", PropertyInfo(Variant::STRING, "message")));
 
+	ADD_SIGNAL(MethodInfo("selectstart", PropertyInfo(Variant::INT, "input_source_id")));
+	ADD_SIGNAL(MethodInfo("select", PropertyInfo(Variant::INT, "input_source_id")));
+	ADD_SIGNAL(MethodInfo("selectend", PropertyInfo(Variant::INT, "input_source_id")));
+	ADD_SIGNAL(MethodInfo("squeezestart", PropertyInfo(Variant::INT, "input_source_id")));
+	ADD_SIGNAL(MethodInfo("squeeze", PropertyInfo(Variant::INT, "input_source_id")));
+	ADD_SIGNAL(MethodInfo("squeezeend", PropertyInfo(Variant::INT, "input_source_id")));
+
 	BIND_ENUM_CONSTANT(WEBXR_TARGET_RAY_MODE_GAZE);
 	BIND_ENUM_CONSTANT(WEBXR_TARGET_RAY_MODE_SCREEN);
 	BIND_ENUM_CONSTANT(WEBXR_TARGET_RAY_MODE_TRACKED_POINTER);

@@ -101,7 +101,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_input_event(char *p_signal_name
 	Ref<ARVRInterface> interface = arvr_server->find_interface("WebXR");
 	ERR_FAIL_COND(interface.is_null());
 
-	String signal_name = String(p_signal_name);
+	StringName signal_name = StringName(p_signal_name);
 	interface->emit_signal(signal_name, p_input_source);
 }
 

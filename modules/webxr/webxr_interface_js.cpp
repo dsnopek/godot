@@ -329,7 +329,7 @@ WebXRInterface::TargetRayMode WebXRInterfaceJS::get_input_source_target_ray_mode
 Transform WebXRInterfaceJS::get_input_source_transform(int p_input_source, WebXRInterface::InputSourceTransformType p_transform_type) const {
 	Transform transform;
 	if (initialized) {
-		float *js_matrix = godot_webxr_get_input_source_matrix(p_input_source, p_transform_type);
+		float *js_matrix = godot_webxr_get_input_source_transform(p_input_source, p_transform_type);
 		if (js_matrix) {
 			transform = _js_matrix_to_transform(js_matrix);
 			free(js_matrix);
@@ -371,7 +371,7 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 	if (godot_webxr_is_input_source_connected(p_controller_id)) {
 		InputDefault *input = (InputDefault *)Input::get_singleton();
 
-		float *tracker_matrix = godot_webxr_get_input_source_matrix(p_controller_id, 0);
+		float *tracker_matrix = godot_webxr_get_input_source_transform(p_controller_id, 0);
 		if (tracker_matrix) {
 			Transform transform = _js_matrix_to_transform(tracker_matrix);
 			tracker->set_position(transform.origin);

@@ -33,20 +33,20 @@
 
 void WebXRInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_session_supported", "session_mode"), &WebXRInterface::is_session_supported);
-	ClassDB::bind_method(D_METHOD("set_session_mode"), &WebXRInterface::set_session_mode);
+	ClassDB::bind_method(D_METHOD("set_session_mode", "session_mode"), &WebXRInterface::set_session_mode);
 	ClassDB::bind_method(D_METHOD("get_session_mode"), &WebXRInterface::get_session_mode);
-	ClassDB::bind_method(D_METHOD("set_required_features"), &WebXRInterface::set_required_features);
+	ClassDB::bind_method(D_METHOD("set_required_features", "required_features"), &WebXRInterface::set_required_features);
 	ClassDB::bind_method(D_METHOD("get_required_features"), &WebXRInterface::get_required_features);
-	ClassDB::bind_method(D_METHOD("set_optional_features"), &WebXRInterface::set_optional_features);
+	ClassDB::bind_method(D_METHOD("set_optional_features", "optional_features"), &WebXRInterface::set_optional_features);
 	ClassDB::bind_method(D_METHOD("get_optional_features"), &WebXRInterface::get_optional_features);
 	ClassDB::bind_method(D_METHOD("get_reference_space_type"), &WebXRInterface::get_reference_space_type);
-	ClassDB::bind_method(D_METHOD("set_requested_reference_space_types"), &WebXRInterface::set_requested_reference_space_types);
+	ClassDB::bind_method(D_METHOD("set_requested_reference_space_types", "requested_reference_space_types"), &WebXRInterface::set_requested_reference_space_types);
 	ClassDB::bind_method(D_METHOD("get_requested_reference_space_types"), &WebXRInterface::get_requested_reference_space_types);
 
 	ClassDB::bind_method(D_METHOD("get_input_source_count"), &WebXRInterface::get_input_source_count);
-	ClassDB::bind_method(D_METHOD("is_input_source_connected"), &WebXRInterface::is_input_source_connected);
-	ClassDB::bind_method(D_METHOD("get_input_source_target_ray_mode"), &WebXRInterface::get_input_source_target_ray_mode);
-	ClassDB::bind_method(D_METHOD("get_input_source_transform"), &WebXRInterface::get_input_source_target_ray_mode);
+	ClassDB::bind_method(D_METHOD("is_input_source_connected", "input_source_id"), &WebXRInterface::is_input_source_connected);
+	ClassDB::bind_method(D_METHOD("get_input_source_target_ray_mode", "input_source_id"), &WebXRInterface::get_input_source_target_ray_mode);
+	ClassDB::bind_method(D_METHOD("get_input_source_transform", "input_source_id", "transform_type"), &WebXRInterface::get_input_source_transform, DEFVAL(WebXRInterface::WEBXR_INPUT_SOURCE_TRANSFORM_TYPE_TARGET_RAY));
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "session_mode", PROPERTY_HINT_NONE), "set_session_mode", "get_session_mode");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "required_features", PROPERTY_HINT_NONE), "set_required_features", "get_required_features");

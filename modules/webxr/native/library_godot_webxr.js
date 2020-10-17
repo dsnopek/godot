@@ -519,9 +519,9 @@ var GodotWebXR = {
 		return 0;
 	},
 
-	godot_webxr_get_input_source_matrix__proxy: 'sync',
-	godot_webxr_get_input_source_matrix__sig: 'iii',
-	godot_webxr_get_input_source_matrix: function (p_input_source, p_input_pose) {
+	godot_webxr_get_input_source_transform__proxy: 'sync',
+	godot_webxr_get_input_source_transform__sig: 'iii',
+	godot_webxr_get_input_source_transform: function (p_input_source, p_transform_type) {
 		if (!GodotWebXR.session || !GodotWebXR.frame) {
 			return 0;
 		}
@@ -536,7 +536,7 @@ var GodotWebXR = {
 		const frame = GodotWebXR.frame;
 		const space = GodotWebXR.space;
 
-		const inputSpace = (p_input_pose === 1) ? input_source.gripSpace : input_source.targetRaySpace;
+		const inputSpace = (p_transform_type === 1) ? input_source.gripSpace : input_source.targetRaySpace;
 		if (!inputSpace) {
 			return 0;
 		}

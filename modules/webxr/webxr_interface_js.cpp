@@ -35,6 +35,7 @@
 #include "core/os/os.h"
 #include "emscripten.h"
 #include "godot_webxr.h"
+#include "main/input_default.h"
 #include "servers/visual/visual_server_globals.h"
 #include <stdlib.h>
 
@@ -81,6 +82,16 @@ extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_failed(char *p_message)
 
 	String message = String(p_message);
 	interface->emit_signal("session_failed", message);
+}
+
+extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_controller_changed() {
+	ARVRServer *arvr_server = ARVRServer::get_singleton();
+	ERR_FAIL_NULL(arvr_server);
+
+	Ref<ARVRInterface> interface = arvr_server->find_interface("WebXR");
+	ERR_FAIL_COND(interface.is_null());
+
+	((WebXRInterfaceJS *)interface.ptr())->_on_controller_changed();
 }
 
 void WebXRInterfaceJS::is_session_supported(const String &p_session_mode) {
@@ -285,49 +296,80 @@ void WebXRInterfaceJS::commit_for_eye(ARVRInterface::Eyes p_eye, RID p_render_ta
 
 void WebXRInterfaceJS::process() {
 	if (initialized) {
-		// @todo This is so much data to pass back - we should really be using some kind of struct!
-		int *tracker_data = godot_webxr_get_tracker_data();
-		if (tracker_data == nullptr) {
+		godot_webxr_sample_controller_data();
+
+		int controller_count = godot_webxr_get_controller_count();
+		if (controller_count == 0) {
 			return;
 		}
 
-		int tracker_count = tracker_data[0];
-		if (tracker_count == 0) {
-			return;
+		for (int i = 0; i < controller_count; i++) {
+			_update_tracker(i);
 		}
-
-		float *tracker_matrices = (float *)(tracker_data + 1);
-		for (int i = 0; i < tracker_count; i++) {
-			_update_tracker(i + 1, _js_matrix_to_transform(tracker_matrices + (i * 16)));
-		}
-
-		free(tracker_data);
 	};
 };
 
-void WebXRInterfaceJS::_update_tracker(int p_tracker_id, Transform p_transform) {
+void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL(arvr_server);
 
-	ARVRPositionalTracker *tracker = arvr_server->find_by_type_and_id(ARVRServer::TRACKER_CONTROLLER, p_tracker_id);
+	ARVRPositionalTracker *tracker = arvr_server->find_by_type_and_id(ARVRServer::TRACKER_CONTROLLER, p_controller_id + 1);
 	if (tracker == nullptr) {
 		tracker = memnew(ARVRPositionalTracker);
-		tracker->set_name(p_tracker_id == 1 ? "Left" : "Right");
+		tracker->set_name(p_controller_id == 0 ? "Left" : "Right");
 		tracker->set_type(ARVRServer::TRACKER_CONTROLLER);
-		tracker->set_hand(p_tracker_id == 1 ? ARVRPositionalTracker::TRACKER_LEFT_HAND : ARVRPositionalTracker::TRACKER_RIGHT_HAND);
-		// Unfortunately, we can't just use tracker->set_joy_id() because WebXR gamepads aren't
-		// registered with the normal Gamepad API per the WebXR spec.
-		//
-		// See: https://immersive-web.github.io/webxr-gamepads-module/#navigator-differences
+		tracker->set_hand(p_controller_id == 0 ? ARVRPositionalTracker::TRACKER_LEFT_HAND : ARVRPositionalTracker::TRACKER_RIGHT_HAND);
+		// Use the ids we're giving to our "virtual" gamepads.
+		tracker->set_joy_id(p_controller_id + 100);
 		arvr_server->add_tracker(tracker);
 	}
 
-	tracker->set_position(p_transform.origin);
-	tracker->set_orientation(p_transform.basis);
+	if (godot_webxr_is_controller_connected(p_controller_id)) {
+		InputDefault *input = (InputDefault *)Input::get_singleton();
+
+		float *tracker_matrix = godot_webxr_get_controller_transform(p_controller_id);
+		if (tracker_matrix) {
+			Transform transform = _js_matrix_to_transform(tracker_matrix);
+			tracker->set_position(transform.origin);
+			tracker->set_orientation(transform.basis);
+			free(tracker_matrix);
+		}
+
+		int *buttons = godot_webxr_get_controller_buttons(p_controller_id);
+		if (buttons) {
+			for (int i = 0; i < buttons[0]; i++) {
+				input->joy_button(p_controller_id + 100, i, *((float *)buttons + (i + 1)));
+			}
+			free(buttons);
+		}
+
+		int *axes = godot_webxr_get_controller_axes(p_controller_id);
+		if (axes) {
+			for (int i = 0; i < axes[0]; i++) {
+				InputDefault::JoyAxis joy_axis;
+				joy_axis.min = -1;
+				joy_axis.value = *((float *)axes + (i + 1));
+				input->joy_axis(p_controller_id + 100, i, joy_axis);
+			}
+			free(axes);
+		}
+	}
+}
+
+void WebXRInterfaceJS::_on_controller_changed() {
+	// Register "virtual" gamepads with Godot for the ones we get from WebXR.
+	godot_webxr_sample_controller_data();
+	for (int i = 0; i < 2; i++) {
+		bool controller_connected = godot_webxr_is_controller_connected(i);
+		if (controllers_state[i] != controller_connected) {
+			Input::get_singleton()->joy_connection_changed(i + 100, controller_connected, i == 0 ? "Left" : "Right", "");
+			controllers_state[i] = controller_connected;
+		}
+	}
 }
 
 void WebXRInterfaceJS::notification(int p_what) {
-	// nothing to do here, I guess we could pauze our sensors...
+	// Nothing to do here.
 }
 
 WebXRInterfaceJS::WebXRInterfaceJS() {

@@ -174,6 +174,31 @@ var GodotWebXR = {
 
 			gl.bindTexture(gl.TEXTURE_2D, null);
 		},
+
+		// Holds the controllers list between function calls.
+		controllers: [],
+
+		// Gets an array with 0-2 items, where the left hand (or sole tracker)
+		// is the first element, and the right hand is the second element.
+		getControllers: () => {
+			if (!GodotWebXR.session) {
+				return [];
+			}
+
+			const controllers = [];
+			for (let input_source of GodotWebXR.session.inputSources) {
+				if (input_source.targetRayMode !== 'tracked-pointer') {
+					continue;
+				}
+				if (input_source.handedness === 'right') {
+					controllers[1] = input_source;
+				}
+				else if (input_source.handedness === 'left' || !controllers[0]) {
+					controllers[0] = input_source;
+				}
+			}
+			return controllers;
+		},
 	},
 
 	godot_webxr_is_supported__proxy: 'sync',
@@ -219,6 +244,20 @@ var GodotWebXR = {
 
 			session.addEventListener('end', function (evt) {
 				ccall('_emwebxr_on_session_ended', 'void', [], []);
+			});
+
+			session.addEventListener('inputsourceschange', function (evt) {
+				let controller_changed = false;
+				for (let lst of [evt.added, evt.removed]) {
+					for (let input_source of lst) {
+						if (input_source.targetRayMode === 'tracked-pointer') {
+							controller_changed = true;
+						}
+					}
+				}
+				if (controller_changed) {
+					ccall('_emwebxr_on_controller_changed', 'void', [], []);
+				}
 			});
 
 			const gl = Module.ctx;
@@ -400,50 +439,106 @@ var GodotWebXR = {
 		GodotWebXR.blitTexture(gl, GodotWebXR.textures[view_index]);
 	},
 
-	// @todo This is too much data! Pass back a struct.
-	godot_webxr_get_tracker_data__proxy: 'sync',
-	godot_webxr_get_tracker_data__sig: 'i',
-	godot_webxr_get_tracker_data: function () {
+	godot_webxr_sample_controller_data__proxy: 'sync',
+	godot_webxr_sample_controller_data__sig: 'v',
+	godot_webxr_sample_controller_data: function () {
+		if (!GodotWebXR.session || !GodotWebXR.frame) {
+			return;
+		}
+		GodotWebXR.controllers = GodotWebXR.getControllers();
+	},
+
+	godot_webxr_get_controller_count__proxy: 'sync',
+	godot_webxr_get_controller_count__sig: 'i',
+	godot_webxr_get_controller_count: function () {
+		if (!GodotWebXR.session || !GodotWebXR.frame) {
+			return 0;
+		}
+		return GodotWebXR.controllers.length;
+	},
+
+	godot_webxr_is_controller_connected__proxy: 'sync',
+	godot_webxr_is_controller_connected__sig: 'ii',
+	godot_webxr_is_controller_connected: function (p_controller) {
+		if (!GodotWebXR.session || !GodotWebXR.frame) {
+			return false;
+		}
+		return !!GodotWebXR.controllers[p_controller];
+	},
+
+	godot_webxr_get_controller_transform__proxy: 'sync',
+	godot_webxr_get_controller_transform__sig: 'ii',
+	godot_webxr_get_controller_transform: function (p_controller) {
 		if (!GodotWebXR.session || !GodotWebXR.frame) {
 			return 0;
 		}
 
-		const session = GodotWebXR.session;
+		const controller = GodotWebXR.controllers[p_controller];
+		if (!controller) {
+			return 0;
+		}
+
 		const frame = GodotWebXR.frame;
 		const space = GodotWebXR.space;
 
-		// We want to construct a 0-2 item array, where the left hand (or sole tracker)
-		// is the first element, and the right hand is the second element.
-		const trackers = [];
-		for (let input_source of session.inputSources) {
-			// @todo Are there pointers which Godot would make into controllers which don't have a gripSpace?
-			if (input_source.targetRayMode !== 'tracked-pointer' || !input_source.gripSpace) {
-				continue;
-			}
-			if (input_source.handedness === 'right') {
-				trackers[1] = input_source;
-			}
-			else if (input_source.handedness === 'left' || !trackers[0]) {
-				trackers[0] = input_source;
-			}
+		const pose = frame.getPose(controller.targetRaySpace, space);
+		if (!pose) {
+			// This can mean that the controller lost tracking.
+			return 0;
 		}
+		const matrix = pose.transform.matrix;
 
-		// Fill out this buffer with the size, and then each transform matrix.
-		let buf = Module._malloc(4 + ((16 * 4) * trackers.length));
-		setValue(buf, trackers.length, 'i32');
-		for (let i = 0; i < trackers.length; i++) {
-			if (trackers[i]) {
-				let gripPose = frame.getPose(trackers[i].gripSpace, space);
-				// @todo I think if we don't get a grip pose, it can mean that tracking has been lost - if so flag that!
-				if (gripPose) {
-					for (let j = 0; j < 16; j++) {
-						setValue(buf + 4 + (i * 4 * 16) + (j * 4), gripPose.transform.matrix[j], 'float')
-					}
-				}
-			}
+		let buf = Module._malloc(16 * 4);
+		for (let i = 0; i < 16; i++) {
+			setValue(buf + (i * 4), matrix[i], 'float')
 		}
 		return buf;
-	}
+	},
+
+	godot_webxr_get_controller_buttons__proxy: 'sync',
+	godot_webxr_get_controller_buttons__sig: 'ii',
+	godot_webxr_get_controller_buttons: function (p_controller) {
+		if (GodotWebXR.controllers.length === 0) {
+			return 0;
+		}
+
+		const controller = GodotWebXR.controllers[p_controller];
+		if (!controller || !controller.gamepad) {
+			return 0;
+		}
+
+		const button_count = controller.gamepad.buttons.length;
+
+		let buf = Module._malloc((button_count + 1) * 4);
+		setValue(buf, button_count, 'i32');
+		for (let i = 0; i < button_count; i++) {
+			setValue(buf + 4 + (i * 4), controller.gamepad.buttons[i].value, 'float')
+		}
+		return buf;
+	},
+
+	godot_webxr_get_controller_axes__proxy: 'sync',
+	godot_webxr_get_controller_axes__sig: 'ii',
+	godot_webxr_get_controller_axes: function (p_controller) {
+		if (GodotWebXR.controllers.length === 0) {
+			return 0;
+		}
+
+		const controller = GodotWebXR.controllers[p_controller];
+		if (!controller || !controller.gamepad) {
+			return 0;
+		}
+
+		const axes_count = controller.gamepad.axes.length;
+
+		let buf = Module._malloc((axes_count + 1) * 4);
+		setValue(buf, axes_count, 'i32');
+		for (let i = 0; i < axes_count; i++) {
+			setValue(buf + 4 + (i * 4), controller.gamepad.axes[i], 'float')
+		}
+		return buf;
+	},
+
 };
 
 autoAddDeps(GodotWebXR, "$GodotWebXR");

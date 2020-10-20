@@ -54,8 +54,10 @@ private:
 	String requested_reference_space_types;
 	String reference_space_type;
 
+	bool controllers_state[2];
+
 	Transform _js_matrix_to_transform(float *p_js_matrix);
-	void _update_tracker(int p_tracker_id, Transform p_transform);
+	void _update_tracker(int p_controller_id);
 
 public:
 	virtual void is_session_supported(const String &p_session_mode);
@@ -86,6 +88,8 @@ public:
 
 	virtual void process();
 	virtual void notification(int p_what);
+
+	void _on_controller_changed();
 
 	WebXRInterfaceJS();
 	~WebXRInterfaceJS();

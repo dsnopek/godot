@@ -355,9 +355,9 @@ void MeshInstance::_initialize_skinning(bool p_force_reset) {
 	}
 
 	RID render_mesh = software_skinning ? software_skinning->mesh_instance->get_rid() : mesh->get_rid();
-	set_base(render_mesh);
+	if (update_mesh || (render_mesh != get_base())) {
+		set_base(render_mesh);
 
-	if (update_mesh) {
 		// Update instance materials after switching mesh.
 		int surface_count = mesh->get_surface_count();
 		for (int surface_index = 0; surface_index < surface_count; ++surface_index) {
@@ -370,7 +370,11 @@ void MeshInstance::_initialize_skinning(bool p_force_reset) {
 
 void MeshInstance::_update_skinning() {
 	ERR_FAIL_COND(!_is_software_skinning_enabled());
+#if defined(TOOLS_ENABLED) && defined(DEBUG_ENABLED)
 	ERR_FAIL_COND(!is_visible_in_tree());
+#else
+	ERR_FAIL_COND(!is_visible());
+#endif
 
 	ERR_FAIL_COND(!software_skinning);
 	Ref<Mesh> software_skinning_mesh = software_skinning->mesh_instance;

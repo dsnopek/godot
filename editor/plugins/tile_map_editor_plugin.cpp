@@ -93,6 +93,25 @@ void TileMapEditor::_notification(int p_what) {
 		case NOTIFICATION_EXIT_TREE: {
 			get_tree()->disconnect("node_removed", this, "_node_removed");
 		} break;
+
+		case NOTIFICATION_WM_FOCUS_OUT: {
+			if (tool == TOOL_PAINTING) {
+				Vector<int> ids = get_selected_tiles();
+
+				if (ids.size() > 0 && ids[0] != TileMap::INVALID_CELL) {
+					_set_cell(over_tile, ids, flip_h, flip_v, transpose);
+					_finish_undo();
+
+					paint_undo.clear();
+				}
+
+				tool = TOOL_NONE;
+				_update_button_tool();
+			}
+
+			// set flag to ignore over_tile on refocus
+			refocus_over_tile = true;
+		} break;
 	}
 }
 
@@ -405,7 +424,9 @@ struct _PaletteEntry {
 	String name;
 
 	bool operator<(const _PaletteEntry &p_rhs) const {
-		return name < p_rhs.name;
+		// Natural no case comparison will compare strings based on CharType
+		// order (except digits) and on numbers that start on the same position.
+		return name.naturalnocasecmp_to(p_rhs.name) < 0;
 	}
 };
 } // namespace
@@ -1272,6 +1293,12 @@ bool TileMapEditor::forward_gui_input(const Ref<InputEvent> &p_event) {
 			CanvasItemEditor::get_singleton()->update_viewport();
 		}
 
+		if (refocus_over_tile) {
+			// editor lost focus; forget last tile position
+			old_over_tile = new_over_tile;
+			refocus_over_tile = false;
+		}
+
 		int tile_under = node->get_cell(over_tile.x, over_tile.y);
 		String tile_name = "none";
 
@@ -2044,7 +2071,11 @@ TileMapEditor::TileMapEditor(EditorNode *p_editor) {
 	// Tools.
 	paint_button = memnew(ToolButton);
 	paint_button->set_shortcut(ED_SHORTCUT("tile_map_editor/paint_tile", TTR("Paint Tile"), KEY_P));
+#ifdef OSX_ENABLED
+	paint_button->set_tooltip(TTR("Shift+LMB: Line Draw\nShift+Command+LMB: Rectangle Paint"));
+#else
 	paint_button->set_tooltip(TTR("Shift+LMB: Line Draw\nShift+Ctrl+LMB: Rectangle Paint"));
+#endif
 	paint_button->connect("pressed", this, "_button_tool_select", make_binds(TOOL_NONE));
 	paint_button->set_toggle_mode(true);
 	toolbar->add_child(paint_button);

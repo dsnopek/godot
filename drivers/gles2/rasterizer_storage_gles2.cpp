@@ -1452,6 +1452,7 @@ void RasterizerStorageGLES2::_update_shader(Shader *p_shader) const {
 			shaders.actions_canvas.usage_flag_pointers["TIME"] = &p_shader->canvas_item.uses_time;
 			shaders.actions_canvas.usage_flag_pointers["MODULATE"] = &p_shader->canvas_item.uses_modulate;
 			shaders.actions_canvas.usage_flag_pointers["COLOR"] = &p_shader->canvas_item.uses_color;
+
 			shaders.actions_canvas.usage_flag_pointers["VERTEX"] = &p_shader->canvas_item.uses_vertex;
 
 			actions = &shaders.actions_canvas;
@@ -1552,10 +1553,10 @@ void RasterizerStorageGLES2::_update_shader(Shader *p_shader) const {
 	// some logic for batching
 	if (p_shader->mode == VS::SHADER_CANVAS_ITEM) {
 		if (p_shader->canvas_item.uses_modulate | p_shader->canvas_item.uses_color) {
-			p_shader->canvas_item.batch_flags |= Shader::CanvasItem::PREVENT_COLOR_BAKING;
+			p_shader->canvas_item.batch_flags |= RasterizerStorageCommon::PREVENT_COLOR_BAKING;
 		}
 		if (p_shader->canvas_item.uses_vertex) {
-			p_shader->canvas_item.batch_flags |= Shader::CanvasItem::PREVENT_VERTEX_BAKING;
+			p_shader->canvas_item.batch_flags |= RasterizerStorageCommon::PREVENT_VERTEX_BAKING;
 		}
 	}
 
@@ -3787,14 +3788,17 @@ void RasterizerStorageGLES2::_update_skeleton_transform_buffer(const PoolVector<
 
 	glBindBuffer(GL_ARRAY_BUFFER, resources.skeleton_transform_buffer);
 
+	uint32_t buffer_size = p_size * sizeof(float);
+
 	if (p_size > resources.skeleton_transform_buffer_size) {
 		// new requested buffer is bigger, so resizing the GPU buffer
 
 		resources.skeleton_transform_buffer_size = p_size;
 
-		glBufferData(GL_ARRAY_BUFFER, p_size * sizeof(float), p_data.read().ptr(), GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, buffer_size, p_data.read().ptr(), GL_DYNAMIC_DRAW);
 	} else {
-		glBufferSubData(GL_ARRAY_BUFFER, 0, p_size * sizeof(float), p_data.read().ptr());
+		// this may not be best, it could be better to use glBufferData in both cases.
+		buffer_orphan_and_upload(resources.skeleton_transform_buffer_size, 0, buffer_size, p_data.read().ptr());
 	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -3855,7 +3859,7 @@ RID RasterizerStorageGLES2::light_create(VS::LightType p_type) {
 	light->directional_blend_splits = false;
 	light->directional_range_mode = VS::LIGHT_DIRECTIONAL_SHADOW_DEPTH_RANGE_STABLE;
 	light->reverse_cull = false;
-	light->use_gi = true;
+	light->bake_mode = VS::LIGHT_BAKE_INDIRECT;
 	light->version = 0;
 
 	return light_owner.make_rid(light);
@@ -3944,10 +3948,15 @@ void RasterizerStorageGLES2::light_set_reverse_cull_face_mode(RID p_light, bool 
 }
 
 void RasterizerStorageGLES2::light_set_use_gi(RID p_light, bool p_enabled) {
+	WARN_DEPRECATED_MSG("'VisualServer.light_set_use_gi' is deprecated and will be removed in a future version. Use 'VisualServer.light_set_bake_mode' instead.");
+	light_set_bake_mode(p_light, p_enabled ? VS::LightBakeMode::LIGHT_BAKE_INDIRECT : VS::LightBakeMode::LIGHT_BAKE_DISABLED);
+}
+
+void RasterizerStorageGLES2::light_set_bake_mode(RID p_light, VS::LightBakeMode p_bake_mode) {
 	Light *light = light_owner.getornull(p_light);
 	ERR_FAIL_COND(!light);
 
-	light->use_gi = p_enabled;
+	light->bake_mode = p_bake_mode;
 
 	light->version++;
 	light->instance_change_notify(true, false);
@@ -4049,10 +4058,14 @@ Color RasterizerStorageGLES2::light_get_color(RID p_light) {
 }
 
 bool RasterizerStorageGLES2::light_get_use_gi(RID p_light) {
-	Light *light = light_owner.getornull(p_light);
-	ERR_FAIL_COND_V(!light, false);
+	return light_get_bake_mode(p_light) != VS::LightBakeMode::LIGHT_BAKE_DISABLED;
+}
 
-	return light->use_gi;
+VS::LightBakeMode RasterizerStorageGLES2::light_get_bake_mode(RID p_light) {
+	Light *light = light_owner.getornull(p_light);
+	ERR_FAIL_COND_V(!light, VS::LightBakeMode::LIGHT_BAKE_DISABLED);
+
+	return light->bake_mode;
 }
 
 bool RasterizerStorageGLES2::light_has_shadow(RID p_light) const {
@@ -5399,6 +5412,24 @@ void RasterizerStorageGLES2::render_target_set_msaa(RID p_render_target, VS::Vie
 	_render_target_clear(rt);
 	rt->msaa = p_msaa;
 	_render_target_allocate(rt);
+}
+
+void RasterizerStorageGLES2::render_target_set_use_fxaa(RID p_render_target, bool p_fxaa) {
+	RenderTarget *rt = render_target_owner.getornull(p_render_target);
+	ERR_FAIL_COND(!rt);
+
+	rt->use_fxaa = p_fxaa;
+}
+
+void RasterizerStorageGLES2::render_target_set_use_debanding(RID p_render_target, bool p_debanding) {
+	RenderTarget *rt = render_target_owner.getornull(p_render_target);
+	ERR_FAIL_COND(!rt);
+
+	if (p_debanding) {
+		WARN_PRINT_ONCE("Debanding is not supported in the GLES2 backend. Switch to the GLES3 backend and make sure HDR is enabled.");
+	}
+
+	rt->use_debanding = p_debanding;
 }
 
 /* CANVAS SHADOW */

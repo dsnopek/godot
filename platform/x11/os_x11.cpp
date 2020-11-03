@@ -1756,6 +1756,17 @@ void OS_X11::request_attention() {
 	XFlush(x11_display);
 }
 
+void *OS_X11::get_native_handle(int p_handle_type) {
+	switch (p_handle_type) {
+		case APPLICATION_HANDLE: return NULL; // Do we have a value to return here?
+		case DISPLAY_HANDLE: return (void *)x11_display;
+		case WINDOW_HANDLE: return (void *)x11_window;
+		case WINDOW_VIEW: return NULL; // Do we have a value to return here?
+		case OPENGL_CONTEXT: return context_gl->get_glx_context();
+		default: return NULL;
+	}
+}
+
 void OS_X11::get_key_modifier_state(unsigned int p_x11_state, Ref<InputEventWithModifiers> state) {
 
 	state->set_shift((p_x11_state & ShiftMask));
@@ -2913,18 +2924,40 @@ String OS_X11::get_name() const {
 }
 
 Error OS_X11::shell_open(String p_uri) {
-
 	Error ok;
+	int err_code;
 	List<String> args;
 	args.push_back(p_uri);
-	ok = execute("xdg-open", args, false);
-	if (ok == OK)
+
+	// Agnostic
+	ok = execute("xdg-open", args, true, NULL, NULL, &err_code);
+	if (ok == OK && !err_code) {
 		return OK;
-	ok = execute("gnome-open", args, false);
-	if (ok == OK)
+	} else if (err_code == 2) {
+		return ERR_FILE_NOT_FOUND;
+	}
+	// GNOME
+	args.push_front("open"); // The command is `gio open`, so we need to add it to args
+	ok = execute("gio", args, true, NULL, NULL, &err_code);
+	if (ok == OK && !err_code) {
 		return OK;
-	ok = execute("kde-open", args, false);
-	return ok;
+	} else if (err_code == 2) {
+		return ERR_FILE_NOT_FOUND;
+	}
+	args.pop_front();
+	ok = execute("gvfs-open", args, true, NULL, NULL, &err_code);
+	if (ok == OK && !err_code) {
+		return OK;
+	} else if (err_code == 2) {
+		return ERR_FILE_NOT_FOUND;
+	}
+	// KDE
+	ok = execute("kde-open5", args, true, NULL, NULL, &err_code);
+	if (ok == OK && !err_code) {
+		return OK;
+	}
+	ok = execute("kde-open", args, true, NULL, NULL, &err_code);
+	return !err_code ? ok : FAILED;
 }
 
 bool OS_X11::_check_internal_feature_support(const String &p_feature) {

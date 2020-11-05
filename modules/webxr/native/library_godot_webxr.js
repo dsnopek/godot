@@ -104,6 +104,8 @@ var GodotWebXR = {
 				gl_FragColor = texture2D(uSampler, vTextureCoord);
 			}
 		`,
+		textureUnit: null,
+
 		initShaderProgram: (gl, vsSource, fsSource) => {
 			const vertexShader = GodotWebXR.loadShader(gl, gl.VERTEX_SHADER, vsSource);
 			const fragmentShader = GodotWebXR.loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
@@ -166,13 +168,16 @@ var GodotWebXR = {
 			gl.vertexAttribPointer(GodotWebXR.programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
 			gl.enableVertexAttribArray(GodotWebXR.programInfo.attribLocations.vertexPosition);
 
-			gl.activeTexture(gl.TEXTURE0);
+			gl.activeTexture(GodotWebXR.textureUnit);
 			gl.bindTexture(gl.TEXTURE_2D, texture);
 			gl.uniform1i(GodotWebXR.programInfo.uniformLocations.uSampler, 0);
 
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
+			// Restore state.
 			gl.bindTexture(gl.TEXTURE_2D, null);
+			gl.disableVertexAttribArray(GodotWebXR.programInfo.attribLocations.vertexPosition);
+			gl.bindBuffer(gl.ARRAY_BUFFER, null);
 		},
 
 		// Holds the controllers list between function calls.
@@ -224,6 +229,10 @@ var GodotWebXR = {
 	godot_webxr_initialize__proxy: 'sync',
 	godot_webxr_initialize__sig: 'viiii',
 	godot_webxr_initialize: function (p_session_mode, p_required_features, p_optional_features, p_requested_reference_spaces) {
+		if (GodotWebXR.textureUnit === null) {
+			GodotWebXR.textureUnit = gl.TEXTURE0 + gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS) - 1;
+		}
+
 		GodotWebXR.monkeyPatchRequestAnimationFrame();
 
 		const session_mode = UTF8ToString(p_session_mode);
@@ -403,6 +412,7 @@ var GodotWebXR = {
 		const gl = Module.ctx;
 
 		const texture = gl.createTexture();
+		gl.activeTexture(GodotWebXR.textureUnit);
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, viewport.width, viewport.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 
@@ -432,11 +442,18 @@ var GodotWebXR = {
 		const viewport = glLayer.getViewport(view);
 		const gl = Module.ctx;
 
+		const orig_framebuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+		const orig_viewport = gl.getParameter(gl.VIEWPORT);
+
 		// Bind to WebXR's framebuffer.
 		gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
 		gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
 
 		GodotWebXR.blitTexture(gl, GodotWebXR.textures[view_index]);
+
+		// Restore state.
+		gl.bindFramebuffer(orig_framebuffer);
+		gl.viewport(orig_viewport[0], orig_viewport[1], orig_viewport[2], orig_viewport[3]);
 	},
 
 	godot_webxr_sample_controller_data__proxy: 'sync',

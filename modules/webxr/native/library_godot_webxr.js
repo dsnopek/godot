@@ -104,6 +104,7 @@ var GodotWebXR = {
 				gl_FragColor = texture2D(uSampler, vTextureCoord);
 			}
 		`,
+		textureUnit: null,
 
 		initShaderProgram: (gl, vsSource, fsSource) => {
 			const vertexShader = GodotWebXR.loadShader(gl, gl.VERTEX_SHADER, vsSource);
@@ -161,15 +162,19 @@ var GodotWebXR = {
 				GodotWebXR.buffer = GodotWebXR.initBuffer(gl);
 			}
 
+			if (GodotWebXR.textureUnit === null) {
+				GodotWebXR.textureUnit = gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS) - 1;
+			}
+
 			gl.useProgram(GodotWebXR.shaderProgram);
 
 			gl.bindBuffer(gl.ARRAY_BUFFER, GodotWebXR.buffer);
 			gl.vertexAttribPointer(GodotWebXR.programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
 			gl.enableVertexAttribArray(GodotWebXR.programInfo.attribLocations.vertexPosition);
 
-			gl.activeTexture(gl.TEXTURE0);
+			gl.activeTexture(gl.TEXTURE0 + GodotWebXR.textureUnit);
 			gl.bindTexture(gl.TEXTURE_2D, texture);
-			gl.uniform1i(GodotWebXR.programInfo.uniformLocations.uSampler, 0);
+			gl.uniform1i(GodotWebXR.programInfo.uniformLocations.uSampler, GodotWebXR.textureUnit);
 
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
@@ -447,7 +452,7 @@ var GodotWebXR = {
 		GodotWebXR.blitTexture(gl, GodotWebXR.textures[view_index]);
 
 		// Restore state.
-		//gl.bindFramebuffer(gl.FRAMEBUFFER, orig_framebuffer);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, orig_framebuffer);
 		gl.viewport(orig_viewport[0], orig_viewport[1], orig_viewport[2], orig_viewport[3]);
 	},
 

@@ -167,7 +167,6 @@ var GodotWebXR = {
 			gl.vertexAttribPointer(GodotWebXR.programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
 			gl.enableVertexAttribArray(GodotWebXR.programInfo.attribLocations.vertexPosition);
 
-			console.log(gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS));
 			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture(gl.TEXTURE_2D, texture);
 			gl.uniform1i(GodotWebXR.programInfo.uniformLocations.uSampler, 0);

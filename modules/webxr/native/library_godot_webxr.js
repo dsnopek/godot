@@ -104,6 +104,7 @@ var GodotWebXR = {
 				gl_FragColor = texture2D(uSampler, vTextureCoord);
 			}
 		`,
+
 		initShaderProgram: (gl, vsSource, fsSource) => {
 			const vertexShader = GodotWebXR.loadShader(gl, gl.VERTEX_SHADER, vsSource);
 			const fragmentShader = GodotWebXR.loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
@@ -147,7 +148,7 @@ var GodotWebXR = {
 		},
 		blitTexture: (gl, texture) => {
 			if (GodotWebXR.shaderProgram === null) {
-				GodotWebXR.shaderProgram = GodotWebXR.initShaderProgram(gl, GodotWebXR.vsSource, GodotWebXR.fsSource),
+				GodotWebXR.shaderProgram = GodotWebXR.initShaderProgram(gl, GodotWebXR.vsSource, GodotWebXR.fsSource);
 				GodotWebXR.programInfo = {
 					program: GodotWebXR.shaderProgram,
 					attribLocations: {
@@ -160,6 +161,7 @@ var GodotWebXR = {
 				GodotWebXR.buffer = GodotWebXR.initBuffer(gl);
 			}
 
+			const orig_program = gl.getParameter(gl.CURRENT_PROGRAM);
 			gl.useProgram(GodotWebXR.shaderProgram);
 
 			gl.bindBuffer(gl.ARRAY_BUFFER, GodotWebXR.buffer);
@@ -172,7 +174,11 @@ var GodotWebXR = {
 
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
+			// Restore state.
 			gl.bindTexture(gl.TEXTURE_2D, null);
+			gl.disableVertexAttribArray(GodotWebXR.programInfo.attribLocations.vertexPosition);
+			gl.bindBuffer(gl.ARRAY_BUFFER, null);
+			gl.useProgram(orig_program);
 		},
 
 		// Holds the controllers list between function calls.
@@ -432,11 +438,18 @@ var GodotWebXR = {
 		const viewport = glLayer.getViewport(view);
 		const gl = Module.ctx;
 
+		const orig_framebuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+		const orig_viewport = gl.getParameter(gl.VIEWPORT);
+
 		// Bind to WebXR's framebuffer.
 		gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
 		gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
 
 		GodotWebXR.blitTexture(gl, GodotWebXR.textures[view_index]);
+
+		// Restore state.
+		gl.bindFramebuffer(gl.FRAMEBUFFER, orig_framebuffer);
+		gl.viewport(orig_viewport[0], orig_viewport[1], orig_viewport[2], orig_viewport[3]);
 	},
 
 	godot_webxr_sample_controller_data__proxy: 'sync',

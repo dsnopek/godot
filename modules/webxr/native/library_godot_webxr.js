@@ -104,7 +104,6 @@ var GodotWebXR = {
 				gl_FragColor = texture2D(uSampler, vTextureCoord);
 			}
 		`,
-		textureUnit: null,
 
 		initShaderProgram: (gl, vsSource, fsSource) => {
 			const vertexShader = GodotWebXR.loadShader(gl, gl.VERTEX_SHADER, vsSource);
@@ -149,7 +148,7 @@ var GodotWebXR = {
 		},
 		blitTexture: (gl, texture) => {
 			if (GodotWebXR.shaderProgram === null) {
-				GodotWebXR.shaderProgram = GodotWebXR.initShaderProgram(gl, GodotWebXR.vsSource, GodotWebXR.fsSource),
+				GodotWebXR.shaderProgram = GodotWebXR.initShaderProgram(gl, GodotWebXR.vsSource, GodotWebXR.fsSource);
 				GodotWebXR.programInfo = {
 					program: GodotWebXR.shaderProgram,
 					attribLocations: {
@@ -168,7 +167,8 @@ var GodotWebXR = {
 			gl.vertexAttribPointer(GodotWebXR.programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
 			gl.enableVertexAttribArray(GodotWebXR.programInfo.attribLocations.vertexPosition);
 
-			gl.activeTexture(GodotWebXR.textureUnit);
+			console.log(gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS));
+			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture(gl.TEXTURE_2D, texture);
 			gl.uniform1i(GodotWebXR.programInfo.uniformLocations.uSampler, 0);
 
@@ -229,10 +229,6 @@ var GodotWebXR = {
 	godot_webxr_initialize__proxy: 'sync',
 	godot_webxr_initialize__sig: 'viiii',
 	godot_webxr_initialize: function (p_session_mode, p_required_features, p_optional_features, p_requested_reference_spaces) {
-		if (GodotWebXR.textureUnit === null) {
-			GodotWebXR.textureUnit = gl.TEXTURE0 + gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS) - 1;
-		}
-
 		GodotWebXR.monkeyPatchRequestAnimationFrame();
 
 		const session_mode = UTF8ToString(p_session_mode);
@@ -412,7 +408,7 @@ var GodotWebXR = {
 		const gl = Module.ctx;
 
 		const texture = gl.createTexture();
-		gl.activeTexture(GodotWebXR.textureUnit);
+		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, viewport.width, viewport.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 
@@ -452,7 +448,7 @@ var GodotWebXR = {
 		GodotWebXR.blitTexture(gl, GodotWebXR.textures[view_index]);
 
 		// Restore state.
-		gl.bindFramebuffer(orig_framebuffer);
+		//gl.bindFramebuffer(gl.FRAMEBUFFER, orig_framebuffer);
 		gl.viewport(orig_viewport[0], orig_viewport[1], orig_viewport[2], orig_viewport[3]);
 	},
 

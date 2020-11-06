@@ -166,6 +166,7 @@ var GodotWebXR = {
 				GodotWebXR.textureUnit = gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS) - 1;
 			}
 
+			const orig_program = gl.getParameter(gl.CURRENT_PROGRAM);
 			gl.useProgram(GodotWebXR.shaderProgram);
 
 			gl.bindBuffer(gl.ARRAY_BUFFER, GodotWebXR.buffer);
@@ -182,6 +183,7 @@ var GodotWebXR = {
 			gl.bindTexture(gl.TEXTURE_2D, null);
 			gl.disableVertexAttribArray(GodotWebXR.programInfo.attribLocations.vertexPosition);
 			gl.bindBuffer(gl.ARRAY_BUFFER, null);
+			gl.useProgram(orig_program);
 		},
 
 		// Holds the controllers list between function calls.

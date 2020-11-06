@@ -17,21 +17,21 @@ if env["threads_enabled"]:
 
 build = env.add_program(build_targets, javascript_files)
 
-js_libraries = [
-    "native/http_request.js",
-    "native/library_godot_audio.js",
-]
-for lib in js_libraries:
-    env.Append(LINKFLAGS=["--js-library", env.File(lib).path])
-env.Depends(build, js_libraries)
+env.AddJSLibraries(
+    [
+        "native/http_request.js",
+        "native/library_godot_audio.js",
+    ]
+)
 
-js_pre = [
-    "native/id_handler.js",
-    "native/utils.js",
-]
-for js in js_pre:
-    env.Append(LINKFLAGS=["--pre-js", env.File(js).path])
-env.Depends(build, js_pre)
+for lib in env["JS_LIBS"]:
+    env.Append(LINKFLAGS=["--js-library", lib])
+env.Depends(build, env["JS_LIBS"])
+
+if "JS_EXTERNS" in env:
+    for ext in env["JS_EXTERNS"]:
+        env["ENV"]["EMCC_CLOSURE_ARGS"] += " --externs " + ext.path
+    env.Depends(build, env["JS_EXTERNS"])
 
 engine = [
     "engine/preloader.js",

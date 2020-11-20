@@ -406,7 +406,7 @@ function XRInputSource() {};
 /**
  * @type {Gamepad}
  */
-XRInputSource.prototype.gampad;
+XRInputSource.prototype.gamepad;
 
 /**
  * @type {XRSpace}

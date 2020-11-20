@@ -6,7 +6,7 @@ Navigator.prototype.xr;
 /**
  * @constructor
  */
-function XRSessionInit();
+function XRSessionInit() {};
 
 /**
  * @type {Array<string>}
@@ -30,12 +30,16 @@ XR.prototype.ondevicechanged;
 
 /**
  * @param {string} mode 
+ * 
+ * @return {!Promise<boolean>}
  */
 XR.prototype.isSessionSupported = function(mode) {}
 
 /**
  * @param {string} mode 
  * @param {XRSessionInit} options 
+ * 
+ * @return {!Promise<XRSession>}
  */
 XR.prototype.requestSession = function(mode, options) {}
 
@@ -45,9 +49,102 @@ XR.prototype.requestSession = function(mode, options) {}
 function XRSession() {}
 
 /**
+ * @type {XRRenderState}
+ */
+XRSession.prototype.renderState;
+
+/**
+ * @type {?function (Event)}
+ */
+XRSession.prototype.onblur;
+
+/**
+ * @type {?function (Event)}
+ */
+XRSession.prototype.onfocus;
+
+/**
+ * @type {?function (Event)}
+ */
+XRSession.prototype.onend;
+
+/**
+ * @param {XRRenderStateInit} state 
+ * @return {void}
+ */
+XRSession.prototype.updateRenderState = function (state) {};
+
+/**
+ * @param {XRFrameRequestCallback} callback 
+ * @return {number}
+ */
+XRSession.prototype.requestAnimationFrame = function (callback) {};
+
+/**
+ * @param {number} handle 
+ * @return {void}
+ */
+XRSession.prototype.cancelAnimationFrame = function (handle) {};
+
+/**
+ * @return {Promise<void>}
+ */
+XRSession.prototype.end = function () {};
+
+/**
+ * @typedef {function(number, XRFrame): undefined}
+ */
+var XRFrameRequestCallback;
+
+/**
  * @constructor
  */
-function XRViewerPose() {}
+function XRRenderStateInit() {}
+
+/**
+ * @type {number}
+ */
+XRRenderStateInit.prototype.depthNear;
+
+/**
+ * @type {number}
+ */
+XRRenderStateInit.prototype.depthFar;
+
+/**
+ * @type {number}
+ */
+XRRenderStateInit.prototype.inlineVerticalFieldOfView;
+
+/**
+ * @type {?XRWebGLLayer}
+ */
+XRRenderStateInit.prototype.baseLayer;
+
+/**
+ * @constructor
+ */
+function XRRenderState() {};
+
+/**
+ * @type {number}
+ */
+XRRenderState.prototype.depthNear;
+
+/**
+ * @type {number}
+ */
+XRRenderState.prototype.depthFar;
+
+/**
+ * @type {?number}
+ */
+XRRenderState.prototype.inlineVerticalFieldOfView;
+
+/**
+ * @type {?XRWebGLLayer}
+ */
+XRRenderState.prototype.baseLayer;
 
 /**
  * @constructor
@@ -60,19 +157,10 @@ function XRFrame() {}
 XRFrame.prototype.session;
 
 /**
- * @return {XRViewerPose?}
+ * @param {XRReferenceSpace} referenceSpace 
+ * @return {?XRViewerPose}
  */
-XRFrame.prototype.getViewerPose = function(referenceSpace) {}
-
-/**
- * @typedef {function(number, XRFrame): undefined}
- */
-var XRFrameRequestCallback;
-
-/**
- * @constructor
- */
-function XRViewport() {}
+XRFrame.prototype.getViewerPose = function (referenceSpace) {};
 
 /**
  * @constructor
@@ -80,12 +168,147 @@ function XRViewport() {}
 function XRView() {}
 
 /**
+ * @type {string}
+ */
+XRView.prototype.eye;
+
+/**
+ * @type {Float32Array}
+ */
+XRView.prototype.projectionMatrix;
+
+/**
+ * @type {XRRigidTransform}
+ */
+XRView.prototype.transform;
+
+/**
  * @constructor
  */
-function XRWebGLLayer(session, ctx) {}
+function XRViewerPose() {}
+
+/**
+ * @type {Array<XRView>}
+ */
+XRViewerPose.prototype.views;
+
+/**
+ * @constructor
+ */
+function XRViewport() {}
+
+/**
+ * @type {number}
+ */
+XRViewport.prototype.x;
+
+/**
+ * @type {number}
+ */
+XRViewport.prototype.y;
+
+/**
+ * @type {number}
+ */
+XRViewport.prototype.width;
+
+/**
+ * @type {number}
+ */
+XRViewport.prototype.height;
+
+/**
+ * @constructor
+ */
+function XRWebGLLayerInit() {};
+
+/**
+ * @type {boolean}
+ */
+XRWebGLLayerInit.prototype.antialias;
+
+/**
+ * @type {boolean}
+ */
+XRWebGLLayerInit.prototype.depth;
+
+/**
+ * @type {boolean}
+ */
+XRWebGLLayerInit.prototype.stencil;
+
+/**
+ * @type {boolean}
+ */
+XRWebGLLayerInit.prototype.alpha;
+
+/**
+ * @type {boolean}
+ */
+XRWebGLLayerInit.prototype.ignoreDepthValues;
+
+/**
+ * @type {boolean}
+ */
+XRWebGLLayerInit.prototype.ignoreDepthValues;
+
+/**
+ * @type {number}
+ */
+XRWebGLLayerInit.prototype.framebufferScaleFactor;
+
+/**
+ * @constructor
+ * 
+ * @param {XRSession} session
+ * @param {WebGLRenderContext|WebGL2RenderingContext} ctx
+ * @param {?XRWebGLLayerInit} options
+ */
+function XRWebGLLayer(session, ctx, options) {}
+
+/**
+ * @type {boolean}
+ */
+XRWebGLLayer.prototype.antialias;
+
+/**
+ * @type {boolean}
+ */
+XRWebGLLayer.prototype.ignoreDepthValues;
+
+/**
+ * @type {number}
+ */
+XRWebGLLayer.prototype.framebufferWidth;
+
+/**
+ * @type {number}
+ */
+XRWebGLLayer.prototype.framebufferHeight;
+
+/**
+ * @type {WebGLFramebuffer}
+ */
+XRWebGLLayer.prototype.framebuffer;
 
 /**
  * @param {XRView} view
- * @return {XRViewport?}
+ * @return {?XRViewport}
  */
 XRWebGLLayer.prototype.getViewport = function(view) {};
+
+/**
+ * @param {XRSession} session 
+ * @return {number}
+ */
+XRWebGLLayer.prototype.getNativeFramebufferScaleFactor = function (session) {};
+
+/**
+ * @constructor
+ */
+function WebGLRenderingContextBase() {};
+
+/**
+ * @return {Promise<void>}
+ */
+WebGLRenderingContextBase.prototype.makeXRCompatible = function () {};

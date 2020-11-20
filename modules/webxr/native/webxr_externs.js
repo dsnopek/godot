@@ -29,16 +29,16 @@ function XR() {}
 XR.prototype.ondevicechanged;
 
 /**
- * @param {string} mode 
- * 
+ * @param {string} mode
+ *
  * @return {!Promise<boolean>}
  */
 XR.prototype.isSessionSupported = function(mode) {}
 
 /**
- * @param {string} mode 
- * @param {XRSessionInit} options 
- * 
+ * @param {string} mode
+ * @param {XRSessionInit} options
+ *
  * @return {!Promise<XRSession>}
  */
 XR.prototype.requestSession = function(mode, options) {}
@@ -79,19 +79,19 @@ XRSession.prototype.onend;
 XRSession.prototype.oninputsourceschange;
 
 /**
- * @param {XRRenderStateInit} state 
+ * @param {XRRenderStateInit} state
  * @return {void}
  */
 XRSession.prototype.updateRenderState = function (state) {};
 
 /**
- * @param {XRFrameRequestCallback} callback 
+ * @param {XRFrameRequestCallback} callback
  * @return {number}
  */
 XRSession.prototype.requestAnimationFrame = function (callback) {};
 
 /**
- * @param {number} handle 
+ * @param {number} handle
  * @return {void}
  */
 XRSession.prototype.cancelAnimationFrame = function (handle) {};
@@ -102,7 +102,7 @@ XRSession.prototype.cancelAnimationFrame = function (handle) {};
 XRSession.prototype.end = function () {};
 
 /**
- * @param {string} referenceSpaceType 
+ * @param {string} referenceSpaceType
  * @return {Promise<XRReferenceSpace>}
  */
 XRSession.prototype.requestReferenceSpace = function (referenceSpaceType) {};
@@ -173,15 +173,15 @@ function XRFrame() {}
 XRFrame.prototype.session;
 
 /**
- * @param {XRReferenceSpace} referenceSpace 
+ * @param {XRReferenceSpace} referenceSpace
  * @return {?XRViewerPose}
  */
 XRFrame.prototype.getViewerPose = function (referenceSpace) {};
 
 /**
- * 
- * @param {XRSpace} space 
- * @param {XRSpace} baseSpace 
+ *
+ * @param {XRSpace} space
+ * @param {XRSpace} baseSpace
  * @return {XRPose}
  */
 XRFrame.prototype.getPose = function (space, baseSpace) {};
@@ -329,7 +329,7 @@ XRWebGLLayerInit.prototype.framebufferScaleFactor;
 
 /**
  * @constructor
- * 
+ *
  * @param {XRSession} session
  * @param {WebGLRenderContext|WebGL2RenderingContext} ctx
  * @param {?XRWebGLLayerInit} options
@@ -368,7 +368,7 @@ XRWebGLLayer.prototype.framebuffer;
 XRWebGLLayer.prototype.getViewport = function(view) {};
 
 /**
- * @param {XRSession} session 
+ * @param {XRSession} session
  * @return {number}
  */
 XRWebGLLayer.prototype.getNativeFramebufferScaleFactor = function (session) {};

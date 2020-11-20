@@ -31,6 +31,8 @@ var GodotWebXR = {
 
 	$GodotWebXR__deps: ['$Browser', '$GL'],
 	$GodotWebXR: {
+		gl: null,
+
 		texture_ids: [null, null],
 		textures: [null, null],
 
@@ -266,7 +268,13 @@ var GodotWebXR = {
 				}
 			});
 
-			const gl = Module.ctx;
+			// We should be able to get the WebGL context via Module['ctx'] but the
+			// Closure Compiler "optimizes" the name to a random set of characters
+			// for some reason.
+			const gl_context_handle = Module['_emscripten_webgl_get_current_context']();
+			const gl = GL.getContext(gl_context_handle).GLctx;
+			GodotWebXR.gl = gl;
+
 			gl.makeXRCompatible().then(function () {
 				session.updateRenderState({
 					baseLayer: new XRWebGLLayer(session, gl)
@@ -316,7 +324,7 @@ var GodotWebXR = {
 		}
 
 		// Clean-up the textures we allocated for each view.
-		const gl = Module.ctx;
+		const gl = GodotWebXR.gl;
 		for (let i = 0; i < GodotWebXR.textures.length; i++) {
 			const texture = GodotWebXR.textures[i];
 			if (texture !== null) {
@@ -347,7 +355,7 @@ var GodotWebXR = {
 		const view = GodotWebXR.pose.views[0];
 		const viewport = glLayer.getViewport(view);
 
-		let buf = Module._malloc(2 * 4);
+		let buf = Module['_malloc'](2 * 4);
 		setValue(buf + 0, viewport.width, 'i32');
 		setValue(buf + 4, viewport.height, 'i32');
 		return buf;
@@ -368,7 +376,7 @@ var GodotWebXR = {
 		else {
 			matrix = views[p_eye - 1].transform.matrix;
 		}
-		let buf = Module._malloc(16 * 4);
+		let buf = Module['_malloc'](16 * 4);
 		for (let i = 0; i < 16; i++) {
 			setValue(buf + (i * 4), matrix[i], 'float')
 		}
@@ -384,7 +392,7 @@ var GodotWebXR = {
 
 		const view_index = (p_eye == 2 /* ARVRInterface::EYE_RIGHT */) ? 1 : 0;
 		const matrix = GodotWebXR.pose.views[view_index].projectionMatrix;
-		let buf = Module._malloc(16 * 4);
+		let buf = Module['_malloc'](16 * 4);
 		for (let i = 0; i < 16; i++) {
 			setValue(buf + (i * 4), matrix[i], 'float')
 		}
@@ -406,7 +414,7 @@ var GodotWebXR = {
 		const glLayer = GodotWebXR.session.renderState.baseLayer;
 		const view = GodotWebXR.pose.views[view_index];
 		const viewport = glLayer.getViewport(view);
-		const gl = Module.ctx;
+		const gl = GodotWebXR.gl;
 
 		const texture = gl.createTexture();
 		gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -436,7 +444,7 @@ var GodotWebXR = {
 		const glLayer = GodotWebXR.session.renderState.baseLayer;
 		const view = GodotWebXR.pose.views[view_index];
 		const viewport = glLayer.getViewport(view);
-		const gl = Module.ctx;
+		const gl = GodotWebXR.gl;
 
 		const orig_framebuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING);
 		const orig_viewport = gl.getParameter(gl.VIEWPORT);
@@ -501,7 +509,7 @@ var GodotWebXR = {
 		}
 		const matrix = pose.transform.matrix;
 
-		let buf = Module._malloc(16 * 4);
+		let buf = Module['_malloc'](16 * 4);
 		for (let i = 0; i < 16; i++) {
 			setValue(buf + (i * 4), matrix[i], 'float')
 		}
@@ -522,7 +530,7 @@ var GodotWebXR = {
 
 		const button_count = controller.gamepad.buttons.length;
 
-		let buf = Module._malloc((button_count + 1) * 4);
+		let buf = Module['_malloc']((button_count + 1) * 4);
 		setValue(buf, button_count, 'i32');
 		for (let i = 0; i < button_count; i++) {
 			setValue(buf + 4 + (i * 4), controller.gamepad.buttons[i].value, 'float')
@@ -544,7 +552,7 @@ var GodotWebXR = {
 
 		const axes_count = controller.gamepad.axes.length;
 
-		let buf = Module._malloc((axes_count + 1) * 4);
+		let buf = Module['_malloc']((axes_count + 1) * 4);
 		setValue(buf, axes_count, 'i32');
 		for (let i = 0; i < axes_count; i++) {
 			setValue(buf + 4 + (i * 4), controller.gamepad.axes[i], 'float')

@@ -54,6 +54,11 @@ function XRSession() {}
 XRSession.prototype.renderState;
 
 /**
+ * @type {Array<XRInputSource>}
+ */
+XRSession.prototype.inputSources;
+
+/**
  * @type {?function (Event)}
  */
 XRSession.prototype.onblur;
@@ -172,6 +177,14 @@ XRFrame.prototype.session;
  * @return {?XRViewerPose}
  */
 XRFrame.prototype.getViewerPose = function (referenceSpace) {};
+
+/**
+ * 
+ * @param {XRSpace} space 
+ * @param {XRSpace} baseSpace 
+ * @return {XRPose}
+ */
+XRFrame.prototype.getPose = function (space, baseSpace) {};
 
 /**
  * @constructor
@@ -424,3 +437,18 @@ XRInputSource.prototype.targetRaySpace;
  * @constructor
  */
 function XRSpace() {};
+
+/**
+ * @constructor
+ */
+function XRPose() {};
+
+/**
+ * @type {XRRigidTransform}
+ */
+XRPose.prototype.transform;
+
+/**
+ * @type {boolean}
+ */
+XRPose.prototype.emulatedPosition;

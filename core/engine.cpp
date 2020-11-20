@@ -228,10 +228,21 @@ Engine::Engine() {
 	_target_fps = 0;
 	_time_scale = 1.0;
 	_pixel_snap = false;
+	_snap_2d_transforms = false;
 	_physics_frames = 0;
 	_idle_frames = 0;
 	_in_physics = false;
 	_frame_ticks = 0;
 	_frame_step = 0;
 	editor_hint = false;
+}
+
+Engine::Singleton::Singleton(const StringName &p_name, Object *p_ptr) :
+		name(p_name),
+		ptr(p_ptr) {
+#ifdef DEBUG_ENABLED
+	if (Object::cast_to<Reference>(p_ptr)) {
+		ERR_PRINT("A class intended to be used as a singleton must *not* inherit from Reference.");
+	}
+#endif
 }

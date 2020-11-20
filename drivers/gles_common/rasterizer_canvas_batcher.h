@@ -279,6 +279,9 @@ public:
 			settings_uv_contract = false;
 			settings_uv_contract_amount = 0.0f;
 
+			buffer_mode_batch_upload_send_null = true;
+			buffer_mode_batch_upload_flag_stream = false;
+
 			stats_items_sorted = 0;
 			stats_light_items_joined = 0;
 		}
@@ -398,6 +401,10 @@ public:
 		bool settings_use_software_skinning;
 		int settings_light_max_join_items;
 		int settings_ninepatch_mode;
+
+		// buffer orphaning modes
+		bool buffer_mode_batch_upload_send_null;
+		bool buffer_mode_batch_upload_flag_stream;
 
 		// uv contraction
 		bool settings_uv_contract;
@@ -572,7 +579,7 @@ private:
 	// translating vertex formats prior to rendering
 	void _translate_batches_to_vertex_colored_FVF();
 	template <class BATCH_VERTEX_TYPE, bool INCLUDE_LIGHT_ANGLES, bool INCLUDE_MODULATE, bool INCLUDE_LARGE>
-	void _translate_batches_to_larger_FVF();
+	void _translate_batches_to_larger_FVF(uint32_t p_sequence_batch_type_flags);
 
 protected:
 	// accessory funcs
@@ -1028,6 +1035,10 @@ PREAMBLE(void)::batch_initialize() {
 	bdata.settings_light_max_join_items = CLAMP(bdata.settings_light_max_join_items, 0, 65535);
 	bdata.settings_item_reordering_lookahead = CLAMP(bdata.settings_item_reordering_lookahead, 0, 65535);
 
+	// allow user to override the api usage techniques using project settings
+	bdata.buffer_mode_batch_upload_send_null = GLOBAL_GET("rendering/options/api_usage_batching/send_null");
+	bdata.buffer_mode_batch_upload_flag_stream = GLOBAL_GET("rendering/options/api_usage_batching/flag_stream");
+
 	// for debug purposes, output a string with the batching options
 	String batching_options_string = "OpenGL ES Batching: ";
 	if (bdata.settings_use_batching) {
@@ -1481,9 +1492,42 @@ bool C_PREAMBLE::_prefill_polygon(RasterizerCanvas::Item::CommandPolygon *p_poly
 	CRASH_COND(!vertex_colors);
 #endif
 
+	// are we using large FVF?
+	////////////////////////////////////
+	const bool use_large_verts = bdata.use_large_verts;
+	const bool use_modulate = bdata.use_modulate;
+
+	BatchColor *vertex_modulates = nullptr;
+	if (use_modulate) {
+		vertex_modulates = bdata.vertex_modulates.request(num_inds);
+#if defined(TOOLS_ENABLED) && defined(DEBUG_ENABLED)
+		CRASH_COND(!vertex_modulates);
+#endif
+		// precalc the vertex modulate (will be shared by all verts)
+		// we store the modulate as an attribute in the fvf rather than a uniform
+		vertex_modulates[0].set(r_fill_state.final_modulate);
+	}
+
+	BatchTransform *pBT = nullptr;
+	if (use_large_verts) {
+		pBT = bdata.vertex_transforms.request(num_inds);
+#if defined(TOOLS_ENABLED) && defined(DEBUG_ENABLED)
+		CRASH_COND(!pBT);
+#endif
+		// precalc the batch transform (will be shared by all verts)
+		// we store the transform as an attribute in the fvf rather than a uniform
+		const Transform2D &tr = r_fill_state.transform_combined;
+
+		pBT[0].translate.set(tr.elements[2]);
+		// could do swizzling in shader?
+		pBT[0].basis[0].set(tr.elements[0][0], tr.elements[1][0]);
+		pBT[0].basis[1].set(tr.elements[0][1], tr.elements[1][1]);
+	}
+	////////////////////////////////////
+
 	// the modulate is always baked
 	Color modulate;
-	if (multiply_final_modulate)
+	if (!use_large_verts && !use_modulate && multiply_final_modulate)
 		modulate = r_fill_state.final_modulate;
 	else
 		modulate = Color(1, 1, 1, 1);
@@ -1497,6 +1541,11 @@ bool C_PREAMBLE::_prefill_polygon(RasterizerCanvas::Item::CommandPolygon *p_poly
 	}
 
 	// N.B. polygons don't have color thus don't need a batch change with color
+	// This code is left as reference in case of problems.
+	//	if (!r_fill_state.curr_batch->color.equals(modulate)) {
+	//		change_batch = true;
+	//		bdata.total_color_changes++;
+	//	}
 
 	if (change_batch) {
 		// put the tex pixel size  in a local (less verbose and can be a register)
@@ -1572,11 +1621,37 @@ bool C_PREAMBLE::_prefill_polygon(RasterizerCanvas::Item::CommandPolygon *p_poly
 			if (ind < p_poly->uvs.size()) {
 				const Point2 &uv = p_poly->uvs[ind];
 				bvs[n].uv.set(uv.x, uv.y);
+			} else {
+				bvs[n].uv.set(0.0f, 0.0f);
 			}
 
 			vertex_colors[n] = precalced_colors[ind];
+
+			if (use_modulate) {
+				vertex_modulates[n] = vertex_modulates[0];
+			}
+
+			if (use_large_verts) {
+				// reuse precalced transform (same for each vertex within polygon)
+				pBT[n] = pBT[0];
+			}
 		}
 	} // if not software skinning
+	else {
+		// software skinning extra passes
+		if (use_modulate) {
+			for (int n = 0; n < num_inds; n++) {
+				vertex_modulates[n] = vertex_modulates[0];
+			}
+		}
+		// not sure if this will produce garbage if software skinning is changing vertex pos
+		// in the shader, but is included for completeness
+		if (use_large_verts) {
+			for (int n = 0; n < num_inds; n++) {
+				pBT[n] = pBT[0];
+			}
+		}
+	}
 
 	// increment total vert count
 	bdata.total_verts += num_inds;
@@ -1614,13 +1689,16 @@ PREAMBLE(bool)::_software_skin_poly(RasterizerCanvas::Item::CommandPolygon *p_po
 
 	if (num_verts && (p_poly->bones.size() == num_verts * 4) && (p_poly->weights.size() == p_poly->bones.size())) {
 
+		const Transform2D &item_transform = p_item->xform;
+		Transform2D item_transform_inv = item_transform.affine_inverse();
+
 		for (int n = 0; n < num_verts; n++) {
 			const Vector2 &src_pos = p_poly->points[n];
 			Vector2 &dst_pos = pTemps[n];
 
 			// there can be an offset on the polygon at rigging time, this has to be accounted for
 			// note it may be possible that this could be concatenated with the bone transforms to save extra transforms - not sure yet
-			Vector2 src_pos_back_transformed = p_item->xform.xform(src_pos);
+			Vector2 src_pos_back_transformed = item_transform.xform(src_pos);
 
 			float total_weight = 0.0f;
 
@@ -1650,7 +1728,7 @@ PREAMBLE(bool)::_software_skin_poly(RasterizerCanvas::Item::CommandPolygon *p_po
 				dst_pos /= total_weight;
 
 				// retransform back from the poly offset space
-				dst_pos = p_item->xform.xform_inv(dst_pos);
+				dst_pos = item_transform_inv.xform(dst_pos);
 			}
 		}
 
@@ -1680,6 +1758,8 @@ PREAMBLE(bool)::_software_skin_poly(RasterizerCanvas::Item::CommandPolygon *p_po
 		if (ind < p_poly->uvs.size()) {
 			const Point2 &uv = p_poly->uvs[ind];
 			bvs[n].uv.set(uv.x, uv.y);
+		} else {
+			bvs[n].uv.set(0.0f, 0.0f);
 		}
 
 		vertex_colors[n] = p_precalced_colors[ind];
@@ -2160,28 +2240,38 @@ PREAMBLE(bool)::prefill_joined_item(FillState &r_fill_state, int &r_command_star
 
 			case RasterizerCanvas::Item::Command::TYPE_POLYGON: {
 
-				// not using software skinning?
-				if (!bdata.settings_use_software_skinning && get_this()->state.using_skeleton) {
+				RasterizerCanvas::Item::CommandPolygon *polygon = static_cast<RasterizerCanvas::Item::CommandPolygon *>(command);
+#ifdef GLES_OVER_GL
+				// anti aliasing not accelerated .. it is problematic because it requires a 2nd line drawn around the outside of each
+				// poly, which would require either a second list of indices or a second list of vertices for this step
+				if (polygon->antialiased) {
 					// not accelerated
 					_prefill_default_batch(r_fill_state, command_num, *p_item);
 				} else {
-					RasterizerCanvas::Item::CommandPolygon *polygon = static_cast<RasterizerCanvas::Item::CommandPolygon *>(command);
-
-					// unoptimized - could this be done once per batch / batch texture?
-					bool send_light_angles = polygon->normal_map != RID();
-
-					bool buffer_full = false;
-
-					if (send_light_angles) {
-						// NYI
+#endif
+					// not using software skinning?
+					if (!bdata.settings_use_software_skinning && get_this()->state.using_skeleton) {
+						// not accelerated
 						_prefill_default_batch(r_fill_state, command_num, *p_item);
-						//buffer_full = prefill_polygon<true>(polygon, r_fill_state, r_command_start, command_num, command_count, p_item, multiply_final_modulate);
-					} else
-						buffer_full = _prefill_polygon<false>(polygon, r_fill_state, r_command_start, command_num, command_count, p_item, multiply_final_modulate);
+					} else {
+						// unoptimized - could this be done once per batch / batch texture?
+						bool send_light_angles = polygon->normal_map != RID();
 
-					if (buffer_full)
-						return true;
-				} // using software skinning path
+						bool buffer_full = false;
+
+						if (send_light_angles) {
+							// NYI
+							_prefill_default_batch(r_fill_state, command_num, *p_item);
+							//buffer_full = prefill_polygon<true>(polygon, r_fill_state, r_command_start, command_num, command_count, p_item, multiply_final_modulate);
+						} else
+							buffer_full = _prefill_polygon<false>(polygon, r_fill_state, r_command_start, command_num, command_count, p_item, multiply_final_modulate);
+
+						if (buffer_full)
+							return true;
+					} // if not using hardware skinning path
+#ifdef GLES_OVER_GL
+				} // if not anti-aliased poly
+#endif
 
 			} break;
 		}
@@ -2254,19 +2344,19 @@ PREAMBLE(void)::flush_render_batches(RasterizerCanvas::Item *p_first_item, Raste
 		case RasterizerStorageCommon::FVF_COLOR: {
 			// special case, where vertex colors are used (polys)
 			if (!bdata.vertex_colors.size())
-				_translate_batches_to_larger_FVF<BatchVertexColored, false, false, false>();
+				_translate_batches_to_larger_FVF<BatchVertexColored, false, false, false>(p_sequence_batch_type_flags);
 			else
 				// normal, reduce number of batches by baking batch colors
 				_translate_batches_to_vertex_colored_FVF();
 		} break;
 		case RasterizerStorageCommon::FVF_LIGHT_ANGLE:
-			_translate_batches_to_larger_FVF<BatchVertexLightAngled, true, false, false>();
+			_translate_batches_to_larger_FVF<BatchVertexLightAngled, true, false, false>(p_sequence_batch_type_flags);
 			break;
 		case RasterizerStorageCommon::FVF_MODULATED:
-			_translate_batches_to_larger_FVF<BatchVertexModulated, true, true, false>();
+			_translate_batches_to_larger_FVF<BatchVertexModulated, true, true, false>(p_sequence_batch_type_flags);
 			break;
 		case RasterizerStorageCommon::FVF_LARGE:
-			_translate_batches_to_larger_FVF<BatchVertexLarge, true, true, true>();
+			_translate_batches_to_larger_FVF<BatchVertexLarge, true, true, true>(p_sequence_batch_type_flags);
 			break;
 	}
 
@@ -2681,7 +2771,15 @@ PREAMBLE(void)::_translate_batches_to_vertex_colored_FVF() {
 // In addition this can optionally add light angles to the FVF, necessary for normal mapping.
 T_PREAMBLE
 template <class BATCH_VERTEX_TYPE, bool INCLUDE_LIGHT_ANGLES, bool INCLUDE_MODULATE, bool INCLUDE_LARGE>
-void C_PREAMBLE::_translate_batches_to_larger_FVF() {
+void C_PREAMBLE::_translate_batches_to_larger_FVF(uint32_t p_sequence_batch_type_flags) {
+
+	bool include_poly_color = false;
+
+	// we ONLY want to include the color verts in translation when using polys,
+	// as rects do not write vertex colors, only colors per batch.
+	if (p_sequence_batch_type_flags & RasterizerStorageCommon::BTF_POLY) {
+		include_poly_color = INCLUDE_LIGHT_ANGLES | INCLUDE_MODULATE | INCLUDE_LARGE;
+	}
 
 	// zeros the size and sets up how big each unit is
 	bdata.unit_vertices.prepare(sizeof(BATCH_VERTEX_TYPE));
@@ -2700,6 +2798,7 @@ void C_PREAMBLE::_translate_batches_to_larger_FVF() {
 
 	Batch *dest_batch = nullptr;
 
+	const BatchColor *source_vertex_colors = &bdata.vertex_colors[0];
 	const float *source_light_angles = &bdata.light_angles[0];
 	const BatchColor *source_vertex_modulates = &bdata.vertex_modulates[0];
 	const BatchTransform *source_vertex_transforms = &bdata.vertex_transforms[0];
@@ -2796,7 +2895,13 @@ void C_PREAMBLE::_translate_batches_to_larger_FVF() {
 #endif
 					cv->pos = bv.pos;
 					cv->uv = bv.uv;
-					cv->col = source_batch.color;
+
+					// polys are special, they can have per vertex colors
+					if (!include_poly_color) {
+						cv->col = source_batch.color;
+					} else {
+						cv->col = *source_vertex_colors++;
+					}
 
 					if (INCLUDE_LIGHT_ANGLES) {
 						// this is required to allow compilation with non light angle vertex.
@@ -2897,17 +3002,18 @@ PREAMBLE(bool)::_detect_item_batch_break(RenderItemState &r_ris, RasterizerCanva
 					}
 				} break;
 				case RasterizerCanvas::Item::Command::TYPE_POLYGON: {
-					//return true;
 					// only allow polygons to join if they aren't skeleton
 					RasterizerCanvas::Item::CommandPolygon *poly = static_cast<RasterizerCanvas::Item::CommandPolygon *>(command);
 
-					//					return true;
+#ifdef GLES_OVER_GL
+					// anti aliasing not accelerated
+					if (poly->antialiased)
+						return true;
+#endif
 
 					// light angles not yet implemented, treat as default
 					if (poly->normal_map != RID())
 						return true;
-
-					// we could possibly join polygons that are software skinned? NYI
 
 					if (!get_this()->bdata.settings_use_software_skinning && poly->bones.size())
 						return true;

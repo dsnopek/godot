@@ -85,7 +85,8 @@ def configure(env):
     if env["use_lto"]:
         env.Append(CCFLAGS=["-s", "WASM_OBJECT_FILES=0"])
         env.Append(LINKFLAGS=["-s", "WASM_OBJECT_FILES=0"])
-        env.Append(LINKFLAGS=["--llvm-lto", "1"])
+        env.Append(CCFLAGS=["-flto"])
+        env.Append(LINKFLAGS=["-flto"])
 
     # Closure compiler
     if env["use_closure_compiler"]:
@@ -170,6 +171,6 @@ def configure(env):
     env.Append(LINKFLAGS=["-s", "OFFSCREEN_FRAMEBUFFER=1"])
 
     # callMain for manual start, FS for preloading, PATH and ERRNO_CODES for BrowserFS.
-    env.Append(LINKFLAGS=["-s", "EXTRA_EXPORTED_RUNTIME_METHODS=['callMain', 'FS']"])
+    env.Append(LINKFLAGS=["-s", "EXTRA_EXPORTED_RUNTIME_METHODS=['callMain']"])
     # Add code that allow exiting runtime.
     env.Append(LINKFLAGS=["-s", "EXIT_RUNTIME=1"])

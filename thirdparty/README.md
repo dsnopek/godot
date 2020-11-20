@@ -115,7 +115,7 @@ Files extracted from upstream source:
 ## glad
 
 - Upstream: https://github.com/Dav1dde/glad
-- Version: 0.1.33 (2019)
+- Version: 0.1.34 (2020)
 - License: MIT
 
 The files we package are automatically generated.
@@ -314,7 +314,7 @@ Collection of single-file libraries used in Godot components.
   * License: Apache 2.0
 - `open-simplex-noise.{c,h}`
   * Upstream: https://github.com/smcameron/open-simplex-noise-in-c
-  * Version: git (0d555e7f40527d0870906fe9469a3b1bb4020b7f, 2015) + custom changes
+  * Version: git (0fef0dbedd76f767da7e3c894822729d0f07e54d, 2020) + custom changes
   * License: Unlicense
 - `pcg.{cpp,h}`
   * Upstream: http://www.pcg-random.org

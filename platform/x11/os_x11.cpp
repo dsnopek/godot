@@ -847,7 +847,9 @@ void OS_X11::finalize() {
 	if (xrandr_handle)
 		dlclose(xrandr_handle);
 
-	XUnmapWindow(x11_display, x11_window);
+	if (!OS::get_singleton()->is_no_window_mode_enabled()) {
+		XUnmapWindow(x11_display, x11_window);
+	}
 	XDestroyWindow(x11_display, x11_window);
 
 #if defined(OPENGL_ENABLED)
@@ -1516,6 +1518,9 @@ bool OS_X11::is_window_resizable() const {
 }
 
 void OS_X11::set_window_minimized(bool p_enabled) {
+	if (is_no_window_mode_enabled()) {
+		return;
+	}
 	// Using ICCCM -- Inter-Client Communication Conventions Manual
 	XEvent xev;
 	Atom wm_change = XInternAtom(x11_display, "WM_CHANGE_STATE", False);
@@ -1579,6 +1584,9 @@ bool OS_X11::is_window_minimized() const {
 }
 
 void OS_X11::set_window_maximized(bool p_enabled) {
+	if (is_no_window_mode_enabled()) {
+		return;
+	}
 	if (is_window_maximized() == p_enabled)
 		return;
 
@@ -3226,6 +3234,12 @@ void OS_X11::swap_buffers() {
 }
 
 void OS_X11::alert(const String &p_alert, const String &p_title) {
+
+	if (is_no_window_mode_enabled()) {
+		print_line("ALERT: " + p_title + ": " + p_alert);
+		return;
+	}
+
 	const char *message_programs[] = { "zenity", "kdialog", "Xdialog", "xmessage" };
 
 	String path = get_environment("PATH");

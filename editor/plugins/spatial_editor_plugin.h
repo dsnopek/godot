@@ -481,6 +481,7 @@ public:
 	bool last_xform_dirty;
 	Spatial *sp;
 	RID sbox_instance;
+	RID sbox_instance_xray;
 
 	SpatialEditorSelectedItem() {
 		sp = NULL;
@@ -598,6 +599,7 @@ private:
 	float snap_rotate_value;
 	float snap_scale_value;
 
+	Ref<ArrayMesh> selection_box_xray;
 	Ref<ArrayMesh> selection_box;
 	RID indicators;
 	RID indicators_instance;
@@ -687,7 +689,7 @@ private:
 
 	HBoxContainer *hbc_menu;
 
-	void _generate_selection_box();
+	void _generate_selection_boxes();
 	UndoRedo *undo_redo;
 
 	int camera_override_viewport_id;
@@ -758,6 +760,7 @@ public:
 	Ref<ArrayMesh> get_scale_gizmo(int idx) const { return scale_gizmo[idx]; }
 	Ref<ArrayMesh> get_scale_plane_gizmo(int idx) const { return scale_plane_gizmo[idx]; }
 
+	void update_grid();
 	void update_transform_gizmo();
 	void update_all_gizmos(Node *p_node = NULL);
 	void snap_selected_nodes_to_floor();

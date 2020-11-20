@@ -25,25 +25,19 @@ env.AddJSLibraries(
         "native/library_godot_os.js",
     ]
 )
+
 if env["tools"]:
     env.AddJSLibraries(["native/library_godot_editor_tools.js"])
 if env["javascript_eval"]:
     env.AddJSLibraries(["native/library_godot_eval.js"])
-
 for lib in env["JS_LIBS"]:
     env.Append(LINKFLAGS=["--js-library", lib])
 env.Depends(build, env["JS_LIBS"])
 
-env.AddJSPre(
-    [
-        "native/id_handler.js",
-        "native/utils.js",
-    ]
-)
-
-for js in env["JS_PRE"]:
-    env.Append(LINKFLAGS=["--pre-js", env.File(js).path])
-env.Depends(build, env["JS_PRE"])
+if "JS_PRE" in env:
+    for js in env["JS_PRE"]:
+        env.Append(LINKFLAGS=["--pre-js", env.File(js).path])
+    env.Depends(build, env["JS_PRE"])
 
 if "JS_EXTERNS" in env:
     for ext in env["JS_EXTERNS"]:

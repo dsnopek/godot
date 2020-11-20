@@ -69,6 +69,11 @@ XRSession.prototype.onfocus;
 XRSession.prototype.onend;
 
 /**
+ * @type {?function (XRInputSourcesChangeEvent)}
+ */
+XRSession.prototype.oninputsourceschange;
+
+/**
  * @param {XRRenderStateInit} state 
  * @return {void}
  */
@@ -90,6 +95,12 @@ XRSession.prototype.cancelAnimationFrame = function (handle) {};
  * @return {Promise<void>}
  */
 XRSession.prototype.end = function () {};
+
+/**
+ * @param {string} referenceSpaceType 
+ * @return {Promise<XRReferenceSpace>}
+ */
+XRSession.prototype.requestReferenceSpace = function (referenceSpaceType) {};
 
 /**
  * @typedef {function(number, XRFrame): undefined}
@@ -161,6 +172,52 @@ XRFrame.prototype.session;
  * @return {?XRViewerPose}
  */
 XRFrame.prototype.getViewerPose = function (referenceSpace) {};
+
+/**
+ * @constructor
+ */
+function XRReferenceSpace() {};
+
+/**
+ * @type {Array<DOMPointReadOnly>}
+ */
+XRReferenceSpace.prototype.boundsGeometry;
+
+/**
+ * @param {XRRigidTransform} originOffset
+ * @return {XRReferenceSpace}
+ */
+XRReferenceSpace.prototype.getOffsetReferenceSpace = function(originOffset) {};
+
+/**
+ * @type {?function (Event)}
+ */
+XRReferenceSpace.prototype.reset;
+
+/**
+ * @constructor
+ */
+function XRRigidTransform() {};
+
+/**
+ * @type {DOMPointReadOnly}
+ */
+XRRigidTransform.prototype.position;
+
+/**
+ * @type {DOMPointReadOnly}
+ */
+XRRigidTransform.prototype.orientation;
+
+/**
+ * @type {Float32Array}
+ */
+XRRigidTransform.prototype.matrix;
+
+/**
+ * @type {XRRigidTransform}
+ */
+XRRigidTransform.prototype.inverse;
 
 /**
  * @constructor
@@ -312,3 +369,58 @@ function WebGLRenderingContextBase() {};
  * @return {Promise<void>}
  */
 WebGLRenderingContextBase.prototype.makeXRCompatible = function () {};
+
+/**
+ * @constructor
+ */
+function XRInputSourcesChangeEvent() {};
+
+/**
+ * @type {Array<XRInputSource>}
+ */
+XRInputSourcesChangeEvent.prototype.added;
+
+/**
+ * @type {Array<XRInputSource>}
+ */
+XRInputSourcesChangeEvent.prototype.removed;
+
+/**
+ * @constructor
+ */
+function XRInputSource() {};
+
+/**
+ * @type {Gamepad}
+ */
+XRInputSource.prototype.gampad;
+
+/**
+ * @type {XRSpace}
+ */
+XRInputSource.prototype.gripSpace;
+
+/**
+ * @type {string}
+ */
+XRInputSource.prototype.handedness;
+
+/**
+ * @type {string}
+ */
+XRInputSource.prototype.profiles;
+
+/**
+ * @type {string}
+ */
+XRInputSource.prototype.targetRayMode;
+
+/**
+ * @type {XRSpace}
+ */
+XRInputSource.prototype.targetRaySpace;
+
+/**
+ * @constructor
+ */
+function XRSpace() {};

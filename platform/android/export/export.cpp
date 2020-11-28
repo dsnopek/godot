@@ -1647,13 +1647,6 @@ public:
 	}
 
 	virtual void get_export_options(List<ExportOption> *r_options) {
-
-		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "graphics/32_bits_framebuffer"), true));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::INT, "xr_features/xr_mode", PROPERTY_HINT_ENUM, "Regular,Oculus Mobile VR"), 0));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::INT, "xr_features/degrees_of_freedom", PROPERTY_HINT_ENUM, "None,3DOF and 6DOF,6DOF"), 0));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::INT, "xr_features/hand_tracking", PROPERTY_HINT_ENUM, "None,Optional,Required"), 0));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "xr_features/focus_awareness"), false));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "one_click_deploy/clear_previous_install"), false));
 		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "custom_template/debug", PROPERTY_HINT_GLOBAL_FILE, "*.apk"), ""));
 		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "custom_template/release", PROPERTY_HINT_GLOBAL_FILE, "*.apk"), ""));
 		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "custom_template/use_custom_build"), false));
@@ -1666,37 +1659,51 @@ public:
 		}
 		plugins_changed = false;
 
-		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "command_line/extra_args"), ""));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::INT, "version/code", PROPERTY_HINT_RANGE, "1,4096,1,or_greater"), 1));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "version/name"), "1.0"));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "package/unique_name", PROPERTY_HINT_PLACEHOLDER_TEXT, "ext.domain.name"), "org.godotengine.$genname"));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "package/name", PROPERTY_HINT_PLACEHOLDER_TEXT, "Game Name [default if blank]"), ""));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "package/signed"), true));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "screen/immersive_mode"), true));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "screen/support_small"), true));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "screen/support_normal"), true));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "screen/support_large"), true));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "screen/support_xlarge"), true));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "screen/opengl_debug"), false));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, launcher_icon_option, PROPERTY_HINT_FILE, "*.png"), ""));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, launcher_adaptive_icon_foreground_option, PROPERTY_HINT_FILE, "*.png"), ""));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, launcher_adaptive_icon_background_option, PROPERTY_HINT_FILE, "*.png"), ""));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "keystore/debug", PROPERTY_HINT_GLOBAL_FILE, "*.keystore,*.jks"), ""));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "keystore/debug_user"), ""));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "keystore/debug_password"), ""));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "keystore/release", PROPERTY_HINT_GLOBAL_FILE, "*.keystore,*.jks"), ""));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "keystore/release_user"), ""));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "keystore/release_password"), ""));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "apk_expansion/enable"), false));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "apk_expansion/SALT"), ""));
-		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "apk_expansion/public_key", PROPERTY_HINT_MULTILINE_TEXT), ""));
-
 		Vector<String> abis = get_abis();
 		for (int i = 0; i < abis.size(); ++i) {
 			String abi = abis[i];
 			bool is_default = (abi == "armeabi-v7a" || abi == "arm64-v8a");
 			r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "architectures/" + abi), is_default));
 		}
+
+		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "keystore/debug", PROPERTY_HINT_GLOBAL_FILE, "*.keystore,*.jks"), ""));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "keystore/debug_user"), ""));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "keystore/debug_password"), ""));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "keystore/release", PROPERTY_HINT_GLOBAL_FILE, "*.keystore,*.jks"), ""));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "keystore/release_user"), ""));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "keystore/release_password"), ""));
+
+		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "one_click_deploy/clear_previous_install"), false));
+
+		r_options->push_back(ExportOption(PropertyInfo(Variant::INT, "version/code", PROPERTY_HINT_RANGE, "1,4096,1,or_greater"), 1));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "version/name"), "1.0"));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "package/unique_name", PROPERTY_HINT_PLACEHOLDER_TEXT, "ext.domain.name"), "org.godotengine.$genname"));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "package/name", PROPERTY_HINT_PLACEHOLDER_TEXT, "Game Name [default if blank]"), ""));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "package/signed"), true));
+
+		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, launcher_icon_option, PROPERTY_HINT_FILE, "*.png"), ""));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, launcher_adaptive_icon_foreground_option, PROPERTY_HINT_FILE, "*.png"), ""));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, launcher_adaptive_icon_background_option, PROPERTY_HINT_FILE, "*.png"), ""));
+
+		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "graphics/32_bits_framebuffer"), true));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "graphics/opengl_debug"), false));
+
+		r_options->push_back(ExportOption(PropertyInfo(Variant::INT, "xr_features/xr_mode", PROPERTY_HINT_ENUM, "Regular,Oculus Mobile VR"), 0));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::INT, "xr_features/degrees_of_freedom", PROPERTY_HINT_ENUM, "None,3DOF and 6DOF,6DOF"), 0));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::INT, "xr_features/hand_tracking", PROPERTY_HINT_ENUM, "None,Optional,Required"), 0));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "xr_features/focus_awareness"), false));
+
+		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "screen/immersive_mode"), true));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "screen/support_small"), true));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "screen/support_normal"), true));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "screen/support_large"), true));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "screen/support_xlarge"), true));
+
+		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "command_line/extra_args"), ""));
+
+		r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "apk_expansion/enable"), false));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "apk_expansion/SALT"), ""));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "apk_expansion/public_key", PROPERTY_HINT_MULTILINE_TEXT), ""));
 
 		r_options->push_back(ExportOption(PropertyInfo(Variant::POOL_STRING_ARRAY, "permissions/custom_permissions"), PoolStringArray()));
 
@@ -2031,15 +2038,6 @@ public:
 				if (errn != OK) {
 					err += TTR("Invalid Android SDK path for custom build in Editor Settings.");
 					err += TTR("Missing 'platform-tools' directory!");
-					err += "\n";
-					valid = false;
-				}
-
-				// Check for the build-tools directory.
-				DirAccessRef build_tools_da = DirAccess::open(sdk_path.plus_file("build-tools"), &errn);
-				if (errn != OK) {
-					err += TTR("Invalid Android SDK path for custom build in Editor Settings.");
-					err += TTR("Missing 'build-tools' directory!");
 					err += "\n";
 					valid = false;
 				}
@@ -2506,7 +2504,7 @@ public:
 			command_line_strings.push_back("--use_immersive");
 		}
 
-		bool debug_opengl = p_preset->get("screen/opengl_debug");
+		bool debug_opengl = p_preset->get("graphics/opengl_debug");
 		if (debug_opengl) {
 			command_line_strings.push_back("--debug_opengl");
 		}
@@ -2628,65 +2626,6 @@ public:
 		}
 	}
 
-	Error _zip_align_project(const String &sdk_path, const String &unaligned_file_path, const String &aligned_file_path) {
-		// Look for the zipalign tool.
-		String zipalign_command_name;
-#ifdef WINDOWS_ENABLED
-		zipalign_command_name = "zipalign.exe";
-#else
-		zipalign_command_name = "zipalign";
-#endif
-
-		String zipalign_command;
-		Error errn;
-		String build_tools_dir = sdk_path.plus_file("build-tools");
-		DirAccessRef da = DirAccess::open(build_tools_dir, &errn);
-		if (errn != OK) {
-			return errn;
-		}
-
-		// There are additional versions directories we need to go through.
-		da->list_dir_begin();
-		String sub_dir = da->get_next();
-		while (!sub_dir.empty()) {
-			if (!sub_dir.begins_with(".") && da->current_is_dir()) {
-				// Check if the tool is here.
-				String tool_path = build_tools_dir.plus_file(sub_dir).plus_file(zipalign_command_name);
-				if (FileAccess::exists(tool_path)) {
-					zipalign_command = tool_path;
-					break;
-				}
-			}
-			sub_dir = da->get_next();
-		}
-		da->list_dir_end();
-
-		if (zipalign_command.empty()) {
-			EditorNode::get_singleton()->show_warning(TTR("Unable to find the zipalign tool."));
-			return ERR_CANT_CREATE;
-		}
-
-		List<String> zipalign_args;
-		zipalign_args.push_back("-f");
-		zipalign_args.push_back("-v");
-		zipalign_args.push_back("4");
-		zipalign_args.push_back(unaligned_file_path); // source file
-		zipalign_args.push_back(aligned_file_path); // destination file
-
-		int result = EditorNode::get_singleton()->execute_and_show_output(TTR("Aligning APK..."), zipalign_command, zipalign_args);
-		if (result != 0) {
-			EditorNode::get_singleton()->show_warning(TTR("Unable to complete APK alignment."));
-			return ERR_CANT_CREATE;
-		}
-
-		// Delete the unaligned path.
-		errn = da->remove(unaligned_file_path);
-		if (errn != OK) {
-			EditorNode::get_singleton()->show_warning(TTR("Unable to delete unaligned APK."));
-		}
-		return OK;
-	}
-
 	virtual Error export_project(const Ref<EditorExportPreset> &p_preset, bool p_debug, const String &p_path, int p_flags = 0) {
 
 		ExportNotifier notifier(*this, p_preset, p_debug, p_path, p_flags);
@@ -2799,6 +2738,8 @@ public:
 			String version_code = itos(p_preset->get("version/code"));
 			String version_name = p_preset->get("version/name");
 			String enabled_abi_string = String("|").join(enabled_abis);
+			String sign_flag = _signed ? "true" : "false";
+			String zipalign_flag = "true";
 
 			Vector<PluginConfig> enabled_plugins = get_enabled_plugins(p_preset);
 			String local_plugins_binaries = get_plugins_binaries(BINARY_TYPE_LOCAL, enabled_plugins);
@@ -2827,15 +2768,25 @@ public:
 			cmdline.push_back("-Pplugins_local_binaries=" + local_plugins_binaries); // argument to specify the list of plugins local dependencies.
 			cmdline.push_back("-Pplugins_remote_binaries=" + remote_plugins_binaries); // argument to specify the list of plugins remote dependencies.
 			cmdline.push_back("-Pplugins_maven_repos=" + custom_maven_repos); // argument to specify the list of custom maven repos for the plugins dependencies.
+			cmdline.push_back("-Pperform_zipalign=" + zipalign_flag); // argument to specify whether the build should be zipaligned.
+			cmdline.push_back("-Pperform_signing=" + sign_flag); // argument to specify whether the build should be signed.
+			if (_signed && !p_debug) {
+				// Pass the release keystore info as well
+				String release_keystore = p_preset->get("keystore/release");
+				String release_username = p_preset->get("keystore/release_user");
+				String release_password = p_preset->get("keystore/release_password");
+				if (!FileAccess::exists(release_keystore)) {
+					EditorNode::add_io_error("Could not find keystore, unable to export.");
+					return ERR_FILE_CANT_OPEN;
+				}
+
+				cmdline.push_back("-Prelease_keystore_file=" + release_keystore); // argument to specify the release keystore file.
+				cmdline.push_back("-Prelease_keystore_alias=" + release_username); // argument to specify the release keystore alias.
+				cmdline.push_back("-Prelease_keystore_password=" + release_password); // argument to specity the release keystore password.
+			}
 			cmdline.push_back("-p"); // argument to specify the start directory.
 			cmdline.push_back(build_path); // start directory.
-			/*{ used for debug
-				int ec;
-				String pipe;
-				OS::get_singleton()->execute(build_command, cmdline, true, NULL, NULL, &ec);
-				print_line("exit code: " + itos(ec));
-			}
-			*/
+
 			int result = EditorNode::get_singleton()->execute_and_show_output(TTR("Building Android Project (gradle)"), build_command, cmdline);
 			if (result != 0) {
 				EditorNode::get_singleton()->show_warning(TTR("Building of Android project failed, check output for the error.\nAlternatively visit docs.godotengine.org for Android build documentation."));
@@ -2856,16 +2807,11 @@ public:
 			copy_args.push_back(build_path); // start directory.
 
 			String export_filename = p_path.get_file();
-			if (export_format == 0) {
-				// By default, generated apk are not aligned.
-				export_filename += ".unaligned";
-			}
 			String export_path = p_path.get_base_dir();
 			if (export_path.is_rel_path()) {
 				export_path = OS::get_singleton()->get_resource_dir().plus_file(export_path);
 			}
 			export_path = ProjectSettings::get_singleton()->globalize_path(export_path).simplify_path();
-			String export_file_path = export_path.plus_file(export_filename);
 
 			copy_args.push_back("-Pexport_path=file:" + export_path);
 			copy_args.push_back("-Pexport_filename=" + export_filename);
@@ -2874,21 +2820,6 @@ public:
 			if (copy_result != 0) {
 				EditorNode::get_singleton()->show_warning(TTR("Unable to copy and rename export file, check gradle project directory for outputs."));
 				return ERR_CANT_CREATE;
-			}
-
-			if (_signed) {
-				err = sign_apk(p_preset, p_debug, export_file_path, ep);
-				if (err != OK) {
-					return err;
-				}
-			}
-
-			if (export_format == 0) {
-				// Perform zip alignment
-				err = _zip_align_project(sdk_path, export_file_path, export_path.plus_file(p_path.get_file()));
-				if (err != OK) {
-					return err;
-				}
 			}
 
 			return OK;

@@ -28,7 +28,8 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#pragma once
+#ifndef RASTERIZER_STORAGE_COMMON_H
+#define RASTERIZER_STORAGE_COMMON_H
 
 class RasterizerStorageCommon {
 public:
@@ -72,3 +73,5 @@ public:
 		BTF_POLY = 1 << BT_POLY,
 	};
 };
+
+#endif // RASTERIZER_STORAGE_COMMON_H

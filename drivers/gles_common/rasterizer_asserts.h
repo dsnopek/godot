@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  library_godot_eval.js                                                */
+/*  rasterizer_asserts.h                                                 */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
@@ -28,60 +28,40 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-const GodotEval = {
+#ifndef RASTERIZER_ASSERTS_H
+#define RASTERIZER_ASSERTS_H
 
-	godot_js_eval__deps: ['$GodotOS'],
-	godot_js_eval: function(p_js, p_use_global_ctx, p_union_ptr, p_byte_arr, p_byte_arr_write, p_callback) {
-		const js_code = UTF8ToString(p_js);
-		let eval_ret = null;
-		try {
-			if (p_use_global_ctx) {
-				// indirect eval call grants global execution context
-				const global_eval = eval;
-				eval_ret = global_eval(js_code);
-			} else {
-				eval_ret = eval(js_code);
-			}
-		} catch (e) {
-			err(e);
-		}
+// For flow control checking, we want an easy way to apply asserts that occur in debug development builds only.
+// This is enforced by outputting a warning which will fail CI checks if the define is set in a PR.
+#if defined(TOOLS_ENABLED) && defined(DEBUG_ENABLED)
+// only uncomment this define for error checking in development, not in the main repository
+// as these checks will slow things down in debug builds.
+//#define RASTERIZER_EXTRA_CHECKS
+#endif
 
-		switch (typeof eval_ret) {
+#ifdef RASTERIZER_EXTRA_CHECKS
+#ifndef _MSC_VER
+#warning do not define RASTERIZER_EXTRA_CHECKS in main repository builds
+#endif
+#define RAST_DEV_DEBUG_ASSERT(a) CRASH_COND(!(a))
+#else
+#define RAST_DEV_DEBUG_ASSERT(a)
+#endif
 
-			case 'boolean':
-				setValue(p_union_ptr, eval_ret, 'i32');
-				return 1; // BOOL
+// Also very useful, an assert check that only occurs in debug tools builds
+#if defined(TOOLS_ENABLED) && defined(DEBUG_ENABLED)
+#define RAST_DEBUG_ASSERT(a) CRASH_COND(!(a))
+#else
+#define RAST_DEBUG_ASSERT(a)
+#endif
 
-			case 'number':
-				setValue(p_union_ptr, eval_ret, 'double');
-				return 3; // REAL
+// Thin wrapper around ERR_FAIL_COND to allow us to make it debug only
+#ifdef DEBUG_ENABLED
+#define RAST_FAIL_COND(m_cond) ERR_FAIL_COND(m_cond)
+#else
+#define RAST_FAIL_COND(m_cond) \
+	if (m_cond) {              \
+	}
+#endif
 
-			case 'string':
-				let array_ptr = GodotOS.allocString(eval_ret);
-				setValue(p_union_ptr, array_ptr , '*');
-				return 4; // STRING
-
-			case 'object':
-				if (eval_ret === null) {
-					break;
-				}
-
-				if (ArrayBuffer.isView(eval_ret) && !(eval_ret instanceof Uint8Array)) {
-					eval_ret = new Uint8Array(eval_ret.buffer);
-				}
-				else if (eval_ret instanceof ArrayBuffer) {
-					eval_ret = new Uint8Array(eval_ret);
-				}
-				if (eval_ret instanceof Uint8Array) {
-					const func = GodotOS.get_func(p_callback);
-					const bytes_ptr = func(p_byte_arr, p_byte_arr_write,  eval_ret.length);
-					HEAPU8.set(eval_ret, bytes_ptr);
-					return 20; // POOL_BYTE_ARRAY
-				}
-				break;
-		}
-		return 0; // NIL
-	},
-}
-
-mergeInto(LibraryManager.library, GodotEval);
+#endif // RASTERIZER_ASSERTS_H

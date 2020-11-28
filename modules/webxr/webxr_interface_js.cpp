@@ -39,7 +39,7 @@
 #include "servers/visual/visual_server_globals.h"
 #include <stdlib.h>
 
-extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_supported(char *p_session_mode, bool supported) {
+void _emwebxr_on_session_supported(char *p_session_mode, int p_supported) {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL(arvr_server);
 
@@ -47,10 +47,10 @@ extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_supported(char *p_sessi
 	ERR_FAIL_COND(interface.is_null());
 
 	String session_mode = String(p_session_mode);
-	interface->emit_signal("session_supported", session_mode, supported);
+	interface->emit_signal("session_supported", session_mode, p_supported ? true : false);
 }
 
-extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_started(char *p_reference_space_type) {
+void _emwebxr_on_session_started(char *p_reference_space_type) {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL(arvr_server);
 
@@ -62,7 +62,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_started(char *p_referen
 	interface->emit_signal("session_started");
 }
 
-extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_ended() {
+void _emwebxr_on_session_ended() {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL(arvr_server);
 
@@ -73,7 +73,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_ended() {
 	interface->emit_signal("session_ended");
 }
 
-extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_failed(char *p_message) {
+void _emwebxr_on_session_failed(char *p_message) {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL(arvr_server);
 
@@ -84,7 +84,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_session_failed(char *p_message)
 	interface->emit_signal("session_failed", message);
 }
 
-extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_controller_changed() {
+void _emwebxr_on_controller_changed() {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL(arvr_server);
 
@@ -95,7 +95,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_controller_changed() {
 }
 
 void WebXRInterfaceJS::is_session_supported(const String &p_session_mode) {
-	godot_webxr_is_session_supported(p_session_mode.utf8().get_data());
+	godot_webxr_is_session_supported(p_session_mode.utf8().get_data(), &_emwebxr_on_session_supported);
 }
 
 void WebXRInterfaceJS::set_session_mode(String p_session_mode) {
@@ -177,7 +177,11 @@ bool WebXRInterfaceJS::initialize() {
 				session_mode.utf8().get_data(),
 				required_features.utf8().get_data(),
 				optional_features.utf8().get_data(),
-				requested_reference_space_types.utf8().get_data());
+				requested_reference_space_types.utf8().get_data(),
+				&_emwebxr_on_session_started,
+				&_emwebxr_on_session_ended,
+				&_emwebxr_on_session_failed,
+				&_emwebxr_on_controller_changed);
 	};
 
 	return true;

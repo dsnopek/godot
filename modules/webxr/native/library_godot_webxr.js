@@ -29,7 +29,7 @@
 /*************************************************************************/
 var GodotWebXR = {
 
-	$GodotWebXR__deps: ['$Browser', '$GL'],
+	$GodotWebXR__deps: ['$Browser', '$GL', '$GodotRuntime'],
 	$GodotWebXR: {
 		gl: null,
 
@@ -217,27 +217,36 @@ var GodotWebXR = {
 
 	godot_webxr_is_session_supported__proxy: 'sync',
 	godot_webxr_is_session_supported__sig: 'vi',
-	godot_webxr_is_session_supported: function (p_session_mode) {
+	godot_webxr_is_session_supported: function (p_session_mode, p_callback) {
 		const session_mode = UTF8ToString(p_session_mode);
+		const cb = GodotRuntime.get_func(p_callback);
 		if (navigator.xr) {
 			navigator.xr.isSessionSupported(session_mode).then(function (supported) {
-				ccall('_emwebxr_on_session_supported', 'void', ["string", "number"], [session_mode, supported]);
+				const c_str = GodotRuntime.allocString(session_mode);
+				cb(c_str, supported ? 1 : 0);
+				GodotRuntime.free(c_str);
 			});
 		}
 		else {
-			ccall('_emwebxr_on_session_supported', 'void', ["string", "number"], [session_mode, false]);
+			const c_str = GodotRuntime.allocString(session_mode);
+			cb(c_str, 0);
+			GodotRuntime.free(c_str);
 		}
 	},
 
 	godot_webxr_initialize__proxy: 'sync',
 	godot_webxr_initialize__sig: 'viiii',
-	godot_webxr_initialize: function (p_session_mode, p_required_features, p_optional_features, p_requested_reference_spaces) {
+	godot_webxr_initialize: function (p_session_mode, p_required_features, p_optional_features, p_requested_reference_spaces, p_on_session_started, p_on_session_ended, p_on_session_failed, p_on_controller_changed) {
 		GodotWebXR.monkeyPatchRequestAnimationFrame();
 
 		const session_mode = UTF8ToString(p_session_mode);
 		const required_features = UTF8ToString(p_required_features).split(",").map((s) => { return s.trim() }).filter((s) => { return s !== "" });
 		const optional_features = UTF8ToString(p_optional_features).split(",").map((s) => { return s.trim() }).filter((s) => { return s !== "" });
 		const requested_reference_space_types = UTF8ToString(p_requested_reference_spaces).split(",").map((s) => { return s.trim() });
+		const onstarted = GodotRuntime.get_func(p_on_session_started);
+		const onended = GodotRuntime.get_func(p_on_session_ended);
+		const onfailed = GodotRuntime.get_func(p_on_session_failed);
+		const oncontroller = GodotRuntime.get_func(p_on_controller_changed);
 
 		const session_init = {};
 		if (required_features.length > 0) {
@@ -251,7 +260,7 @@ var GodotWebXR = {
 			GodotWebXR.session = session;
 
 			session.addEventListener('end', function (evt) {
-				ccall('_emwebxr_on_session_ended', 'void', [], []);
+				onended();
 			});
 
 			session.addEventListener('inputsourceschange', function (evt) {
@@ -264,7 +273,7 @@ var GodotWebXR = {
 					}
 				}
 				if (controller_changed) {
-					ccall('_emwebxr_on_controller_changed', 'void', [], []);
+					oncontroller();
 				}
 			});
 
@@ -286,12 +295,16 @@ var GodotWebXR = {
 					// set, we need to pause and resume the main loop for the XR
 					// main loop to kick in.
 					GodotWebXR.pauseResumeMainLoop();
-					ccall('_emwebxr_on_session_started', 'void', ['string'], [reference_space_type]);
+					const c_str = GodotRuntime.allocString(reference_space_type);
+					onstarted(c_str);
+					GodotRuntime.free(c_str);
 				}
 
 				function onReferenceSpaceFailure() {
 					if (requested_reference_space_types.length === 0) {
-						ccall('_emwebxr_on_session_failed', 'void', ['string'], ['Unable to get any of the requested reference space types']);
+						const c_str = GodotRuntime.allocString('Unable to get any of the requested reference space types');
+						onfailed(c_str);
+						GodotRuntime.free(c_str);
 					}
 					else {
 						requestReferenceSpace();
@@ -307,10 +320,14 @@ var GodotWebXR = {
 
 				requestReferenceSpace();
 			}).catch(function (error) {
-				ccall('_emwebxr_on_session_failed', 'void', ['string'], ['Unable to make WebGL context compatible with WebXR: ' + error]);
+				const c_str = GodotRuntime.allocString('Unable to make WebGL context compatible with WebXR: ' + error);
+				onfailed(c_str);
+				GodotRuntime.free(c_str);
 			});
 		}).catch(function (error) {
-			ccall('_emwebxr_on_session_failed', 'void', ['string'], ['Unable to start session: ' + error]);
+			const c_str = GodotRuntime.allocString('Unable to start session: ' + error);
+			onfailed(c_str);
+			GodotRuntime.free(c_str);
 		});
 	},
 

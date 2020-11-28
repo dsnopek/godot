@@ -37,10 +37,24 @@ extern "C" {
 
 #include "stddef.h"
 
-extern int godot_webxr_is_supported();
-extern void godot_webxr_is_session_supported(const char *p_session_mode);
+typedef void (*GodotWebXRSupportedCallback)(char *p_session_mode, int p_supported);
+typedef void (*GodotWebXRStartedCallback)(char *p_reference_space_type);
+typedef void (*GodotWebXREndedCallback)();
+typedef void (*GodotWebXRFailedCallback)(char *p_message);
+typedef void (*GodotWebXRControllerCallback)();
 
-extern void godot_webxr_initialize(const char *p_session_mode, const char *p_required_features, const char *p_optional_features, const char *p_requested_reference_space_types);
+extern int godot_webxr_is_supported();
+extern void godot_webxr_is_session_supported(const char *p_session_mode, GodotWebXRSupportedCallback p_callback);
+
+extern void godot_webxr_initialize(
+		const char *p_session_mode,
+		const char *p_required_features,
+		const char *p_optional_features,
+		const char *p_requested_reference_space_types,
+		GodotWebXRStartedCallback p_on_session_started,
+		GodotWebXREndedCallback p_on_session_ended,
+		GodotWebXRFailedCallback p_on_session_failed,
+		GodotWebXRControllerCallback p_on_controller_changed);
 extern void godot_webxr_uninitialize();
 
 extern int *godot_webxr_get_render_targetsize();

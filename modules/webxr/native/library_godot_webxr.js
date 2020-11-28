@@ -27,7 +27,7 @@
 /* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     */
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
-var GodotWebXR = {
+const GodotWebXR = {
 
 	$GodotWebXR__deps: ['$Browser', '$GL', '$GodotRuntime'],
 	$GodotWebXR: {
@@ -117,7 +117,7 @@ var GodotWebXR = {
 			gl.linkProgram(shaderProgram);
 
 			if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-				alert('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
+				GodotRuntime.error('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
 				return null;
 			}
 
@@ -129,7 +129,7 @@ var GodotWebXR = {
 			gl.compileShader(shader);
 
 			if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-				alert('An error occurred compiling the shader: ' + gl.getShaderInfoLog(shader));
+				GodotRuntime.error('An error occurred compiling the shader: ' + gl.getShaderInfoLog(shader));
 				gl.deleteShader(shader);
 				return null;
 			}
@@ -194,9 +194,9 @@ var GodotWebXR = {
 			}
 
 			const controllers = [];
-			for (let input_source of GodotWebXR.session.inputSources) {
+			GodotWebXR.session.inputSources.forEach((input_source) => {
 				if (input_source.targetRayMode !== 'tracked-pointer') {
-					continue;
+					return;
 				}
 				if (input_source.handedness === 'right') {
 					controllers[1] = input_source;
@@ -204,7 +204,7 @@ var GodotWebXR = {
 				else if (input_source.handedness === 'left' || !controllers[0]) {
 					controllers[0] = input_source;
 				}
-			}
+			});
 			return controllers;
 		},
 	},
@@ -218,7 +218,7 @@ var GodotWebXR = {
 	godot_webxr_is_session_supported__proxy: 'sync',
 	godot_webxr_is_session_supported__sig: 'vi',
 	godot_webxr_is_session_supported: function (p_session_mode, p_callback) {
-		const session_mode = UTF8ToString(p_session_mode);
+		const session_mode = GodotRuntime.parseString(p_session_mode);
 		const cb = GodotRuntime.get_func(p_callback);
 		if (navigator.xr) {
 			navigator.xr.isSessionSupported(session_mode).then(function (supported) {
@@ -240,10 +240,10 @@ var GodotWebXR = {
 	godot_webxr_initialize: function (p_session_mode, p_required_features, p_optional_features, p_requested_reference_spaces, p_on_session_started, p_on_session_ended, p_on_session_failed, p_on_controller_changed) {
 		GodotWebXR.monkeyPatchRequestAnimationFrame();
 
-		const session_mode = UTF8ToString(p_session_mode);
-		const required_features = UTF8ToString(p_required_features).split(",").map((s) => { return s.trim() }).filter((s) => { return s !== "" });
-		const optional_features = UTF8ToString(p_optional_features).split(",").map((s) => { return s.trim() }).filter((s) => { return s !== "" });
-		const requested_reference_space_types = UTF8ToString(p_requested_reference_spaces).split(",").map((s) => { return s.trim() });
+		const session_mode = GodotRuntime.parseString(p_session_mode);
+		const required_features = GodotRuntime.parseString(p_required_features).split(",").map((s) => { return s.trim() }).filter((s) => { return s !== "" });
+		const optional_features = GodotRuntime.parseString(p_optional_features).split(",").map((s) => { return s.trim() }).filter((s) => { return s !== "" });
+		const requested_reference_space_types = GodotRuntime.parseString(p_requested_reference_spaces).split(",").map((s) => { return s.trim() });
 		const onstarted = GodotRuntime.get_func(p_on_session_started);
 		const onended = GodotRuntime.get_func(p_on_session_ended);
 		const onfailed = GodotRuntime.get_func(p_on_session_failed);
@@ -266,13 +266,13 @@ var GodotWebXR = {
 
 			session.addEventListener('inputsourceschange', function (evt) {
 				let controller_changed = false;
-				for (let lst of [evt.added, evt.removed]) {
-					for (let input_source of lst) {
+				[evt.added, evt.removed].forEach((lst) => {
+					lst.forEach((input_source) => {
 						if (input_source.targetRayMode === 'tracked-pointer') {
 							controller_changed = true;
 						}
-					}
-				}
+					});
+				});
 				if (controller_changed) {
 					oncontroller();
 				}
@@ -298,22 +298,20 @@ var GodotWebXR = {
 					GodotRuntime.free(c_str);
 				}
 
-				function onReferenceSpaceFailure() {
-					if (requested_reference_space_types.length === 0) {
-						const c_str = GodotRuntime.allocString('Unable to get any of the requested reference space types');
-						onfailed(c_str);
-						GodotRuntime.free(c_str);
-					}
-					else {
-						requestReferenceSpace();
-					}
-				}
-
 				function requestReferenceSpace() {
 					let reference_space_type = requested_reference_space_types.shift();
 					session.requestReferenceSpace(reference_space_type)
 						.then((refSpace) => { onReferenceSpaceSuccess(refSpace, reference_space_type); })
-						.catch(onReferenceSpaceFailure);
+						.catch(() => {
+							if (requested_reference_space_types.length === 0) {
+								const c_str = GodotRuntime.allocString('Unable to get any of the requested reference space types');
+								onfailed(c_str);
+								GodotRuntime.free(c_str);
+							}
+							else {
+								requestReferenceSpace();
+							}
+						});
 				}
 
 				requestReferenceSpace();
@@ -405,7 +403,7 @@ var GodotWebXR = {
 			return 0;
 		}
 
-		const view_index = (p_eye == 2 /* ARVRInterface::EYE_RIGHT */) ? 1 : 0;
+		const view_index = (p_eye === 2 /* ARVRInterface::EYE_RIGHT */) ? 1 : 0;
 		const matrix = GodotWebXR.pose.views[view_index].projectionMatrix;
 		let buf = GodotRuntime.malloc(16 * 4);
 		for (let i = 0; i < 16; i++) {
@@ -421,7 +419,7 @@ var GodotWebXR = {
 			return 0;
 		}
 
-		const view_index = (p_eye == 2 /* ARVRInterface::EYE_RIGHT */) ? 1 : 0;
+		const view_index = (p_eye === 2 /* ARVRInterface::EYE_RIGHT */) ? 1 : 0;
 		if (GodotWebXR.texture_ids[view_index]) {
 			return GodotWebXR.texture_ids[view_index];
 		}
@@ -455,7 +453,7 @@ var GodotWebXR = {
 			return;
 		}
 
-		const view_index = (p_eye == 2 /* ARVRInterface::EYE_RIGHT */) ? 1 : 0;
+		const view_index = (p_eye === 2 /* ARVRInterface::EYE_RIGHT */) ? 1 : 0;
 		const glLayer = GodotWebXR.session.renderState.baseLayer;
 		const view = GodotWebXR.pose.views[view_index];
 		const viewport = glLayer.getViewport(view);

@@ -216,7 +216,7 @@ const GodotWebXR = {
 	},
 
 	godot_webxr_is_session_supported__proxy: 'sync',
-	godot_webxr_is_session_supported__sig: 'vi',
+	godot_webxr_is_session_supported__sig: 'vii',
 	godot_webxr_is_session_supported: function (p_session_mode, p_callback) {
 		const session_mode = GodotRuntime.parseString(p_session_mode);
 		const cb = GodotRuntime.get_func(p_callback);
@@ -236,7 +236,7 @@ const GodotWebXR = {
 
 	godot_webxr_initialize__deps: ['emscripten_webgl_get_current_context'],
 	godot_webxr_initialize__proxy: 'sync',
-	godot_webxr_initialize__sig: 'viiii',
+	godot_webxr_initialize__sig: 'viiiiiiii',
 	godot_webxr_initialize: function (p_session_mode, p_required_features, p_optional_features, p_requested_reference_spaces, p_on_session_started, p_on_session_ended, p_on_session_failed, p_on_controller_changed) {
 		GodotWebXR.monkeyPatchRequestAnimationFrame();
 

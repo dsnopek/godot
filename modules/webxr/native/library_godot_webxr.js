@@ -47,7 +47,7 @@ const GodotWebXR = {
 		orig_RequestAnimationFrame: null,
 		requestAnimationFrame: (callback) => {
 			if (GodotWebXR.session && GodotWebXR.space) {
-				let onFrame = function (time, frame) {
+				const onFrame = function (time, frame) {
 					// @todo Do we actually need to do this?
 					GodotWebXR.session = frame.session;
 
@@ -58,8 +58,7 @@ const GodotWebXR = {
 					GodotWebXR.pose = null;
 				};
 				GodotWebXR.session.requestAnimationFrame(onFrame);
-			}
-			else {
+			} else {
 				GodotWebXR.orig_requestAnimationFrame(callback);
 			}
 		},
@@ -76,7 +75,9 @@ const GodotWebXR = {
 			// gets picked up automatically, however, in the Oculus Browser
 			// on the Quest, we need to pause and resume the main loop.
 			Browser.mainLoop.pause();
-			window.setTimeout(function () { Browser.mainLoop.resume(); });
+			window.setTimeout(function () {
+				Browser.mainLoop.resume();
+			});
 		},
 
 		// Some custom WebGL code for blitting our eye textures to the
@@ -117,7 +118,7 @@ const GodotWebXR = {
 			gl.linkProgram(shaderProgram);
 
 			if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-				GodotRuntime.error('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
+				GodotRuntime.error(`Unable to initialize the shader program: ${gl.getProgramInfoLog(shaderProgram)}`);
 				return null;
 			}
 
@@ -129,7 +130,7 @@ const GodotWebXR = {
 			gl.compileShader(shader);
 
 			if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-				GodotRuntime.error('An error occurred compiling the shader: ' + gl.getShaderInfoLog(shader));
+				GodotRuntime.error(`An error occurred compiling the shader: ${gl.getShaderInfoLog(shader)}`);
 				gl.deleteShader(shader);
 				return null;
 			}
@@ -142,8 +143,8 @@ const GodotWebXR = {
 			const positions = [
 				-1.0, -1.0,
 				1.0, -1.0,
-				-1.0,  1.0,
-				1.0,  1.0,
+				-1.0, 1.0,
+				1.0, 1.0,
 			];
 			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 			return positionBuffer;
@@ -200,8 +201,7 @@ const GodotWebXR = {
 				}
 				if (input_source.handedness === 'right') {
 					controllers[1] = input_source;
-				}
-				else if (input_source.handedness === 'left' || !controllers[0]) {
+				} else if (input_source.handedness === 'left' || !controllers[0]) {
 					controllers[0] = input_source;
 				}
 			});
@@ -226,8 +226,7 @@ const GodotWebXR = {
 				cb(c_str, supported ? 1 : 0);
 				GodotRuntime.free(c_str);
 			});
-		}
-		else {
+		} else {
 			const c_str = GodotRuntime.allocString(session_mode);
 			cb(c_str, 0);
 			GodotRuntime.free(c_str);
@@ -241,9 +240,9 @@ const GodotWebXR = {
 		GodotWebXR.monkeyPatchRequestAnimationFrame();
 
 		const session_mode = GodotRuntime.parseString(p_session_mode);
-		const required_features = GodotRuntime.parseString(p_required_features).split(",").map((s) => { return s.trim() }).filter((s) => { return s !== "" });
-		const optional_features = GodotRuntime.parseString(p_optional_features).split(",").map((s) => { return s.trim() }).filter((s) => { return s !== "" });
-		const requested_reference_space_types = GodotRuntime.parseString(p_requested_reference_spaces).split(",").map((s) => { return s.trim() });
+		const required_features = GodotRuntime.parseString(p_required_features).split(',').map((s) => s.trim()).filter((s) => s !== '');
+		const optional_features = GodotRuntime.parseString(p_optional_features).split(',').map((s) => s.trim()).filter((s) => s !== '');
+		const requested_reference_space_types = GodotRuntime.parseString(p_requested_reference_spaces).split(',').map((s) => s.trim());
 		const onstarted = GodotRuntime.get_func(p_on_session_started);
 		const onended = GodotRuntime.get_func(p_on_session_ended);
 		const onfailed = GodotRuntime.get_func(p_on_session_failed);
@@ -284,7 +283,7 @@ const GodotWebXR = {
 
 			gl.makeXRCompatible().then(function () {
 				session.updateRenderState({
-					baseLayer: new XRWebGLLayer(session, gl)
+					baseLayer: new XRWebGLLayer(session, gl),
 				});
 
 				function onReferenceSpaceSuccess(reference_space, reference_space_type) {
@@ -299,16 +298,17 @@ const GodotWebXR = {
 				}
 
 				function requestReferenceSpace() {
-					let reference_space_type = requested_reference_space_types.shift();
+					const reference_space_type = requested_reference_space_types.shift();
 					session.requestReferenceSpace(reference_space_type)
-						.then((refSpace) => { onReferenceSpaceSuccess(refSpace, reference_space_type); })
+						.then((refSpace) => {
+							onReferenceSpaceSuccess(refSpace, reference_space_type);
+						})
 						.catch(() => {
 							if (requested_reference_space_types.length === 0) {
 								const c_str = GodotRuntime.allocString('Unable to get any of the requested reference space types');
 								onfailed(c_str);
 								GodotRuntime.free(c_str);
-							}
-							else {
+							} else {
 								requestReferenceSpace();
 							}
 						});
@@ -316,12 +316,12 @@ const GodotWebXR = {
 
 				requestReferenceSpace();
 			}).catch(function (error) {
-				const c_str = GodotRuntime.allocString('Unable to make WebGL context compatible with WebXR: ' + error);
+				const c_str = GodotRuntime.allocString(`Unable to make WebGL context compatible with WebXR: ${error}`);
 				onfailed(c_str);
 				GodotRuntime.free(c_str);
 			});
 		}).catch(function (error) {
-			const c_str = GodotRuntime.allocString('Unable to start session: ' + error);
+			const c_str = GodotRuntime.allocString(`Unable to start session: ${error}`);
 			onfailed(c_str);
 			GodotRuntime.free(c_str);
 		});
@@ -368,7 +368,7 @@ const GodotWebXR = {
 		const view = GodotWebXR.pose.views[0];
 		const viewport = glLayer.getViewport(view);
 
-		let buf = GodotRuntime.malloc(2 * 4);
+		const buf = GodotRuntime.malloc(2 * 4);
 		GodotRuntime.setHeapValue(buf + 0, viewport.width, 'i32');
 		GodotRuntime.setHeapValue(buf + 4, viewport.height, 'i32');
 		return buf;
@@ -385,13 +385,12 @@ const GodotWebXR = {
 		let matrix;
 		if (p_eye === 0) {
 			matrix = GodotWebXR.pose.transform.matrix;
-		}
-		else {
+		} else {
 			matrix = views[p_eye - 1].transform.matrix;
 		}
-		let buf = GodotRuntime.malloc(16 * 4);
+		const buf = GodotRuntime.malloc(16 * 4);
 		for (let i = 0; i < 16; i++) {
-			GodotRuntime.setHeapValue(buf + (i * 4), matrix[i], 'float')
+			GodotRuntime.setHeapValue(buf + (i * 4), matrix[i], 'float');
 		}
 		return buf;
 	},
@@ -405,9 +404,9 @@ const GodotWebXR = {
 
 		const view_index = (p_eye === 2 /* ARVRInterface::EYE_RIGHT */) ? 1 : 0;
 		const matrix = GodotWebXR.pose.views[view_index].projectionMatrix;
-		let buf = GodotRuntime.malloc(16 * 4);
+		const buf = GodotRuntime.malloc(16 * 4);
 		for (let i = 0; i < 16; i++) {
-			GodotRuntime.setHeapValue(buf + (i * 4), matrix[i], 'float')
+			GodotRuntime.setHeapValue(buf + (i * 4), matrix[i], 'float');
 		}
 		return buf;
 	},
@@ -522,9 +521,9 @@ const GodotWebXR = {
 		}
 		const matrix = pose.transform.matrix;
 
-		let buf = GodotRuntime.malloc(16 * 4);
+		const buf = GodotRuntime.malloc(16 * 4);
 		for (let i = 0; i < 16; i++) {
-			GodotRuntime.setHeapValue(buf + (i * 4), matrix[i], 'float')
+			GodotRuntime.setHeapValue(buf + (i * 4), matrix[i], 'float');
 		}
 		return buf;
 	},
@@ -543,10 +542,10 @@ const GodotWebXR = {
 
 		const button_count = controller.gamepad.buttons.length;
 
-		let buf = GodotRuntime.malloc((button_count + 1) * 4);
+		const buf = GodotRuntime.malloc((button_count + 1) * 4);
 		GodotRuntime.setHeapValue(buf, button_count, 'i32');
 		for (let i = 0; i < button_count; i++) {
-			GodotRuntime.setHeapValue(buf + 4 + (i * 4), controller.gamepad.buttons[i].value, 'float')
+			GodotRuntime.setHeapValue(buf + 4 + (i * 4), controller.gamepad.buttons[i].value, 'float');
 		}
 		return buf;
 	},
@@ -565,15 +564,15 @@ const GodotWebXR = {
 
 		const axes_count = controller.gamepad.axes.length;
 
-		let buf = GodotRuntime.malloc((axes_count + 1) * 4);
+		const buf = GodotRuntime.malloc((axes_count + 1) * 4);
 		GodotRuntime.setHeapValue(buf, axes_count, 'i32');
 		for (let i = 0; i < axes_count; i++) {
-			GodotRuntime.setHeapValue(buf + 4 + (i * 4), controller.gamepad.axes[i], 'float')
+			GodotRuntime.setHeapValue(buf + 4 + (i * 4), controller.gamepad.axes[i], 'float');
 		}
 		return buf;
 	},
 
 };
 
-autoAddDeps(GodotWebXR, "$GodotWebXR");
+autoAddDeps(GodotWebXR, '$GodotWebXR');
 mergeInto(LibraryManager.library, GodotWebXR);

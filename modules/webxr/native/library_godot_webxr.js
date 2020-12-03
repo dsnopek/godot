@@ -48,9 +48,6 @@ const GodotWebXR = {
 		requestAnimationFrame: (callback) => {
 			if (GodotWebXR.session && GodotWebXR.space) {
 				const onFrame = function (time, frame) {
-					// @todo Do we actually need to do this?
-					GodotWebXR.session = frame.session;
-
 					GodotWebXR.frame = frame;
 					GodotWebXR.pose = frame.getViewerPose(GodotWebXR.space);
 					callback(time);

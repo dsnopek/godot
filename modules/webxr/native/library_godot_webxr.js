@@ -203,17 +203,14 @@ const GodotWebXR = {
 					} else if (input_source.handedness === 'left' || !controllers[0]) {
 						controllers[0] = input_source;
 					}
-				}
-				else {
+				} else {
 					controllers[other_index++] = input_source;
 				}
 			});
 			GodotWebXR.controllers = controllers;
 		},
 
-		getControllerId: (input_source) => {
-			return GodotWebXR.controllers.indexOf(input_source);
-		},
+		getControllerId: (input_source) => GodotWebXR.controllers.indexOf(input_source),
 	},
 
 	godot_webxr_is_supported__proxy: 'sync',

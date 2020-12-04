@@ -94,6 +94,17 @@ void _emwebxr_on_controller_changed() {
 	((WebXRInterfaceJS *)interface.ptr())->_on_controller_changed();
 }
 
+extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_input_event(char *p_signal_name, int p_input_source) {
+	ARVRServer *arvr_server = ARVRServer::get_singleton();
+	ERR_FAIL_NULL(arvr_server);
+
+	Ref<ARVRInterface> interface = arvr_server->find_interface("WebXR");
+	ERR_FAIL_COND(interface.is_null());
+
+	StringName signal_name = StringName(p_signal_name);
+	interface->emit_signal(signal_name, p_input_source + 1);
+}
+
 void WebXRInterfaceJS::is_session_supported(const String &p_session_mode) {
 	godot_webxr_is_session_supported(p_session_mode.utf8().get_data(), &_emwebxr_on_session_supported);
 }
@@ -181,7 +192,8 @@ bool WebXRInterfaceJS::initialize() {
 				&_emwebxr_on_session_started,
 				&_emwebxr_on_session_ended,
 				&_emwebxr_on_session_failed,
-				&_emwebxr_on_controller_changed);
+				&_emwebxr_on_controller_changed,
+				&_emwebxr_on_input_event);
 	};
 
 	return true;
@@ -318,17 +330,20 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 	ERR_FAIL_NULL(arvr_server);
 
 	ARVRPositionalTracker *tracker = arvr_server->find_by_type_and_id(ARVRServer::TRACKER_CONTROLLER, p_controller_id + 1);
-	if (tracker == nullptr) {
-		tracker = memnew(ARVRPositionalTracker);
-		tracker->set_name(p_controller_id == 0 ? "Left" : "Right");
-		tracker->set_type(ARVRServer::TRACKER_CONTROLLER);
-		tracker->set_hand(p_controller_id == 0 ? ARVRPositionalTracker::TRACKER_LEFT_HAND : ARVRPositionalTracker::TRACKER_RIGHT_HAND);
-		// Use the ids we're giving to our "virtual" gamepads.
-		tracker->set_joy_id(p_controller_id + 100);
-		arvr_server->add_tracker(tracker);
-	}
-
 	if (godot_webxr_is_controller_connected(p_controller_id)) {
+		if (tracker == nullptr) {
+			tracker = memnew(ARVRPositionalTracker);
+			tracker->set_type(ARVRServer::TRACKER_CONTROLLER);
+			// Controller id's 0 and 1 are always the left and right hands.
+			if (p_controller_id < 2) {
+				tracker->set_name(p_controller_id == 0 ? "Left" : "Right");
+				tracker->set_hand(p_controller_id == 0 ? ARVRPositionalTracker::TRACKER_LEFT_HAND : ARVRPositionalTracker::TRACKER_RIGHT_HAND);
+			}
+			// Use the ids we're giving to our "virtual" gamepads.
+			tracker->set_joy_id(p_controller_id + 100);
+			arvr_server->add_tracker(tracker);
+		}
+
 		InputDefault *input = (InputDefault *)Input::get_singleton();
 
 		float *tracker_matrix = godot_webxr_get_controller_transform(p_controller_id);
@@ -357,6 +372,8 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 			}
 			free(axes);
 		}
+	} else if (tracker) {
+		arvr_server->remove_tracker(tracker);
 	}
 }
 

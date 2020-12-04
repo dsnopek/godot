@@ -197,7 +197,6 @@ const GodotWebXR = {
 			let other_index = 2;
 			const controllers = [];
 			GodotWebXR.session.inputSources.forEach((input_source) => {
-				const idx;
 				if (input_source.targetRayMode === 'tracked-pointer') {
 					if (input_source.handedness === 'right') {
 						controllers[1] = input_source;

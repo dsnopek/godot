@@ -149,6 +149,13 @@ String WebXRInterfaceJS::get_reference_space_type() const {
 	return reference_space_type;
 }
 
+ARVRPositionalTracker *WebXRInterfaceJS::get_controller(int p_controller_id) const {
+	ARVRServer *arvr_server = ARVRServer::get_singleton();
+	ERR_FAIL_NULL_V(arvr_server, nullptr);
+
+	return arvr_server->find_by_type_and_id(ARVRServer::TRACKER_CONTROLLER, p_controller_id);
+}
+
 StringName WebXRInterfaceJS::get_name() const {
 	return "WebXR";
 };

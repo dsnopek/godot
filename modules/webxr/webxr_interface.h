@@ -47,7 +47,6 @@ protected:
 	static void _bind_methods();
 
 public:
-	// @todo Should these really use enums instead of strings?
 	virtual void is_session_supported(const String &p_session_mode) = 0;
 	virtual void set_session_mode(String p_session_mode) = 0;
 	virtual String get_session_mode() const = 0;
@@ -58,6 +57,7 @@ public:
 	virtual void set_requested_reference_space_types(String p_requested_reference_space_types) = 0;
 	virtual String get_requested_reference_space_types() const = 0;
 	virtual String get_reference_space_type() const = 0;
+	virtual ARVRPositionalTracker *get_controller(int p_controller_id) const = 0;
 };
 
 #endif // WEBXR_INTERFACE_H

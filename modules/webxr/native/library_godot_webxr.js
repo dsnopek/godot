@@ -186,25 +186,33 @@ const GodotWebXR = {
 		// Holds the controllers list between function calls.
 		controllers: [],
 
-		// Gets an array with 0-2 items, where the left hand (or sole tracker)
-		// is the first element, and the right hand is the second element.
-		getControllers: () => {
-			if (!GodotWebXR.session) {
-				return [];
+		// Updates controllers array, where the left hand (or sole tracker) is
+		// the first element, and the right hand is the second element, and any
+		// others placed at the 3rd position and up.
+		sampleControllers: () => {
+			if (!GodotWebXR.session || !GodotWebXR.frame) {
+				return;
 			}
 
+			let other_index = 2;
 			const controllers = [];
 			GodotWebXR.session.inputSources.forEach((input_source) => {
-				if (input_source.targetRayMode !== 'tracked-pointer') {
-					return;
+				if (input_source.targetRayMode === 'tracked-pointer') {
+					if (input_source.handedness === 'right') {
+						controllers[1] = input_source;
+					} else if (input_source.handedness === 'left' || !controllers[0]) {
+						controllers[0] = input_source;
+					}
 				}
-				if (input_source.handedness === 'right') {
-					controllers[1] = input_source;
-				} else if (input_source.handedness === 'left' || !controllers[0]) {
-					controllers[0] = input_source;
+				else {
+					controllers[other_index++] = input_source;
 				}
 			});
-			return controllers;
+			GodotWebXR.controllers = controllers;
+		},
+
+		getControllerId: (input_source) => {
+			return GodotWebXR.controllers.indexOf(input_source);
 		},
 	},
 
@@ -234,8 +242,8 @@ const GodotWebXR = {
 
 	godot_webxr_initialize__deps: ['emscripten_webgl_get_current_context'],
 	godot_webxr_initialize__proxy: 'sync',
-	godot_webxr_initialize__sig: 'viiiiiiii',
-	godot_webxr_initialize: function (p_session_mode, p_required_features, p_optional_features, p_requested_reference_spaces, p_on_session_started, p_on_session_ended, p_on_session_failed, p_on_controller_changed) {
+	godot_webxr_initialize__sig: 'viiiiiiiii',
+	godot_webxr_initialize: function (p_session_mode, p_required_features, p_optional_features, p_requested_reference_spaces, p_on_session_started, p_on_session_ended, p_on_session_failed, p_on_controller_changed, p_on_input_event) {
 		GodotWebXR.monkeyPatchRequestAnimationFrame();
 
 		const session_mode = GodotRuntime.parseString(p_session_mode);
@@ -246,6 +254,7 @@ const GodotWebXR = {
 		const onended = GodotRuntime.get_func(p_on_session_ended);
 		const onfailed = GodotRuntime.get_func(p_on_session_failed);
 		const oncontroller = GodotRuntime.get_func(p_on_controller_changed);
+		const oninputevent = GodotRuntime.get_func(p_on_input_event);
 
 		const session_init = {};
 		if (required_features.length > 0) {
@@ -274,6 +283,14 @@ const GodotWebXR = {
 				if (controller_changed) {
 					oncontroller();
 				}
+			});
+
+			['selectstart', 'select', 'selectend', 'squeezestart', 'squeeze', 'squeezeend'].forEach((input_event) => {
+				session.addEventListener(input_event, function (evt) {
+					const c_str = GodotRuntime.allocString(input_event);
+					oninputevent(c_str, GodotWebXR.getControllerId(evt.inputSource));
+					GodotRuntime.free(c_str);
+				});
 			});
 
 			const gl_context_handle = _emscripten_webgl_get_current_context(); // eslint-disable-line no-undef
@@ -474,10 +491,7 @@ const GodotWebXR = {
 	godot_webxr_sample_controller_data__proxy: 'sync',
 	godot_webxr_sample_controller_data__sig: 'v',
 	godot_webxr_sample_controller_data: function () {
-		if (!GodotWebXR.session || !GodotWebXR.frame) {
-			return;
-		}
-		GodotWebXR.controllers = GodotWebXR.getControllers();
+		GodotWebXR.sampleControllers();
 	},
 
 	godot_webxr_get_controller_count__proxy: 'sync',

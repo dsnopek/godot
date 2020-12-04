@@ -79,6 +79,36 @@ XRSession.prototype.onend;
 XRSession.prototype.oninputsourceschange;
 
 /**
+ * @type {?function (XRInputSourceEvent)}
+ */
+XRSession.prototype.onselectstart;
+
+/**
+ * @type {?function (XRInputSourceEvent)}
+ */
+XRSession.prototype.onselect;
+
+/**
+ * @type {?function (XRInputSourceEvent)}
+ */
+XRSession.prototype.onselectend;
+
+/**
+ * @type {?function (XRInputSourceEvent)}
+ */
+XRSession.prototype.onsqueezestart;
+
+/**
+ * @type {?function (XRInputSourceEvent)}
+ */
+XRSession.prototype.onsqueeze;
+
+/**
+ * @type {?function (XRInputSourceEvent)}
+ */
+XRSession.prototype.onsqueezeend;
+
+/**
  * @param {XRRenderStateInit} state
  * @return {void}
  */
@@ -397,6 +427,21 @@ XRInputSourcesChangeEvent.prototype.added;
  * @type {Array<XRInputSource>}
  */
 XRInputSourcesChangeEvent.prototype.removed;
+
+/**
+ * @constructor
+ */
+function XRInputSourceEvent() {};
+
+/**
+ * @type {XRFrame}
+ */
+XRInputSourceEvent.prototype.frame;
+
+/**
+ * @type {XRInputSource}
+ */
+XRInputSourceEvent.prototype.inputSource;
 
 /**
  * @constructor

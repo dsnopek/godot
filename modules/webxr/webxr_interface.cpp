@@ -42,6 +42,7 @@ void WebXRInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_reference_space_type"), &WebXRInterface::get_reference_space_type);
 	ClassDB::bind_method(D_METHOD("set_requested_reference_space_types", "requested_reference_space_types"), &WebXRInterface::set_requested_reference_space_types);
 	ClassDB::bind_method(D_METHOD("get_requested_reference_space_types"), &WebXRInterface::get_requested_reference_space_types);
+	ClassDB::bind_method(D_METHOD("get_controller"), &WebXRInterface::get_controller);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "session_mode", PROPERTY_HINT_NONE), "set_session_mode", "get_session_mode");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "required_features", PROPERTY_HINT_NONE), "set_required_features", "get_required_features");
@@ -53,4 +54,11 @@ void WebXRInterface::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("session_started"));
 	ADD_SIGNAL(MethodInfo("session_ended"));
 	ADD_SIGNAL(MethodInfo("session_failed", PropertyInfo(Variant::STRING, "message")));
+
+	ADD_SIGNAL(MethodInfo("selectstart", PropertyInfo(Variant::INT, "controller_id")));
+	ADD_SIGNAL(MethodInfo("select", PropertyInfo(Variant::INT, "controller_id")));
+	ADD_SIGNAL(MethodInfo("selectend", PropertyInfo(Variant::INT, "controller_id")));
+	ADD_SIGNAL(MethodInfo("squeezestart", PropertyInfo(Variant::INT, "controller_id")));
+	ADD_SIGNAL(MethodInfo("squeeze", PropertyInfo(Variant::INT, "controller_id")));
+	ADD_SIGNAL(MethodInfo("squeezeend", PropertyInfo(Variant::INT, "controller_id")));
 }

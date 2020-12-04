@@ -287,7 +287,9 @@ const GodotWebXR = {
 
 			['selectstart', 'select', 'selectend', 'squeezestart', 'squeeze', 'squeezeend'].forEach((input_event) => {
 				session.addEventListener(input_event, function (evt) {
-					oninputevent(input_event, GodotWebXR.getControllerId(evt.inputSource));
+					const c_str = GodotRuntime.allocString(input_event);
+					oninputevent(c_str, GodotWebXR.getControllerId(evt.inputSource));
+					GodotRuntime.free(c_str);
 				});
 			});
 

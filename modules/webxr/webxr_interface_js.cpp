@@ -156,6 +156,22 @@ ARVRPositionalTracker *WebXRInterfaceJS::get_controller(int p_controller_id) con
 	return arvr_server->find_by_type_and_id(ARVRServer::TRACKER_CONTROLLER, p_controller_id);
 }
 
+PoolVector3Array WebXRInterfaceJS::get_bounds_geometry() const {
+	PoolVector3Array ret;
+
+	int *js_bounds = godot_webxr_get_bounds_geometry();
+	if (js_bounds) {
+		ret.resize(js_bounds[0]);
+		for (int i = 0; i < js_bounds[0]; i++) {
+			float *js_vector3 = ((float *)js_bounds) + (i * 3) + 1;
+			ret.set(i, Vector3(js_vector3[0], js_vector3[1], js_vector3[2]));
+		}
+		free(js_bounds);
+	}
+
+	return ret;
+}
+
 StringName WebXRInterfaceJS::get_name() const {
 	return "WebXR";
 };

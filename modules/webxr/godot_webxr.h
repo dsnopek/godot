@@ -72,6 +72,8 @@ extern float *godot_webxr_get_controller_transform(int p_controller);
 extern int *godot_webxr_get_controller_buttons(int p_controller);
 extern int *godot_webxr_get_controller_axes(int p_controller);
 
+extern int *godot_webxr_get_bounds_geometry();
+
 #ifdef __cplusplus
 }
 #endif

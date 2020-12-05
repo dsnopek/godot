@@ -76,7 +76,7 @@ const GodotWebXR = {
 			window.setTimeout(function () {
 				Browser.resumeAsyncCallbacks();
 				Browser.mainLoop.resume();
-			});
+			}, 0);
 		},
 
 		// Some custom WebGL code for blitting our eye textures to the
@@ -305,9 +305,14 @@ const GodotWebXR = {
 					// set, we need to pause and resume the main loop for the XR
 					// main loop to kick in.
 					GodotWebXR.pauseResumeMainLoop();
-					const c_str = GodotRuntime.allocString(reference_space_type);
-					onstarted(c_str);
-					GodotRuntime.free(c_str);
+					// Call in setTimeout() so that errors in the onstarted()
+					// callback don't bubble up here and cause Godot to try the
+					// next reference space.
+					window.setTimeout(function () {
+						const c_str = GodotRuntime.allocString(reference_space_type);
+						onstarted(c_str);
+						GodotRuntime.free(c_str);
+					}, 0);
 				}
 
 				function requestReferenceSpace() {
@@ -579,6 +584,30 @@ const GodotWebXR = {
 		for (let i = 0; i < axes_count; i++) {
 			GodotRuntime.setHeapValue(buf + 4 + (i * 4), controller.gamepad.axes[i], 'float');
 		}
+		return buf;
+	},
+
+	godot_webxr_get_bounds_geometry__proxy: 'sync',
+	godot_webxr_get_bounds_geometry__sig: 'i',
+	godot_webxr_get_bounds_geometry: function () {
+		if (!GodotWebXR.space || !GodotWebXR.space.boundsGeometry) {
+			return 0;
+		}
+
+		const point_count = GodotWebXR.space.boundsGeometry.length;
+		if (point_count === 0) {
+			return 0;
+		}
+
+		const buf = GodotRuntime.malloc(((point_count * 3) + 1) * 4);
+		GodotRuntime.setHeapValue(buf, point_count, 'i32');
+		for (let i = 0; i < point_count; i++) {
+			const point = GodotWebXR.space.boundsGeometry[i];
+			GodotRuntime.setHeapValue(buf + ((i * 3) + 1) * 4, point.x, 'float');
+			GodotRuntime.setHeapValue(buf + ((i * 3) + 2) * 4, point.y, 'float');
+			GodotRuntime.setHeapValue(buf + ((i * 3) + 3) * 4, point.z, 'float');
+		}
+
 		return buf;
 	},
 

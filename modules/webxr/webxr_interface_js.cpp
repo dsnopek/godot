@@ -163,8 +163,8 @@ PoolVector3Array WebXRInterfaceJS::get_bounds_geometry() const {
 	if (js_bounds) {
 		ret.resize(js_bounds[0]);
 		for (int i = 0; i < js_bounds[0]; i++) {
-			float *js_vector3 = (float *)js_bounds[(i * 3) + 1];
-			ret.append(Vector3(js_vector3[0], js_vector3[1], js_vector3[2]));
+			float *js_vector3 = ((float *)js_bounds) + (i * 3) + 1;
+			ret.set(i, Vector3(js_vector3[0], js_vector3[1], js_vector3[2]));
 		}
 		free(js_bounds);
 	}

@@ -43,6 +43,7 @@ void WebXRInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_requested_reference_space_types", "requested_reference_space_types"), &WebXRInterface::set_requested_reference_space_types);
 	ClassDB::bind_method(D_METHOD("get_requested_reference_space_types"), &WebXRInterface::get_requested_reference_space_types);
 	ClassDB::bind_method(D_METHOD("get_controller"), &WebXRInterface::get_controller);
+	ClassDB::bind_method(D_METHOD("get_bounds_geometry"), &WebXRInterface::get_bounds_geometry);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "session_mode", PROPERTY_HINT_NONE), "set_session_mode", "get_session_mode");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "required_features", PROPERTY_HINT_NONE), "set_required_features", "get_required_features");

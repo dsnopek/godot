@@ -265,8 +265,6 @@ Transform WebXRInterfaceJS::get_transform_for_eye(ARVRInterface::Eyes p_eye, con
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL_V(arvr_server, transform_for_eye);
 
-	// @todo In 3DOF where we only have rotation, we should take the position from the p_cam_transform, I think?
-
 	float *js_matrix = godot_webxr_get_transform_for_eye(p_eye);
 	if (!initialized || js_matrix == nullptr) {
 		transform_for_eye = p_cam_transform;
@@ -297,8 +295,8 @@ CameraMatrix WebXRInterfaceJS::get_projection_for_eye(ARVRInterface::Eyes p_eye,
 	free(js_matrix);
 
 	// Copied from godot_oculus_mobile's ovr_mobile_session.cpp
-	//eye.matrix[2][2] = -(p_z_far + p_z_near) / (p_z_far - p_z_near);
-	//eye.matrix[2][3] = -(2.0f * p_z_far * p_z_near) / (p_z_far - p_z_near);
+	eye.matrix[2][2] = -(p_z_far + p_z_near) / (p_z_far - p_z_near);
+	eye.matrix[3][2] = -(2.0f * p_z_far * p_z_near) / (p_z_far - p_z_near);
 
 	return eye;
 }

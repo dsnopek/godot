@@ -62,4 +62,6 @@ void WebXRInterface::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("squeezestart", PropertyInfo(Variant::INT, "controller_id")));
 	ADD_SIGNAL(MethodInfo("squeeze", PropertyInfo(Variant::INT, "controller_id")));
 	ADD_SIGNAL(MethodInfo("squeezeend", PropertyInfo(Variant::INT, "controller_id")));
+
+	ADD_SIGNAL(MethodInfo("reference_space_reset"));
 }

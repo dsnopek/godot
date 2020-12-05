@@ -235,7 +235,7 @@ XRReferenceSpace.prototype.getOffsetReferenceSpace = function(originOffset) {};
 /**
  * @type {?function (Event)}
  */
-XRReferenceSpace.prototype.reset;
+XRReferenceSpace.prototype.onreset;
 
 /**
  * @constructor

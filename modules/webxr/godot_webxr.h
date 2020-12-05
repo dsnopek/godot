@@ -43,6 +43,7 @@ typedef void (*GodotWebXREndedCallback)();
 typedef void (*GodotWebXRFailedCallback)(char *p_message);
 typedef void (*GodotWebXRControllerCallback)();
 typedef void (*GodotWebXRInputEventCallback)(char *p_signal_name, int p_controller_id);
+typedef void (*GodotWebXRSimpleEventCallback)(char *p_signal_name);
 
 extern int godot_webxr_is_supported();
 extern void godot_webxr_is_session_supported(const char *p_session_mode, GodotWebXRSupportedCallback p_callback);
@@ -56,7 +57,8 @@ extern void godot_webxr_initialize(
 		GodotWebXREndedCallback p_on_session_ended,
 		GodotWebXRFailedCallback p_on_session_failed,
 		GodotWebXRControllerCallback p_on_controller_changed,
-		GodotWebXRInputEventCallback p_on_input_event);
+		GodotWebXRInputEventCallback p_on_input_event,
+		GodotWebXRSimpleEventCallback p_on_simple_event);
 extern void godot_webxr_uninitialize();
 
 extern int *godot_webxr_get_render_targetsize();

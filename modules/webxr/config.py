@@ -7,7 +7,7 @@ def configure(env):
 
 
 def get_doc_classes():
-    return []
+    return ["WebXRInterface"]
 
 
 def get_doc_path():

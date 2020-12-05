@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="WebXRInterface" inherits="ARVRInterface" version="3.2">
+	<brief_description>
+		AR/VR interface using WebXR.
+	</brief_description>
+	<description>
+
+		Since WebXR uses several callbacks and 
+
+		[codeblock]
+		var webxr_interface = ARVRServer.find_interface("WebXR")
+
+		func _on_Button_pressed():
+		var interface = ARVRServer.find_interface("Native mobile")
+		if interface:
+		interface.initialize():
+		    get_viewport().arvr = true
+		[/codeblock]
+
+		TODO: mention joystick ids that will appear in Joystick events
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="is_session_supported">
+			<return type="void">
+			</return>
+			<argument index="0" name="session_mode" type="String">
+			</argument>
+			<description>
+				Checks if the given session_mode is supported.
+			</description>
+		</method>
+		<method name="set_session_mode">
+			<return type="void">
+			</return>
+			<argument index="0" name="session_mode" type="String">
+			</argument>
+			<description>
+				Sets the session mode to request when [code]initialize()[code] is called.
+				This doesn't have any effect on the interface when already initialized.
+				TODO: Link to spec/MDN
+			</description>
+		</method>
+		<method name="get_session_mode">
+			<return type="String">
+			</return>
+			<description>
+				Gets the session mode.
+			</description>
+		</method>
+		<method name="set_required_features">
+			<return type="void">
+			</return>
+			<argument index="0" name="required_features" type="String">
+			</argument>
+			<description>
+				TODO: mention comma seperated
+			</description>
+		</method>
+		<method name="get_required_features">
+			<return type="String">
+			</return>
+			<description>
+				TODO: mention comma seperated
+			</description>
+		</method>
+		<method name="set_optional_features">
+			<return type="void">
+			</return>
+			<argument index="0" name="optional_features" type="String">
+			</argument>
+			<description>
+				TODO: mention comma seperated
+			</description>
+		</method>
+		<method name="get_optional_features">
+			<return type="String">
+			</return>
+			<description>
+				TODO: mention comma seperated
+			</description>
+		</method>
+		<method name="set_requested_reference_space_types">
+			<return type="void">
+			</return>
+			<argument index="0" name="set_requested_reference_space_types" type="String">
+			</argument>
+			<description>
+				TODO: mention comma seperated
+			</description>
+		</method>
+		<method name="get_requested_reference_space_types">
+			<return type="String">
+			</return>
+			<description>
+				TODO: mention comma seperated
+			</description>
+		</method>
+		<method name="get_reference_space_type">
+			<return type="String">
+			</return>
+			<description>
+				TODO
+			</description>
+		</method>
+		<method name="get_controller">
+			<return type="ARVRPositionalTracker">
+			</return>
+			<argument index="0" name="controller_id" type="int">
+			</argument>
+			<description>
+				TODO
+			</description>
+		</method>
+		<method name="get_visibility_state">
+			<return type="String">
+			</return>
+			<description>
+				TODO
+			</description>
+		</method>
+		<method name="get_bounds_geometry">
+			<return type="PoolVector3Array">
+			</return>
+			<description>
+				TODO
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="session_mode" type="String" setter="set_session_mode" getter="get_session_mode">
+			TODO
+		</member>
+		<member name="required_features" type="String" setter="set_required_features" getter="get_required_features">
+			TODO
+		</member>
+		<member name="optional_features" type="String" setter="set_optional_features" getter="get_optional_features">
+			TODO
+		</member>
+		<member name="requested_reference_space_types" type="String" setter="set_requested_reference_space_types" getter="get_requested_reference_space_types">
+			TODO
+		</member>
+		<member name="reference_space_type" type="String" setter="" getter="get_reference_space_type">
+			TODO
+		</member>
+		<member name="visibility_state" type="String" setter="" getter="get_visibility_state">
+			TODO
+		</member>
+	</members>
+	<signals>
+		<signal name="session_supported">
+			<argument index="0" name="session_mode" type="String">
+			</argument>
+			<argument index="1" name="supported" type="bool">
+			</argument>
+			<description>
+				TODO
+			</description>
+		</signal>
+		<signal name="session_started">
+			<description>
+				TODO
+			</description>
+		</signal>
+		<signal name="session_ended">
+			<description>
+				TODO
+			</description>
+		</signal>
+		<signal name="session_failed">
+			<argument index="0" name="message" type="String">
+			</argument>
+			<description>
+				TODO
+			</description>
+		</signal>
+		<signal name="selectstart">
+			<argument index="0" name="controller_id" type="int">
+			</argument>
+			<description>
+				TODO
+			</description>
+		</signal>
+		<signal name="select">
+			<argument index="0" name="controller_id" type="int">
+			</argument>
+			<description>
+				TODO
+			</description>
+		</signal>
+		<signal name="selectend">
+			<argument index="0" name="controller_id" type="int">
+			</argument>
+			<description>
+				TODO
+			</description>
+		</signal>
+		<signal name="squeezestart">
+			<argument index="0" name="controller_id" type="int">
+			</argument>
+			<description>
+				TODO
+			</description>
+		</signal>
+		<signal name="squeeze">
+			<argument index="0" name="controller_id" type="int">
+			</argument>
+			<description>
+				TODO
+			</description>
+		</signal>
+		<signal name="squeezeend">
+			<argument index="0" name="controller_id" type="int">
+			</argument>
+			<description>
+				TODO
+			</description>
+		</signal>
+		<signal name="visibility_state_changed">
+			<description>
+				TODO
+			</description>
+		</signal>
+		<signal name="reference_space_reset">
+			<description>
+				TODO
+			</description>
+		</signal>
+	</signals>
+	<constants>
+	</constants>
+</class>

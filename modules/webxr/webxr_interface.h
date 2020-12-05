@@ -58,6 +58,7 @@ public:
 	virtual String get_requested_reference_space_types() const = 0;
 	virtual String get_reference_space_type() const = 0;
 	virtual ARVRPositionalTracker *get_controller(int p_controller_id) const = 0;
+	virtual String get_visibility_state() const = 0;
 	virtual PoolVector3Array get_bounds_geometry() const = 0;
 };
 

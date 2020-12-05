@@ -239,8 +239,8 @@ const GodotWebXR = {
 
 	godot_webxr_initialize__deps: ['emscripten_webgl_get_current_context'],
 	godot_webxr_initialize__proxy: 'sync',
-	godot_webxr_initialize__sig: 'viiiiiiiii',
-	godot_webxr_initialize: function (p_session_mode, p_required_features, p_optional_features, p_requested_reference_spaces, p_on_session_started, p_on_session_ended, p_on_session_failed, p_on_controller_changed, p_on_input_event) {
+	godot_webxr_initialize__sig: 'viiiiiiiiii',
+	godot_webxr_initialize: function (p_session_mode, p_required_features, p_optional_features, p_requested_reference_spaces, p_on_session_started, p_on_session_ended, p_on_session_failed, p_on_controller_changed, p_on_input_event, p_on_simple_event) {
 		GodotWebXR.monkeyPatchRequestAnimationFrame();
 
 		const session_mode = GodotRuntime.parseString(p_session_mode);
@@ -252,6 +252,7 @@ const GodotWebXR = {
 		const onfailed = GodotRuntime.get_func(p_on_session_failed);
 		const oncontroller = GodotRuntime.get_func(p_on_controller_changed);
 		const oninputevent = GodotRuntime.get_func(p_on_input_event);
+		const onsimpleevent = GodotRuntime.get_func(p_on_simple_event);
 
 		const session_init = {};
 		if (required_features.length > 0) {
@@ -290,6 +291,12 @@ const GodotWebXR = {
 				});
 			});
 
+			session.addEventListener('visibilitychange', function (evt) {
+				const c_str = GodotRuntime.allocString('visibility_state_changed');
+				onsimpleevent(c_str);
+				GodotRuntime.free(c_str);
+			});
+
 			const gl_context_handle = _emscripten_webgl_get_current_context(); // eslint-disable-line no-undef
 			const gl = GL.getContext(gl_context_handle).GLctx;
 			GodotWebXR.gl = gl;
@@ -301,10 +308,21 @@ const GodotWebXR = {
 
 				function onReferenceSpaceSuccess(reference_space, reference_space_type) {
 					GodotWebXR.space = reference_space;
+
+					// Using reference_space.addEventListener() crashes when
+					// using the polyfill with the WebXR Emulator extension,
+					// so we set the event property instead.
+					reference_space.onreset = function (evt) {
+						const c_str = GodotRuntime.allocString('reference_space_reset');
+						onsimpleevent(c_str);
+						GodotRuntime.free(c_str);
+					};
+
 					// Now that both GodotWebXR.session and GodotWebXR.space are
 					// set, we need to pause and resume the main loop for the XR
 					// main loop to kick in.
 					GodotWebXR.pauseResumeMainLoop();
+
 					// Call in setTimeout() so that errors in the onstarted()
 					// callback don't bubble up here and cause Godot to try the
 					// next reference space.
@@ -585,6 +603,16 @@ const GodotWebXR = {
 			GodotRuntime.setHeapValue(buf + 4 + (i * 4), controller.gamepad.axes[i], 'float');
 		}
 		return buf;
+	},
+
+	godot_webxr_get_visibility_state__proxy: 'sync',
+	godot_webxr_get_visibility_state__sig: 'i',
+	godot_webxr_get_visibility_state: function () {
+		if (!GodotWebXR.session || !GodotWebXR.session.visibilityState) {
+			return 0;
+		}
+
+		return GodotRuntime.allocString(GodotWebXR.session.visibilityState);
 	},
 
 	godot_webxr_get_bounds_geometry__proxy: 'sync',

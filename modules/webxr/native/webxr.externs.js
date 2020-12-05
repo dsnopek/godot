@@ -59,14 +59,9 @@ XRSession.prototype.renderState;
 XRSession.prototype.inputSources;
 
 /**
- * @type {?function (Event)}
+ * @type {string}
  */
-XRSession.prototype.onblur;
-
-/**
- * @type {?function (Event)}
- */
-XRSession.prototype.onfocus;
+XRSession.prototype.visibilityState;
 
 /**
  * @type {?function (Event)}
@@ -107,6 +102,11 @@ XRSession.prototype.onsqueeze;
  * @type {?function (XRInputSourceEvent)}
  */
 XRSession.prototype.onsqueezeend;
+
+/**
+ * @type {?function (Event)}
+ */
+XRSession.prototype.onvisibilitychange;
 
 /**
  * @param {XRRenderStateInit} state
@@ -235,7 +235,7 @@ XRReferenceSpace.prototype.getOffsetReferenceSpace = function(originOffset) {};
 /**
  * @type {?function (Event)}
  */
-XRReferenceSpace.prototype.reset;
+XRReferenceSpace.prototype.onreset;
 
 /**
  * @constructor

@@ -159,8 +159,6 @@ ARVRPositionalTracker *WebXRInterfaceJS::get_controller(int p_controller_id) con
 PoolVector3Array WebXRInterfaceJS::get_bounds_geometry() const {
 	PoolVector3Array ret;
 
-	ERR_FAIL_COND_V(reference_space_type != "bounded-floor", ret);
-
 	int *js_bounds = godot_webxr_get_bounds_geometry();
 	if (js_bounds) {
 		ret.resize(js_bounds[0]);

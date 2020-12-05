@@ -167,6 +167,17 @@ ARVRPositionalTracker *WebXRInterfaceJS::get_controller(int p_controller_id) con
 	return arvr_server->find_by_type_and_id(ARVRServer::TRACKER_CONTROLLER, p_controller_id);
 }
 
+String WebXRInterfaceJS::get_visibility_state() const {
+	char *c_str = godot_webxr_get_visibility_state();
+	if (c_str) {
+		String visibility_state = String(c_str);
+		free(c_str);
+
+		return visibility_state;
+	}
+	return String();
+}
+
 PoolVector3Array WebXRInterfaceJS::get_bounds_geometry() const {
 	PoolVector3Array ret;
 

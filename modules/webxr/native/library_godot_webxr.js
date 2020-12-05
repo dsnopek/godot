@@ -291,6 +291,12 @@ const GodotWebXR = {
 				});
 			});
 
+			session.addEventListener('visibilitychange', function (evt) {
+				const c_str = GodotRuntime.allocString('visibility_state_changed');
+				onsimpleevent(c_str);
+				GodotRuntime.free(c_str);
+			});
+
 			const gl_context_handle = _emscripten_webgl_get_current_context(); // eslint-disable-line no-undef
 			const gl = GL.getContext(gl_context_handle).GLctx;
 			GodotWebXR.gl = gl;
@@ -597,6 +603,16 @@ const GodotWebXR = {
 			GodotRuntime.setHeapValue(buf + 4 + (i * 4), controller.gamepad.axes[i], 'float');
 		}
 		return buf;
+	},
+
+	godot_webxr_get_visibility_state__proxy: 'sync',
+	godot_webxr_get_visibility_state__sig: 'i',
+	godot_webxr_get_visibility_state: function () {
+		if (!GodotWebXR.session || !GodotWebXR.session.visibilityState) {
+			return 0;
+		}
+
+		return GodotRuntime.allocString(GodotWebXR.session.visibilityState);
 	},
 
 	godot_webxr_get_bounds_geometry__proxy: 'sync',

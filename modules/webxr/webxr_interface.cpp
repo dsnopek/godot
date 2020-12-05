@@ -43,6 +43,7 @@ void WebXRInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_requested_reference_space_types", "requested_reference_space_types"), &WebXRInterface::set_requested_reference_space_types);
 	ClassDB::bind_method(D_METHOD("get_requested_reference_space_types"), &WebXRInterface::get_requested_reference_space_types);
 	ClassDB::bind_method(D_METHOD("get_controller"), &WebXRInterface::get_controller);
+	ClassDB::bind_method(D_METHOD("get_visibility_state"), &WebXRInterface::get_visibility_state);
 	ClassDB::bind_method(D_METHOD("get_bounds_geometry"), &WebXRInterface::get_bounds_geometry);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "session_mode", PROPERTY_HINT_NONE), "set_session_mode", "get_session_mode");
@@ -50,6 +51,7 @@ void WebXRInterface::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "optional_features", PROPERTY_HINT_NONE), "set_optional_features", "get_optional_features");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "requested_reference_space_types", PROPERTY_HINT_NONE), "set_requested_reference_space_types", "get_requested_reference_space_types");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "reference_space_type", PROPERTY_HINT_NONE), "", "get_reference_space_type");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "visibility_state", PROPERTY_HINT_NONE), "", "get_visibility_state");
 
 	ADD_SIGNAL(MethodInfo("session_supported", PropertyInfo(Variant::STRING, "session_mode"), PropertyInfo(Variant::BOOL, "supported")));
 	ADD_SIGNAL(MethodInfo("session_started"));
@@ -63,5 +65,6 @@ void WebXRInterface::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("squeeze", PropertyInfo(Variant::INT, "controller_id")));
 	ADD_SIGNAL(MethodInfo("squeezeend", PropertyInfo(Variant::INT, "controller_id")));
 
+	ADD_SIGNAL(MethodInfo("visibility_state_changed"));
 	ADD_SIGNAL(MethodInfo("reference_space_reset"));
 }

@@ -37,7 +37,7 @@
 			<argument index="0" name="session_mode" type="String">
 			</argument>
 			<description>
-				Sets the session mode to request when [code]initialize()[code] is called.
+				Sets the session mode to request when [code]initialize()[/code] is called.
 				This doesn't have any effect on the interface when already initialized.
 				TODO: Link to spec/MDN
 			</description>

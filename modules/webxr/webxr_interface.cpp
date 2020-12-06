@@ -52,6 +52,7 @@ void WebXRInterface::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "requested_reference_space_types", PROPERTY_HINT_NONE), "set_requested_reference_space_types", "get_requested_reference_space_types");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "reference_space_type", PROPERTY_HINT_NONE), "", "get_reference_space_type");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "visibility_state", PROPERTY_HINT_NONE), "", "get_visibility_state");
+	ADD_PROPERTY(PropertyInfo(Variant::POOL_VECTOR3_ARRAY, "bounds_geometry", PROPERTY_HINT_NONE), "", "get_bounds_geometry");
 
 	ADD_SIGNAL(MethodInfo("session_supported", PropertyInfo(Variant::STRING, "session_mode"), PropertyInfo(Variant::BOOL, "supported")));
 	ADD_SIGNAL(MethodInfo("session_started"));

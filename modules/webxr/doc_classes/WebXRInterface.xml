@@ -20,6 +20,7 @@
 		TODO: mention joystick ids that will appear in Joystick events
 	</description>
 	<tutorials>
+		<link title="How to make a VR game for WebXR with Godot">https://www.snopekgames.com/blog/2020/how-make-vr-game-webxr-godot</link>
 	</tutorials>
 	<methods>
 		<method name="is_session_supported">
@@ -28,80 +29,9 @@
 			<argument index="0" name="session_mode" type="String">
 			</argument>
 			<description>
-				Checks if the given session_mode is supported.
-			</description>
-		</method>
-		<method name="set_session_mode">
-			<return type="void">
-			</return>
-			<argument index="0" name="session_mode" type="String">
-			</argument>
-			<description>
-				Sets the session mode to request when [code]initialize()[/code] is called.
-				This doesn't have any effect on the interface when already initialized.
-				TODO: Link to spec/MDN
-			</description>
-		</method>
-		<method name="get_session_mode">
-			<return type="String">
-			</return>
-			<description>
-				Gets the session mode.
-			</description>
-		</method>
-		<method name="set_required_features">
-			<return type="void">
-			</return>
-			<argument index="0" name="required_features" type="String">
-			</argument>
-			<description>
-				TODO: mention comma seperated
-			</description>
-		</method>
-		<method name="get_required_features">
-			<return type="String">
-			</return>
-			<description>
-				TODO: mention comma seperated
-			</description>
-		</method>
-		<method name="set_optional_features">
-			<return type="void">
-			</return>
-			<argument index="0" name="optional_features" type="String">
-			</argument>
-			<description>
-				TODO: mention comma seperated
-			</description>
-		</method>
-		<method name="get_optional_features">
-			<return type="String">
-			</return>
-			<description>
-				TODO: mention comma seperated
-			</description>
-		</method>
-		<method name="set_requested_reference_space_types">
-			<return type="void">
-			</return>
-			<argument index="0" name="set_requested_reference_space_types" type="String">
-			</argument>
-			<description>
-				TODO: mention comma seperated
-			</description>
-		</method>
-		<method name="get_requested_reference_space_types">
-			<return type="String">
-			</return>
-			<description>
-				TODO: mention comma seperated
-			</description>
-		</method>
-		<method name="get_reference_space_type">
-			<return type="String">
-			</return>
-			<description>
-				TODO
+				Checks if the given [code]session_mode[/code] is supported by the user's browser.
+				Possible values comes from [url=https://developer.mozilla.org/en-US/docs/Web/API/XRSessionMode]WebXR's XRSessionMode[/url], including: [code]"immersive-vr"[/code], [code]"immersive-ar"[/code], and [code]"inline"[/code].
+				This method returns nothing, instead it emits [signal session_supported] with the result.
 			</description>
 		</method>
 		<method name="get_controller">
@@ -110,42 +40,48 @@
 			<argument index="0" name="controller_id" type="int">
 			</argument>
 			<description>
-				TODO
-			</description>
-		</method>
-		<method name="get_visibility_state">
-			<return type="String">
-			</return>
-			<description>
-				TODO
-			</description>
-		</method>
-		<method name="get_bounds_geometry">
-			<return type="PoolVector3Array">
-			</return>
-			<description>
-				TODO
+				Gets an [ARVRPositionalTracker] for the given [code]controller_id[/code].
+				Use this method to get information about the controller that triggered one of these signals:
+				- [signal selectstart]
+				- [signal select]
+				- [signal selectend]
+				- [signal squeezestart]
+				- [signal squeeze]
+				- [signal squeezestart]
 			</description>
 		</method>
 	</methods>
 	<members>
 		<member name="session_mode" type="String" setter="set_session_mode" getter="get_session_mode">
-			TODO
+			The session mode used by [method ARVRInterface.initialize] when setting up the WebXR session.
+			This doesn't have any effect on the interface when already initialized.
+			Possible values comes from [url=https://developer.mozilla.org/en-US/docs/Web/API/XRSessionMode]WebXR's XRSessionMode[/url], including: [code]"immersive-vr"[/code], [code]"immersive-ar"[/code], and [code]"inline"[/code].
 		</member>
 		<member name="required_features" type="String" setter="set_required_features" getter="get_required_features">
-			TODO
+			A comma-seperated list of required features used by [method ARVRInterface.initialize] when setting up the WebXR session.
+			If a user's browser or device doesn't support one of the given features, initialization will fail and [signal session_failed] will be emitted.
+			This doesn't have any effect on the interface when already initialized.
+			Possible values come from [url=https://developer.mozilla.org/en-US/docs/Web/API/XRReferenceSpaceType]WebXR's XRReferenceSpaceType[/url]. If you want to use a particular reference space type, it must be listed in either [member required_features] or [member optional_features].
 		</member>
 		<member name="optional_features" type="String" setter="set_optional_features" getter="get_optional_features">
-			TODO
+			A comma-seperated list of optional features used by [method ARVRInterface.initialize] when setting up the WebXR session.
+			If a user's browser or device doesn't support one of the given features, initialization will continue, but you won't be able to use the requested feature.
+			This doesn't have any effect on the interface when already initialized.
+			Possible values come from [url=https://developer.mozilla.org/en-US/docs/Web/API/XRReferenceSpaceType]WebXR's XRReferenceSpaceType[/url]. If you want to use a particular reference space type, it must be listed in either [member required_features] or [member optional_features].
 		</member>
 		<member name="requested_reference_space_types" type="String" setter="set_requested_reference_space_types" getter="get_requested_reference_space_types">
-			TODO
+			A comma-seperated list of reference space types used by [method ARVRInterface.initialize] when setting up the WebXR session.
+			The reference space types are requested in order, and the first on supported by the users device or browser will be used. The [member reference_space_type] property contains the reference space type that was ultimately used.
+			This doesn't have any effect on the interface when already initialized.
+			Possible values come from [url=https://developer.mozilla.org/en-US/docs/Web/API/XRReferenceSpaceType]WebXR's XRReferenceSpaceType[/url]. If you want to use a particular reference space type, it must be listed in either [member required_features] or [member optional_features].
 		</member>
 		<member name="reference_space_type" type="String" setter="" getter="get_reference_space_type">
-			TODO
+			The reference space type (from the list of requested types set in the [member requested_reference_space_types] property), that was ultimately used by [method ARVRInterface.initialize] when setting up the WebXR session.
+			Possible values come from [url=https://developer.mozilla.org/en-US/docs/Web/API/XRReferenceSpaceType]WebXR's XRReferenceSpaceType[/url]. If you want to use a particular reference space type, it must be listed in either [member required_features] or [member optional_features].
 		</member>
 		<member name="visibility_state" type="String" setter="" getter="get_visibility_state">
-			TODO
+			Indicates if the WebXR session's imagery is visible to the user.
+			Possible values come from [url=https://developer.mozilla.org/en-US/docs/Web/API/XRVisibilityState]WebXR's XRVisibilityState[/url], including [code]"hidden"[/code], [code]"visible"[/code], and [code]"visible-blurred"[/code].
 		</member>
 	</members>
 	<signals>
@@ -155,7 +91,7 @@
 			<argument index="1" name="supported" type="bool">
 			</argument>
 			<description>
-				TODO
+				Emitted by [method is_session_supported] to indicate if the given [code]session_mode[/code] is supported or not.
 			</description>
 		</signal>
 		<signal name="session_started">

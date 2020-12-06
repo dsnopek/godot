@@ -1,6 +1,6 @@
 import os
 
-from emscripten_helpers import parse_config, run_closure_compiler, create_engine_file, add_js_libraries, add_js_pre, add_js_externs
+from emscripten_helpers import run_closure_compiler, create_engine_file, add_js_libraries, add_js_pre, add_js_externs
 from SCons.Util import WhereIs
 
 

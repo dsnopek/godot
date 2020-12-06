@@ -4,20 +4,94 @@
 		AR/VR interface using WebXR.
 	</brief_description>
 	<description>
+		WebXR is an open standard that allows creating VR and AR applications that run in the web browser.
 
-		Since WebXR uses several callbacks and 
+		As such, this interface is only available when running in an HTML5 export.
+
+		WebXR supports a wide range of devices, from the very capable (like Valve Index, HTC Vive, Oculus Rift and Quest) down to the less capable (like Google Cardboard, Oculus Go, GearVR, or plain smart phones).
+
+		Since WebXR is based on Javascript, it uses makes extensive use of callbacks, which means that [WebXRInterface] is forced to use signals, where other AR/VR interfaces would instead use functions that return a result immediately. This makes [WebXRInterface] quite a bit more complicated to intialize than other AR/VR interfaces.
+
+		Here's the minimum code required to start an immersive VR session:
 
 		[codeblock]
-		var webxr_interface = ARVRServer.find_interface("WebXR")
+        var webxr_interface
+        var vr_supported = false
 
-		func _on_Button_pressed():
-		var interface = ARVRServer.find_interface("Native mobile")
-		if interface:
-		interface.initialize():
-		    get_viewport().arvr = true
+        func _ready():
+            # We assume this node has a canvas layer with a button on it as a child.
+            # This button is for the user to consent to entering immersive VR mode.
+            $CanvasLayer/Button.connect("pressed", self, "_on_Button_pressed")
+        
+            webxr_interface = ARVRServer.find_interface("WebXR")
+            if webxr_interface:
+                # WebXR uses a lot of asynchronous callbacks, so we connect to various
+                # signals in order to receive them.
+                webxr_interface.connect("session_supported", self, "_webxr_session_supported")
+                webxr_interface.connect("session_started", self, "_webxr_session_started")
+                webxr_interface.connect("session_ended", self, "_webxr_session_ended")
+                webxr_interface.connect("session_failed", self, "_webxr_session_failed")
+        
+                # This returns immediately - our _webxr_session_supported() method 
+                # (which we connected to the "session_supported" signal above) will
+                # be called sometime later to let us know if it's supported or not.
+                webxr_interface.is_session_supported("immersive-vr")
+        
+        func _webxr_session_supported(session_mode, supported) -> void:
+            if session_mode == 'immersive-vr':
+                vr_supported = supported
+        
+        func _on_Button_pressed() -> void:
+            if not vr_supported:
+                OS.alert("Your browser doesn't support VR")
+                return
+        
+            # We want an immersive VR session, as opposed to AR ('immersive-ar') or a
+            # simple 3DoF viewer ('viewer').
+            webxr_interface.session_mode = 'immersive-vr'
+            # 'bounded-floor' is room scale, 'local-floor' is a standing or sitting
+            # experience (it puts you 1.6m above the ground if you have 3DoF headset),
+            # whereas as 'local' puts you down at the ARVROrigin.
+            # This list means it'll first try to request 'bounded-floor', then 
+            # fallback on 'local-floor' and ultimately 'local', if nothing else is
+            # supported.
+            webxr_interface.requested_reference_space_types = 'bounded-floor, local-floor, local'
+            # In order to use 'local-floor' or 'bounded-floor' we must also
+            # mark the features as required or optional.
+            webxr_interface.required_features = 'local-floor'
+            webxr_interface.optional_features = 'bounded-floor'
+        
+            # This will return false if we're unable to even request the session,
+            # however, it can still fail asynchronously later in the process, so we
+            # only know if it's really succeeded or failed when our 
+            # _webxr_session_started() or _webxr_session_failed() methods are called.
+            if not webxr_interface.initialize():
+                OS.alert("Failed to initialize")
+                return
+        
+        func _webxr_session_started() -> void:
+            # This tells Godot to start rendering to the headset.
+            get_viewport().arvr = true
+            # This will be the reference space type you ultimately got, out of the
+            # types that you requested above. This is useful if you want the game to
+            # work a little differently in 'bounded-floor' versus 'local-floor'.
+            print ("Reference space type: " + webxr_interface.reference_space_type)
+        
+        func _webxr_session_ended() -> void:
+            # If the user exits immersive mode, then we tell Godot to render to the web
+            # page again.
+            get_viewport().arvr = false
+        
+        func _webxr_session_failed(message: String) -> void:
+            OS.alert("Failed to initialize: " + message)
 		[/codeblock]
 
-		TODO: mention joystick ids that will appear in Joystick events
+		There are several ways to handle "controller" input:
+		- Using [ARVRController] nodes and their [signal ARVRController.button_pressed] and [signal ARVRController.button_release] signals. This is how controllers are typically handled in AR/VR apps in Godot, however, this will only work with advanced VR controllers like the Oculus Touch or Index controllers, for example. The buttons codes are defined by [url=https://immersive-web.github.io/webxr-gamepads-module/#xr-standard-gamepad-mapping]Section 3.3 of the WebXR Gamepads Module[/url].
+		- Using [method Node._unhandled_input] and [InputEventJoypadButton] or [InputEventJoypadMotion]. This works the same a normal joypads, except the [member InputEvent.device] starts at 100, so the left controller is 100 and the right controller is 101, and the button codes will also be defined by the WebXR spec.
+		- Using the [signal select], [signal squeeze] and related signals. This method will work for both advanced VR controllers, and non-traditional "controllers" like a tap on the screen, a spoken voice command or a button press on the device itself. The [code]controller_id[/code] passed to these signals is the same id as used in [member ARVRController.controller_id].
+
+		You can use one or all of these methods to allow your game or app to support a wider or narrower set of devices and input methods, or to allow more advanced interations with more advanced devices.
 	</description>
 	<tutorials>
 		<link title="How to make a VR game for WebXR with Godot">https://www.snopekgames.com/blog/2020/how-make-vr-game-webxr-godot</link>
@@ -30,7 +104,7 @@
 			</argument>
 			<description>
 				Checks if the given [code]session_mode[/code] is supported by the user's browser.
-				Possible values comes from [url=https://developer.mozilla.org/en-US/docs/Web/API/XRSessionMode]WebXR's XRSessionMode[/url], including: [code]"immersive-vr"[/code], [code]"immersive-ar"[/code], and [code]"inline"[/code].
+				Possible values come from [url=https://developer.mozilla.org/en-US/docs/Web/API/XRSessionMode]WebXR's XRSessionMode[/url], including: [code]"immersive-vr"[/code], [code]"immersive-ar"[/code], and [code]"inline"[/code].
 				This method returns nothing, instead it emits [signal session_supported] with the result.
 			</description>
 		</method>
@@ -56,7 +130,7 @@
 		<member name="session_mode" type="String" setter="set_session_mode" getter="get_session_mode">
 			The session mode used by [method ARVRInterface.initialize] when setting up the WebXR session.
 			This doesn't have any effect on the interface when already initialized.
-			Possible values comes from [url=https://developer.mozilla.org/en-US/docs/Web/API/XRSessionMode]WebXR's XRSessionMode[/url], including: [code]"immersive-vr"[/code], [code]"immersive-ar"[/code], and [code]"inline"[/code].
+			Possible values come from [url=https://developer.mozilla.org/en-US/docs/Web/API/XRSessionMode]WebXR's XRSessionMode[/url], including: [code]"immersive-vr"[/code], [code]"immersive-ar"[/code], and [code]"inline"[/code].
 		</member>
 		<member name="required_features" type="String" setter="set_required_features" getter="get_required_features">
 			A comma-seperated list of required features used by [method ARVRInterface.initialize] when setting up the WebXR session.

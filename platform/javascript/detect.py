@@ -100,11 +100,8 @@ def configure(env):
 
     # Add helper method for adding libraries.
     env.AddMethod(add_js_libraries, "AddJSLibraries")
-<<<<<<< HEAD
-=======
     env.AddMethod(add_js_pre, "AddJSPre")
     env.AddMethod(add_js_externs, "AddJSExterns")
->>>>>>> Add support for WebXR
 
     # Add method that joins/compiles our Engine files.
     env.AddMethod(create_engine_file, "CreateEngineFile")

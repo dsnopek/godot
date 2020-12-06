@@ -31,12 +31,10 @@
 #ifdef JAVASCRIPT_ENABLED
 
 #include "webxr_interface_js.h"
-#include "core/os/input.h"
+#include "core/input/input.h"
 #include "core/os/os.h"
 #include "emscripten.h"
 #include "godot_webxr.h"
-#include "main/input_default.h"
-#include "servers/visual/visual_server_globals.h"
 #include <stdlib.h>
 
 void _emwebxr_on_session_supported(char *p_session_mode, int p_supported) {
@@ -285,7 +283,7 @@ Size2 WebXRInterfaceJS::get_render_targetsize() {
 	int *js_size = godot_webxr_get_render_targetsize();
 	if (!initialized || js_size == nullptr) {
 		// As a default, use half the window size.
-		target_size = OS::get_singleton()->get_window_size();
+		target_size = DisplayServer::get_singleton()->window_get_size();
 		target_size.width /= 2.0;
 		return target_size;
 	}
@@ -388,7 +386,7 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 			xr_server->add_tracker(tracker);
 		}
 
-		InputDefault *input = (InputDefault *)Input::get_singleton();
+		Input *input = Input::get_singleton();
 
 		float *tracker_matrix = godot_webxr_get_controller_transform(p_controller_id);
 		if (tracker_matrix) {
@@ -409,7 +407,7 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 		int *axes = godot_webxr_get_controller_axes(p_controller_id);
 		if (axes) {
 			for (int i = 0; i < axes[0]; i++) {
-				InputDefault::JoyAxis joy_axis;
+				Input::JoyAxis joy_axis;
 				joy_axis.min = -1;
 				joy_axis.value = *((float *)axes + (i + 1));
 				input->joy_axis(p_controller_id + 100, i, joy_axis);

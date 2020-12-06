@@ -41,6 +41,7 @@
 			</argument>
 			<description>
 				Gets an [ARVRPositionalTracker] for the given [code]controller_id[/code].
+				In the context of WebXR, a "controller" can be an advanced VR controller like the Oculus Touch or Index controllers, or even a tap on the screen, a spoken voice command or a button press on the device itself. When a non-traditional controller is used, interpret the position and orientation of the [ARVRPositionalTracker] as a ray pointing at the object the user wishes to interact with.
 				Use this method to get information about the controller that triggered one of these signals:
 				- [signal selectstart]
 				- [signal select]
@@ -83,6 +84,11 @@
 			Indicates if the WebXR session's imagery is visible to the user.
 			Possible values come from [url=https://developer.mozilla.org/en-US/docs/Web/API/XRVisibilityState]WebXR's XRVisibilityState[/url], including [code]"hidden"[/code], [code]"visible"[/code], and [code]"visible-blurred"[/code].
 		</member>
+		<member name="bounds_geometry" type="PoolVector3Array" setter="" getter="get_bounds_geometry">
+			The vertexes of a polygon which defines the boundaries of the users play area.
+			This will only be available if [member reference_space_type] is [code]"bounded-floor"[/code] and only on certain browsers and devices that support it.
+			The [signal reference_space_reset] signal may indicate when this changes.
+		</member>
 	</members>
 	<signals>
 		<signal name="session_supported">
@@ -96,71 +102,82 @@
 		</signal>
 		<signal name="session_started">
 			<description>
-				TODO
-			</description>
-		</signal>
-		<signal name="session_ended">
-			<description>
-				TODO
+				Emitted by [method ARVRInterface.initialize] if the session is successfully started.
+				At this point, it's safe to do [code]get_viewport().arvr = true[/code] to instruct Godot to start rendering to the AR/VR device.
 			</description>
 		</signal>
 		<signal name="session_failed">
 			<argument index="0" name="message" type="String">
 			</argument>
 			<description>
-				TODO
+				Emitted by [method ARVRInterface.initialize] if the session fails to start.
+				[code]message[/code] may optionally contain an error message from WebXR, or an empty string if no message is available.
+			</description>
+		</signal>
+		<signal name="session_ended">
+			<description>
+				Emitted when the user ends the WebXR session (which can be done using UI from the browser or device).
+				At this point, you should do [code]get_viewport().arvr = false[/code] to instruct Godot to resume rendering to the screen.
 			</description>
 		</signal>
 		<signal name="selectstart">
 			<argument index="0" name="controller_id" type="int">
 			</argument>
 			<description>
-				TODO
+				Emitted when one of the "controllers" has started its "primary action".
+				Use [method get_controller] to get more information about the controller.
 			</description>
 		</signal>
 		<signal name="select">
 			<argument index="0" name="controller_id" type="int">
 			</argument>
 			<description>
-				TODO
+				Emitted after one of the "controllers" has finished its "primary action".
+				Use [method get_controller] to get more information about the controller.
 			</description>
 		</signal>
 		<signal name="selectend">
 			<argument index="0" name="controller_id" type="int">
 			</argument>
 			<description>
-				TODO
+				Emitted when one of the "controllers" has finished its "primary action".
+				Use [method get_controller] to get more information about the controller.
 			</description>
 		</signal>
 		<signal name="squeezestart">
 			<argument index="0" name="controller_id" type="int">
 			</argument>
 			<description>
-				TODO
+				Emitted when one of the "controllers" has started its "primary squeeze action".
+				Use [method get_controller] to get more information about the controller.
 			</description>
 		</signal>
 		<signal name="squeeze">
 			<argument index="0" name="controller_id" type="int">
 			</argument>
 			<description>
-				TODO
+				Emitted after one of the "controllers" has finished its "primary squeeze action".
+				Use [method get_controller] to get more information about the controller.
 			</description>
 		</signal>
 		<signal name="squeezeend">
 			<argument index="0" name="controller_id" type="int">
 			</argument>
 			<description>
-				TODO
+				Emitted when one of the "controllers" has finished its "primary squeeze action".
+				Use [method get_controller] to get more information about the controller.
 			</description>
 		</signal>
 		<signal name="visibility_state_changed">
 			<description>
-				TODO
+				Emitted when [member visibility_state] has changed.
 			</description>
 		</signal>
 		<signal name="reference_space_reset">
 			<description>
-				TODO
+				Emitted to indicate that the reference space has been reset or reconfigured.
+				When this emitted is dependent on the user's browser or device, but may include when the user has changed the dimensions of their play space (which you may be able to access via [member bounds_geometry]) or pressed/held a button to recenter their position.
+				See [url=https://developer.mozilla.org/en-US/docs/Web/API/XRReferenceSpace/reset_event]WebXR's XRReferenceSpace reset event[/url] for more information.
 			</description>
 		</signal>
 	</signals>

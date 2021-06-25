@@ -743,15 +743,17 @@ PhysicsServer::~PhysicsServer() {
 void PhysicsServer::simulate() {
 	MessageQueue::get_singleton()->flush();
 
-	Physics2DServer::get_singleton()->sync();
 	Physics2DServer::get_singleton()->flush_queries();
 
 	SceneTree::get_singleton()->flush_transform_notifications();
 
+	// Because we are run within _physics_process(), sync has already started, so end it.
 	Physics2DServer::get_singleton()->end_sync();
 	Physics2DServer::get_singleton()->step(1.0f / 60.0f);
-
 	MessageQueue::get_singleton()->flush();
+
+	// Then start it back up again.
+	Physics2DServer::get_singleton()->sync();
 }
 
 Vector<PhysicsServerManager::ClassInfo> PhysicsServerManager::physics_servers;

@@ -744,13 +744,13 @@ void PhysicsServer::simulate() {
 	MessageQueue::get_singleton()->flush();
 
 	// Because we are run within _physics_process(), sync has already started, so end it.
-	Physics2DServer::get_singleton()->end_sync();
+	// Physics2DServer::get_singleton()->end_sync();
 	Physics2DServer::get_singleton()->step(1.0f / 60.0f);
 
 	MessageQueue::get_singleton()->flush();
 
 	// Then start it back up again.
-	Physics2DServer::get_singleton()->sync();
+	// Physics2DServer::get_singleton()->sync();
 
 	// I think this will emit the body_entered and similar signals?
 	Physics2DServer::get_singleton()->flush_queries();

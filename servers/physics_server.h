@@ -233,8 +233,6 @@ protected:
 public:
 	static PhysicsServer *get_singleton();
 
-	void simulate();
-
 	enum ShapeType {
 		SHAPE_PLANE, ///< plane:"plane"
 		SHAPE_RAY, ///< float:"length"

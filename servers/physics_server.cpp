@@ -409,8 +409,6 @@ void PhysicsShapeQueryResult::_bind_methods() {
 
 void PhysicsServer::_bind_methods() {
 
-	ClassDB::bind_method(D_METHOD("simulate"), &PhysicsServer::simulate);
-
 #ifndef _3D_DISABLED
 
 	ClassDB::bind_method(D_METHOD("shape_create", "type"), &PhysicsServer::shape_create);

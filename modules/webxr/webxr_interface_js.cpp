@@ -96,6 +96,46 @@ void _emwebxr_on_controller_changed() {
 	((WebXRInterfaceJS *)interface.ptr())->_on_controller_changed();
 }
 
+static void _send_screen_touch_event(int p_index, const Vector2 &p_position, bool p_pressed) {
+	Ref<InputEventScreenTouch> event;
+	event.instance();
+	event->set_index(p_index);
+	event->set_position(p_position);
+	event->set_pressed(p_pressed);
+	Input::get_singleton()->parse_input_event(event);
+}
+
+static void _generate_touch_from_screen_input(StringName p_signal_name, int p_input_source) {
+	SceneTree *scene_tree = Object::cast_to<SceneTree>(OS::get_singleton()->get_main_loop());
+	if (!scene_tree) {
+		return;
+	}
+
+	int *axes = godot_webxr_get_controller_axes(p_input_source);
+	if (axes) {
+		float x_axis = 0.0;
+		float y_axis = 0.0;
+		if (axes[0] >= 2) {
+			x_axis = *((float *)axes + 1);
+			y_axis = *((float *)axes + 2);
+			// Invert the Y-axis.
+			y_axis = -y_axis;
+		}
+		free(axes);
+
+		Viewport *viewport = scene_tree->get_root();
+
+		Vector2 position_percentage((x_axis + 1.0f) / 2.0f, (y_axis + 1.0f) / 2.0f);
+		Vector2 position = viewport->get_size() * position_percentage;
+
+		if (p_signal_name == "select") {
+			int index = p_input_source - 3;
+			_send_screen_touch_event(index, position, true);
+			_send_screen_touch_event(index, position, false);
+		}
+	}
+}
+
 extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_input_event(char *p_signal_name, int p_input_source) {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL(arvr_server);
@@ -105,6 +145,11 @@ extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_input_event(char *p_signal_name
 
 	StringName signal_name = StringName(p_signal_name);
 	interface->emit_signal(signal_name, p_input_source + 1);
+
+	int target_ray_mode = godot_webxr_get_controller_target_ray_mode(p_input_source);
+	if (target_ray_mode == GodotWebXRTargetRayMode::TARGET_RAY_MODE_SCREEN) {
+		_generate_touch_from_screen_input(signal_name, p_input_source);
+	}
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_simple_event(char *p_signal_name) {

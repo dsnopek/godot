@@ -572,6 +572,32 @@ const GodotWebXR = {
 		return buf;
 	},
 
+	godot_webxr_get_controller_target_ray_mode__proxy: 'sync',
+	godot_webxr_get_controller_target_ray_mode__sig: 'ii',
+	godot_webxr_get_controller_target_ray_mode: function (p_controller) {
+		if (GodotWebXR.controllers.length === 0) {
+			return 0;
+		}
+
+		const controller = GodotWebXR.controllers[p_controller];
+		if (!controller) {
+			return 0;
+		}
+
+		switch (controller.targetRayMode) {
+			case "gaze":
+				return 1;
+
+			case "tracked-pointer":
+				return 2;
+			
+			case "screen":
+				return 3;
+		}
+
+		return 0;
+	},
+
 	godot_webxr_get_visibility_state__proxy: 'sync',
 	godot_webxr_get_visibility_state__sig: 'i',
 	godot_webxr_get_visibility_state: function () {

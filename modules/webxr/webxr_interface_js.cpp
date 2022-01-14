@@ -39,6 +39,45 @@
 #include "servers/visual/visual_server_globals.h"
 #include <stdlib.h>
 
+// Helper functions for generating touch events:
+// -----
+
+static int _get_touch_index(int p_input_source) {
+	int index = 0;
+	for (int i = 0; i < p_input_source; i++) {
+		if (godot_webxr_get_controller_target_ray_mode(i) == WebXRInterface::TARGET_RAY_MODE_SCREEN) {
+			index++;
+		}
+	}
+	return index;
+}
+
+static Vector2 _get_screen_position_from_axes(int *axes) {
+	SceneTree *scene_tree = Object::cast_to<SceneTree>(OS::get_singleton()->get_main_loop());
+	if (!scene_tree) {
+		return Vector2();
+	}
+
+	float x_axis = 0.0;
+	float y_axis = 0.0;
+	if (axes[0] >= 2) {
+		x_axis = *((float *)axes + 1);
+		y_axis = *((float *)axes + 2);
+		// Invert the Y-axis.
+		y_axis = -y_axis;
+	}
+
+	Viewport *viewport = scene_tree->get_root();
+
+	Vector2 position_percentage((x_axis + 1.0f) / 2.0f, (y_axis + 1.0f) / 2.0f);
+	Vector2 position = viewport->get_size() * position_percentage;
+
+	return position;
+}
+
+// Callbacks from Emscripten:
+// -----
+
 void _emwebxr_on_session_supported(char *p_session_mode, int p_supported) {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL(arvr_server);
@@ -96,58 +135,6 @@ void _emwebxr_on_controller_changed() {
 	((WebXRInterfaceJS *)interface.ptr())->_on_controller_changed();
 }
 
-static void _send_screen_touch_event(int p_index, const Vector2 &p_position, bool p_pressed) {
-	Ref<InputEventScreenTouch> event;
-	event.instance();
-	event->set_index(p_index);
-	event->set_position(p_position);
-	event->set_pressed(p_pressed);
-	Input::get_singleton()->parse_input_event(event);
-}
-
-static int _get_touch_index(int p_input_source) {
-	int index = 0;
-	for (int i = 0; i < p_input_source; i++) {
-		if (godot_webxr_get_controller_target_ray_mode(i) == WebXRInterface::TARGET_RAY_MODE_SCREEN) {
-			index++;
-		}
-	}
-	return index;
-}
-
-static void _generate_touch_from_screen_input(int p_event_type, int p_input_source) {
-	SceneTree *scene_tree = Object::cast_to<SceneTree>(OS::get_singleton()->get_main_loop());
-	if (!scene_tree) {
-		return;
-	}
-
-	int *axes = godot_webxr_get_controller_axes(p_input_source);
-	if (axes) {
-		float x_axis = 0.0;
-		float y_axis = 0.0;
-		if (axes[0] >= 2) {
-			x_axis = *((float *)axes + 1);
-			y_axis = *((float *)axes + 2);
-			// Invert the Y-axis.
-			y_axis = -y_axis;
-		}
-		free(axes);
-
-		Viewport *viewport = scene_tree->get_root();
-
-		Vector2 position_percentage((x_axis + 1.0f) / 2.0f, (y_axis + 1.0f) / 2.0f);
-		Vector2 position = viewport->get_size() * position_percentage;
-
-		int index = _get_touch_index(p_input_source);
-		if (p_event_type == WEBXR_INPUT_EVENT_SELECTSTART) {
-			_send_screen_touch_event(index, position, true);
-		}
-		else if (p_event_type == WEBXR_INPUT_EVENT_SELECTEND) {
-			_send_screen_touch_event(index, position, false);
-		}
-	}
-}
-
 extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_input_event(int p_event_type, int p_input_source) {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL(arvr_server);
@@ -185,7 +172,23 @@ extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_input_event(int p_event_type, i
 	if (p_event_type == WEBXR_INPUT_EVENT_SELECTSTART || p_event_type == WEBXR_INPUT_EVENT_SELECTEND) {
 		int target_ray_mode = godot_webxr_get_controller_target_ray_mode(p_input_source);
 		if (target_ray_mode == WebXRInterface::TARGET_RAY_MODE_SCREEN) {
-			_generate_touch_from_screen_input(p_event_type, p_input_source);
+			int touch_index = _get_touch_index(p_input_source);
+			if (touch_index < 5) {
+				touching[touch_index] = (p_event_type == WEBXR_INPUT_EVENT_SELECTSTART);
+			}
+
+			int *axes = godot_webxr_get_controller_axes(p_input_source);
+			if (axes) {
+				Vector2 position = _get_screen_position_from_axes(axes);
+				free(axes);
+
+				Ref<InputEventScreenTouch> event;
+				event.instance();
+				event->set_index(touch_index);
+				event->set_position(position);
+				event->set_pressed(p_event_type == WEBXR_INPUT_EVENT_SELECTSTART);
+				Input::get_singleton()->parse_input_event(event);
+			}
 		}
 	}
 }
@@ -200,6 +203,9 @@ extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_simple_event(char *p_signal_nam
 	StringName signal_name = StringName(p_signal_name);
 	interface->emit_signal(signal_name);
 }
+
+// Methods:
+// -----
 
 void WebXRInterfaceJS::is_session_supported(const String &p_session_mode) {
 	godot_webxr_is_session_supported(p_session_mode.utf8().get_data(), &_emwebxr_on_session_supported);
@@ -319,6 +325,10 @@ bool WebXRInterfaceJS::initialize() {
 
 		// make this our primary interface
 		arvr_server->set_primary_interface(this);
+
+		// Clear state variables.
+		memset(controllers_state, 0, sizeof controllers_state);
+		memset(touching, 0, sizeof touching);
 
 		// Clear render_targetsize to make sure it gets reset to the new size.
 		// Clearing in uninitialize() doesn't work because a frame can still be
@@ -506,6 +516,14 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 
 		int *axes = godot_webxr_get_controller_axes(p_controller_id);
 		if (axes) {
+			WebXRInterface::TargetRayMode target_ray_mode = godot_webxr_get_controller_target_ray_mode(p_controller_id);
+			if (target_ray_mode == WebXRInterface::TARGET_RAY_MODE_SCREEN) {
+				int touch_index = _get_touch_index(p_controller_id);
+				if (touch_index < 5 && touching[touch_index]) {
+					//input->
+				}
+			}
+
 			for (int i = 0; i < axes[0]; i++) {
 				InputDefault::JoyAxis joy_axis;
 				joy_axis.min = -1;

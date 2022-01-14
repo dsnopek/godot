@@ -54,6 +54,7 @@ private:
 	String reference_space_type;
 
 	bool controllers_state[2];
+	bool touching[5];
 	Size2 render_targetsize;
 
 	Transform _js_matrix_to_transform(float *p_js_matrix);

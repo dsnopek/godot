@@ -186,7 +186,7 @@ const GodotWebXR = {
 		// the first element, and the right hand is the second element, and any
 		// others placed at the 3rd position and up.
 		sampleControllers: () => {
-			if (!GodotWebXR.session || !GodotWebXR.frame) {
+			if (!GodotWebXR.session) {
 				return;
 			}
 
@@ -281,6 +281,9 @@ const GodotWebXR = {
 
 			['selectstart', 'selectend', 'select', 'squeezestart', 'squeezeend', 'squeeze'].forEach((input_event, index) => {
 				session.addEventListener(input_event, function (evt) {
+					// Some controllers won't exist until an event occurs,
+					// for example, with "screen" input sources (touch).
+					GodotWebXR.sampleControllers();
 					oninputevent(index, GodotWebXR.getControllerId(evt.inputSource));
 				});
 			});

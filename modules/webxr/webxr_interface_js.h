@@ -72,6 +72,7 @@ public:
 	void _set_reference_space_type(String p_reference_space_type);
 	virtual String get_reference_space_type() const;
 	virtual Ref<ARVRPositionalTracker> get_controller(int p_controller_id) const;
+	virtual TargetRayMode get_controller_target_ray_mode(int p_controller_id) const;
 	virtual String get_visibility_state() const;
 	virtual PoolVector3Array get_bounds_geometry() const;
 

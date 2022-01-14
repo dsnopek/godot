@@ -5,8 +5,8 @@
 /*                           GODOT ENGINE                                */
 /*                      https://godotengine.org                          */
 /*************************************************************************/
-/* Copyright (c) 2007-2022 Juan Linietsky, Ariel Manzur.                 */
-/* Copyright (c) 2014-2022 Godot Engine contributors (cf. AUTHORS.md).   */
+/* Copyright (c) 2007-2021 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2014-2021 Godot Engine contributors (cf. AUTHORS.md).   */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -279,11 +279,9 @@ const GodotWebXR = {
 				}
 			});
 
-			['selectstart', 'select', 'selectend', 'squeezestart', 'squeeze', 'squeezeend'].forEach((input_event) => {
+			['selectstart', 'selectend', 'select', 'squeezestart', 'squeezeend', 'squeeze'].forEach((input_event, index) => {
 				session.addEventListener(input_event, function (evt) {
-					const c_str = GodotRuntime.allocString(input_event);
-					oninputevent(c_str, GodotWebXR.getControllerId(evt.inputSource));
-					GodotRuntime.free(c_str);
+					oninputevent(index, GodotWebXR.getControllerId(evt.inputSource));
 				});
 			});
 
@@ -575,7 +573,7 @@ const GodotWebXR = {
 	godot_webxr_get_controller_target_ray_mode__proxy: 'sync',
 	godot_webxr_get_controller_target_ray_mode__sig: 'ii',
 	godot_webxr_get_controller_target_ray_mode: function (p_controller) {
-		if (GodotWebXR.controllers.length === 0) {
+		if (p_controller <= 0 || p_controller >= GodotWebXR.controllers.length) {
 			return 0;
 		}
 

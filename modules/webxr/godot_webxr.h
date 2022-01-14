@@ -37,11 +37,13 @@ extern "C" {
 
 #include "stddef.h"
 
-enum GodotWebXRTargetRayMode {
-	TARGET_RAY_MODE_UNKNOWN,
-	TARGET_RAY_MODE_GAZE,
-	TARGET_RAY_MODE_TRACKED_POINTER,
-	TARGET_RAY_MODE_SCREEN,
+enum WebXRInputEvent {
+	WEBXR_INPUT_EVENT_SELECTSTART,
+	WEBXR_INPUT_EVENT_SELECTEND,
+	WEBXR_INPUT_EVENT_SELECT,
+	WEBXR_INPUT_EVENT_SQUEEZESTART,
+	WEBXR_INPUT_EVENT_SQUEEZEEND,
+	WEBXR_INPUT_EVENT_SQUEEZE,
 };
 
 typedef void (*GodotWebXRSupportedCallback)(char *p_session_mode, int p_supported);
@@ -49,7 +51,7 @@ typedef void (*GodotWebXRStartedCallback)(char *p_reference_space_type);
 typedef void (*GodotWebXREndedCallback)();
 typedef void (*GodotWebXRFailedCallback)(char *p_message);
 typedef void (*GodotWebXRControllerCallback)();
-typedef void (*GodotWebXRInputEventCallback)(char *p_signal_name, int p_controller_id);
+typedef void (*GodotWebXRInputEventCallback)(int p_event_type, int p_controller_id);
 typedef void (*GodotWebXRSimpleEventCallback)(char *p_signal_name);
 
 extern int godot_webxr_is_supported();

@@ -68,4 +68,11 @@ void WebXRInterface::_bind_methods() {
 
 	ADD_SIGNAL(MethodInfo("visibility_state_changed"));
 	ADD_SIGNAL(MethodInfo("reference_space_reset"));
+
+/*
+	BIND_ENUM_CONSTANT(TARGET_RAY_MODE_UNKNOWN);
+	BIND_ENUM_CONSTANT(TARGET_RAY_MODE_GAZE);
+	BIND_ENUM_CONSTANT(TARGET_RAY_MODE_TRACKED_POINTER);
+	BIND_ENUM_CONSTANT(TARGET_RAY_MODE_SCREEN);
+	*/
 }

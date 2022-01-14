@@ -105,7 +105,17 @@ static void _send_screen_touch_event(int p_index, const Vector2 &p_position, boo
 	Input::get_singleton()->parse_input_event(event);
 }
 
-static void _generate_touch_from_screen_input(StringName p_signal_name, int p_input_source) {
+static int _get_touch_index(int p_input_source) {
+	int index = 0;
+	for (int i = 0; i < p_input_source; i++) {
+		if (godot_webxr_get_controller_target_ray_mode(i) == WebXRInterface::TARGET_RAY_MODE_SCREEN) {
+			index++;
+		}
+	}
+	return index;
+}
+
+static void _generate_touch_from_screen_input(int p_event_type, int p_input_source) {
 	SceneTree *scene_tree = Object::cast_to<SceneTree>(OS::get_singleton()->get_main_loop());
 	if (!scene_tree) {
 		return;
@@ -128,27 +138,55 @@ static void _generate_touch_from_screen_input(StringName p_signal_name, int p_in
 		Vector2 position_percentage((x_axis + 1.0f) / 2.0f, (y_axis + 1.0f) / 2.0f);
 		Vector2 position = viewport->get_size() * position_percentage;
 
-		if (p_signal_name == "select") {
-			int index = p_input_source - 3;
+		int index = _get_touch_index(p_input_source);
+		if (p_event_type == WEBXR_INPUT_EVENT_SELECTSTART) {
 			_send_screen_touch_event(index, position, true);
+		}
+		else if (p_event_type == WEBXR_INPUT_EVENT_SELECTEND) {
 			_send_screen_touch_event(index, position, false);
 		}
 	}
 }
 
-extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_input_event(char *p_signal_name, int p_input_source) {
+extern "C" EMSCRIPTEN_KEEPALIVE void _emwebxr_on_input_event(int p_event_type, int p_input_source) {
 	ARVRServer *arvr_server = ARVRServer::get_singleton();
 	ERR_FAIL_NULL(arvr_server);
 
 	Ref<ARVRInterface> interface = arvr_server->find_interface("WebXR");
 	ERR_FAIL_COND(interface.is_null());
 
-	StringName signal_name = StringName(p_signal_name);
-	interface->emit_signal(signal_name, p_input_source + 1);
+	int controller_id = p_input_source + 1;
+	switch (p_event_type) {
+		case WEBXR_INPUT_EVENT_SELECTSTART:
+			interface->emit_signal("selectstart", controller_id);
+			break;
 
-	int target_ray_mode = godot_webxr_get_controller_target_ray_mode(p_input_source);
-	if (target_ray_mode == GodotWebXRTargetRayMode::TARGET_RAY_MODE_SCREEN) {
-		_generate_touch_from_screen_input(signal_name, p_input_source);
+		case WEBXR_INPUT_EVENT_SELECTEND:
+			interface->emit_signal("selectend", controller_id);
+			break;
+
+		case WEBXR_INPUT_EVENT_SELECT:
+			interface->emit_signal("select", controller_id);
+			break;
+
+		case WEBXR_INPUT_EVENT_SQUEEZESTART:
+			interface->emit_signal("squeezestart", controller_id);
+			break;
+
+		case WEBXR_INPUT_EVENT_SQUEEZEEND:
+			interface->emit_signal("squeezeend", controller_id);
+			break;
+
+		case WEBXR_INPUT_EVENT_SQUEEZE:
+			interface->emit_signal("squeeze", controller_id);
+			break;
+	}
+
+	if (p_event_type == WEBXR_INPUT_EVENT_SELECTSTART || p_event_type == WEBXR_INPUT_EVENT_SELECTEND) {
+		int target_ray_mode = godot_webxr_get_controller_target_ray_mode(p_input_source);
+		if (target_ray_mode == WebXRInterface::TARGET_RAY_MODE_SCREEN) {
+			_generate_touch_from_screen_input(p_event_type, p_input_source);
+		}
 	}
 }
 
@@ -212,6 +250,15 @@ Ref<ARVRPositionalTracker> WebXRInterfaceJS::get_controller(int p_controller_id)
 	ERR_FAIL_NULL_V(arvr_server, nullptr);
 
 	return arvr_server->find_by_type_and_id(ARVRServer::TRACKER_CONTROLLER, p_controller_id);
+}
+
+WebXRInterface::TargetRayMode WebXRInterfaceJS::get_controller_target_ray_mode(int p_controller_id) const {
+	ERR_FAIL_COND_V(p_controller_id <= 0, WebXRInterface::TARGET_RAY_MODE_UNKNOWN);
+
+	ARVRServer *arvr_server = ARVRServer::get_singleton();
+	ERR_FAIL_NULL_V(arvr_server, WebXRInterface::TARGET_RAY_MODE_UNKNOWN);
+
+	return (WebXRInterface::TargetRayMode)godot_webxr_get_controller_target_ray_mode(p_controller_id - 1);
 }
 
 String WebXRInterfaceJS::get_visibility_state() const {

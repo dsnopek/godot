@@ -60,8 +60,9 @@ private:
 	Transform _js_matrix_to_transform(float *p_js_matrix);
 	void _update_tracker(int p_controller_id);
 
+	Vector2 _get_joy_vector_from_axes(int *p_axes);
 	int _get_touch_index(int p_input_source);
-	Vector2 _get_screen_position_from_axes(int *p_axes);
+	Vector2 _get_screen_position_from_joy_vector(const Vector2 &p_joy_vector);
 
 public:
 	virtual void is_session_supported(const String &p_session_mode);

@@ -420,7 +420,7 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 		int *buttons = godot_webxr_get_controller_buttons(p_controller_id);
 		if (buttons) {
 			for (int i = 0; i < buttons[0]; i++) {
-				input->joy_button(joy_id + 100, i, *((float *)buttons + (i + 1)));
+				input->joy_button(joy_id, i, *((float *)buttons + (i + 1)));
 			}
 			free(buttons);
 		}
@@ -452,7 +452,7 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 				InputDefault::JoyAxis joy_axis;
 				joy_axis.min = -1;
 				joy_axis.value = *((float *)axes + (i + 1));
-				input->joy_axis(joy_id + 100, i, joy_axis);
+				input->joy_axis(joy_id, i, joy_axis);
 			}
 			free(axes);
 		}

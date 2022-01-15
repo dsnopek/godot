@@ -576,7 +576,7 @@ const GodotWebXR = {
 	godot_webxr_get_controller_target_ray_mode__proxy: 'sync',
 	godot_webxr_get_controller_target_ray_mode__sig: 'ii',
 	godot_webxr_get_controller_target_ray_mode: function (p_controller) {
-		if (p_controller <= 0 || p_controller >= GodotWebXR.controllers.length) {
+		if (p_controller < 0 || p_controller >= GodotWebXR.controllers.length) {
 			return 0;
 		}
 

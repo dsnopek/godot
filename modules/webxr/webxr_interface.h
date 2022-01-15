@@ -70,4 +70,6 @@ public:
 	virtual PoolVector3Array get_bounds_geometry() const = 0;
 };
 
+VARIANT_ENUM_CAST(WebXRInterface::TargetRayMode);
+
 #endif // WEBXR_INTERFACE_H

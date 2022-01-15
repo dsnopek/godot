@@ -60,6 +60,9 @@ private:
 	Transform _js_matrix_to_transform(float *p_js_matrix);
 	void _update_tracker(int p_controller_id);
 
+	int _get_touch_index(int p_input_source);
+	Vector2 _get_screen_position_from_axes(int *p_axes);
+
 public:
 	virtual void is_session_supported(const String &p_session_mode);
 	virtual void set_session_mode(String p_session_mode);
@@ -94,6 +97,7 @@ public:
 	virtual void notification(int p_what);
 
 	void _on_controller_changed();
+	void _on_input_event(int p_event_type, int p_input_source);
 
 	WebXRInterfaceJS();
 	~WebXRInterfaceJS();

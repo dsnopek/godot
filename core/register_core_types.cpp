@@ -71,6 +71,7 @@
 #include "core/math/triangle_mesh.h"
 #include "core/multiplayer/multiplayer_api.h"
 #include "core/multiplayer/multiplayer_peer.h"
+#include "core/multiplayer/multiplayer_peer_custom.h"
 #include "core/object/class_db.h"
 #include "core/object/script_language_extension.h"
 #include "core/object/undo_redo.h"
@@ -209,6 +210,7 @@ void register_core_types() {
 
 	GDREGISTER_ABSTRACT_CLASS(MultiplayerPeer);
 	GDREGISTER_CLASS(MultiplayerPeerExtension);
+	GDREGISTER_CLASS(MultiplayerPeerCustom);
 	GDREGISTER_CLASS(MultiplayerAPI);
 	GDREGISTER_CLASS(MainLoop);
 	GDREGISTER_CLASS(Translation);

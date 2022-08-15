@@ -36,7 +36,9 @@
 #include "core/os/os.h"
 #include "emscripten.h"
 #include "godot_webxr.h"
+#include "servers/rendering/rendering_server_globals.h"
 #include "servers/rendering/renderer_compositor.h"
+#include "drivers/gles3/storage/texture_storage.h"
 
 #include <stdlib.h>
 
@@ -394,11 +396,16 @@ Vector<BlitToScreen> WebXRInterfaceJS::post_draw_viewport(RID p_render_target, c
 		return blit_to_screen;
 	}
 
-	// @todo Refactor this to be based on "views" rather than "eyes".
-	godot_webxr_commit_for_eye(1);
-	if (godot_webxr_get_view_count() > 1) {
-		godot_webxr_commit_for_eye(2);
+	GLES3::TextureStorage *texture_storage = dynamic_cast<GLES3::TextureStorage *>(RSG::texture_storage);
+	if (!texture_storage) {
+		return blit_to_screen;
 	}
+
+	RID texture = texture_storage->render_target_get_texture(p_render_target);
+	uint32_t texture_id = texture_storage->texture_get_texid(texture);
+
+	// @todo Support multiple eyes!
+	godot_webxr_commit_for_eye(1, texture_id);
 
 	return blit_to_screen;
 };

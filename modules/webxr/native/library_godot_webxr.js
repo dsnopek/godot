@@ -43,6 +43,7 @@ const GodotWebXR = {
 		orig_requestAnimationFrame: null,
 		requestAnimationFrame: (callback) => {
 			if (GodotWebXR.session && GodotWebXR.space) {
+				console.log("XRSesssion.requestAnimationFrame");
 				const onFrame = function (time, frame) {
 					GodotWebXR.frame = frame;
 					GodotWebXR.pose = frame.getViewerPose(GodotWebXR.space);
@@ -52,6 +53,7 @@ const GodotWebXR = {
 				};
 				GodotWebXR.session.requestAnimationFrame(onFrame);
 			} else {
+				console.log("original requestAnimationFrame");
 				GodotWebXR.orig_requestAnimationFrame(callback);
 			}
 		},
@@ -293,13 +295,21 @@ const GodotWebXR = {
 			});
 
 			const gl_context_handle = _emscripten_webgl_get_current_context(); // eslint-disable-line no-undef
-			const gl = GL.getContext(gl_context_handle).GLctx;
+			const gl_pre = GL.getContext(gl_context_handle);
+			console.log('gl_pre:');
+			console.log(gl_pre);
+			const gl = gl_pre.GLctx;
+			console.log('gl:');
+			console.log(gl);
 			GodotWebXR.gl = gl;
 
 			gl.makeXRCompatible().then(function () {
 				session.updateRenderState({
 					baseLayer: new XRWebGLLayer(session, gl),
 				});
+				console.log('session started - heres some objects (renderState and baseLayer):');
+				console.log(session.renderState);
+				console.log(session.renderState.baseLayer);
 
 				function onReferenceSpaceSuccess(reference_space, reference_space_type) {
 					GodotWebXR.space = reference_space;
@@ -445,6 +455,7 @@ const GodotWebXR = {
 	godot_webxr_commit_for_eye__sig: 'vii',
 	godot_webxr_commit_for_eye: function (p_eye, p_texture_id) {
 		if (!GodotWebXR.session || !GodotWebXR.pose) {
+			console.log("No session or pose - what?!");
 			return;
 		}
 
@@ -458,9 +469,16 @@ const GodotWebXR = {
 		const orig_viewport = gl.getParameter(gl.VIEWPORT);
 
 		// Bind to WebXR's framebuffer.
+		console.log("WebXR render state:");
+		console.log(GodotWebXR.session.renderState);
+		console.log("WebXR layer:");
+		console.log(GodotWebXR.session.renderState.baseLayer);
+		console.log("WebXR FBO:");
+		console.log(glLayer.framebuffer);
 		gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
 		gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
 
+		console.log(GL.textures[p_texture_id]);
 		GodotWebXR.blitTexture(gl, GL.textures[p_texture_id]);
 
 		// Restore state.

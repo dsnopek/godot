@@ -393,19 +393,25 @@ Vector<BlitToScreen> WebXRInterfaceJS::post_draw_viewport(RID p_render_target, c
 	Vector<BlitToScreen> blit_to_screen;
 
 	if (!initialized) {
+		printf("post_draw_viewport(): not initialized\n");
 		return blit_to_screen;
 	}
 
 	GLES3::TextureStorage *texture_storage = dynamic_cast<GLES3::TextureStorage *>(RSG::texture_storage);
 	if (!texture_storage) {
+		printf("post_draw_viewport(): no texture storage\n");
 		return blit_to_screen;
 	}
 
 	RID texture = texture_storage->render_target_get_texture(p_render_target);
 	uint32_t texture_id = texture_storage->texture_get_texid(texture);
 
+	printf("texture_id = %d\n", texture_id);
+
 	// @todo Support multiple eyes!
 	godot_webxr_commit_for_eye(1, texture_id);
+
+	printf("post_draw_viewport(): finished!\n");
 
 	return blit_to_screen;
 };

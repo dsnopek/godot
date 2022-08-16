@@ -100,6 +100,7 @@ const GodotWebXR = {
 			uniform sampler2D uSampler;
 
 			void main() {
+				//gl_FragColor = vec4(vTextureCoord.x, vTextureCoord.y, 0.0, 0.0);
 				gl_FragColor = texture2D(uSampler, vTextureCoord);
 			}
 		`,
@@ -475,8 +476,19 @@ const GodotWebXR = {
 		console.log(GodotWebXR.session.renderState.baseLayer);
 		console.log("WebXR FBO:");
 		console.log(glLayer.framebuffer);
+		console.log("Viewport:");
+		console.log(viewport);
 		gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
 		gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+
+		gl.clearColor(1.0, 0.0, 0.0, 0.0);
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+		gl.disable(gl.BLEND);
+		gl.disable(gl.DEPTH_TEST);
+		gl.disable(gl.CULL_FACE);
+		gl.disable(gl.SCISSOR_TEST);
+		gl.disable(gl.STENCIL_TEST);
 
 		console.log(GL.textures[p_texture_id]);
 		GodotWebXR.blitTexture(gl, GL.textures[p_texture_id]);

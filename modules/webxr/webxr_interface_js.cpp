@@ -311,6 +311,7 @@ Transform3D WebXRInterfaceJS::_js_matrix_to_transform(float *p_js_matrix) {
 
 Size2 WebXRInterfaceJS::get_render_target_size() {
 	if (render_targetsize.width != 0 && render_targetsize.height != 0) {
+		printf("Cached render target size %f x %f\n", render_targetsize.width, render_targetsize.height);
 		return render_targetsize;
 	}
 
@@ -319,11 +320,14 @@ Size2 WebXRInterfaceJS::get_render_target_size() {
 		// As a temporary default (until WebXR is fully initialized), use half the window size.
 		Size2 temp = DisplayServer::get_singleton()->window_get_size();
 		temp.width /= 2.0;
+		printf("Temp render target size %f x %f\n", temp.width, temp.height);
 		return temp;
 	}
 
 	render_targetsize.width = js_size[0];
 	render_targetsize.height = js_size[1];
+
+	printf("Render target size %f x %f\n", render_targetsize.width, render_targetsize.height);
 
 	free(js_size);
 

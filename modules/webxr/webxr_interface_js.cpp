@@ -311,7 +311,7 @@ Transform3D WebXRInterfaceJS::_js_matrix_to_transform(float *p_js_matrix) {
 
 Size2 WebXRInterfaceJS::get_render_target_size() {
 	if (render_targetsize.width != 0 && render_targetsize.height != 0) {
-		printf("Cached render target size %f x %f\n", render_targetsize.width, render_targetsize.height);
+		//printf("Cached render target size %f x %f\n", render_targetsize.width, render_targetsize.height);
 		return render_targetsize;
 	}
 
@@ -320,14 +320,14 @@ Size2 WebXRInterfaceJS::get_render_target_size() {
 		// As a temporary default (until WebXR is fully initialized), use half the window size.
 		Size2 temp = DisplayServer::get_singleton()->window_get_size();
 		temp.width /= 2.0;
-		printf("Temp render target size %f x %f\n", temp.width, temp.height);
+		//printf("Temp render target size %f x %f\n", temp.width, temp.height);
 		return temp;
 	}
 
 	render_targetsize.width = js_size[0];
 	render_targetsize.height = js_size[1];
 
-	printf("Render target size %f x %f\n", render_targetsize.width, render_targetsize.height);
+	//printf("Render target size %f x %f\n", render_targetsize.width, render_targetsize.height);
 
 	free(js_size);
 
@@ -397,25 +397,25 @@ Vector<BlitToScreen> WebXRInterfaceJS::post_draw_viewport(RID p_render_target, c
 	Vector<BlitToScreen> blit_to_screen;
 
 	if (!initialized) {
-		printf("post_draw_viewport(): not initialized\n");
+		//printf("post_draw_viewport(): not initialized\n");
 		return blit_to_screen;
 	}
 
 	GLES3::TextureStorage *texture_storage = dynamic_cast<GLES3::TextureStorage *>(RSG::texture_storage);
 	if (!texture_storage) {
-		printf("post_draw_viewport(): no texture storage\n");
+		//printf("post_draw_viewport(): no texture storage\n");
 		return blit_to_screen;
 	}
 
 	RID texture = texture_storage->render_target_get_texture(p_render_target);
 	uint32_t texture_id = texture_storage->texture_get_texid(texture);
 
-	printf("texture_id = %d\n", texture_id);
+	//printf("texture_id = %d\n", texture_id);
 
 	// @todo Support multiple eyes!
 	godot_webxr_commit_for_eye(1, texture_id);
 
-	printf("post_draw_viewport(): finished!\n");
+	//printf("post_draw_viewport(): finished!\n");
 
 	return blit_to_screen;
 };

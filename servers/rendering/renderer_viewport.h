@@ -204,6 +204,7 @@ public:
 	int total_draw_calls_used = 0;
 
 private:
+	void _viewport_set_size(Viewport *p_viewport, int p_width, int p_height, int p_view_count);
 	void _configure_3d_render_buffers(Viewport *p_viewport);
 	void _draw_3d(Viewport *p_viewport);
 	void _draw_viewport(Viewport *p_viewport);

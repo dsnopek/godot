@@ -428,6 +428,8 @@ Vector<BlitToScreen> WebXRInterfaceJS::post_draw_viewport(RID p_render_target, c
 
 	GLES3::RenderTarget *rt = texture_storage->get_render_target(p_render_target);
 	//printf("RENDER TARGET:\n");
+	//printf("rt->external.fbo: %d\n", rt->external.fbo);
+	//printf("rt->fbo: %d\n", rt->fbo);
 	//printf("rt->position: %d, %d\n", rt->position.x, rt->position.y);
 	//printf("rt->size: %d, %d\n", rt->size.x, rt->size.y);
 	//printf("rt->mipmap_count: %d\n", rt->mipmap_count);
@@ -463,6 +465,7 @@ Vector<BlitToScreen> WebXRInterfaceJS::post_draw_viewport(RID p_render_target, c
 
 	// @todo Support multiple eyes!
 	//godot_webxr_commit_for_eye(1, texture_id);
+	//godot_webxr_commit_for_eye(1, rt->color);
 	godot_webxr_commit_for_eye(1, rt->fbo);
 
 	//printf("post_draw_viewport(): finished!\n");

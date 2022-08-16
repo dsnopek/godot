@@ -573,14 +573,7 @@ void RendererViewport::draw_viewports() {
 			if (xr_interface.is_valid()) {
 				// Override our size, make sure it matches our required size and is created as a stereo target
 				Size2 xr_size = xr_interface->get_render_target_size();
-
-				// Would have been nice if we could call viewport_set_size here,
-				// but alas that takes our RID and we now have our pointer,
-				// also we only check if view_count changes in render_target_set_size so we need to call that for this to reliably change
-				vp->occlusion_buffer_dirty = vp->occlusion_buffer_dirty || (vp->size != xr_size);
-				vp->size = xr_size;
-				uint32_t view_count = xr_interface->get_view_count();
-				RSG::texture_storage->render_target_set_size(vp->render_target, vp->size.x, vp->size.y, view_count);
+				_viewport_set_size(vp, xr_size.width, xr_size.height, xr_interface->get_view_count());
 
 				// Inform xr interface we're about to render its viewport, if this returns false we don't render
 				visible = xr_interface->pre_draw_viewport(vp->render_target);
@@ -790,9 +783,12 @@ void RendererViewport::viewport_set_size(RID p_viewport, int p_width, int p_heig
 	Viewport *viewport = viewport_owner.get_or_null(p_viewport);
 	ERR_FAIL_COND(!viewport);
 
+	_viewport_set_size(viewport, p_width, p_height, viewport->get_view_count());
+}
+
+void RendererViewport::_viewport_set_size(Viewport *viewport, int p_width, int p_height, int view_count) {
 	viewport->size = Size2(p_width, p_height);
 
-	uint32_t view_count = viewport->get_view_count();
 	RSG::texture_storage->render_target_set_size(viewport->render_target, p_width, p_height, view_count);
 	_configure_3d_render_buffers(viewport);
 

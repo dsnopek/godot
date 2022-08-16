@@ -209,11 +209,13 @@ StringName WebXRInterfaceJS::get_name() const {
 };
 
 uint32_t WebXRInterfaceJS::get_capabilities() const {
-	return XRInterface::XR_STEREO | XRInterface::XR_MONO;
+	//return XRInterface::XR_STEREO | XRInterface::XR_MONO;
+	return XRInterface::XR_MONO;
 };
 
 uint32_t WebXRInterfaceJS::get_view_count() {
-	return godot_webxr_get_view_count();
+	//return godot_webxr_get_view_count();
+	return 1;
 };
 
 bool WebXRInterfaceJS::is_initialized() const {
@@ -234,6 +236,8 @@ bool WebXRInterfaceJS::initialize() {
 		}
 
 		// we must create a tracker for our head
+		head_transform.basis = Basis();
+		head_transform.origin = Vector3();
 		head_tracker.instantiate();
 		head_tracker->set_tracker_type(XRServer::TRACKER_HEAD);
 		head_tracker->set_tracker_name("head");
@@ -340,15 +344,17 @@ Transform3D WebXRInterfaceJS::get_camera_transform() {
 	XRServer *xr_server = XRServer::get_singleton();
 	ERR_FAIL_NULL_V(xr_server, transform_for_eye);
 
-	float *js_matrix = godot_webxr_get_transform_for_eye(0);
-	if (!initialized || js_matrix == nullptr) {
-		return transform_for_eye;
+	if (initialized) {
+		float world_scale = xr_server->get_world_scale();
+
+		// just scale our origin point of our transform
+		Transform3D _head_transform = head_transform;
+		_head_transform.origin *= world_scale;
+
+		transform_for_eye = (xr_server->get_reference_frame()) * _head_transform;
 	}
 
-	transform_for_eye = _js_matrix_to_transform(js_matrix);
-	free(js_matrix);
-
-	return xr_server->get_reference_frame() * transform_for_eye;
+	return transform_for_eye;
 };
 
 Transform3D WebXRInterfaceJS::get_transform_for_view(uint32_t p_view, const Transform3D &p_cam_transform) {
@@ -407,13 +413,57 @@ Vector<BlitToScreen> WebXRInterfaceJS::post_draw_viewport(RID p_render_target, c
 		return blit_to_screen;
 	}
 
+ /*
+	BlitToScreen blit;
+	blit.render_target = p_render_target;
+	//blit.multi_view.use_layer = true;
+	//blit.multi_view.layer = 0;
+	blit.dst_rect = p_screen_rect;
+	blit.dst_rect.size.width *= 0.5;
+	blit_to_screen.push_back(blit);
+	*/
+
 	RID texture = texture_storage->render_target_get_texture(p_render_target);
 	uint32_t texture_id = texture_storage->texture_get_texid(texture);
+
+	GLES3::RenderTarget *rt = texture_storage->get_render_target(p_render_target);
+	//printf("RENDER TARGET:\n");
+	//printf("rt->position: %d, %d\n", rt->position.x, rt->position.y);
+	//printf("rt->size: %d, %d\n", rt->size.x, rt->size.y);
+	//printf("rt->mipmap_count: %d\n", rt->mipmap_count);
+	//printf("rt->fbo: %d\n", rt->fbo);
+	//printf("rt->color: %d\n", rt->color);
+	//printf("rt->backbuffer: %d\n", rt->backbuffer);
+	//printf("rt->backbuffer_fbo: %d\n", rt->backbuffer_fbo);
+	//printf("rt->direct_to_screen: %d\n", rt->direct_to_screen);
+	//printf("rt->is_transparent: %d\n", rt->direct_to_screen);
+	//printf("rt->clear_color: %f, %f, %f, %f\n", rt->clear_color.r, rt->clear_color.g, rt->clear_color.b, rt->clear_color.a);
+
+	GLES3::Texture *t = texture_storage->get_texture(rt->texture);
+	//printf("TEXTURE:\n");
+	//printf("t->width: %d\n", t->width);
+	//printf("t->height: %d\n", t->height);
+	//printf("t->depth: %d\n", t->depth);
+	//printf("t->layers: %d\n", t->layers);
+	//printf("t->type: %d\n", t->type);
+	//printf("t->layered_type: %d\n", t->layered_type);
+	//printf("t->target: %d\n", t->target);
+
+	//printf("p_screen_rect: %f, %f, %f, %f\n", p_screen_rect.position.x, p_screen_rect.position.y, p_screen_rect.size.x, p_screen_rect.size.y);
+
+ /*
+	glBindFramebuffer(GL_FRAMEBUFFER, texture_storage->system_fbo);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, rt->fbo);
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, texture_storage->system_fbo);
+	glBlitFramebuffer(0, 0, p_screen_rect.size.x / 2.0, p_screen_rect.size.y, 0, 0, p_screen_rect.size.x / 2.0, p_screen_rect.size.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	*/
 
 	//printf("texture_id = %d\n", texture_id);
 
 	// @todo Support multiple eyes!
-	godot_webxr_commit_for_eye(1, texture_id);
+	//godot_webxr_commit_for_eye(1, texture_id);
+	godot_webxr_commit_for_eye(1, rt->fbo);
 
 	//printf("post_draw_viewport(): finished!\n");
 
@@ -422,18 +472,18 @@ Vector<BlitToScreen> WebXRInterfaceJS::post_draw_viewport(RID p_render_target, c
 
 void WebXRInterfaceJS::process() {
 	if (initialized) {
-		godot_webxr_sample_controller_data();
-
+		// Get the "head" position.
+		float *js_matrix = godot_webxr_get_transform_for_eye(0);
+		if (js_matrix != nullptr) {
+			head_transform = _js_matrix_to_transform(js_matrix);
+			free(js_matrix);
+		}
 		if (head_tracker.is_valid()) {
-			// TODO set default pose to our head location (i.e. get_camera_transform without world scale and reference frame applied)
-			// head_tracker->set_pose("default", head_transform, Vector3(), Vector3());
+			head_tracker->set_pose("default", head_transform, Vector3(), Vector3());
 		}
 
+		godot_webxr_sample_controller_data();
 		int controller_count = godot_webxr_get_controller_count();
-		if (controller_count == 0) {
-			return;
-		}
-
 		for (int i = 0; i < controller_count; i++) {
 			_update_tracker(i);
 		}

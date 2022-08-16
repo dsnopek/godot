@@ -478,6 +478,7 @@ const GodotWebXR = {
 		//console.log(glLayer.framebuffer);
 		//console.log("Viewport:");
 		//console.log(viewport);
+		/*
 		gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
 		gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
 
@@ -496,6 +497,20 @@ const GodotWebXR = {
 		// Restore state.
 		gl.bindFramebuffer(gl.FRAMEBUFFER, orig_framebuffer);
 		gl.viewport(orig_viewport[0], orig_viewport[1], orig_viewport[2], orig_viewport[3]);
+		*/
+
+		//var framebuffer = GL.framebuffers[p_texture_id];
+		var framebuffers = Object.values(GL.framebuffers).filter(o => o);
+		console.log(framebuffers);
+		var framebuffer = framebuffers[0];
+
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		gl.bindFramebuffer(gl.READ_FRAMEBUFFER, framebuffer);
+		gl.readBuffer(gl.COLOR_ATTACHMENT0);
+		gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+
+		gl.blitFramebuffer(0, 0, viewport.width, viewport.height, 0, 0, viewport.width, viewport.height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+
 	},
 
 	godot_webxr_sample_controller_data__proxy: 'sync',

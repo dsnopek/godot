@@ -765,7 +765,8 @@ DisplayServerJavaScript::DisplayServerJavaScript(const String &p_rendering_drive
 		EmscriptenWebGLContextAttributes attributes;
 		emscripten_webgl_init_context_attributes(&attributes);
 		//attributes.alpha = GLOBAL_GET("display/window/per_pixel_transparency/allowed");
-		attributes.alpha = true;
+		//attributes.alpha = true;
+		attributes.alpha = false;
 		attributes.antialias = false;
 		attributes.majorVersion = 2;
 

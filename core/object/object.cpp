@@ -1649,7 +1649,9 @@ void Object::set_instance_binding(void *p_token, void *p_binding, const GDNative
 
 void *Object::get_instance_binding(void *p_token, const GDNativeInstanceBindingCallbacks *p_callbacks) {
 	void *binding = nullptr;
+#ifndef NO_THREADS
 	_instance_binding_mutex.lock();
+#endif
 	for (uint32_t i = 0; i < _instance_binding_count; i++) {
 		if (_instance_bindings[i].token == p_token) {
 			binding = _instance_bindings[i].binding;
@@ -1674,14 +1676,18 @@ void *Object::get_instance_binding(void *p_token, const GDNativeInstanceBindingC
 		_instance_binding_count++;
 	}
 
+#ifndef NO_THREADS
 	_instance_binding_mutex.unlock();
+#endif
 
 	return binding;
 }
 
 bool Object::has_instance_binding(void *p_token) {
 	bool found = false;
+#ifndef NO_THREADS
 	_instance_binding_mutex.lock();
+#endif
 	for (uint32_t i = 0; i < _instance_binding_count; i++) {
 		if (_instance_bindings[i].token == p_token) {
 			found = true;
@@ -1689,7 +1695,9 @@ bool Object::has_instance_binding(void *p_token) {
 		}
 	}
 
+#ifndef NO_THREADS
 	_instance_binding_mutex.unlock();
+#endif
 
 	return found;
 }

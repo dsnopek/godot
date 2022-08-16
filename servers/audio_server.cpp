@@ -43,6 +43,7 @@
 #include "servers/audio/audio_driver_dummy.h"
 #include "servers/audio/effects/audio_effect_compressor.h"
 
+#include <algorithm>
 #include <cstring>
 
 #ifdef TOOLS_ENABLED

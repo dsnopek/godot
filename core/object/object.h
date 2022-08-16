@@ -577,9 +577,7 @@ private:
 	friend class RefCounted;
 	bool type_is_reference = false;
 
-#ifndef NO_THREADS
 	std::mutex _instance_binding_mutex;
-#endif
 	struct InstanceBinding {
 		void *binding = nullptr;
 		void *token = nullptr;
@@ -595,9 +593,7 @@ protected:
 	_FORCE_INLINE_ bool _instance_binding_reference(bool p_reference) {
 		bool can_die = true;
 		if (_instance_bindings) {
-#ifndef NO_THREADS
 			_instance_binding_mutex.lock();
-#endif
 			for (uint32_t i = 0; i < _instance_binding_count; i++) {
 				if (_instance_bindings[i].reference_callback) {
 					if (!_instance_bindings[i].reference_callback(_instance_bindings[i].token, _instance_bindings[i].binding, p_reference)) {
@@ -605,9 +601,7 @@ protected:
 					}
 				}
 			}
-#ifndef NO_THREADS
 			_instance_binding_mutex.unlock();
-#endif
 		}
 		return can_die;
 	}

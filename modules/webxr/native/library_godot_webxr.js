@@ -304,13 +304,12 @@ const GodotWebXR = {
 			GodotWebXR.gl = gl;
 
 			gl.makeXRCompatible().then(function () {
-				const baseLayer = new XRWebGLLayer(session, gl);
 				session.updateRenderState({
-					baseLayer: baseLayer,
+					baseLayer: new XRWebGLLayer(session, gl),
 				});
 				console.log('session started - heres some objects (renderState and baseLayer):');
 				console.log(session.renderState);
-				console.log(baseLayer);
+				console.log(session.renderState.baseLayer);
 
 				function onReferenceSpaceSuccess(reference_space, reference_space_type) {
 					GodotWebXR.space = reference_space;
@@ -476,20 +475,11 @@ const GodotWebXR = {
 		console.log(GodotWebXR.session.renderState.baseLayer);
 		console.log("WebXR FBO:");
 		console.log(glLayer.framebuffer);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
+		gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+
 		console.log(GL.textures[p_texture_id]);
-
-		var input_fbo = gl.createFramebuffer()
-		gl.bindFramebuffer(gl.READ_FRAMEBUFFER, input_fbo);
-		gl.framebufferTexture2D(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, GL.textures[p_texture_id], 0);
-		gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, glLayer.framebuffer);
-		//gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
-		gl.viewport(0, 0, viewport.width, viewport.height);
-		gl.blitFramebuffer(0, 0, viewport.width, viewport.height, 0, 0, viewport.width, viewport.height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
-
-		gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
-		gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
-		gl.deleteFramebuffer(input_fbo);
-		//GodotWebXR.blitTexture(gl, GL.textures[p_texture_id]);
+		GodotWebXR.blitTexture(gl, GL.textures[p_texture_id]);
 
 		// Restore state.
 		gl.bindFramebuffer(gl.FRAMEBUFFER, orig_framebuffer);

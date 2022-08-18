@@ -6,6 +6,70 @@
 	<description>
 		A [NetworkedMultiplayerPeer] implementation that can be used as a [member MultiplayerAPI.network_peer] and controlled from a script.
 		Its purpose is to allow adding a new backend for the high-Level multiplayer API without needing to use GDNative.
+		Here's a short example, assuming you have an imaginary [code]_connect_to_real_multiplayer()[/code] function that will create a client connected to the underlying multiplayer transport (ex. Steam peer-to-peer, PlayFab, etc):
+		[codeblock]
+		extends Node
+
+		var custom_peer := NetworkedMultiplayerCustom.new()
+		var real_multiplayer_client
+
+		func join_multiplayer():
+		    custom_peer.set_connection_status(NetworkedMultiplayerPeer.CONNECTION_CONNECTING)
+		    get_tree().network_peer = custom_peer
+
+		    # Start connecting via real transport (ex. Steam peer-to-peer, PlayFab, etc).
+		    real_multiplayer_client = _connect_to_real_multiplayer()
+		    real_multiplayer_client.connect("connection_succeeded", self, "_on_real_multiplayer_connection_succeeded")
+		    real_multiplayer_client.connect("connection_failed", self, "_on_real_multiplayer_connection_failed")
+		    real_multiplayer_client.connect("peer_connected", self, "_on_real_multiplayer_peer_connected")
+		    real_multiplayer_client.connect("peer_disconnected", self, "_on_real_multiplayer_peer_disconnected")
+		    real_multiplayer_client.connect("recieved_message", self, "_on_real_multiplayer_received_message")
+
+		    # Intercept any RPC's sent locally.
+		    custom_peer.connect("packet_generated", self, "_on_custom_peer_packet_generated")
+
+		func _on_real_multiplayer_connection_succeeded():
+		    # Once connection is formed, assign a peer id somehow. If the real transport
+		    # doesn't have a compatible id, you'll need to generate your own ids, and map
+		    # them to the ids used by the real transport (the same mapping should be used
+		    # by all peers).
+		    #
+		    # Also, if you want Godot to treat this peer as the "host" or "server" (per
+		    # `get_tree().is_network_server()`) then use the peer id of 1.
+		    var my_id = real_multiplayer_client.get_my_id()
+		    custom_peer.initialize(my_id)
+		    custom_peer.set_connection_status(NetworkedMultiplayerCustom.CONNECTION_CONNECTED)
+
+		func _on_real_multiplayer_connection_failed():
+		    custom_peer.set_connection_status(NetworkedMultiplayerCustom.CONNECTION_DISCONNECTED)
+
+		func _on_real_multiplayer_peer_connected(peer_id):
+		    # Let Godot know a peer connected. Again, you may need to map between Godot ids
+		    # and the ids used by the real multiplayer client.
+		    custom_peer.emit_signal("peer_connected", peer_id)
+
+		func _on_real_multiplayer_peer_disconnected(peer_id):
+		    # Same notes as above.
+		    custom_peer.emit_signal("peer_disconnected", peer_id)
+
+		func _on_custom_peer_packet_generated(peer_id, buffer, transfer_mode):
+		    # Send any packets generated locally (ex RPCs) to the requested peer
+		    # using the real multiplayer client.
+		    if transfer_mode == NetworkedMultiplayerPeer.TRANSFER_MODE_RELIABLE:
+		        real_multiplayer_client.send_reliable(peer_id, {
+		            'from_peer_id': custom_peer.get_unique_id(),
+		            'data': buffer,
+		        })
+		    else:
+		        real_multiplayer_client.send_unreliable(peer_id, {
+		            'from_peer_id': custom_peer.get_unique_id(),
+		            'data': buffer,
+		        })
+
+		func _on_real_multiplayer_received_message(message):
+		    # Take any packets we recieved from other peers, and deliver them locally.
+		    custom_peer.deliver_packet(message['data'], message['from_peer_id'])
+		[/codeblock]
 	</description>
 	<tutorials>
 	</tutorials>
@@ -23,7 +87,7 @@
 			<return type="void" />
 			<argument index="0" name="self_peer_id" type="int" />
 			<description>
-				Initialize the peer with the given [code]peer_id[/code] (must be between 1 and 2147483647).
+				Initialize the peer with the given [code]self_peer_id[/code] (must be between 1 and 2147483647).
 				Can only be called if the connection status is [constant NetworkedMultiplayerPeer.CONNECTION_CONNECTING]. See [method set_connection_status].
 			</description>
 		</method>
@@ -50,7 +114,7 @@
 			<argument index="1" name="buffer" type="PoolByteArray" />
 			<argument index="2" name="transfer_mode" type="int" />
 			<description>
-				Emitted when the local [MultiplayerAPI] generates a packet.
+				Emitted when the local [MultiplayerAPI] generates a packet (e.g. when calling [method Node.rpc]).
 				Your script should take this packet and send it to the requested peer over the network (which should call [method deliver_packet] with the data when it's received).
 			</description>
 		</signal>

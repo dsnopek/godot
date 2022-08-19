@@ -119,11 +119,11 @@
 			// Same notes as above.
 			customPeer.EmitSignal("peer_disconnected", peerId);
 		    }
-		    void _OnCustomPeerPacketGenerated(int peerId, byte[] buffer, int transferMode)
+		    void _OnCustomPeerPacketGenerated(int peerId, byte[] buffer, NetworkedMultiplayerPeer.TransferModeEnum transferMode)
 		    {
 			// Send any packets generated locally (ex RPCs) to the requested peer
 			// using the real multiplayer client.
-			if (transferMode == NetworkedMultiplayerPeer.TRANSFER_MODE_RELIABLE)
+			if (transferMode == NetworkedMultiplayerPeer.TransferModeEnum.Reliable)
 			{
 			    realMultiplayerClient.SendReliable(peerId, new RealPacket()
 			    {

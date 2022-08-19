@@ -7,7 +7,8 @@
 		A [NetworkedMultiplayerPeer] implementation that can be used as a [member MultiplayerAPI.network_peer] and controlled from a script.
 		Its purpose is to allow adding a new backend for the high-Level multiplayer API without needing to use GDNative.
 		Here's a short example, assuming you have an imaginary [code]_connect_to_real_multiplayer()[/code] function that will create a client connected to the underlying multiplayer transport (ex. Steam peer-to-peer, PlayFab, etc):
-		[codeblock]
+		[codeblocks]
+		[gdscript]
 		extends Node
 
 		var custom_peer := NetworkedMultiplayerCustom.new()
@@ -69,7 +70,84 @@
 		func _on_real_multiplayer_received_message(message):
 		    # Take any packets we recieved from other peers, and deliver them locally.
 		    custom_peer.deliver_packet(message['data'], message['from_peer_id'])
-		[/codeblock]
+		[/gdscript]
+		[csharp]
+		using Godot;
+		public class CustomLobby : Node
+		{
+		    NetworkedMultiplayerCustom customPeer;
+		    RealMultiplayerClient realMultiplayerClient;
+		    void JoinMultiplayer()
+		    {
+			customPeer.SetConnectionStatus(NetworkedMultiplayerPeer.CONNECTION_CONNECTING);
+			GetTree().NetworkPeer = customPeer;
+			// Start connecting via real transport (ex. Steam peer-to-peer, PlayFab, etc).
+			realMultiplayerClient = _ConnectToRealMultiplayer();
+			realMultiplayerClient.Connect("connection_succeeded", this, nameof(_OnRealMultiplayerConnectionSucceeded));
+			realMultiplayerClient.Connect("connection_failed", this, nameof(_OnRealMultiplayerConnectionFailed));
+			realMultiplayerClient.Connect("peer_connected", this, nameof(_OnRealMultiplayerPeerConnected));
+			realMultiplayerClient.Connect("peer_disconnected", this, nameof(_OnRealMultiplayerPeerDisconnected));
+			realMultiplayerClient.Connect("recieved_message", this, nameof(_OnRealMultiplayerReceivedMessage));
+			// Intercept any RPC's sent locally.
+			customPeer.Connect("packet_generated", this, nameof(_OnCustomPeerPacketGenerated));
+		    }
+		    void _OnRealMultiplayerConnectionSucceeded()
+		    {
+			// Once connection is formed, assign a peer id somehow. If the real transport
+			// doesn't have a compatible id, you'll need to generate your own ids, and map
+			// them to the ids used by the real transport (the same mapping should be used
+			// by all peers).
+			//
+			// Also, if you want Godot to treat this peer as the "host" or "server" (per
+			// `GetTree().IsNetworkServer()`) then use the peer id of 1.
+			var myId = realMultiplayerClient.GetMyId();
+			customPeer.Initialize(myId);
+			customPeer.SetConnectionStatus(NetworkedMultiplayerCustom.CONNECTION_CONNECTED);
+		    }
+		    void _OnRealMultiplayerConnectionFailed()
+		    {
+			customPeer.SetConnectionStatus(NetworkedMultiplayerCustom.CONNECTION_DISCONNECTED);
+		    }
+		    void _OnRealMultiplayerPeerConnected(int peerId)
+		    {
+			// Let Godot know a peer connected. Again, you may need to map between Godot ids
+			// and the ids used by the real multiplayer client.
+			customPeer.EmitSignal("peer_connected", peerId);
+		    }
+		    void _OnRealMultiplayerPeerDisconnected(int peerId)
+		    {
+			// Same notes as above.
+			customPeer.EmitSignal("peer_disconnected", peerId);
+		    }
+		    void _OnCustomPeerPacketGenerated(int peerId, byte[] buffer, int transferMode)
+		    {
+			// Send any packets generated locally (ex RPCs) to the requested peer
+			// using the real multiplayer client.
+			if (transferMode == NetworkedMultiplayerPeer.TRANSFER_MODE_RELIABLE)
+			{
+			    realMultiplayerClient.SendReliable(peerId, new RealPacket()
+			    {
+				fromPeerId = customPeer.GetNetworkUniqueId(),
+				data = buffer
+			    });
+			}
+			else
+			{
+			    realMultiplayerClient.SendUnreliable(peerId, new RealPacket()
+			    {
+				fromPeerId = customPeer.GetNetworkUniqueId(),
+				data = buffer
+			    });
+			}
+		    }
+		    void _OnRealMultiplayerReceivedMessage(RealPacket message)
+		    {
+			// Take any packets we recieved from other peers, and deliver them locally.
+			customPeer.DeliverPacket(message.data, message.fromPeerId);
+		    }
+		}
+		[/csharp]
+		[/codeblocks]
 	</description>
 	<tutorials>
 	</tutorials>

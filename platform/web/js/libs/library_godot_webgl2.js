@@ -1,12 +1,12 @@
 /*************************************************************************/
-/*  config.h                                                             */
+/*  library_godot_webgl2.js                                               */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
 /*                      https://godotengine.org                          */
 /*************************************************************************/
-/* Copyright (c) 2007-2022 Juan Linietsky, Ariel Manzur.                 */
-/* Copyright (c) 2014-2022 Godot Engine contributors (cf. AUTHORS.md).   */
+/* Copyright (c) 2007-2020 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2014-2020 Godot Engine contributors (cf. AUTHORS.md).   */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -27,78 +27,26 @@
 /* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     */
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
+const GodotWebGL2 = {
+	$GodotWebGL2__deps: ['$GL', '$GodotRuntime'],
+	$GodotWebGL2: {},
 
-#ifndef CONFIG_GLES3_H
-#define CONFIG_GLES3_H
-
-#ifdef GLES3_ENABLED
-
-#include "core/string/ustring.h"
-#include "core/templates/hash_set.h"
-
-// This must come first to avoid windows.h mess
-#include "platform_config.h"
-#ifndef OPENGL_INCLUDE_H
-#include <GLES3/gl3.h>
-#else
-#include OPENGL_INCLUDE_H
-#endif
-
-#if !defined(GLES_OVER_GL) && !defined(WEB_ENABLED) && !defined(IOS_ENABLED)
-typedef void (*PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC)(GLenum, GLenum, GLuint, GLint, GLint, GLsizei);
-#endif
-
-namespace GLES3 {
-
-class Config {
-private:
-	static Config *singleton;
-
-public:
-	bool use_nearest_mip_filter = false;
-	bool use_skeleton_software = false;
-	bool use_depth_prepass = true;
-	bool use_rgba_2d_shadows = false;
-
-	int max_vertex_texture_image_units = 0;
-	int max_texture_image_units = 0;
-	int max_texture_size = 0;
-	int max_uniform_buffer_size = 0;
-	int max_renderable_elements = 0;
-	int max_renderable_lights = 0;
-	int max_lights_per_object = 0;
-
-	int uniform_buffer_offset_alignment = 0;
-
-	// TODO implement wireframe in OpenGL
-	// bool generate_wireframes;
-
-	HashSet<String> extensions;
-
-	bool float_texture_supported = false;
-	bool s3tc_supported = false;
-	bool rgtc_supported = false;
-	bool bptc_supported = false;
-	bool etc2_supported = false;
-
-	bool force_vertex_shading = false;
-
-	bool support_anisotropic_filter = false;
-	float anisotropic_level = 0.0f;
-
-	bool multiview_supported = false;
-#if !defined(GLES_OVER_GL) && !defined(WEB_ENABLED) && !defined(IOS_ENABLED)
-	PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC eglFramebufferTextureMultiviewOVR = nullptr;
-#endif
-
-	static Config *get_singleton() { return singleton; };
-
-	Config();
-	~Config();
+	godot_webgl2_glFramebufferTextureMultiviewOVR__deps: ['emscripten_webgl_get_current_context'],
+	godot_webgl2_glFramebufferTextureMultiviewOVR__proxy: 'sync',
+	godot_webgl2_glFramebufferTextureMultiviewOVR__sig: 'viiiiii',
+	godot_webgl2_glFramebufferTextureMultiviewOVR: function (target, attachment, texture, level, base_view_index, num_views) {
+		const context = GL.currentContext;
+		if (typeof context.multiviewExt === 'undefined') {
+			const ext = context.GLctx.getExtension('OVR_multiview2');
+			if (!ext) {
+				console.error('Trying to call glFramebufferTextureMultiviewOVR() without the OVR_multiview2 extension');
+				return;
+			}
+			context.multiviewExt = ext;
+		}
+		context.multiviewExt.framebufferTextureMultiviewOVR(target, attachment, GL.textures[texture], level, base_view_index, num_views);
+	},
 };
 
-} // namespace GLES3
-
-#endif // GLES3_ENABLED
-
-#endif // CONFIG_GLES3_H
+autoAddDeps(GodotWebGL2, '$GodotWebGL2');
+mergeInto(LibraryManager.library, GodotWebGL2);

@@ -21,7 +21,6 @@ void main() {
 /* clang-format off */
 #[fragment]
 
-
 #define M_PI 3.14159265359
 
 uniform samplerCube source_cube; //texunit:0

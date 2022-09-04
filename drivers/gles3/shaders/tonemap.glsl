@@ -1,6 +1,13 @@
 /* clang-format off */
 [vertex]
 
+#ifdef MULTIVIEW
+#ifdef GL_OVR_multiview
+#extension GL_OVR_multiview : require
+layout(num_views=2) in;
+#endif
+#endif
+
 #ifdef USE_GLES_OVER_GL
 #define lowp
 #define mediump
@@ -25,6 +32,16 @@ void main() {
 /* clang-format off */
 [fragment]
 
+#ifdef MULTIVIEW
+#ifdef GL_OVR_multiview
+#extension GL_OVR_multiview : require
+layout(num_views=2) in;
+#define ViewIndex gl_ViewID_OVR
+#else
+#define ViewIndex 0
+#endif
+#endif
+
 #ifdef USE_GLES_OVER_GL
 #define lowp
 #define mediump
@@ -44,7 +61,11 @@ in vec2 uv_interp;
 
 layout(location = 0) out vec4 frag_color;
 
+#ifdef MULTVIEW
+uniform highp sampler2DArray source; //texunit:0
+#else
 uniform highp sampler2D source; //texunit:0
+#endif
 
 #if defined(USE_GLOW_LEVEL1) || defined(USE_GLOW_LEVEL2) || defined(USE_GLOW_LEVEL3) || defined(USE_GLOW_LEVEL4) || defined(USE_GLOW_LEVEL5) || defined(USE_GLOW_LEVEL6) || defined(USE_GLOW_LEVEL7)
 #define USING_GLOW // only use glow when at least one glow level is selected
@@ -191,10 +212,17 @@ vec3 apply_fxaa(vec3 color, vec2 uv_interp, vec2 pixel_size) {
 	const float FXAA_REDUCE_MUL = (1.0 / 8.0);
 	const float FXAA_SPAN_MAX = 8.0;
 
+#ifdef MULTIVIEW
+	vec3 rgbNW = textureLod(source, vec3(uv_interp + vec2(-1.0, -1.0) * pixel_size, ViewIndex), 0.0).xyz;
+	vec3 rgbNE = textureLod(source, vec3(uv_interp + vec2(1.0, -1.0) * pixel_size, ViewIndex), 0.0).xyz;
+	vec3 rgbSW = textureLod(source, vec3(uv_interp + vec2(-1.0, 1.0) * pixel_size, ViewIndex), 0.0).xyz;
+	vec3 rgbSE = textureLod(source, vec3(uv_interp + vec2(1.0, 1.0) * pixel_size, ViewIndex), 0.0).xyz;
+#else
 	vec3 rgbNW = textureLod(source, uv_interp + vec2(-1.0, -1.0) * pixel_size, 0.0).xyz;
 	vec3 rgbNE = textureLod(source, uv_interp + vec2(1.0, -1.0) * pixel_size, 0.0).xyz;
 	vec3 rgbSW = textureLod(source, uv_interp + vec2(-1.0, 1.0) * pixel_size, 0.0).xyz;
 	vec3 rgbSE = textureLod(source, uv_interp + vec2(1.0, 1.0) * pixel_size, 0.0).xyz;
+#endif
 	vec3 rgbM = color;
 	vec3 luma = vec3(0.299, 0.587, 0.114);
 	float lumaNW = dot(rgbNW, luma);
@@ -219,8 +247,13 @@ vec3 apply_fxaa(vec3 color, vec2 uv_interp, vec2 pixel_size) {
 						  dir * rcpDirMin)) *
 			pixel_size;
 
+#ifdef MULTIVIEW
+	vec3 rgbA = 0.5 * (textureLod(source, vec3(uv_interp + dir * (1.0 / 3.0 - 0.5), ViewIndex), 0.0).xyz + textureLod(source, vec3(uv_interp + dir * (2.0 / 3.0 - 0.5), ViewIndex), 0.0).xyz);
+	vec3 rgbB = rgbA * 0.5 + 0.25 * (textureLod(source, vec3(uv_interp + dir * -0.5, ViewIndex), 0.0).xyz + textureLod(source, vec3(uv_interp + dir * 0.5, ViewIndex), 0.0).xyz);
+#else
 	vec3 rgbA = 0.5 * (textureLod(source, uv_interp + dir * (1.0 / 3.0 - 0.5), 0.0).xyz + textureLod(source, uv_interp + dir * (2.0 / 3.0 - 0.5), 0.0).xyz);
 	vec3 rgbB = rgbA * 0.5 + 0.25 * (textureLod(source, uv_interp + dir * -0.5, 0.0).xyz + textureLod(source, uv_interp + dir * 0.5, 0.0).xyz);
+#endif
 
 	float lumaB = dot(rgbB, luma);
 	if ((lumaB < lumaMin) || (lumaB > lumaMax)) {
@@ -231,11 +264,18 @@ vec3 apply_fxaa(vec3 color, vec2 uv_interp, vec2 pixel_size) {
 }
 
 void main() {
+#ifdef MULTIVIEW
+	vec4 color = textureLod(source, vec3(uv_interp, ViewIndex), 0.0);
+#else
 	vec4 color = textureLod(source, uv_interp, 0.0);
+#endif
 
 #ifdef USE_FXAA
 	color.rgb = apply_fxaa(color.rgb, uv_interp, pixel_size);
 #endif
+
+// DRS: Let's just not do any of this for now
+#ifdef MULTIVIEW
 
 	// Glow
 
@@ -298,6 +338,8 @@ void main() {
 	glow *= glow_intensity;
 	color.rgb = apply_glow(color.rgb, glow);
 #endif
+
+#endif // MULTIVIEW
 
 	// Additional effects
 

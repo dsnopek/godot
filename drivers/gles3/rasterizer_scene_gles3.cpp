@@ -1383,6 +1383,17 @@ void RasterizerSceneGLES3::_setup_environment(const RenderDataGLES3 *p_render_da
 	GLES3::MaterialStorage::store_transform(p_render_data->cam_transform, scene_state.ubo.inv_view_matrix);
 	GLES3::MaterialStorage::store_transform(p_render_data->inv_cam_transform, scene_state.ubo.view_matrix);
 
+	for (uint32_t v = 0; v < p_render_data->view_count; v++) {
+		projection = correction * p_render_data->view_projection[v];
+		GLES3::MaterialStorage::store_camera(projection, scene_state.ubo.projection_matrix_view[v]);
+		GLES3::MaterialStorage::store_camera(projection.inverse(), scene_state.ubo.inv_projection_matrix_view[v]);
+
+		scene_state.ubo.eye_offset[v][0] = p_render_data->view_eye_offset[v].x;
+		scene_state.ubo.eye_offset[v][1] = p_render_data->view_eye_offset[v].y;
+		scene_state.ubo.eye_offset[v][2] = p_render_data->view_eye_offset[v].z;
+		scene_state.ubo.eye_offset[v][3] = 0.0;
+	}
+
 	scene_state.ubo.directional_light_count = p_render_data->directional_light_count;
 
 	scene_state.ubo.z_far = p_render_data->z_far;
@@ -2026,20 +2037,19 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 	GLES3::SceneMaterialData *prev_material_data = nullptr;
 	GLES3::SceneShaderData *prev_shader = nullptr;
 	GeometryInstanceGLES3 *prev_inst = nullptr;
-	SceneShaderGLES3::ShaderVariant prev_variant = SceneShaderGLES3::ShaderVariant::MODE_COLOR;
-
-	SceneShaderGLES3::ShaderVariant shader_variant = SceneShaderGLES3::MODE_COLOR; // Assigned to silence wrong -Wmaybe-initialized.
+	SceneShaderGLES3::ShaderVariant prev_variant = p_render_data->view_count > 1 ? SceneShaderGLES3::ShaderVariant::MODE_COLOR_MULTIVIEW : SceneShaderGLES3::ShaderVariant::MODE_COLOR;
+	SceneShaderGLES3::ShaderVariant shader_variant = p_render_data->view_count > 1 ? SceneShaderGLES3::ShaderVariant::MODE_COLOR_MULTIVIEW : SceneShaderGLES3::ShaderVariant::MODE_COLOR;
 
 	switch (p_pass_mode) {
 		case PASS_MODE_COLOR:
 		case PASS_MODE_COLOR_TRANSPARENT: {
 		} break;
 		case PASS_MODE_COLOR_ADDITIVE: {
-			shader_variant = SceneShaderGLES3::MODE_ADDITIVE;
+			shader_variant = p_render_data->view_count > 1 ? SceneShaderGLES3::MODE_ADDITIVE_MULTIVIEW : SceneShaderGLES3::MODE_ADDITIVE;
 		} break;
 		case PASS_MODE_SHADOW:
 		case PASS_MODE_DEPTH: {
-			shader_variant = SceneShaderGLES3::MODE_DEPTH;
+			shader_variant = p_render_data->view_count > 1 ? SceneShaderGLES3::MODE_DEPTH_MULTIVIEW : SceneShaderGLES3::MODE_DEPTH;
 		} break;
 	}
 

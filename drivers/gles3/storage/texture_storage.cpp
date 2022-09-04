@@ -34,6 +34,22 @@
 #include "config.h"
 #include "drivers/gles3/effects/copy_effects.h"
 
+#if !defined(GLES_OVER_GL)
+#include <GLES3/gl3.h>
+#include <GLES3/gl3ext.h>
+#include <GLES3/gl3platform.h>
+
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#endif
+
+typedef void (*PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC)(GLenum target,
+		GLenum attachment,
+		GLuint texture,
+		GLint level,
+		GLint baseViewIndex,
+		GLsizei numViews);
+
 using namespace GLES3;
 
 TextureStorage *TextureStorage::singleton = nullptr;
@@ -1197,6 +1213,14 @@ void TextureStorage::_update_render_target(RenderTarget *rt) {
 		return;
 	}
 
+	Config *config = Config::get_singleton();
+#if !defined(GLES_OVER_GL)
+	PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC glFramebufferTextureMultiviewOVR = nullptr;
+	if (config->multiview_supported && view_count > 1) {
+		glFramebufferTextureMultiviewOVR = (PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC)eglGetProcAddress("glFramebufferTextureMultiviewOVR");
+	}
+#endif
+
 	rt->color_internal_format = rt->is_transparent ? GL_RGBA8 : GL_RGB10_A2;
 	rt->color_format = GL_RGBA;
 	rt->color_type = rt->is_transparent ? GL_UNSIGNED_BYTE : GL_UNSIGNED_INT_2_10_10_10_REV;
@@ -1218,17 +1242,29 @@ void TextureStorage::_update_render_target(RenderTarget *rt) {
 
 		// color
 		glGenTextures(1, &rt->color);
-		glBindTexture(GL_TEXTURE_2D, rt->color);
+		if (rt->view_count > 1 && config->multiview_supported) {
+			glBindTexture(GL_TEXTURE_2D_ARRAY, rt->color);
+			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, rt->color_internal_format, rt->size.x, rt->size.y, rt->view_count, 0, rt->color_format, rt->color_type, nullptr);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, rt->color_internal_format, rt->size.x, rt->size.y, 0, rt->color_format, rt->color_type, nullptr);
+			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		} else {
+			glBindTexture(GL_TEXTURE_2D, rt->color);
+			glTexImage2D(GL_TEXTURE_2D, 0, rt->color_internal_format, rt->size.x, rt->size.y, 0, rt->color_format, rt->color_type, nullptr);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		}
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rt->color, 0);
+		if (rt->view_count > 1 && config->multiview_supported) {
+			glFramebufferTextureMultiviewOVR(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rt->color, 0, 0, rt->view_count);
+		} else {
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rt->color, 0);
+		}
 
 		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
@@ -1409,6 +1445,7 @@ void TextureStorage::render_target_set_size(RID p_render_target, int p_width, in
 	_clear_render_target(rt);
 
 	rt->size = Size2i(p_width, p_height);
+	rt->view_count = p_view_count;
 
 	_update_render_target(rt);
 }

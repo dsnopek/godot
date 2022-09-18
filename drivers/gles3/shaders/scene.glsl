@@ -8,6 +8,10 @@ mode_additive_instancing = #define USE_ADDITIVE_LIGHTING \n#define USE_INSTANCIN
 mode_depth = #define MODE_RENDER_DEPTH
 mode_depth_instancing = #define MODE_RENDER_DEPTH \n#define USE_INSTANCING
 
+mode_color_multiview = #define BASE_PASS \n#define USE_MULTIVIEW
+mode_additive_multiview = #define USE_ADDITIVE_LIGHTING \n#define MULTIVIEW
+mode_depth_multiview = #define MODE_RENDER_DEPTH \n#define USE_MULTIVIEW
+
 #[specializations]
 
 DISABLE_LIGHTMAP = false
@@ -19,6 +23,18 @@ USE_RADIANCE_MAP = true
 
 
 #[vertex]
+
+#ifdef USE_MULTIVIEW
+#ifdef GL_OVR_multiview
+#extension GL_OVR_multiview : require
+layout(num_views=2) in;
+#define ViewIndex gl_ViewID_OVR
+#else
+#define ViewIndex 0
+#endif
+#else
+#define ViewIndex 0
+#endif
 
 #define M_PI 3.14159265359
 
@@ -339,6 +355,16 @@ void main() {
 /* clang-format off */
 #[fragment]
 
+#ifdef USE_MULTIVIEW
+#ifdef GL_OVR_multiview
+#extension GL_OVR_multiview : require
+#define ViewIndex gl_ViewID_OVR
+#else
+#define ViewIndex 0
+#endif
+#else
+#define ViewIndex 0
+#endif
 
 // Default to SPECULAR_SCHLICK_GGX.
 #if !defined(SPECULAR_DISABLED) && !defined(SPECULAR_SCHLICK_GGX) && !defined(SPECULAR_TOON)

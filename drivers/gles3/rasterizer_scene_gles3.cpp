@@ -2026,20 +2026,19 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 	GLES3::SceneMaterialData *prev_material_data = nullptr;
 	GLES3::SceneShaderData *prev_shader = nullptr;
 	GeometryInstanceGLES3 *prev_inst = nullptr;
-	SceneShaderGLES3::ShaderVariant prev_variant = SceneShaderGLES3::ShaderVariant::MODE_COLOR;
-
-	SceneShaderGLES3::ShaderVariant shader_variant = SceneShaderGLES3::MODE_COLOR; // Assigned to silence wrong -Wmaybe-initialized.
+	SceneShaderGLES3::ShaderVariant prev_variant = p_render_data->view_count > 1 ? SceneShaderGLES3::ShaderVariant::MODE_COLOR_MULTIVIEW : SceneShaderGLES3::ShaderVariant::MODE_COLOR;
+	SceneShaderGLES3::ShaderVariant shader_variant = p_render_data->view_count > 1 ? SceneShaderGLES3::ShaderVariant::MODE_COLOR_MULTIVIEW : SceneShaderGLES3::ShaderVariant::MODE_COLOR;
 
 	switch (p_pass_mode) {
 		case PASS_MODE_COLOR:
 		case PASS_MODE_COLOR_TRANSPARENT: {
 		} break;
 		case PASS_MODE_COLOR_ADDITIVE: {
-			shader_variant = SceneShaderGLES3::MODE_ADDITIVE;
+			shader_variant = p_render_data->view_count > 1 ? SceneShaderGLES3::MODE_ADDITIVE_MULTIVIEW : SceneShaderGLES3::MODE_ADDITIVE;
 		} break;
 		case PASS_MODE_SHADOW:
 		case PASS_MODE_DEPTH: {
-			shader_variant = SceneShaderGLES3::MODE_DEPTH;
+			shader_variant = p_render_data->view_count > 1 ? SceneShaderGLES3::MODE_DEPTH_MULTIVIEW : SceneShaderGLES3::MODE_DEPTH;
 		} break;
 	}
 

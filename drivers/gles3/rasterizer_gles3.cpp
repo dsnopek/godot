@@ -300,7 +300,10 @@ void RasterizerGLES3::_blit_render_target_to_screen(RID p_render_target, Display
 	glReadBuffer(GL_COLOR_ATTACHMENT0);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, GLES3::TextureStorage::system_fbo);
 	// Flip content upside down to correct for coordinates.
-	glBlitFramebuffer(0, 0, rt->size.x, rt->size.y, 0, p_screen_rect.size.y, p_screen_rect.size.x, 0, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	Vector2i screen_rect_end = p_screen_rect.get_end();
+	glBlitFramebuffer(0, 0, rt->size.x, rt->size.y,
+			p_screen_rect.position.x, screen_rect_end.y, screen_rect_end.x, p_screen_rect.position.y,
+			GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 	if (read_fbo != 0) {
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);

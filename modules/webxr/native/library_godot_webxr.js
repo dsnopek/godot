@@ -376,6 +376,8 @@ const GodotWebXR = {
 				viewport.x, viewport.y + viewport.height, viewport.x + viewport.width, viewport.y,
 				gl.COLOR_BUFFER_BIT, gl.NEAREST);
 
+
+			gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
 			gl.deleteFramebuffer(read_fbo);
 		}
 

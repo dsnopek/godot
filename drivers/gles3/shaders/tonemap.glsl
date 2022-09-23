@@ -1,11 +1,15 @@
 /* clang-format off */
 [vertex]
 
-#ifdef MULTIVIEW
+#ifdef USE_MULTIVIEW
 #ifdef GL_OVR_multiview
 #extension GL_OVR_multiview : require
-layout(num_views=2) in;
+#define ViewIndex gl_ViewID_OVR
+#else
+#define ViewIndex 0
 #endif
+#else
+#define ViewIndex 0
 #endif
 
 #ifdef USE_GLES_OVER_GL
@@ -32,14 +36,15 @@ void main() {
 /* clang-format off */
 [fragment]
 
-#ifdef MULTIVIEW
+#ifdef USE_MULTIVIEW
 #ifdef GL_OVR_multiview
 #extension GL_OVR_multiview : require
-layout(num_views=2) in;
 #define ViewIndex gl_ViewID_OVR
 #else
 #define ViewIndex 0
 #endif
+#else
+#define ViewIndex 0
 #endif
 
 #ifdef USE_GLES_OVER_GL

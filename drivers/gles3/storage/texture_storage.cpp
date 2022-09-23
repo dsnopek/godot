@@ -34,18 +34,14 @@
 #include "config.h"
 #include "drivers/gles3/effects/copy_effects.h"
 
-#if !defined(GLES_OVER_GL)
+#if !defined(GLES_OVER_GL) && !defined(WEB_ENABLED)
 #include <GLES3/gl3.h>
-#ifdef WEB_ENABLED
-#include <GLES3/gl2ext.h>
-#else
 #include <GLES3/gl3ext.h>
-#endif // WEB_ENABLED
 #include <GLES3/gl3platform.h>
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#endif // !defined(GLES_OVER_GL)
+#endif
 
 using namespace GLES3;
 
@@ -1214,7 +1210,7 @@ void TextureStorage::_update_render_target(RenderTarget *rt) {
 	}
 
 	Config *config = Config::get_singleton();
-#if !defined(GLES_OVER_GL)
+#if !defined(GLES_OVER_GL) && !defined(WEB_ENABLED)
 	PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC glFramebufferTextureMultiviewOVR = nullptr;
 	if (config->multiview_supported && rt->view_count > 1) {
 		glFramebufferTextureMultiviewOVR = (PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC)eglGetProcAddress("glFramebufferTextureMultiviewOVR");

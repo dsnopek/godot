@@ -33,13 +33,9 @@
 #include "render_scene_buffers_gles3.h"
 #include "texture_storage.h"
 
-#if !defined(GLES_OVER_GL)
+#if !defined(GLES_OVER_GL) && !defined(WEB_ENABLED)
 #include <GLES3/gl3.h>
-#ifdef WEB_ENABLED
-#include <GLES3/gl2ext.h>
-#else
 #include <GLES3/gl3ext.h>
-#endif // WEB_ENABLED
 #include <GLES3/gl3platform.h>
 
 #include <EGL/egl.h>
@@ -68,7 +64,7 @@ void RenderSceneBuffersGLES3::configure(RID p_render_target, const Size2i p_inte
 
 	free_render_buffer_data();
 
-#if !defined(GLES_OVER_GL)
+#if !defined(GLES_OVER_GL) && !defined(WEB_ENABLED)
 	PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC glFramebufferTextureMultiviewOVR = nullptr;
 	if (config->multiview_supported && view_count > 1) {
 		glFramebufferTextureMultiviewOVR = (PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC)eglGetProcAddress("glFramebufferTextureMultiviewOVR");

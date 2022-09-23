@@ -357,6 +357,8 @@ const GodotWebXR = {
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		for (let i = 0; i < views.length; i++) {
+			const viewport = glLayer.getViewport(views[i]);
+
 			const read_fbo = gl.createFramebuffer();
 			gl.bindFramebuffer(gl.READ_FRAMEBUFFER, read_fbo);
 			if (views.length > 1) {

@@ -40,7 +40,7 @@
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#endif // !defined(GLES_OVER_GL)
+#endif
 
 RenderSceneBuffersGLES3::~RenderSceneBuffersGLES3() {
 	free_render_buffer_data();

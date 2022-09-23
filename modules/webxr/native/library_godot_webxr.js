@@ -355,6 +355,7 @@ const GodotWebXR = {
 		const orig_read_buffer = gl.getParameter(gl.READ_BUFFER);
 		const orig_draw_framebuffer = gl.getParameter(gl.DRAW_FRAMEBUFFER_BINDING);
 
+		// Copy from Godot render target into framebuffer from WebXR.
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		for (let i = 0; i < views.length; i++) {
 			const viewport = glLayer.getViewport(views[i]);

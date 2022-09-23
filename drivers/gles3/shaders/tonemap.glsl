@@ -4,6 +4,7 @@
 #ifdef USE_MULTIVIEW
 #ifdef GL_OVR_multiview
 #extension GL_OVR_multiview : require
+layout(num_views=2) in;
 #define ViewIndex gl_ViewID_OVR
 #else
 #define ViewIndex 0

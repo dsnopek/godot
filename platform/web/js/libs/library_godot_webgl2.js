@@ -30,24 +30,24 @@
 const GodotWebGL2 = {
 	$GodotWebGL2__deps: ['$GL', '$GodotRuntime'],
 	$GodotWebGL2: {
-		multiview: null,
 	},
 
 	godot_webgl2_glFramebufferTextureMultiviewOVR__deps: ['emscripten_webgl_get_current_context'],
 	godot_webgl2_glFramebufferTextureMultiviewOVR__proxy: 'sync',
 	godot_webgl2_glFramebufferTextureMultiviewOVR__sig: 'viiiiii',
 	godot_webgl2_glFramebufferTextureMultiviewOVR: function (target, attachment, texture, level, base_view_index, num_views) {
-		if (GodotWebGL2.multiview === null) {
-			const gl_context_handle = _emscripten_webgl_get_current_context(); // eslint-disable-line no-undef
-			const gl = GL.getContext(gl_context_handle).GLctx;
+		const gl_context_handle = _emscripten_webgl_get_current_context(); // eslint-disable-line no-undef
+		const gl = GL.getContext(gl_context_handle).GLctx;
+
+		if (!gl.framebufferTextureMultiviewOVR) {
 			const ext = gl.getExtension('OVR_multiview2');
 			if (!ext) {
 				return;
 			}
-			GodotWebGL2.multiview = ext;
+			gl.framebufferTextureMultiviewOVR = ext.framebufferTextureMultiviewOVR;
 		}
 
-		GodotWebGL2.multiview.framebufferTextureMultiviewOVR(target, attachment, GL.textures[texture], level, base_view_index, num_views);
+		gl.framebufferTextureMultiviewOVR(target, attachment, GL.textures[texture], level, base_view_index, num_views);
 	},
 };
 

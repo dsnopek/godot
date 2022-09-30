@@ -2062,8 +2062,8 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 				texture_to_bind = sky->radiance;
 				// base_spec_constant |= USE_RADIANCE_MAP;
 			}
-			glBindTexture(GL_TEXTURE_CUBE_MAP, texture_to_bind);
 		}
+		glBindTexture(GL_TEXTURE_CUBE_MAP, texture_to_bind);
 	}
 
 	for (uint32_t i = p_from_element; i < p_to_element; i++) {

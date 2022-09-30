@@ -576,8 +576,13 @@ uniform highp samplerCubeShadow positional_shadow; // texunit:-4
 
 #endif // !defined(DISABLE_LIGHT_OMNI) && !defined(DISABLE_LIGHT_SPOT)
 
-uniform highp sampler2D screen_texture; // texunit:-5
+#ifdef MULTIVIEW
+uniform highp sampler2DArray depth_buffer; // texunit:-6
+uniform highp sampler2DArray screen_texture; // texunit:-5
+#else
 uniform highp sampler2D depth_buffer; // texunit:-6
+uniform highp sampler2D screen_texture; // texunit:-5
+#endif
 
 uniform highp mat4 world_transform;
 uniform mediump float opaque_prepass_threshold;

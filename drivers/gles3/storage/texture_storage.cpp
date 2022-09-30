@@ -1441,7 +1441,7 @@ void TextureStorage::render_target_set_size(RID p_render_target, int p_width, in
 	RenderTarget *rt = render_target_owner.get_or_null(p_render_target);
 	ERR_FAIL_COND(!rt);
 
-	if (p_width == rt->size.x && p_height == rt->size.y) {
+	if (p_width == rt->size.x && p_height == rt->size.y && p_view_count == rt->view_count) {
 		return;
 	}
 

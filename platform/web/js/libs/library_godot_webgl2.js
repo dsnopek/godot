@@ -29,25 +29,22 @@
 /*************************************************************************/
 const GodotWebGL2 = {
 	$GodotWebGL2__deps: ['$GL', '$GodotRuntime'],
-	$GodotWebGL2: {
-		multiview: null,
-	},
+	$GodotWebGL2: {},
 
 	godot_webgl2_glFramebufferTextureMultiviewOVR__deps: ['emscripten_webgl_get_current_context'],
 	godot_webgl2_glFramebufferTextureMultiviewOVR__proxy: 'sync',
 	godot_webgl2_glFramebufferTextureMultiviewOVR__sig: 'viiiiii',
 	godot_webgl2_glFramebufferTextureMultiviewOVR: function (target, attachment, texture, level, base_view_index, num_views) {
-		if (GodotWebGL2.multiview === null) {
-			const gl_context_handle = _emscripten_webgl_get_current_context(); // eslint-disable-line no-undef
-			const gl = GL.getContext(gl_context_handle).GLctx;
-			const ext = gl.getExtension('OVR_multiview2');
+		const context = GL.currentContext;
+		if (typeof context.multiviewExt === 'undefined') {
+			const ext = context.GLctx.getExtension('OVR_multiview2');
 			if (!ext) {
+				console.error("Trying to call glFramebufferTextureMultiviewOVR() without the OVR_multiview2 extension");
 				return;
 			}
-			GodotWebGL2.multiview = ext;
+			context.multiviewExt= ext;
 		}
-
-		GodotWebGL2.multiview.framebufferTextureMultiviewOVR(target, attachment, GL.textures[texture], level, base_view_index, num_views);
+		context.multiviewExt.framebufferTextureMultiviewOVR(target, attachment, GL.textures[texture], level, base_view_index, num_views);
 	},
 };
 

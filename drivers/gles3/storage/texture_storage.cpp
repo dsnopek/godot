@@ -34,15 +34,6 @@
 #include "config.h"
 #include "drivers/gles3/effects/copy_effects.h"
 
-#if !defined(GLES_OVER_GL) && !defined(WEB_ENABLED)
-#include <GLES3/gl3.h>
-#include <GLES3/gl3ext.h>
-#include <GLES3/gl3platform.h>
-
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#endif
-
 using namespace GLES3;
 
 TextureStorage *TextureStorage::singleton = nullptr;
@@ -1224,11 +1215,8 @@ void TextureStorage::_update_render_target(RenderTarget *rt) {
 	}
 
 	Config *config = Config::get_singleton();
-#if !defined(GLES_OVER_GL) && !defined(WEB_ENABLED)
-	PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC glFramebufferTextureMultiviewOVR = nullptr;
-	if (config->multiview_supported && rt->view_count > 1) {
-		glFramebufferTextureMultiviewOVR = (PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC)eglGetProcAddress("glFramebufferTextureMultiviewOVR");
-	}
+#if !defined(GLES_OVER_GL) && !defined(WEB_ENABLED) && !defined(IOS_ENABLED)
+	PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC glFramebufferTextureMultiviewOVR = config->eglFramebufferTextureMultiviewOVR;
 #endif
 
 	rt->color_internal_format = rt->is_transparent ? GL_RGBA8 : GL_RGB10_A2;

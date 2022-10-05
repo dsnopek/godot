@@ -44,6 +44,10 @@
 #include OPENGL_INCLUDE_H
 #endif
 
+#if !defined(GLES_OVER_GL) && !defined(WEB_ENABLED) && !defined(IOS_ENABLED)
+typedef void (*PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC)(GLenum, GLenum, GLuint, GLint, GLint, GLsizei);
+#endif
+
 namespace GLES3 {
 
 class Config {
@@ -81,6 +85,9 @@ public:
 	float anisotropic_level = 0.0f;
 
 	bool multiview_supported = false;
+#if !defined(GLES_OVER_GL) && !defined(WEB_ENABLED) && !defined(IOS_ENABLED)
+	PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC eglFramebufferTextureMultiviewOVR = nullptr;
+#endif
 
 	static Config *get_singleton() { return singleton; };
 

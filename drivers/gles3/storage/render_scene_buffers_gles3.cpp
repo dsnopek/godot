@@ -33,15 +33,6 @@
 #include "render_scene_buffers_gles3.h"
 #include "texture_storage.h"
 
-#if !defined(GLES_OVER_GL) && !defined(WEB_ENABLED)
-#include <GLES3/gl3.h>
-#include <GLES3/gl3ext.h>
-#include <GLES3/gl3platform.h>
-
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#endif
-
 RenderSceneBuffersGLES3::~RenderSceneBuffersGLES3() {
 	free_render_buffer_data();
 }
@@ -64,11 +55,8 @@ void RenderSceneBuffersGLES3::configure(RID p_render_target, const Size2i p_inte
 
 	free_render_buffer_data();
 
-#if !defined(GLES_OVER_GL) && !defined(WEB_ENABLED)
-	PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC glFramebufferTextureMultiviewOVR = nullptr;
-	if (config->multiview_supported && view_count > 1) {
-		glFramebufferTextureMultiviewOVR = (PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC)eglGetProcAddress("glFramebufferTextureMultiviewOVR");
-	}
+#if !defined(GLES_OVER_GL) && !defined(WEB_ENABLED) && !defined(IOS_ENABLED)
+	PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC glFramebufferTextureMultiviewOVR = config->eglFramebufferTextureMultiviewOVR;
 #endif
 
 	GLES3::RenderTarget *rt = texture_storage->get_render_target(p_render_target);

@@ -42,6 +42,10 @@
 #include "servers/rendering/renderer_rd/renderer_compositor_rd.h"
 #endif
 
+#if defined(GLES3_ENABLED)
+#include "drivers/gles3/rasterizer_gles3.h"
+#endif
+
 DisplayServerAndroid *DisplayServerAndroid::get_singleton() {
 	return static_cast<DisplayServerAndroid *>(DisplayServer::get_singleton());
 }
@@ -497,8 +501,7 @@ DisplayServerAndroid::DisplayServerAndroid(const String &p_rendering_driver, Dis
 	if (rendering_driver == "opengl3") {
 		bool gl_initialization_error = false;
 
-		if (RasterizerGLES3::is_viable() == OK) {
-			RasterizerGLES3::register_config();
+		if (true) {
 			RasterizerGLES3::make_current();
 		} else {
 			gl_initialization_error = true;

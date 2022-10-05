@@ -165,7 +165,7 @@ def configure(env: "Environment"):
             "-fpic -ffunction-sections -funwind-tables -fstack-protector-strong -fvisibility=hidden -fno-strict-aliasing".split()
         )
     )
-    env.Append(CPPDEFINES=["GLES_ENABLED"])
+    env.Append(CPPDEFINES=["GLES_ENABLED", "GLES3_ENABLED"])
 
     if get_min_sdk_version(env["ndk_platform"]) >= 24:
         env.Append(CPPDEFINES=[("_FILE_OFFSET_BITS", 64)])

@@ -44,7 +44,7 @@ in vec2 uv_interp;
 
 layout(location = 0) out vec4 frag_color;
 
-#ifdef MULTVIEW
+#ifdef USE_MULTIVIEW
 uniform highp sampler2DArray source; //texunit:0
 #else
 uniform highp sampler2D source; //texunit:0
@@ -257,9 +257,6 @@ void main() {
 	color.rgb = apply_fxaa(color.rgb, uv_interp, pixel_size);
 #endif
 
-// DRS: Let's just not do any of this for now
-#ifndef USE_MULTIVIEW
-
 	// Glow
 
 #ifdef USING_GLOW
@@ -321,8 +318,6 @@ void main() {
 	glow *= glow_intensity;
 	color.rgb = apply_glow(color.rgb, glow);
 #endif
-
-#endif // USE_MULTIVIEW
 
 	// Additional effects
 

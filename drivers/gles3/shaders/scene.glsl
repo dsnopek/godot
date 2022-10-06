@@ -125,11 +125,6 @@ layout(std140) uniform SceneData { // ubo:2
 	highp mat4 inv_view_matrix;
 	highp mat4 view_matrix;
 
-	// only used for multiview
-	highp mat4 projection_matrix_view[MAX_VIEWS];
-	highp mat4 inv_projection_matrix_view[MAX_VIEWS];
-	highp vec4 eye_offset[MAX_VIEWS];
-
 	vec2 viewport_size;
 	vec2 screen_pixel_size;
 
@@ -161,6 +156,15 @@ layout(std140) uniform SceneData { // ubo:2
 	float fog_sun_scatter;
 }
 scene_data;
+
+#ifdef USE_MULTIVIEW
+layout(std140) uniform MultiviewData { // ubo:8
+	highp mat4 projection_matrix_view[MAX_VIEWS];
+	highp mat4 inv_projection_matrix_view[MAX_VIEWS];
+	highp vec4 eye_offset[MAX_VIEWS];
+}
+multiview_data;
+#endif
 
 uniform highp mat4 world_transform;
 
@@ -261,8 +265,8 @@ void main() {
 #endif
 
 #ifdef USE_MULTIVIEW
-	mat4 projection_matrix = scene_data.projection_matrix_view[ViewIndex];
-	mat4 inv_projection_matrix = scene_data.inv_projection_matrix_view[ViewIndex];
+	mat4 projection_matrix = multiview_data.projection_matrix_view[ViewIndex];
+	mat4 inv_projection_matrix = multiview_data.inv_projection_matrix_view[ViewIndex];
 #else
 	mat4 projection_matrix = scene_data.projection_matrix;
 	mat4 inv_projection_matrix = scene_data.inv_projection_matrix;
@@ -445,11 +449,6 @@ layout(std140) uniform SceneData { // ubo:2
 	highp mat4 inv_view_matrix;
 	highp mat4 view_matrix;
 
-	// only used for multiview
-	highp mat4 projection_matrix_view[MAX_VIEWS];
-	highp mat4 inv_projection_matrix_view[MAX_VIEWS];
-	highp vec4 eye_offset[MAX_VIEWS];
-
 	vec2 viewport_size;
 	vec2 screen_pixel_size;
 
@@ -481,6 +480,15 @@ layout(std140) uniform SceneData { // ubo:2
 	float fog_sun_scatter;
 }
 scene_data;
+
+#ifdef USE_MULTIVIEW
+layout(std140) uniform MultiviewData { // ubo:8
+	highp mat4 projection_matrix_view[MAX_VIEWS];
+	highp mat4 inv_projection_matrix_view[MAX_VIEWS];
+	highp vec4 eye_offset[MAX_VIEWS];
+}
+multiview_data;
+#endif
 
 /* clang-format off */
 
@@ -909,7 +917,7 @@ void main() {
 	//lay out everything, whatever is unused is optimized away anyway
 	vec3 vertex = vertex_interp;
 #ifdef USE_MULTIVIEW
-	vec3 view = -normalize(vertex_interp - scene_data.eye_offset[ViewIndex].xyz);
+	vec3 view = -normalize(vertex_interp - multiview_data.eye_offset[ViewIndex].xyz);
 #else
 	vec3 view = -normalize(vertex_interp);
 #endif

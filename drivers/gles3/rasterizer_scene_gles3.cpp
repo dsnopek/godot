@@ -1272,15 +1272,17 @@ void RasterizerSceneGLES3::_setup_environment(const RenderDataGLES3 *p_render_da
 	GLES3::MaterialStorage::store_transform(p_render_data->cam_transform, scene_state.ubo.inv_view_matrix);
 	GLES3::MaterialStorage::store_transform(p_render_data->inv_cam_transform, scene_state.ubo.view_matrix);
 
-	for (uint32_t v = 0; v < p_render_data->view_count; v++) {
-		projection = correction * p_render_data->view_projection[v];
-		GLES3::MaterialStorage::store_camera(projection, scene_state.ubo.projection_matrix_view[v]);
-		GLES3::MaterialStorage::store_camera(projection.inverse(), scene_state.ubo.inv_projection_matrix_view[v]);
+	if (p_render_data->view_count > 1) {
+		for (uint32_t v = 0; v < p_render_data->view_count; v++) {
+			projection = correction * p_render_data->view_projection[v];
+			GLES3::MaterialStorage::store_camera(projection, scene_state.multiview_ubo.projection_matrix_view[v]);
+			GLES3::MaterialStorage::store_camera(projection.inverse(), scene_state.multiview_ubo.inv_projection_matrix_view[v]);
 
-		scene_state.ubo.eye_offset[v][0] = p_render_data->view_eye_offset[v].x;
-		scene_state.ubo.eye_offset[v][1] = p_render_data->view_eye_offset[v].y;
-		scene_state.ubo.eye_offset[v][2] = p_render_data->view_eye_offset[v].z;
-		scene_state.ubo.eye_offset[v][3] = 0.0;
+			scene_state.multiview_ubo.eye_offset[v][0] = p_render_data->view_eye_offset[v].x;
+			scene_state.multiview_ubo.eye_offset[v][1] = p_render_data->view_eye_offset[v].y;
+			scene_state.multiview_ubo.eye_offset[v][2] = p_render_data->view_eye_offset[v].z;
+			scene_state.multiview_ubo.eye_offset[v][3] = 0.0;
+		}
 	}
 
 	scene_state.ubo.directional_light_count = p_render_data->directional_light_count;
@@ -1384,6 +1386,15 @@ void RasterizerSceneGLES3::_setup_environment(const RenderDataGLES3 *p_render_da
 	glBindBufferBase(GL_UNIFORM_BUFFER, SCENE_DATA_UNIFORM_LOCATION, scene_state.ubo_buffer);
 	glBufferData(GL_UNIFORM_BUFFER, sizeof(SceneState::UBO), &scene_state.ubo, GL_STREAM_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+	if (p_render_data->view_count > 1) {
+		if (scene_state.multiview_buffer == 0) {
+			glGenBuffers(1, &scene_state.multiview_buffer);
+		}
+		glBindBufferBase(GL_UNIFORM_BUFFER, SCENE_MULTIVIEW_UNIFORM_LOCATION, scene_state.multiview_buffer);
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(SceneState::MultiviewUBO), &scene_state.multiview_ubo, GL_STREAM_DRAW);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	}
 }
 
 // Puts lights into Uniform Buffers. Needs to be called before _fill_list as this caches the index of each light in the Uniform Buffer

@@ -1937,19 +1937,27 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 	GLES3::SceneMaterialData *prev_material_data = nullptr;
 	GLES3::SceneShaderData *prev_shader = nullptr;
 	GeometryInstanceGLES3 *prev_inst = nullptr;
-	SceneShaderGLES3::ShaderVariant prev_variant = p_render_data->view_count > 1 ? SceneShaderGLES3::ShaderVariant::MODE_COLOR_MULTIVIEW : SceneShaderGLES3::ShaderVariant::MODE_COLOR;
-	SceneShaderGLES3::ShaderVariant shader_variant = p_render_data->view_count > 1 ? SceneShaderGLES3::ShaderVariant::MODE_COLOR_MULTIVIEW : SceneShaderGLES3::ShaderVariant::MODE_COLOR;
+	SceneShaderGLES3::ShaderVariant prev_variant = SceneShaderGLES3::ShaderVariant::MODE_COLOR;
+	SceneShaderGLES3::ShaderVariant shader_variant = SceneShaderGLES3::ShaderVariant::MODE_COLOR;
+
+	// @todo Temporarily hardcode this for now.
+	//uint32_t base_spec_constants = p_params->spec_constant_base_flags;
+	uint32_t base_spec_constants = 1 << SPEC_CONSTANT_USE_RADIANCE_MAP;
+
+	if (p_render_data->view_count > 1) {
+		base_spec_constants |= 1 << SPEC_CONSTANT_USE_MULTIVIEW;
+	}
 
 	switch (p_pass_mode) {
 		case PASS_MODE_COLOR:
 		case PASS_MODE_COLOR_TRANSPARENT: {
 		} break;
 		case PASS_MODE_COLOR_ADDITIVE: {
-			shader_variant = p_render_data->view_count > 1 ? SceneShaderGLES3::MODE_ADDITIVE_MULTIVIEW : SceneShaderGLES3::MODE_ADDITIVE;
+			shader_variant = SceneShaderGLES3::MODE_ADDITIVE;
 		} break;
 		case PASS_MODE_SHADOW:
 		case PASS_MODE_DEPTH: {
-			shader_variant = p_render_data->view_count > 1 ? SceneShaderGLES3::MODE_DEPTH_MULTIVIEW : SceneShaderGLES3::MODE_DEPTH;
+			shader_variant = SceneShaderGLES3::MODE_DEPTH;
 		} break;
 	}
 
@@ -1977,8 +1985,6 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 		if (inst->instance_count == 0) {
 			continue;
 		}
-
-		//uint32_t base_spec_constants = p_params->spec_constant_base_flags;
 
 		GLES3::SceneShaderData *shader;
 		GLES3::SceneMaterialData *material_data;
@@ -2149,7 +2155,7 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 		}
 
 		if (prev_shader != shader || prev_variant != instance_variant) {
-			material_storage->shaders.scene_shader.version_bind_shader(shader->version, instance_variant);
+			material_storage->shaders.scene_shader.version_bind_shader(shader->version, instance_variant, base_spec_constants);
 			float opaque_prepass_threshold = 0.0;
 			if constexpr (p_pass_mode == PASS_MODE_DEPTH) {
 				opaque_prepass_threshold = 0.99;

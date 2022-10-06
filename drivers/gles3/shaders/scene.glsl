@@ -8,10 +8,6 @@ mode_additive_instancing = #define USE_ADDITIVE_LIGHTING \n#define USE_INSTANCIN
 mode_depth = #define MODE_RENDER_DEPTH
 mode_depth_instancing = #define MODE_RENDER_DEPTH \n#define USE_INSTANCING
 
-mode_color_multiview = #define BASE_PASS \n#define USE_MULTIVIEW
-mode_additive_multiview = #define USE_ADDITIVE_LIGHTING \n#define MULTIVIEW
-mode_depth_multiview = #define MODE_RENDER_DEPTH \n#define USE_MULTIVIEW
-
 #[specializations]
 
 DISABLE_LIGHTMAP = false
@@ -20,6 +16,7 @@ DISABLE_LIGHT_OMNI = false
 DISABLE_LIGHT_SPOT = false
 DISABLE_FOG = false
 USE_RADIANCE_MAP = true
+USE_MULTIVIEW = false
 
 
 #[vertex]

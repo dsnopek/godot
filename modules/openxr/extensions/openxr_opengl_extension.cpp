@@ -59,11 +59,61 @@ void OpenXROpenGLExtension::on_instance_created(const XrInstance p_instance) {
 bool OpenXROpenGLExtension::check_graphics_api_support(XrVersion p_desired_version) {
 	ERR_FAIL_NULL_V(openxr_api, false);
 
+#ifdef ANDROID
+	XrGraphicsRequirementsOpenGLESKHR opengl_requirements = {
+		.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_ES_KHR,
+		.next = nullptr
+	};
+
+	PFN_xrGetOpenGLESGraphicsRequirementsKHR pfnGetOpenGLESGraphicsRequirementsKHR = nullptr;
+	XrResult result = xrGetInstanceProcAddr(instance, "xrGetOpenGLESGraphicsRequirementsKHR", (PFN_xrVoidFunction *)&pfnGetOpenGLESGraphicsRequirementsKHR);
+
+	if (!xr_result(result, "Failed to get xrGetOpenGLESGraphicsRequirementsKHR fp!")) {
+		return false;
+	}
+
+	result = pfnGetOpenGLESGraphicsRequirementsKHR(instance, system_id, &opengl_requirements);
+	if (!xr_result(result, "Failed to get OpenGL graphics requirements!")) {
+		return false;
+	}
+#else
+	XrGraphicsRequirementsOpenGLKHR opengl_requirements = {
+		.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR,
+		.next = nullptr
+	};
+
+	PFN_xrGetOpenGLGraphicsRequirementsKHR pfnGetOpenGLGraphicsRequirementsKHR = nullptr;
+	XrResult result = xrGetInstanceProcAddr(instance, "xrGetOpenGLGraphicsRequirementsKHR", (PFN_xrVoidFunction *)&pfnGetOpenGLGraphicsRequirementsKHR);
+
+	if (!xr_result(result, "Failed to get xrGetOpenGLGraphicsRequirementsKHR fp!")) {
+		return false;
+	}
+
+	result = pfnGetOpenGLGraphicsRequirementsKHR(instance, system_id, &opengl_requirements);
+	if (!xr_result(result, "Failed to get OpenGL graphics requirements!")) {
+		return false;
+	}
+#endif
+
+	if (p_desired_version < opengl_requirements.minApiVersionSupported) {
+		print_line("OpenXR: Requested OpenGL version does not meet the minimum version this runtime supports.");
+		print_line("- desired_version ", OpenXRUtil::make_xr_version_string(p_desired_version));
+		print_line("- minApiVersionSupported ", OpenXRUtil::make_xr_version_string(opengl_requirements.minApiVersionSupported));
+		print_line("- maxApiVersionSupported ", OpenXRUtil::make_xr_version_string(opengl_requirements.maxApiVersionSupported));
+		return false;
+	}
+
+	if (p_desired_version > opengl_requirements.maxApiVersionSupported) {
+		print_line("OpenXR: Requested OpenGL version exceeds the maximum version this runtime has been tested on and is known to support.");
+		print_line("- desired_version ", OpenXRUtil::make_xr_version_string(p_desired_version));
+		print_line("- minApiVersionSupported ", OpenXRUtil::make_xr_version_string(opengl_requirements.minApiVersionSupported));
+		print_line("- maxApiVersionSupported ", OpenXRUtil::make_xr_version_string(opengl_requirements.maxApiVersionSupported));
+	}
+
 	return true;
 }
 
 void *OpenXROpenGLExtension::set_session_create_and_get_next_pointer(void *p_next_pointer) {
-
 #ifdef WIN32
 	graphics_binding_gl = XrGraphicsBindingOpenGLWin32KHR{
 		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_WIN32_KHR,

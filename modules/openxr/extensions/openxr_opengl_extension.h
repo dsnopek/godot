@@ -81,6 +81,13 @@ private:
 	XrSwapchainImageOpenGLKHR **images = nullptr;
 #endif
 
+#ifdef ANDROID
+	EXT_PROTO_XRRESULT_FUNC3(xrGetOpenGLESGraphicsRequirementsKHR, (XrInstance), p_instance, (XrSystemId), p_system_id, (XrGraphicsRequirementsOpenGLESKHR *), p_graphics_requirements)
+#else
+	EXT_PROTO_XRRESULT_FUNC3(xrGetOpenGLGraphicsRequirementsKHR, (XrInstance), p_instance, (XrSystemId), p_system_id, (XrGraphicsRequirementsOpenGLKHR *), p_graphics_requirements)
+#endif
+
+
 };
 
 #endif // OPENXR_OPENGL_EXTENSION_H

@@ -56,10 +56,15 @@ private:
 	// TODO maybe turn into a vector to support more then 2 controllers...
 	bool controllers_state[2];
 	Ref<XRPositionalTracker> controllers[2];
+	bool touching[5];
 	Size2 render_targetsize;
 
 	Transform3D _js_matrix_to_transform(float *p_js_matrix);
 	void _update_tracker(int p_controller_id);
+
+	Vector2 _get_joy_vector_from_axes(int *p_axes);
+	int _get_touch_index(int p_input_source);
+	Vector2 _get_screen_position_from_joy_vector(const Vector2 &p_joy_vector);
 
 public:
 	virtual void is_session_supported(const String &p_session_mode) override;
@@ -74,6 +79,7 @@ public:
 	void _set_reference_space_type(String p_reference_space_type);
 	virtual String get_reference_space_type() const override;
 	virtual Ref<XRPositionalTracker> get_controller(int p_controller_id) const override;
+	virtual TargetRayMode get_controller_target_ray_mode(int p_controller_id) const override;
 	virtual String get_visibility_state() const override;
 	virtual PackedVector3Array get_bounds_geometry() const override;
 
@@ -94,6 +100,7 @@ public:
 	virtual void process() override;
 
 	void _on_controller_changed();
+	void _on_input_event(int p_event_type, int p_input_source);
 
 	WebXRInterfaceJS();
 	~WebXRInterfaceJS();

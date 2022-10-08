@@ -37,6 +37,12 @@
 #include "../openxr_api.h"
 #include "../util.h"
 
+#ifdef ANDROID
+#define XR_USE_GRAPHICS_API_OPENGL_ES
+#else
+#define XR_USE_GRAPHICS_API_OPENGL
+#endif
+
 #ifdef WINDOWS_ENABLED
 // Including windows.h here is absolutely evil, we shouldn't be doing this outside of platform
 // however due to the way the openxr headers are put together, we have no choice.

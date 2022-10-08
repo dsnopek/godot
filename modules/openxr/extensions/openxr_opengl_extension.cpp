@@ -56,6 +56,7 @@ void OpenXROpenGLExtension::on_instance_created(const XrInstance p_instance) {
 
 }
 
+#if 0
 bool OpenXROpenGLExtension::check_graphics_api_support(XrVersion p_desired_version) {
 	ERR_FAIL_NULL_V(openxr_api, false);
 
@@ -112,6 +113,7 @@ bool OpenXROpenGLExtension::check_graphics_api_support(XrVersion p_desired_versi
 
 	return true;
 }
+#endif
 
 void *OpenXROpenGLExtension::set_session_create_and_get_next_pointer(void *p_next_pointer) {
 #ifdef WIN32

@@ -743,10 +743,10 @@ int64_t DisplayServerWindows::window_get_native_handle(HandleType p_handle_type,
 		}
 #if defined(GLES3_ENABLED)
 		case WINDOW_VIEW: {
-			return gl_manager->get_hdc(p_window);
+			return (int64_t)gl_manager->get_hdc(p_window);
 		}
 		case OPENGL_CONTEXT: {
-			return gl_manager->get_hglrc(p_window);
+			return (int64_t)gl_manager->get_hglrc(p_window);
 		}
 #endif
 		default: {

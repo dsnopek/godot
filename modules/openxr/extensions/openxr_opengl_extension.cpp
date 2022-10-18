@@ -122,8 +122,8 @@ void *OpenXROpenGLExtension::set_session_create_and_get_next_pointer(void *p_nex
 		.next = p_next_pointer,
 	};
 
-	graphics_binding_gl.hDC = (HDC)display_server->get_native_handle(DisplayServer::WINDOW_VIEW);
-	graphics_binding_gl.hGLRC = (HGLRC)display_server->get_native_handle(DisplayServer::OPENGL_CONTEXT);
+	graphics_binding_gl.hDC = (HDC)display_server->window_get_native_handle(DisplayServer::WINDOW_VIEW);
+	graphics_binding_gl.hGLRC = (HGLRC)display_server->window_get_native_handle(DisplayServer::OPENGL_CONTEXT);
 #elif ANDROID
 	graphics_binding_gl = XrGraphicsBindingOpenGLESAndroidKHR{
 		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_ES_ANDROID_KHR,
@@ -139,9 +139,9 @@ void *OpenXROpenGLExtension::set_session_create_and_get_next_pointer(void *p_nex
 		.next = p_next_pointer,
 	};
 
-	void *display_handle = (void *)display_server->get_native_handle(DisplayServer::DISPLAY_HANDLE);
-	void *glxcontext_handle = (void *)display_server->get_native_handle(DisplayServer::OPENGL_CONTEXT);
-	void *glxdrawable_handle = (void *)display_server->get_native_handle(DisplayServer::WINDOW_HANDLE);
+	void *display_handle = (void *)display_server->window_get_native_handle(DisplayServer::DISPLAY_HANDLE);
+	void *glxcontext_handle = (void *)display_server->window_get_native_handle(DisplayServer::OPENGL_CONTEXT);
+	void *glxdrawable_handle = (void *)display_server->window_get_native_handle(DisplayServer::WINDOW_HANDLE);
 
 	graphics_binding_gl.xDisplay = (Display *)display_handle;
 	graphics_binding_gl.glxContext = (GLXContext)glxcontext_handle;

@@ -37,7 +37,6 @@
 
 OpenXROpenGLExtension::OpenXROpenGLExtension(OpenXRAPI *p_openxr_api) :
 		OpenXRGraphicsExtensionWrapper(p_openxr_api) {
-
 #ifdef ANDROID
 	request_extensions[XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME] = nullptr;
 	request_extensions[XR_KHR_ANDROID_THREAD_SETTINGS_EXTENSION_NAME] = nullptr;
@@ -53,7 +52,6 @@ OpenXROpenGLExtension::~OpenXROpenGLExtension() {
 
 void OpenXROpenGLExtension::on_instance_created(const XrInstance p_instance) {
 	ERR_FAIL_NULL(openxr_api);
-
 }
 
 #if 0
@@ -116,14 +114,16 @@ bool OpenXROpenGLExtension::check_graphics_api_support(XrVersion p_desired_versi
 #endif
 
 void *OpenXROpenGLExtension::set_session_create_and_get_next_pointer(void *p_next_pointer) {
+	DisplayServer *display_server = DisplayServer::get_singleton();
+
 #ifdef WIN32
 	graphics_binding_gl = XrGraphicsBindingOpenGLWin32KHR{
 		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_WIN32_KHR,
 		.next = p_next_pointer,
 	};
 
-	graphics_binding_gl.hDC = (HDC)os->get_native_handle(OS::WINDOW_VIEW);
-	graphics_binding_gl.hGLRC = (HGLRC)os->get_native_handle(OS::OPENGL_CONTEXT);
+	graphics_binding_gl.hDC = (HDC)display_server->get_native_handle(DisplayServer::WINDOW_VIEW);
+	graphics_binding_gl.hGLRC = (HGLRC)display_server->get_native_handle(DisplayServer::OPENGL_CONTEXT);
 #elif ANDROID
 	graphics_binding_gl = XrGraphicsBindingOpenGLESAndroidKHR{
 		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_ES_ANDROID_KHR,
@@ -139,9 +139,9 @@ void *OpenXROpenGLExtension::set_session_create_and_get_next_pointer(void *p_nex
 		.next = p_next_pointer,
 	};
 
-	void *display_handle = (void *)os->get_native_handle(OS::DISPLAY_HANDLE);
-	void *glxcontext_handle = (void *)os->get_native_handle(OS::OPENGL_CONTEXT);
-	void *glxdrawable_handle = (void *)os->get_native_handle(OS::WINDOW_HANDLE);
+	void *display_handle = (void *)display_server->get_native_handle(DisplayServer::DISPLAY_HANDLE);
+	void *glxcontext_handle = (void *)display_server->get_native_handle(DisplayServer::OPENGL_CONTEXT);
+	void *glxdrawable_handle = (void *)display_server->get_native_handle(DisplayServer::WINDOW_HANDLE);
 
 	graphics_binding_gl.xDisplay = (Display *)display_handle;
 	graphics_binding_gl.glxContext = (GLXContext)glxcontext_handle;
@@ -182,9 +182,9 @@ void OpenXROpenGLExtension::get_usable_swapchain_formats(Vector<int64_t> &p_usab
 }
 
 void OpenXROpenGLExtension::get_usable_depth_formats(Vector<int64_t> &p_usable_depth_formats) {
-	p_usable_depth_formats.push_back(GL_DEPTH_COMPONENT32F)
-	p_usable_depth_formats.push_back(GL_DEPTH24_STENCIL8)
-	p_usable_depth_formats.push_back(GL_DEPTH32F_STENCIL8)
+	p_usable_depth_formats.push_back(GL_DEPTH_COMPONENT32F);
+	p_usable_depth_formats.push_back(GL_DEPTH24_STENCIL8);
+	p_usable_depth_formats.push_back(GL_DEPTH32F_STENCIL8);
 }
 
 bool OpenXROpenGLExtension::get_swapchain_image_data(XrSwapchain p_swapchain, int64_t p_swapchain_format, uint32_t p_width, uint32_t p_height, uint32_t p_sample_count, uint32_t p_array_size, void **r_swapchain_graphics_data) {

@@ -59,10 +59,9 @@ bool OpenXROpenGLExtension::check_graphics_api_support(XrVersion p_desired_versi
 	ERR_FAIL_NULL_V(openxr_api, false);
 
 #ifdef ANDROID
-	XrGraphicsRequirementsOpenGLESKHR opengl_requirements = {
-		.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_ES_KHR,
-		.next = nullptr
-	};
+	XrGraphicsRequirementsOpenGLESKHR opengl_requirements;
+	opengl_requirements.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_ES_KHR;
+	opengl_requirements.next = nullptr
 
 	PFN_xrGetOpenGLESGraphicsRequirementsKHR pfnGetOpenGLESGraphicsRequirementsKHR = nullptr;
 	XrResult result = xrGetInstanceProcAddr(instance, "xrGetOpenGLESGraphicsRequirementsKHR", (PFN_xrVoidFunction *)&pfnGetOpenGLESGraphicsRequirementsKHR);
@@ -76,10 +75,9 @@ bool OpenXROpenGLExtension::check_graphics_api_support(XrVersion p_desired_versi
 		return false;
 	}
 #else
-	XrGraphicsRequirementsOpenGLKHR opengl_requirements = {
-		.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR,
-		.next = nullptr
-	};
+	XrGraphicsRequirementsOpenGLKHR opengl_requirements;
+	opengl_requirements.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR;
+	opengl_requirements.next = nullptr;
 
 	PFN_xrGetOpenGLGraphicsRequirementsKHR pfnGetOpenGLGraphicsRequirementsKHR = nullptr;
 	XrResult result = xrGetInstanceProcAddr(instance, "xrGetOpenGLGraphicsRequirementsKHR", (PFN_xrVoidFunction *)&pfnGetOpenGLGraphicsRequirementsKHR);
@@ -117,27 +115,21 @@ void *OpenXROpenGLExtension::set_session_create_and_get_next_pointer(void *p_nex
 	DisplayServer *display_server = DisplayServer::get_singleton();
 
 #ifdef WIN32
-	graphics_binding_gl = XrGraphicsBindingOpenGLWin32KHR{
-		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_WIN32_KHR,
-		.next = p_next_pointer,
-	};
+	graphics_binding_gl.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_WIN32_KHR,
+	graphics_binding_gl.next = p_next_pointer;
 
 	graphics_binding_gl.hDC = (HDC)display_server->window_get_native_handle(DisplayServer::WINDOW_VIEW);
 	graphics_binding_gl.hGLRC = (HGLRC)display_server->window_get_native_handle(DisplayServer::OPENGL_CONTEXT);
 #elif ANDROID
-	graphics_binding_gl = XrGraphicsBindingOpenGLESAndroidKHR{
-		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_ES_ANDROID_KHR,
-		.next = p_next_pointer,
-	};
+	graphics_binding_gl.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_ES_ANDROID_KHR;
+	graphics_binding_gl.next = p_next_pointer;
 
 	graphics_binding_gl.display = eglGetCurrentDisplay();
 	graphics_binding_gl.config = (EGLConfig)0; // https://github.com/KhronosGroup/OpenXR-SDK-Source/blob/master/src/tests/hello_xr/graphicsplugin_opengles.cpp#L122
 	graphics_binding_gl.context = eglGetCurrentContext();
 #else
-	graphics_binding_gl = (XrGraphicsBindingOpenGLXlibKHR){
-		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_XLIB_KHR,
-		.next = p_next_pointer,
-	};
+	graphics_binding_gl.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_XLIB_KHR;
+	graphics_binding_gl.next = p_next_pointer;
 
 	void *display_handle = (void *)display_server->window_get_native_handle(DisplayServer::DISPLAY_HANDLE);
 	void *glxcontext_handle = (void *)display_server->window_get_native_handle(DisplayServer::OPENGL_CONTEXT);

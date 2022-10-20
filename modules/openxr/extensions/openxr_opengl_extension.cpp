@@ -182,6 +182,9 @@ void OpenXROpenGLExtension::get_usable_depth_formats(Vector<int64_t> &p_usable_d
 }
 
 bool OpenXROpenGLExtension::get_swapchain_image_data(XrSwapchain p_swapchain, int64_t p_swapchain_format, uint32_t p_width, uint32_t p_height, uint32_t p_sample_count, uint32_t p_array_size, void **r_swapchain_graphics_data) {
+	GLES3::TextureStorage *texture_storage = GLES3::TextureStorage::get_singleton();
+	ERR_FAIL_NULL_V(texture_storage, false);
+
 	uint32_t swapchain_length;
 	XrResult result = xrEnumerateSwapchainImages(p_swapchain, 0, &swapchain_length, nullptr);
 	if (XR_FAILED(result)) {
@@ -190,9 +193,9 @@ bool OpenXROpenGLExtension::get_swapchain_image_data(XrSwapchain p_swapchain, in
 	}
 
 #ifdef ANDROID
-	XrSwapchainImageOpenGLESKHR **images = (XrSwapchainImageOpenGLESKHR **)malloc(sizeof(XrSwapchainImageOpenGLESKHR **) * view_count);
+	XrSwapchainImageOpenGLESKHR *images = (XrSwapchainImageOpenGLESKHR *)malloc(sizeof(XrSwapchainImageOpenGLESKHR) * swapchain_length);
 #else
-	XrSwapChainImageOpenGLKHR **images = (XrSwapchainImageOpenGLKHR **)malloc(sizeof(XrSwapchainImageOpenGLKHR **) * view_count);
+	XrSwapchainImageOpenGLKHR *images = (XrSwapchainImageOpenGLKHR *)malloc(sizeof(XrSwapchainImageOpenGLKHR) * swapchain_length);
 #endif
 	ERR_FAIL_NULL_V_MSG(images, false, "OpenXR Couldn't allocate memory for swap chain image");
 
@@ -222,7 +225,18 @@ bool OpenXROpenGLExtension::get_swapchain_image_data(XrSwapchain p_swapchain, in
 	*r_swapchain_graphics_data = data;
 	data->is_multiview = (p_array_size > 1);
 
-	// @todo Allocate Godot textures for the swapchain
+	Vector<RID> texture_rids;
+
+	for (uint64_t i = 0; i < swapchain_length; i++) {
+		RID texture_rid = texture_storage->texture_create();
+		// @todo Create texture that uses images[i].image as the GL texture.
+
+		texture_rids.push_back(texture_rid);
+	}
+
+	data->texture_rids = texture_rids;
+
+	memfree(images);
 
 	return true;
 }
@@ -249,6 +263,22 @@ RID OpenXROpenGLExtension::get_texture(void *p_swapchain_graphics_data, int p_im
 }
 
 void OpenXROpenGLExtension::cleanup_swapchain_graphics_data(void **p_swapchain_graphics_data) {
+	if (*p_swapchain_graphics_data == nullptr) {
+		return;
+	}
+
+	GLES3::TextureStorage *texture_storage = GLES3::TextureStorage::get_singleton();
+	ERR_FAIL_NULL(texture_storage);
+
+	SwapchainGraphicsData *data = (SwapchainGraphicsData *)*p_swapchain_graphics_data;
+
+	for (int i = 0; i < data->texture_rids.size(); i++) {
+		texture_storage->texture_free(data->texture_rids[i]);
+	}
+	data->texture_rids.clear();
+
+	memdelete(data);
+	*p_swapchain_graphics_data = nullptr;
 }
 
 #define ENUM_TO_STRING_CASE(e) \

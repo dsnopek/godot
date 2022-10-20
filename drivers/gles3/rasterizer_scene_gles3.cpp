@@ -1942,7 +1942,8 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 
 	// @todo Temporarily hardcode this for now.
 	//uint32_t base_spec_constants = p_params->spec_constant_base_flags;
-	uint32_t base_spec_constants = 1 << SPEC_CONSTANT_USE_RADIANCE_MAP;
+	//uint32_t base_spec_constants = 1 << SPEC_CONSTANT_USE_RADIANCE_MAP;
+	uint32_t base_spec_constants = 0;
 
 	if (p_render_data->view_count > 1) {
 		base_spec_constants |= 1 << SPEC_CONSTANT_USE_MULTIVIEW;

@@ -554,7 +554,7 @@ uniform highp samplerCubeShadow positional_shadow; // texunit:-4
 
 #endif // !defined(DISABLE_LIGHT_OMNI) && !defined(DISABLE_LIGHT_SPOT)
 
-#ifdef MULTIVIEW
+#ifdef USE_MULTIVIEW
 uniform highp sampler2DArray depth_buffer; // texunit:-6
 uniform highp sampler2DArray screen_texture; // texunit:-5
 #else

@@ -76,24 +76,27 @@ public:
 private:
 	static OpenXROpenGLExtension *singleton;
 
-	bool check_graphics_api_support(XrVersion p_desired_version);
-
 #ifdef WIN32
-	XrGraphicsBindingOpenGLWin32KHR graphics_binding_gl;
-	XrSwapchainImageOpenGLKHR **images = nullptr;
+	static XrGraphicsBindingOpenGLWin32KHR graphics_binding_gl;
 #elif ANDROID
-	XrGraphicsBindingOpenGLESAndroidKHR graphics_binding_gl;
-	XrSwapchainImageOpenGLESKHR **images = nullptr;
+	static XrGraphicsBindingOpenGLESAndroidKHR graphics_binding_gl;
 #else
-	XrGraphicsBindingOpenGLXlibKHR graphics_binding_gl;
-	XrSwapchainImageOpenGLKHR **images = nullptr;
+	static XrGraphicsBindingOpenGLXlibKHR graphics_binding_gl;
 #endif
+
+	struct SwapchainGraphicsData {
+		bool is_multiview;
+		Vector<RID> texture_rids;
+	};
+
+	bool check_graphics_api_support(XrVersion p_desired_version);
 
 #ifdef ANDROID
 	EXT_PROTO_XRRESULT_FUNC3(xrGetOpenGLESGraphicsRequirementsKHR, (XrInstance), p_instance, (XrSystemId), p_system_id, (XrGraphicsRequirementsOpenGLESKHR *), p_graphics_requirements)
 #else
 	EXT_PROTO_XRRESULT_FUNC3(xrGetOpenGLGraphicsRequirementsKHR, (XrInstance), p_instance, (XrSystemId), p_system_id, (XrGraphicsRequirementsOpenGLKHR *), p_graphics_requirements)
 #endif
+	EXT_PROTO_XRRESULT_FUNC4(xrEnumerateSwapchainImages, (XrSwapchain), p_swapchain, (uint32_t), p_image_capacity_input, (uint32_t *), p_image_count_output, (XrSwapchainImageBaseHeader *), p_images)
 };
 
 #endif // OPENXR_OPENGL_EXTENSION_H

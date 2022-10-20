@@ -60,6 +60,7 @@ void OpenXROpenGLExtension::on_instance_created(const XrInstance p_instance) {
 #else
 	EXT_INIT_XR_FUNC(xrGetOpenGLGraphicsRequirementsKHR);
 #endif
+	EXT_INIT_XR_FUNC(xrEnumerateSwapchainImages);
 }
 
 bool OpenXROpenGLExtension::check_graphics_api_support(XrVersion p_desired_version) {
@@ -141,15 +142,15 @@ void *OpenXROpenGLExtension::set_session_create_and_get_next_pointer(void *p_nex
 	graphics_binding_gl.glxDrawable = (GLXDrawable)glxdrawable_handle;
 
 	if (graphics_binding_gl.xDisplay == nullptr) {
-		Godot::print("OpenXR Failed to get xDisplay from Godot, using XOpenDisplay(nullptr)");
+		print_line("OpenXR Failed to get xDisplay from Godot, using XOpenDisplay(nullptr)");
 		graphics_binding_gl.xDisplay = XOpenDisplay(nullptr);
 	}
 	if (graphics_binding_gl.glxContext == nullptr) {
-		Godot::print("OpenXR Failed to get glxContext from Godot, using glXGetCurrentContext()");
+		print_line("OpenXR Failed to get glxContext from Godot, using glXGetCurrentContext()");
 		graphics_binding_gl.glxContext = glXGetCurrentContext();
 	}
 	if (graphics_binding_gl.glxDrawable == 0) {
-		Godot::print("OpenXR Failed to get glxDrawable from Godot, using glXGetCurrentDrawable()");
+		print_line("OpenXR Failed to get glxDrawable from Godot, using glXGetCurrentDrawable()");
 		graphics_binding_gl.glxDrawable = glXGetCurrentDrawable();
 	}
 
@@ -181,6 +182,48 @@ void OpenXROpenGLExtension::get_usable_depth_formats(Vector<int64_t> &p_usable_d
 }
 
 bool OpenXROpenGLExtension::get_swapchain_image_data(XrSwapchain p_swapchain, int64_t p_swapchain_format, uint32_t p_width, uint32_t p_height, uint32_t p_sample_count, uint32_t p_array_size, void **r_swapchain_graphics_data) {
+	uint32_t swapchain_length;
+	XrResult result = xrEnumerateSwapchainImages(p_swapchain, 0, &swapchain_length, nullptr);
+	if (XR_FAILED(result)) {
+		print_line("OpenXR: Failed to get swapchaim image count [", openxr_api->get_error_string(result), "]");
+		return false;
+	}
+
+#ifdef ANDROID
+	XrSwapchainImageOpenGLESKHR **images = (XrSwapchainImageOpenGLESKHR **)malloc(sizeof(XrSwapchainImageOpenGLESKHR **) * view_count);
+#else
+	XrSwapChainImageOpenGLKHR **images = (XrSwapchainImageOpenGLKHR **)malloc(sizeof(XrSwapchainImageOpenGLKHR **) * view_count);
+#endif
+	ERR_FAIL_NULL_V_MSG(images, false, "OpenXR Couldn't allocate memory for swap chain image");
+
+	for (uint64_t i = 0; i < swapchain_length; i++) {
+#ifdef ANDROID
+		images[i].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_ES_KHR;
+#else
+		images[i].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_KHR;
+#endif
+		images[i].next = nullptr;
+		images[i].image = 0;
+	}
+
+	result = xrEnumerateSwapchainImages(p_swapchain, swapchain_length, &swapchain_length, (XrSwapchainImageBaseHeader *)images);
+	if (XR_FAILED(result)) {
+		print_line("OpenXR: Failed to get swapchaim images [", openxr_api->get_error_string(result), "]");
+		memfree(images);
+		return false;
+	}
+
+	SwapchainGraphicsData *data = memnew(SwapchainGraphicsData);
+	if (data == nullptr) {
+		print_line("OpenXR: Failed to allocate memory for swapchain data");
+		memfree(images);
+		return false;
+	}
+	*r_swapchain_graphics_data = data;
+	data->is_multiview = (p_array_size > 1);
+
+	// @todo Allocate Godot textures for the swapchain
+
 	return true;
 }
 
@@ -198,6 +241,11 @@ bool OpenXROpenGLExtension::create_projection_fov(const XrFovf p_fov, double p_z
 }
 
 RID OpenXROpenGLExtension::get_texture(void *p_swapchain_graphics_data, int p_image_index) {
+	SwapchainGraphicsData *data = (SwapchainGraphicsData *)p_swapchain_graphics_data;
+	ERR_FAIL_NULL_V(data, RID());
+
+	ERR_FAIL_INDEX_V(p_image_index, data->texture_rids.size(), RID());
+	return data->texture_rids[p_image_index];
 }
 
 void OpenXROpenGLExtension::cleanup_swapchain_graphics_data(void **p_swapchain_graphics_data) {

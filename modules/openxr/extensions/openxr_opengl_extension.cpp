@@ -52,26 +52,29 @@ OpenXROpenGLExtension::~OpenXROpenGLExtension() {
 
 void OpenXROpenGLExtension::on_instance_created(const XrInstance p_instance) {
 	ERR_FAIL_NULL(openxr_api);
+
+	// Obtain pointers to functions we're accessing here.
+
+#ifdef ANDROID
+	EXT_INIT_XR_FUNC(xrGetOpenGLESGraphicsRequirementsKHR);
+#else
+	EXT_INIT_XR_FUNC(xrGetOpenGLGraphicsRequirementsKHR);
+#endif
 }
 
-#if 0
 bool OpenXROpenGLExtension::check_graphics_api_support(XrVersion p_desired_version) {
 	ERR_FAIL_NULL_V(openxr_api, false);
+
+	XrSystemId system_id = openxr_api->get_system_id();
+	XrInstance instance = openxr_api->get_instance();
 
 #ifdef ANDROID
 	XrGraphicsRequirementsOpenGLESKHR opengl_requirements;
 	opengl_requirements.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_ES_KHR;
 	opengl_requirements.next = nullptr
 
-	PFN_xrGetOpenGLESGraphicsRequirementsKHR pfnGetOpenGLESGraphicsRequirementsKHR = nullptr;
-	XrResult result = xrGetInstanceProcAddr(instance, "xrGetOpenGLESGraphicsRequirementsKHR", (PFN_xrVoidFunction *)&pfnGetOpenGLESGraphicsRequirementsKHR);
-
-	if (!xr_result(result, "Failed to get xrGetOpenGLESGraphicsRequirementsKHR fp!")) {
-		return false;
-	}
-
-	result = pfnGetOpenGLESGraphicsRequirementsKHR(instance, system_id, &opengl_requirements);
-	if (!xr_result(result, "Failed to get OpenGL graphics requirements!")) {
+			XrResult result = xrGetOpenGLESGraphicsRequirementsKHR(instance, system_id, &opengl_requirements);
+	if (!openxr_api->xr_result(result, "Failed to get OpenGL graphics requirements!")) {
 		return false;
 	}
 #else
@@ -79,15 +82,8 @@ bool OpenXROpenGLExtension::check_graphics_api_support(XrVersion p_desired_versi
 	opengl_requirements.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR;
 	opengl_requirements.next = nullptr;
 
-	PFN_xrGetOpenGLGraphicsRequirementsKHR pfnGetOpenGLGraphicsRequirementsKHR = nullptr;
-	XrResult result = xrGetInstanceProcAddr(instance, "xrGetOpenGLGraphicsRequirementsKHR", (PFN_xrVoidFunction *)&pfnGetOpenGLGraphicsRequirementsKHR);
-
-	if (!xr_result(result, "Failed to get xrGetOpenGLGraphicsRequirementsKHR fp!")) {
-		return false;
-	}
-
-	result = pfnGetOpenGLGraphicsRequirementsKHR(instance, system_id, &opengl_requirements);
-	if (!xr_result(result, "Failed to get OpenGL graphics requirements!")) {
+	XrResult result = xrGetOpenGLGraphicsRequirementsKHR(instance, system_id, &opengl_requirements);
+	if (!openxr_api->xr_result(result, "Failed to get OpenGL graphics requirements!")) {
 		return false;
 	}
 #endif
@@ -109,9 +105,14 @@ bool OpenXROpenGLExtension::check_graphics_api_support(XrVersion p_desired_versi
 
 	return true;
 }
-#endif
 
 void *OpenXROpenGLExtension::set_session_create_and_get_next_pointer(void *p_next_pointer) {
+	XrVersion desired_version = XR_MAKE_VERSION(3, 3, 0);
+
+	if (!check_graphics_api_support(desired_version)) {
+		return p_next_pointer;
+	}
+
 	DisplayServer *display_server = DisplayServer::get_singleton();
 
 #ifdef WIN32

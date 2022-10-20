@@ -76,6 +76,8 @@ public:
 private:
 	static OpenXROpenGLExtension *singleton;
 
+	bool check_graphics_api_support(XrVersion p_desired_version);
+
 #ifdef WIN32
 	XrGraphicsBindingOpenGLWin32KHR graphics_binding_gl;
 	XrSwapchainImageOpenGLKHR **images = nullptr;
@@ -92,8 +94,6 @@ private:
 #else
 	EXT_PROTO_XRRESULT_FUNC3(xrGetOpenGLGraphicsRequirementsKHR, (XrInstance), p_instance, (XrSystemId), p_system_id, (XrGraphicsRequirementsOpenGLKHR *), p_graphics_requirements)
 #endif
-
-
 };
 
 #endif // OPENXR_OPENGL_EXTENSION_H

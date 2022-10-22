@@ -226,7 +226,7 @@ bool OpenXROpenGLExtension::get_swapchain_image_data(XrSwapchain p_swapchain, in
 	data->is_multiview = (p_array_size > 1);
 
 	// @todo How to get the real format?
-	GLES3::Image::Format format = GLES3::Image::FORMAT_RGBA8;
+	Image::Format format = Image::FORMAT_RGBA8;
 
 	Vector<RID> texture_rids;
 

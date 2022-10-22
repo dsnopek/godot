@@ -345,6 +345,12 @@ struct RenderTarget {
 	bool used_in_frame = false;
 	RS::ViewportMSAA msaa = RS::VIEWPORT_MSAA_DISABLED;
 
+	struct RTOverridden {
+		RID color;
+		RID depth;
+		RID velocity;
+	} overridden;
+
 	RID texture;
 
 	Color clear_color = Color(1, 1, 1, 1);
@@ -603,12 +609,12 @@ public:
 	virtual void render_target_set_vrs_texture(RID p_render_target, RID p_texture) override {}
 	virtual RID render_target_get_vrs_texture(RID p_render_target) const override { return RID(); }
 
-	virtual void render_target_set_override_color(RID p_render_target, RID p_texture) override {}
-	virtual RID render_target_get_override_color(RID p_render_target) const override { return RID(); }
-	virtual void render_target_set_override_depth(RID p_render_target, RID p_texture) override {}
-	virtual RID render_target_get_override_depth(RID p_render_target) const override { return RID(); }
-	virtual void render_target_set_override_velocity(RID p_render_target, RID p_texture) override {}
-	virtual RID render_target_get_override_velocity(RID p_render_target) const override { return RID(); }
+	virtual void render_target_set_override_color(RID p_render_target, RID p_texture) override;
+	virtual RID render_target_get_override_color(RID p_render_target) const override;
+	virtual void render_target_set_override_depth(RID p_render_target, RID p_texture) override;
+	virtual RID render_target_get_override_depth(RID p_render_target) const override;
+	virtual void render_target_set_override_velocity(RID p_render_target, RID p_texture) override;
+	virtual RID render_target_get_override_velocity(RID p_render_target) const override;
 
 	virtual RID render_target_get_texture(RID p_render_target) override;
 

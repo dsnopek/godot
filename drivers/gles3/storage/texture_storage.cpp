@@ -653,7 +653,9 @@ void TextureStorage::texture_free(RID p_texture) {
 	}
 
 	if (t->tex_id != 0) {
-		glDeleteTextures(1, &t->tex_id);
+		if (!t->is_external) {
+			glDeleteTextures(1, &t->tex_id);
+		}
 		t->tex_id = 0;
 	}
 
@@ -717,6 +719,35 @@ void TextureStorage::texture_proxy_initialize(RID p_texture, RID p_base) {
 	proxy_tex.proxies.clear();
 	texture->proxies.push_back(p_texture);
 	texture_owner.initialize_rid(p_texture, proxy_tex);
+}
+
+RID TextureStorage::texture_create_external(Texture::Type p_type, Image::Format p_format, unsigned int p_image, int p_width, int p_height, int p_depth, int p_layers, RS::TextureLayeredType p_layered_type) {
+	Texture texture;
+	texture.active = true;
+	texture.is_external = true;
+	texture.type = p_type;
+
+	switch (p_type) {
+		case Texture::TYPE_2D: {
+			texture.target = GL_TEXTURE_2D;
+		} break;
+		case Texture::TYPE_3D: {
+			texture.target = GL_TEXTURE_3D;
+		} break;
+		case Texture::TYPE_LAYERED: {
+			texture.target = GL_TEXTURE_2D_ARRAY;
+		} break;
+	}
+
+	texture.real_format = texture.format = p_format;
+	texture.tex_id = p_image;
+	texture.alloc_width = texture.width = p_width;
+	texture.alloc_height = texture.height = p_height;
+	texture.depth = p_depth;
+	texture.layers = p_layers;
+	texture.layered_type = p_layered_type;
+
+	return texture_owner.make_rid(texture);
 }
 
 void TextureStorage::texture_2d_update(RID p_texture, const Ref<Image> &p_image, int p_layer) {

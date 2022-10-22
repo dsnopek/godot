@@ -225,11 +225,20 @@ bool OpenXROpenGLExtension::get_swapchain_image_data(XrSwapchain p_swapchain, in
 	*r_swapchain_graphics_data = data;
 	data->is_multiview = (p_array_size > 1);
 
+	// @todo How to get the real format?
+	GLES3::Image::Format format = GLES3::Image::FORMAT_RGBA8;
+
 	Vector<RID> texture_rids;
 
 	for (uint64_t i = 0; i < swapchain_length; i++) {
-		RID texture_rid = texture_storage->texture_create();
-		// @todo Create texture that uses images[i].image as the GL texture.
+		RID texture_rid = texture_storage->texture_create_external(
+				p_array_size == 1 ? GLES3::Texture::TYPE_2D : GLES3::Texture::TYPE_LAYERED,
+				format,
+				images[i].image,
+				p_width,
+				p_height,
+				1,
+				p_array_size);
 
 		texture_rids.push_back(texture_rid);
 	}

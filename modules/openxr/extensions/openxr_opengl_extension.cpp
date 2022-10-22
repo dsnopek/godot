@@ -107,6 +107,8 @@ bool OpenXROpenGLExtension::check_graphics_api_support(XrVersion p_desired_versi
 	return true;
 }
 
+XrGraphicsBindingOpenGLWin32KHR OpenXROpenGLExtension::graphics_binding_gl;
+
 void *OpenXROpenGLExtension::set_session_create_and_get_next_pointer(void *p_next_pointer) {
 	XrVersion desired_version = XR_MAKE_VERSION(3, 3, 0);
 

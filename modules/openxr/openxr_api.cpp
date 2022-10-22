@@ -49,6 +49,10 @@
 #include "extensions/openxr_vulkan_extension.h"
 #endif
 
+#ifdef GLES3_ENABLED
+#include "extensions/openxr_opengl_extension.h"
+#endif
+
 #include "extensions/openxr_composition_layer_depth_extension.h"
 #include "extensions/openxr_fb_display_refresh_rate_extension.h"
 #include "extensions/openxr_fb_passthrough_extension_wrapper.h"
@@ -1142,8 +1146,8 @@ bool OpenXRAPI::initialize(const String &p_rendering_driver) {
 #endif
 	} else if (p_rendering_driver == "opengl3") {
 #ifdef GLES3_ENABLED
-		// graphics_extension = memnew(OpenXROpenGLExtension(this));
-		// register_extension_wrapper(graphics_extension);
+		graphics_extension = memnew(OpenXROpenGLExtension(this));
+		register_extension_wrapper(graphics_extension);
 		ERR_FAIL_V_MSG(false, "OpenXR: OpenGL is not supported at this time.");
 #else
 		// shouldn't be possible...

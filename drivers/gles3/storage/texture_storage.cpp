@@ -1731,6 +1731,10 @@ void TextureStorage::render_target_set_override_color(RID p_render_target, RID p
 	RenderTarget *rt = render_target_owner.get_or_null(p_render_target);
 	ERR_FAIL_COND(!rt);
 
+	if (rt->overridden.color == p_texture) {
+		return;
+	}
+
 	_clear_render_target(rt);
 
 	if (p_texture.is_valid()) {

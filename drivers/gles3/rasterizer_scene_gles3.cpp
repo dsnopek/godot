@@ -1642,6 +1642,9 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 		ERR_FAIL_COND(rb.is_null());
 	}
 
+	GLES3::RenderTarget *rt = texture_storage->get_render_target(rb->render_target);
+	ERR_FAIL_COND(!rt);
+
 	// Assign render data
 	// Use the format from rendererRD
 	RenderDataGLES3 render_data;
@@ -1811,7 +1814,7 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 		}
 	}
 
-	glBindFramebuffer(GL_FRAMEBUFFER, rb->framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, rt->fbo);
 	glViewport(0, 0, rb->width, rb->height);
 
 	// Do depth prepass if it's explicitly enabled

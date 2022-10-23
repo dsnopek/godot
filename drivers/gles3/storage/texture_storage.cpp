@@ -657,7 +657,9 @@ void TextureStorage::texture_free(RID p_texture) {
 	}
 
 	if (t->tex_id != 0) {
-		glDeleteTextures(1, &t->tex_id);
+		if (!t->is_external) {
+			glDeleteTextures(1, &t->tex_id);
+		}
 		t->tex_id = 0;
 	}
 
@@ -721,6 +723,35 @@ void TextureStorage::texture_proxy_initialize(RID p_texture, RID p_base) {
 	proxy_tex.proxies.clear();
 	texture->proxies.push_back(p_texture);
 	texture_owner.initialize_rid(p_texture, proxy_tex);
+}
+
+RID TextureStorage::texture_create_external(Texture::Type p_type, Image::Format p_format, unsigned int p_image, int p_width, int p_height, int p_depth, int p_layers, RS::TextureLayeredType p_layered_type) {
+	Texture texture;
+	texture.active = true;
+	texture.is_external = true;
+	texture.type = p_type;
+
+	switch (p_type) {
+		case Texture::TYPE_2D: {
+			texture.target = GL_TEXTURE_2D;
+		} break;
+		case Texture::TYPE_3D: {
+			texture.target = GL_TEXTURE_3D;
+		} break;
+		case Texture::TYPE_LAYERED: {
+			texture.target = GL_TEXTURE_2D_ARRAY;
+		} break;
+	}
+
+	texture.real_format = texture.format = p_format;
+	texture.tex_id = p_image;
+	texture.alloc_width = texture.width = p_width;
+	texture.alloc_height = texture.height = p_height;
+	texture.depth = p_depth;
+	texture.layers = p_layers;
+	texture.layered_type = p_layered_type;
+
+	return texture_owner.make_rid(texture);
 }
 
 void TextureStorage::texture_2d_update(RID p_texture, const Ref<Image> &p_image, int p_layer) {
@@ -1446,7 +1477,14 @@ void TextureStorage::_update_render_target(RenderTarget *rt) {
 	{
 		/* Front FBO */
 
-		Texture *texture = get_texture(rt->texture);
+		Texture *texture;
+		bool overridden = false;
+		if (rt->overridden.color.is_valid()) {
+			texture = get_texture(rt->overridden.color);
+			overridden = true;
+		} else {
+			texture = get_texture(rt->texture);
+		}
 		ERR_FAIL_COND(!texture);
 
 		// framebuffer
@@ -1454,23 +1492,27 @@ void TextureStorage::_update_render_target(RenderTarget *rt) {
 		glBindFramebuffer(GL_FRAMEBUFFER, rt->fbo);
 
 		// color
-		glGenTextures(1, &rt->color);
-		if (rt->view_count > 1 && config->multiview_supported) {
-			glBindTexture(GL_TEXTURE_2D_ARRAY, rt->color);
-			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, rt->color_internal_format, rt->size.x, rt->size.y, rt->view_count, 0, rt->color_format, rt->color_type, nullptr);
-
-			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		if (overridden) {
+			rt->color = texture->tex_id;
 		} else {
-			glBindTexture(GL_TEXTURE_2D, rt->color);
-			glTexImage2D(GL_TEXTURE_2D, 0, rt->color_internal_format, rt->size.x, rt->size.y, 0, rt->color_format, rt->color_type, nullptr);
+			glGenTextures(1, &rt->color);
+			if (rt->view_count > 1 && config->multiview_supported) {
+				glBindTexture(GL_TEXTURE_2D_ARRAY, rt->color);
+				glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, rt->color_internal_format, rt->size.x, rt->size.y, rt->view_count, 0, rt->color_format, rt->color_type, nullptr);
 
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			} else {
+				glBindTexture(GL_TEXTURE_2D, rt->color);
+				glTexImage2D(GL_TEXTURE_2D, 0, rt->color_internal_format, rt->size.x, rt->size.y, 0, rt->color_format, rt->color_type, nullptr);
+
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			}
 		}
 
 		if (rt->view_count > 1 && config->multiview_supported) {
@@ -1488,32 +1530,38 @@ void TextureStorage::_update_render_target(RenderTarget *rt) {
 			rt->size.x = 0;
 			rt->size.y = 0;
 			rt->color = 0;
-			texture->tex_id = 0;
-			texture->active = false;
+			if (!overridden) {
+				texture->tex_id = 0;
+				texture->active = false;
+			}
 			WARN_PRINT("Could not create render target, status: " + get_framebuffer_error(status));
 			return;
 		}
 
-		texture->format = rt->image_format;
-		texture->real_format = rt->image_format;
-		if (rt->view_count > 1 && config->multiview_supported) {
-			texture->type = Texture::TYPE_LAYERED;
-			texture->target = GL_TEXTURE_2D_ARRAY;
-			texture->layers = rt->view_count;
+		if (overridden) {
+			texture->is_render_target = true;
 		} else {
-			texture->type = Texture::TYPE_2D;
-			texture->target = GL_TEXTURE_2D;
-			texture->layers = 1;
+			texture->format = rt->image_format;
+			texture->real_format = rt->image_format;
+			if (rt->view_count > 1 && config->multiview_supported) {
+				texture->type = Texture::TYPE_LAYERED;
+				texture->target = GL_TEXTURE_2D_ARRAY;
+				texture->layers = rt->view_count;
+			} else {
+				texture->type = Texture::TYPE_2D;
+				texture->target = GL_TEXTURE_2D;
+				texture->layers = 1;
+			}
+			texture->gl_format_cache = rt->color_format;
+			texture->gl_type_cache = GL_UNSIGNED_BYTE;
+			texture->gl_internal_format_cache = rt->color_internal_format;
+			texture->tex_id = rt->color;
+			texture->width = rt->size.x;
+			texture->alloc_width = rt->size.x;
+			texture->height = rt->size.y;
+			texture->alloc_height = rt->size.y;
+			texture->active = true;
 		}
-		texture->gl_format_cache = rt->color_format;
-		texture->gl_type_cache = GL_UNSIGNED_BYTE;
-		texture->gl_internal_format_cache = rt->color_internal_format;
-		texture->tex_id = rt->color;
-		texture->width = rt->size.x;
-		texture->alloc_width = rt->size.x;
-		texture->height = rt->size.y;
-		texture->alloc_height = rt->size.y;
-		texture->active = true;
 	}
 
 	glClearColor(0, 0, 0, 0);
@@ -1581,17 +1629,27 @@ void TextureStorage::_clear_render_target(RenderTarget *rt) {
 
 	if (rt->fbo) {
 		glDeleteFramebuffers(1, &rt->fbo);
-		glDeleteTextures(1, &rt->color);
+		if (rt->overridden.color.is_null()) {
+			glDeleteTextures(1, &rt->color);
+		}
 		rt->fbo = 0;
 		rt->color = 0;
 	}
 
-	Texture *tex = get_texture(rt->texture);
-	tex->alloc_height = 0;
-	tex->alloc_width = 0;
-	tex->width = 0;
-	tex->height = 0;
-	tex->active = false;
+	if (rt->texture.is_valid()) {
+		Texture *tex = get_texture(rt->texture);
+		tex->alloc_height = 0;
+		tex->alloc_width = 0;
+		tex->width = 0;
+		tex->height = 0;
+		tex->active = false;
+	}
+
+	if (rt->overridden.color.is_valid()) {
+		Texture *tex = get_texture(rt->overridden.color);
+		tex->is_render_target = false;
+		rt->overridden.color = RID();
+	}
 
 	if (rt->backbuffer_fbo != 0) {
 		glDeleteFramebuffers(1, &rt->backbuffer_fbo);
@@ -1657,6 +1715,9 @@ void TextureStorage::render_target_set_size(RID p_render_target, int p_width, in
 	rt->view_count = p_view_count;
 
 	_update_render_target(rt);
+
+	rt->overridden.depth = RID();
+	rt->overridden.velocity = RID();
 }
 
 // TODO: convert to Size2i internally
@@ -1667,9 +1728,70 @@ Size2i TextureStorage::render_target_get_size(RID p_render_target) const {
 	return rt->size;
 }
 
+void TextureStorage::render_target_set_override_color(RID p_render_target, RID p_texture) {
+	RenderTarget *rt = render_target_owner.get_or_null(p_render_target);
+	ERR_FAIL_COND(!rt);
+
+	if (rt->overridden.color == p_texture) {
+		return;
+	}
+
+	_clear_render_target(rt);
+
+	if (p_texture.is_valid()) {
+		Texture *tex = get_texture(p_texture);
+		rt->size = Size2i(tex->width, tex->height);
+	} else {
+		rt->size = Size2i();
+	}
+
+	rt->overridden.color = p_texture;
+
+	_update_render_target(rt);
+}
+
+RID TextureStorage::render_target_get_override_color(RID p_render_target) const {
+	RenderTarget *rt = render_target_owner.get_or_null(p_render_target);
+	ERR_FAIL_COND_V(!rt, RID());
+
+	return rt->overridden.color;
+}
+
+void TextureStorage::render_target_set_override_depth(RID p_render_target, RID p_texture) {
+	RenderTarget *rt = render_target_owner.get_or_null(p_render_target);
+	ERR_FAIL_COND(!rt);
+
+	rt->overridden.depth = p_texture;
+}
+
+RID TextureStorage::render_target_get_override_depth(RID p_render_target) const {
+	RenderTarget *rt = render_target_owner.get_or_null(p_render_target);
+	ERR_FAIL_COND_V(!rt, RID());
+
+	return rt->overridden.depth;
+}
+
+void TextureStorage::render_target_set_override_velocity(RID p_render_target, RID p_texture) {
+	RenderTarget *rt = render_target_owner.get_or_null(p_render_target);
+	ERR_FAIL_COND(!rt);
+
+	rt->overridden.velocity = p_texture;
+}
+
+RID TextureStorage::render_target_get_override_velocity(RID p_render_target) const {
+	RenderTarget *rt = render_target_owner.get_or_null(p_render_target);
+	ERR_FAIL_COND_V(!rt, RID());
+
+	return rt->overridden.velocity;
+}
+
 RID TextureStorage::render_target_get_texture(RID p_render_target) {
 	RenderTarget *rt = render_target_owner.get_or_null(p_render_target);
 	ERR_FAIL_COND_V(!rt, RID());
+
+	if (rt->overridden.color.is_valid()) {
+		return rt->overridden.color;
+	}
 
 	return rt->texture;
 }
@@ -1680,8 +1802,10 @@ void TextureStorage::render_target_set_transparent(RID p_render_target, bool p_t
 
 	rt->is_transparent = p_transparent;
 
-	_clear_render_target(rt);
-	_update_render_target(rt);
+	if (rt->overridden.color.is_null()) {
+		_clear_render_target(rt);
+		_update_render_target(rt);
+	}
 }
 
 bool TextureStorage::render_target_get_transparent(RID p_render_target) const {
@@ -1734,6 +1858,7 @@ void TextureStorage::render_target_set_msaa(RID p_render_target, RS::ViewportMSA
 	}
 
 	WARN_PRINT("2D MSAA is not yet supported for GLES3.");
+
 	_clear_render_target(rt);
 	rt->msaa = p_msaa;
 	_update_render_target(rt);

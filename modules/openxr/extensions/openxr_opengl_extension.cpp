@@ -113,7 +113,8 @@ void *OpenXROpenGLExtension::set_session_create_and_get_next_pointer(void *p_nex
 	XrVersion desired_version = XR_MAKE_VERSION(3, 3, 0);
 
 	if (!check_graphics_api_support(desired_version)) {
-		return p_next_pointer;
+		print_line("OpenXR: Trying to initialize with OpenGL anyway...");
+		//return p_next_pointer;
 	}
 
 	DisplayServer *display_server = DisplayServer::get_singleton();

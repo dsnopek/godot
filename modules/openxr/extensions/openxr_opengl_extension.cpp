@@ -35,6 +35,16 @@
 #include "servers/rendering/rendering_server_globals.h"
 #include "servers/rendering_server.h"
 
+#ifdef X11_ENABLED
+#define GL_GLEXT_PROTOTYPES 1
+#define GL3_PROTOTYPES 1
+#include <GL/gl.h>
+#include <GL/glext.h>
+
+#include <GL/glx.h>
+#include <X11/Xlib.h>
+#endif
+
 OpenXROpenGLExtension::OpenXROpenGLExtension(OpenXRAPI *p_openxr_api) :
 		OpenXRGraphicsExtensionWrapper(p_openxr_api) {
 #ifdef ANDROID_ENABLED

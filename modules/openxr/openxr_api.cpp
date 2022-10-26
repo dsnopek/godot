@@ -45,8 +45,8 @@
 #include "extensions/openxr_android_extension.h"
 #endif
 
-// We need to have all the platform defines before the Vulkan or OpenGL extensions
-// are included, otherwise we'll only get one graphics API or the other.
+// We need to have all the graphics API defines before the Vulkan or OpenGL
+// extensions are included, otherwise we'll only get one graphics API.
 #ifdef VULKAN_ENABLED
 #define XR_USE_GRAPHICS_API_VULKAN
 #endif
@@ -55,8 +55,17 @@
 #define XR_USE_GRAPHICS_API_OPENGL_ES
 #else
 #define XR_USE_GRAPHICS_API_OPENGL
-#endif
-#endif
+#endif // ANDROID
+#ifdef X11_ENABLED
+#include OPENGL_INCLUDE_H
+#define GL_GLEXT_PROTOTYPES 1
+#define GL3_PROTOTYPES 1
+#include <GL/gl.h>
+#include <GL/glext.h>
+#include <GL/glx.h>
+#include <X11/Xlib.h>
+#endif // X11_ENABLED
+#endif // GLES_ENABLED
 
 #ifdef VULKAN_ENABLED
 #include "extensions/openxr_vulkan_extension.h"

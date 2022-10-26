@@ -49,6 +49,16 @@
 #include <windows.h>
 #endif
 
+#ifdef X11_ENABLED
+#include OPENGL_INCLUDE_H
+#define GL_GLEXT_PROTOTYPES 1
+#define GL3_PROTOTYPES 1
+#include <GL/gl.h>
+#include <GL/glext.h>
+#include <GL/glx.h>
+#include <X11/Xlib.h>
+#endif
+
 #ifdef ANDROID_ENABLED
 // The jobject type from jni.h is used by openxr_platform.h on Android.
 #include <jni.h>

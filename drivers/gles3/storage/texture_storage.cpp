@@ -1789,6 +1789,7 @@ void TextureStorage::render_target_set_override_color(RID p_render_target, RID p
 	}
 
 	rt->overridden.color = p_texture;
+	rt->color = tex->tex_id;
 
 	// But if we're only changing the overridden texture, let's just change the
 	// attachment on the framebuffer.
@@ -1835,6 +1836,7 @@ void TextureStorage::render_target_set_override_depth(RID p_render_target, RID p
 	}
 
 	rt->overridden.depth = p_texture;
+	rt->depth = tex->tex_id;
 
 	// But if we're only changing the overridden texture, let's just change the
 	// attachment on the framebuffer.

@@ -37,7 +37,7 @@
 
 OpenXROpenGLExtension::OpenXROpenGLExtension(OpenXRAPI *p_openxr_api) :
 		OpenXRGraphicsExtensionWrapper(p_openxr_api) {
-#ifdef ANDROID
+#ifdef ANDROID_ENABLED
 	request_extensions[XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME] = nullptr;
 	request_extensions[XR_KHR_ANDROID_THREAD_SETTINGS_EXTENSION_NAME] = nullptr;
 #else
@@ -55,7 +55,7 @@ void OpenXROpenGLExtension::on_instance_created(const XrInstance p_instance) {
 
 	// Obtain pointers to functions we're accessing here.
 
-#ifdef ANDROID
+#ifdef ANDROID_ENABLED
 	EXT_INIT_XR_FUNC(xrGetOpenGLESGraphicsRequirementsKHR);
 #else
 	EXT_INIT_XR_FUNC(xrGetOpenGLGraphicsRequirementsKHR);
@@ -69,7 +69,7 @@ bool OpenXROpenGLExtension::check_graphics_api_support(XrVersion p_desired_versi
 	XrSystemId system_id = openxr_api->get_system_id();
 	XrInstance instance = openxr_api->get_instance();
 
-#ifdef ANDROID
+#ifdef ANDROID_ENABLED
 	XrGraphicsRequirementsOpenGLESKHR opengl_requirements;
 	opengl_requirements.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_ES_KHR;
 	opengl_requirements.next = nullptr
@@ -125,7 +125,7 @@ void *OpenXROpenGLExtension::set_session_create_and_get_next_pointer(void *p_nex
 
 	graphics_binding_gl.hDC = (HDC)display_server->window_get_native_handle(DisplayServer::WINDOW_VIEW);
 	graphics_binding_gl.hGLRC = (HGLRC)display_server->window_get_native_handle(DisplayServer::OPENGL_CONTEXT);
-#elif ANDROID
+#elif ANDROID_ENABLED
 	graphics_binding_gl.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_ES_ANDROID_KHR;
 	graphics_binding_gl.next = p_next_pointer;
 
@@ -169,7 +169,7 @@ void OpenXROpenGLExtension::get_usable_swapchain_formats(Vector<int64_t> &p_usab
 #ifdef WIN32
 	p_usable_swap_chains.push_back(GL_SRGB8_ALPHA8);
 	p_usable_swap_chains.push_back(GL_RGBA8);
-#elif ANDROID
+#elif ANDROID_ENABLED
 	p_usable_swap_chains.push_back(GL_SRGB8_ALPHA8);
 	p_usable_swap_chains.push_back(GL_RGBA8);
 #else
@@ -195,7 +195,7 @@ bool OpenXROpenGLExtension::get_swapchain_image_data(XrSwapchain p_swapchain, in
 		return false;
 	}
 
-#ifdef ANDROID
+#ifdef ANDROID_ENABLED
 	XrSwapchainImageOpenGLESKHR *images = (XrSwapchainImageOpenGLESKHR *)memalloc(sizeof(XrSwapchainImageOpenGLESKHR) * swapchain_length);
 #else
 	XrSwapchainImageOpenGLKHR *images = (XrSwapchainImageOpenGLKHR *)memalloc(sizeof(XrSwapchainImageOpenGLKHR) * swapchain_length);
@@ -203,7 +203,7 @@ bool OpenXROpenGLExtension::get_swapchain_image_data(XrSwapchain p_swapchain, in
 	ERR_FAIL_NULL_V_MSG(images, false, "OpenXR Couldn't allocate memory for swap chain image");
 
 	for (uint64_t i = 0; i < swapchain_length; i++) {
-#ifdef ANDROID
+#ifdef ANDROID_ENABLED
 		images[i].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_ES_KHR;
 #else
 		images[i].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_KHR;
@@ -353,7 +353,7 @@ String OpenXROpenGLExtension::get_swapchain_format_name(int64_t p_swapchain_form
 		ENUM_TO_STRING_CASE(GL_DEPTH_COMPONENT32F)
 		ENUM_TO_STRING_CASE(GL_DEPTH32F_STENCIL8)
 
-#elif ANDROID
+#elif ANDROID_ENABLED
 		// using definitions from GLES3/gl3.h
 
 		ENUM_TO_STRING_CASE(GL_RGBA4)

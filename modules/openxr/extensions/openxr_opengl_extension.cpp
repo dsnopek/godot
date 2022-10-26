@@ -72,9 +72,9 @@ bool OpenXROpenGLExtension::check_graphics_api_support(XrVersion p_desired_versi
 #ifdef ANDROID_ENABLED
 	XrGraphicsRequirementsOpenGLESKHR opengl_requirements;
 	opengl_requirements.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_ES_KHR;
-	opengl_requirements.next = nullptr
+	opengl_requirements.next = nullptr;
 
-			XrResult result = xrGetOpenGLESGraphicsRequirementsKHR(instance, system_id, &opengl_requirements);
+	XrResult result = xrGetOpenGLESGraphicsRequirementsKHR(instance, system_id, &opengl_requirements);
 	if (!openxr_api->xr_result(result, "Failed to get OpenGL graphics requirements!")) {
 		return false;
 	}

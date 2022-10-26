@@ -117,7 +117,13 @@ bool OpenXROpenGLExtension::check_graphics_api_support(XrVersion p_desired_versi
 	return true;
 }
 
+#ifdef WIN32
 XrGraphicsBindingOpenGLWin32KHR OpenXROpenGLExtension::graphics_binding_gl;
+#elif ANDROID_ENABLED
+XrGraphicsBindingOpenGLESAndroidKHR OpenXROpenGLExtension::graphics_binding_gl;
+#else
+XrGraphicsBindingOpenGLXlibKHR OpenXROpenGLExtension::graphics_binding_gl;
+#endif
 
 void *OpenXROpenGLExtension::set_session_create_and_get_next_pointer(void *p_next_pointer) {
 	XrVersion desired_version = XR_MAKE_VERSION(3, 3, 0);

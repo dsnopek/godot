@@ -331,6 +331,7 @@ struct RenderTarget {
 	RID self;
 	GLuint fbo = 0;
 	GLuint color = 0;
+	GLuint depth = 0;
 	GLuint backbuffer_fbo = 0;
 	GLuint backbuffer = 0;
 

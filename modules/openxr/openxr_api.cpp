@@ -53,6 +53,10 @@
 #ifdef GLES3_ENABLED
 #ifdef ANDROID
 #define XR_USE_GRAPHICS_API_OPENGL_ES
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <GLES3/gl3.h>
+#include <GLES3/gl3ext.h>
 #else
 #define XR_USE_GRAPHICS_API_OPENGL
 #endif // ANDROID

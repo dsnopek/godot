@@ -28,6 +28,8 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
+#ifdef GLES3_ENABLED
+
 #include "../extensions/openxr_opengl_extension.h"
 #include "../openxr_util.h"
 #include "drivers/gles3/effects/copy_effects.h"
@@ -39,7 +41,6 @@ OpenXROpenGLExtension::OpenXROpenGLExtension(OpenXRAPI *p_openxr_api) :
 		OpenXRGraphicsExtensionWrapper(p_openxr_api) {
 #ifdef ANDROID_ENABLED
 	request_extensions[XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME] = nullptr;
-	request_extensions[XR_KHR_ANDROID_THREAD_SETTINGS_EXTENSION_NAME] = nullptr;
 #else
 	request_extensions[XR_KHR_OPENGL_ENABLE_EXTENSION_NAME] = nullptr;
 #endif
@@ -475,3 +476,5 @@ String OpenXROpenGLExtension::get_swapchain_format_name(int64_t p_swapchain_form
 		} break;
 	}
 }
+
+#endif // GLES3_ENABLED

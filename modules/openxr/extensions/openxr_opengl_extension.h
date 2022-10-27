@@ -31,6 +31,8 @@
 #ifndef OPENXR_OPENGL_EXTENSION_H
 #define OPENXR_OPENGL_EXTENSION_H
 
+#ifdef GLES3_ENABLED
+
 #include "core/templates/vector.h"
 #include "openxr_extension_wrapper.h"
 
@@ -39,6 +41,10 @@
 
 #ifdef ANDROID_ENABLED
 #define XR_USE_GRAPHICS_API_OPENGL_ES
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <GLES3/gl3.h>
+#include <GLES3/gl3ext.h>
 #else
 #define XR_USE_GRAPHICS_API_OPENGL
 #endif
@@ -108,5 +114,7 @@ private:
 #endif
 	EXT_PROTO_XRRESULT_FUNC4(xrEnumerateSwapchainImages, (XrSwapchain), p_swapchain, (uint32_t), p_image_capacity_input, (uint32_t *), p_image_count_output, (XrSwapchainImageBaseHeader *), p_images)
 };
+
+#endif // GLES3_ENABLED
 
 #endif // OPENXR_OPENGL_EXTENSION_H

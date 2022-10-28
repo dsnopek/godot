@@ -2534,6 +2534,7 @@ void RendererSceneCull::render_camera(const Ref<RenderSceneBuffers> &p_render_bu
 		}
 
 		if (view_count == 1) {
+			printf("transforms[0] = (%f, %f, %f)\n", transforms[0].origin.x, transforms[0].origin.y, transforms[0].origin.z);
 			camera_data.set_camera(transforms[0], projections[0], false, camera->vaspect, jitter);
 		} else if (view_count == 2) {
 			camera_data.set_multiview_camera(view_count, transforms, projections, false, camera->vaspect);

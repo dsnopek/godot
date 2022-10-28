@@ -352,6 +352,9 @@ const GodotWebXR = {
 		const gl = GodotWebXR.gl;
 
 		const texture = GL.textures[p_texture];
+		console.log("p_texture = ", p_texture);
+		console.log("texture = ", texture);
+		console.log("glLayer.framebuffer = ", glLayer.framebuffer);
 
 		const orig_framebuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING);
 		const orig_read_framebuffer = gl.getParameter(gl.READ_FRAMEBUFFER_BINDING);
@@ -360,14 +363,17 @@ const GodotWebXR = {
 
 		// Copy from Godot render target into framebuffer from WebXR.
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		console.log("views.length = ", views.length);
 		for (let i = 0; i < views.length; i++) {
 			const viewport = glLayer.getViewport(views[i]);
+			console.log("viewport = ", viewport.x, ", ", viewport.y, ", ", viewport.width, ", ", viewport.height);
 
 			const read_fbo = gl.createFramebuffer();
 			gl.bindFramebuffer(gl.READ_FRAMEBUFFER, read_fbo);
 			if (views.length > 1) {
 				gl.framebufferTextureLayer(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, texture, 0, i);
 			} else {
+				gl.bindTexture(gl.TEXTURE_2D, texture);
 				gl.framebufferTexture2D(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 			}
 			gl.readBuffer(gl.COLOR_ATTACHMENT0);

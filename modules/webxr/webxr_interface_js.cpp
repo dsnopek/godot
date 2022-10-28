@@ -223,7 +223,8 @@ uint32_t WebXRInterfaceJS::get_capabilities() const {
 };
 
 uint32_t WebXRInterfaceJS::get_view_count() {
-	return godot_webxr_get_view_count();
+	int view_count = godot_webxr_get_view_count();
+	return view_count >= 1 ? view_count : 1;
 };
 
 bool WebXRInterfaceJS::is_initialized() const {

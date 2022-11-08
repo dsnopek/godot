@@ -299,7 +299,8 @@ void RasterizerGLES3::_blit_render_target_to_screen(RID p_render_target, Display
 	// Flip content upside down to correct for coordinates.
 	Vector2i screen_rect_end = p_screen_rect.get_end();
 	glBlitFramebuffer(0, 0, rt->size.x, rt->size.y,
-			p_screen_rect.position.x, screen_rect_end.y, screen_rect_end.x, p_screen_rect.position.y,
+			//p_screen_rect.position.x, screen_rect_end.y, screen_rect_end.x, p_screen_rect.position.y,
+			p_screen_rect.position.x, p_screen_rect.position.y, screen_rect_end.x, screen_rect_end.y,
 			GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 	if (read_fbo != 0) {

@@ -1264,6 +1264,7 @@ void RasterizerSceneGLES3::_fill_render_list(RenderListType p_render_list, const
 
 // Needs to be called after _setup_lights so that directional_light_count is accurate.
 void RasterizerSceneGLES3::_setup_environment(const RenderDataGLES3 *p_render_data, bool p_no_fog, const Size2i &p_screen_size, bool p_flip_y, const Color &p_default_bg_color, bool p_pancake_shadows) {
+	p_flip_y = false;
 	Projection correction;
 	correction.columns[1][1] = p_flip_y ? -1.0 : 1.0;
 	Projection projection = correction * p_render_data->cam_projection;
@@ -2505,6 +2506,8 @@ void sky() {
 #ifdef GLES_OVER_GL
 	glEnable(_EXT_TEXTURE_CUBE_MAP_SEAMLESS);
 #endif
+
+	glFrontFace(GL_CW);
 
 	// MultiMesh may read from color when color is disabled, so make sure that the color defaults to white instead of black;
 	glVertexAttrib4f(RS::ARRAY_COLOR, 1.0, 1.0, 1.0, 1.0);

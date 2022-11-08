@@ -107,6 +107,9 @@ public:
 	virtual bool create_projection_fov(const XrFovf p_fov, double p_z_near, double p_z_far, Projection &r_camera_matrix) = 0;
 	virtual RID get_texture(void *p_swapchain_graphics_data, int p_image_index) = 0;
 
+	virtual void on_pre_draw_viewport(RID p_render_target) {}
+	virtual void on_post_draw_viewport(RID p_render_target) {}
+
 	OpenXRGraphicsExtensionWrapper(OpenXRAPI *p_openxr_api) :
 			OpenXRExtensionWrapper(p_openxr_api){};
 };

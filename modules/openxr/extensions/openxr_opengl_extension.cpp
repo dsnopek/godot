@@ -185,6 +185,16 @@ void OpenXROpenGLExtension::get_usable_swapchain_formats(Vector<int64_t> &p_usab
 #endif
 }
 
+void OpenXROpenGLExtension::on_pre_draw_viewport(RID p_render_target) {
+	// Change the winding order because we're flipping the Y axis.
+	glFrontFace(GL_CW);
+}
+
+void OpenXROpenGLExtension::on_post_draw_viewport(RID p_render_target) {
+	// Restore the original winding order.
+	glFrontFace(GL_CCW);
+}
+
 void OpenXROpenGLExtension::get_usable_depth_formats(Vector<int64_t> &p_usable_depth_formats) {
 	p_usable_depth_formats.push_back(GL_DEPTH_COMPONENT32F);
 	p_usable_depth_formats.push_back(GL_DEPTH24_STENCIL8);
@@ -265,8 +275,10 @@ bool OpenXROpenGLExtension::create_projection_fov(const XrFovf p_fov, double p_z
 	XrMatrix4x4f_CreateProjectionFov(&matrix, GRAPHICS_OPENGL, p_fov, (float)p_z_near, (float)p_z_far);
 
 	for (int j = 0; j < 4; j++) {
+		// Invert Y to flip rendering right-side up.
+		float direction = (j == 1) ? -1.0 : 1.0;
 		for (int i = 0; i < 4; i++) {
-			r_camera_matrix.columns[j][i] = matrix.m[j * 4 + i];
+			r_camera_matrix.columns[j][i] = matrix.m[j * 4 + i] * direction;
 		}
 	}
 

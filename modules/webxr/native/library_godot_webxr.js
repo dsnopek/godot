@@ -409,7 +409,7 @@ const GodotWebXR = {
 		if (subimage === null) {
 			return 0;
 		}
-		if (subimage.depthStencilTexture === null) {
+		if (!subimage.depthStencilTexture) {
 			return 0;
 		}
 		return GodotWebXR.getTextureId(subimage.depthStencilTexture);
@@ -422,7 +422,7 @@ const GodotWebXR = {
 		if (subimage === null) {
 			return 0;
 		}
-		if (subimage.motionVectorTexture === null) {
+		if (!subimage.motionVectorTexture) {
 			return 0;
 		}
 		return GodotWebXR.getTextureId(subimage.motionVectorTexture);

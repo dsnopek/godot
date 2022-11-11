@@ -38,6 +38,7 @@ const GodotWebXR = {
 		space: null,
 		frame: null,
 		pose: null,
+		view_count: 1,
 
 		// Monkey-patch the requestAnimationFrame() used by Emscripten for the main
 		// loop, so that we can swap it out for XRSession.requestAnimationFrame()
@@ -79,19 +80,23 @@ const GodotWebXR = {
 		},
 
 		getLayer: () => {
-			if (GodotWebXR.layer) {
-				return GodotWebXR.layer;
+			const new_view_count = (GodotWebXR.pose) ? GodotWebXR.pose.views.length : 1;
+			let layer = GodotWebXR.layer;
+
+			// If the view count hasn't changed since creating this layer, then
+			// we can simply return it.
+			if (layer && GodotWebXR.view_count == new_view_count) {
+				return layer;
 			}
-			//if (!GodotWebXR.session || !GodotWebXR.pose || !GodotWebXR.gl_binding) {
+
 			if (!GodotWebXR.session || !GodotWebXR.gl_binding) {
 				return null;
 			}
 
-
 			const gl = GodotWebXR.gl;
-			const layer = GodotWebXR.gl_binding.createProjectionLayer({
-				//textureType: GodotWebXR.pose.views.length > 1 ? "texture-array" : "texture",
-				textureType: "texture-array",
+
+			layer = GodotWebXR.gl_binding.createProjectionLayer({
+				textureType: new_view_count > 1 ? "texture-array" : "texture",
 				colorFormat: gl.RGBA8,
 				depthFormat: gl.DEPTH_COMPONENT24
 			});
@@ -100,10 +105,14 @@ const GodotWebXR = {
 			console.log("Creating layer: ", layer);
 
 			GodotWebXR.layer = layer;
+			GodotWebXR.view_count = new_view_count;
 			return layer;
 		},
 
 		getSubImage: () => {
+			if (!GodotWebXR.pose) {
+				return null;
+			}
 			const layer = GodotWebXR.getLayer();
 			if (layer === null) {
 				return null;
@@ -123,9 +132,6 @@ const GodotWebXR = {
 			const id = GL.getNewId(GL.textures);
 			texture.name = id;
 			GL.textures[id] = texture;
-
-			// @todo remove!
-			console.log("Generating ID for texture: ", id);
 
 			return id;
 		},
@@ -252,16 +258,8 @@ const GodotWebXR = {
 			gl.makeXRCompatible().then(function () {
 				GodotWebXR.gl_binding = new XRWebGLBinding(session, gl);
 
+				// This will trigger the layer to get created.
 				const layer = GodotWebXR.getLayer();
-				console.log(layer);
-
-				// Temporarily setup baseLayer until we know how many views
-				// we're going to get (and whether to use multiview or not).
-				/*
-				session.updateRenderState({
-					baseLayer: new XRWebGLLayer(session, gl),
-				});
-				*/
 
 				function onReferenceSpaceSuccess(reference_space, reference_space_type) {
 					GodotWebXR.space = reference_space;

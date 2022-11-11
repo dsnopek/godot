@@ -333,6 +333,7 @@ const GodotWebXR = {
 		GodotWebXR.space = null;
 		GodotWebXR.frame = null;
 		GodotWebXR.pose = null;
+		GodotWebXR.view_count = 1;
 
 		// Disable the monkey-patched window.requestAnimationFrame() and
 		// pause/restart the main loop to activate it on all platforms.

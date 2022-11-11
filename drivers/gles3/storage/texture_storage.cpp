@@ -1478,8 +1478,6 @@ void TextureStorage::_update_render_target(RenderTarget *rt) {
 		return;
 	}
 
-	printf("Creating render target: %dx%d - view_count: %d\n", rt->size.x, rt->size.y, rt->view_count);
-
 	Config *config = Config::get_singleton();
 
 	rt->color_internal_format = rt->is_transparent ? GL_RGBA8 : GL_RGB10_A2;

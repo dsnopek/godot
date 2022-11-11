@@ -1795,8 +1795,6 @@ void TextureStorage::render_target_set_override(RID p_render_target, RID p_color
 		return;
 	}
 
-	//printf("color texture: %llu - depth texture: %llu\n", p_color_texture.get_id(), p_depth_texture.get_id());
-
 	if (p_color_texture.is_null() && p_depth_texture.is_null()) {
 		_clear_render_target(rt);
 		rt->overridden.is_overridden = false;

@@ -82,17 +82,22 @@ const GodotWebXR = {
 			if (GodotWebXR.layer) {
 				return GodotWebXR.layer;
 			}
-			if (!GodotWebXR.session || !GodotWebXR.pose || !GodotWebXR.gl_binding) {
+			//if (!GodotWebXR.session || !GodotWebXR.pose || !GodotWebXR.gl_binding) {
+			if (!GodotWebXR.session || !GodotWebXR.gl_binding) {
 				return null;
 			}
 
+
 			const gl = GodotWebXR.gl;
 			const layer = GodotWebXR.gl_binding.createProjectionLayer({
-				textureType: GodotWebXR.pose.views.length > 1 ? "texture-array" : "texture",
+				//textureType: GodotWebXR.pose.views.length > 1 ? "texture-array" : "texture",
+				textureType: "texture-array",
 				colorFormat: gl.RGBA8,
 				depthFormat: gl.DEPTH_COMPONENT24
 			});
 			GodotWebXR.session.updateRenderState({ layers: [layer] });
+
+			console.log("Creating layer: ", layer);
 
 			GodotWebXR.layer = layer;
 			return layer;
@@ -107,7 +112,7 @@ const GodotWebXR = {
 			// Because we always use "texture-array" for multiview and "texture"
 			// when there is only 1 view, it should be safe to only grab the
 			// subimage for the first view.
-			return GodotWebXR.gl_binding.getViewSubImage(GodotWebXR.layer, GodotWebXR.pose.views[0]);
+			return GodotWebXR.gl_binding.getViewSubImage(layer, GodotWebXR.pose.views[0]);
 		},
 
 		getTextureId: (texture) => {
@@ -247,11 +252,16 @@ const GodotWebXR = {
 			gl.makeXRCompatible().then(function () {
 				GodotWebXR.gl_binding = new XRWebGLBinding(session, gl);
 
+				const layer = GodotWebXR.getLayer();
+				console.log(layer);
+
 				// Temporarily setup baseLayer until we know how many views
 				// we're going to get (and whether to use multiview or not).
+				/*
 				session.updateRenderState({
 					baseLayer: new XRWebGLLayer(session, gl),
 				});
+				*/
 
 				function onReferenceSpaceSuccess(reference_space, reference_space_type) {
 					GodotWebXR.space = reference_space;
@@ -350,6 +360,7 @@ const GodotWebXR = {
 		}
 
 		const buf = GodotRuntime.malloc(2 * 4);
+		//GodotRuntime.setHeapValue(buf + 0, Math.floor(layer.textureWidth / 2.0), 'i32');
 		GodotRuntime.setHeapValue(buf + 0, layer.textureWidth, 'i32');
 		GodotRuntime.setHeapValue(buf + 4, layer.textureHeight, 'i32');
 		return buf;

@@ -1478,7 +1478,7 @@ void TextureStorage::_update_render_target(RenderTarget *rt) {
 		return;
 	}
 
-	//printf("Creating render target: %dx%d - view_count: %d\n", rt->size.x, rt->size.y, rt->view_count);
+	printf("Creating render target: %dx%d - view_count: %d\n", rt->size.x, rt->size.y, rt->view_count);
 
 	Config *config = Config::get_singleton();
 
@@ -1572,6 +1572,7 @@ void TextureStorage::_update_render_target(RenderTarget *rt) {
 				texture->tex_id = 0;
 				texture->active = false;
 			}
+			printf("Render target has incomplete buffer\n");
 			WARN_PRINT("Could not create render target, status: " + get_framebuffer_error(status));
 			return;
 		}
@@ -1602,6 +1603,7 @@ void TextureStorage::_update_render_target(RenderTarget *rt) {
 	}
 
 	glClearColor(0, 0, 0, 0);
+	printf("About to clear new render target after creation\n");
 	glClear(GL_COLOR_BUFFER_BIT);
 	glBindFramebuffer(GL_FRAMEBUFFER, system_fbo);
 }
@@ -1790,6 +1792,18 @@ void TextureStorage::render_target_set_override(RID p_render_target, RID p_color
 
 	rt->overridden.velocity = p_velocity_texture;
 
+	_clear_render_target(rt);
+
+	rt->overridden.color = p_color_texture;
+	rt->overridden.depth = p_depth_texture;
+	if (p_color_texture.is_valid() || p_depth_texture.is_valid()) {
+		rt->overridden.is_overridden = true;
+	}
+
+	_update_render_target(rt);
+
+/*
+
 	if (rt->overridden.color == p_color_texture && rt->overridden.depth == p_depth_texture) {
 		return;
 	}
@@ -1837,6 +1851,7 @@ void TextureStorage::render_target_set_override(RID p_render_target, RID p_color
 		new_entry.allocated_textures.push_back(rt->depth);
 	}
 	rt->overridden.fbo_cache.insert(hash_key, new_entry);
+	*/
 }
 
 RID TextureStorage::render_target_get_override_color(RID p_render_target) const {

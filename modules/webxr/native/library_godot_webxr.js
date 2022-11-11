@@ -207,10 +207,10 @@ const GodotWebXR = {
 		const oninputevent = GodotRuntime.get_func(p_on_input_event);
 		const onsimpleevent = GodotRuntime.get_func(p_on_simple_event);
 
-		required_features.unshift("layers");
-		const session_init = {
-			requiredFeatures: required_features
-		};
+		const session_init = {};
+		if (required_features.length > 0) {
+			session_init['requiredFeatures'] = required_features;
+		}
 		if (optional_features.length > 0) {
 			session_init['optionalFeatures'] = optional_features;
 		}

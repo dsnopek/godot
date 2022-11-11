@@ -304,20 +304,16 @@ void WebXRInterfaceJS::uninitialize() {
 
 		GLES3::TextureStorage *texture_storage = dynamic_cast<GLES3::TextureStorage *>(RSG::texture_storage);
 		if (texture_storage != nullptr) {
-			if (last_color_texture.is_valid()) {
-				texture_storage->texture_free(last_color_texture);
-				last_color_texture = RID();
-			}
-			if (last_depth_texture.is_valid()) {
-				texture_storage->texture_free(last_depth_texture);
-				last_depth_texture = RID();
-			}
-			if (last_velocity_texture.is_valid()) {
-				texture_storage->texture_free(last_velocity_texture);
-				last_velocity_texture = RID();
+			for (KeyValue<unsigned int, RID> &E : texture_cache) {
+				// Forcibly mark as not part of a render target so we can free it.
+				GLES3::Texture *texture = texture_storage->get_texture(E.value);
+				texture->is_render_target = false;
+
+				texture_storage->texture_free(E.value);
 			}
 		}
 
+		texture_cache.clear();
 		reference_space_type = "";
 		initialized = false;
 	};
@@ -431,6 +427,42 @@ Projection WebXRInterfaceJS::get_projection_for_view(uint32_t p_view, double p_a
 	return eye;
 }
 
+bool WebXRInterfaceJS::pre_draw_viewport(RID p_render_target) {
+	GLES3::TextureStorage *texture_storage = dynamic_cast<GLES3::TextureStorage *>(RSG::texture_storage);
+	if (texture_storage == nullptr) {
+		return false;
+	}
+
+	GLES3::RenderTarget *rt = texture_storage->get_render_target(p_render_target);
+	if (rt == nullptr) {
+		return false;
+	}
+
+	RID color_texture = get_color_texture();
+	RID depth_texture = get_depth_texture();
+
+	// If the texture resources don't change, we need to re-attach the color and
+	// depth textures every frame. WebXR is doing something tricky where the
+	// 'texture' object is the same, but it changes internally to move to the
+	// next buffer in the swap chain.
+	if (rt->overridden.is_overridden && rt->overridden.color == color_texture && rt->overridden.depth == depth_texture) {
+		GLES3::Config *config = GLES3::Config::get_singleton();
+		bool use_multiview = rt->view_count > 1 && config->multiview_supported;
+
+		glBindFramebuffer(GL_FRAMEBUFFER, rt->fbo);
+		if (use_multiview) {
+			glFramebufferTextureMultiviewOVR(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rt->color, 0, 0, rt->view_count);
+			glFramebufferTextureMultiviewOVR(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, rt->depth, 0, 0, rt->view_count);
+		} else {
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rt->color, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, rt->depth, 0);
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, texture_storage->system_fbo);
+	}
+
+	return true;
+}
+
 Vector<BlitToScreen> WebXRInterfaceJS::post_draw_viewport(RID p_render_target, const Rect2 &p_screen_rect) {
 	Vector<BlitToScreen> blit_to_screen;
 
@@ -439,7 +471,17 @@ Vector<BlitToScreen> WebXRInterfaceJS::post_draw_viewport(RID p_render_target, c
 	return blit_to_screen;
 };
 
-RID WebXRInterfaceJS::_create_texture(GLES3::TextureStorage *texture_storage, unsigned int p_texture_id) {
+RID WebXRInterfaceJS::_get_texture(unsigned int p_texture_id) {
+	RBMap<unsigned int, RID>::Element *cache = texture_cache.find(p_texture_id);
+	if (cache != nullptr) {
+		return cache->get();
+	}
+
+	GLES3::TextureStorage *texture_storage = dynamic_cast<GLES3::TextureStorage *>(RSG::texture_storage);
+	if (texture_storage == nullptr) {
+		return RID();
+	}
+
 	uint32_t view_count = get_view_count();
 	Size2 texture_size = get_render_target_size();
 
@@ -452,67 +494,36 @@ RID WebXRInterfaceJS::_create_texture(GLES3::TextureStorage *texture_storage, un
 			1,
 			view_count);
 
+	texture_cache.insert(p_texture_id, texture);
+
 	return texture;
 }
 
 RID WebXRInterfaceJS::get_color_texture() {
-	GLES3::TextureStorage *texture_storage = dynamic_cast<GLES3::TextureStorage *>(RSG::texture_storage);
-	if (texture_storage == nullptr) {
+	unsigned int texture_id = godot_webxr_get_color_texture();
+	if (texture_id == 0) {
 		return RID();
 	}
 
-	if (last_color_texture.is_valid()) {
-		texture_storage->texture_free(last_color_texture);
-	}
-
-	unsigned int texture_id = godot_webxr_get_color_texture();
-	if (texture_id == 0) {
-		last_color_texture = RID();
-	} else {
-		last_color_texture = _create_texture(texture_storage, texture_id);
-	}
-
-	return last_color_texture;
+	return _get_texture(texture_id);
 }
 
 RID WebXRInterfaceJS::get_depth_texture() {
-	GLES3::TextureStorage *texture_storage = dynamic_cast<GLES3::TextureStorage *>(RSG::texture_storage);
-	if (texture_storage == nullptr) {
+	unsigned int texture_id = godot_webxr_get_depth_texture();
+	if (texture_id == 0) {
 		return RID();
 	}
 
-	if (last_depth_texture.is_valid()) {
-		texture_storage->texture_free(last_depth_texture);
-	}
-
-	unsigned int texture_id = godot_webxr_get_depth_texture();
-	if (texture_id == 0) {
-		last_depth_texture = RID();
-	} else {
-		last_depth_texture = _create_texture(texture_storage, texture_id);
-	}
-
-	return last_depth_texture;
+	return _get_texture(texture_id);
 }
 
 RID WebXRInterfaceJS::get_velocity_texture() {
-	GLES3::TextureStorage *texture_storage = dynamic_cast<GLES3::TextureStorage *>(RSG::texture_storage);
-	if (texture_storage == nullptr) {
+	unsigned int texture_id = godot_webxr_get_velocity_texture();
+	if (texture_id == 0) {
 		return RID();
 	}
 
-	if (last_velocity_texture.is_valid()) {
-		texture_storage->texture_free(last_velocity_texture);
-	}
-
-	unsigned int texture_id = godot_webxr_get_depth_texture();
-	if (texture_id == 0) {
-		last_velocity_texture = RID();
-	} else {
-		last_velocity_texture = _create_texture(texture_storage, texture_id);
-	}
-
-	return last_velocity_texture;
+	return _get_texture(texture_id);
 }
 
 void WebXRInterfaceJS::process() {

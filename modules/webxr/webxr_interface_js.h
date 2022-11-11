@@ -58,16 +58,14 @@ private:
 	String reference_space_type;
 
 	Size2 render_targetsize;
-	RID last_color_texture;
-	RID last_depth_texture;
-	RID last_velocity_texture;
+	RBMap<unsigned int, RID> texture_cache;
 
 	// TODO maybe turn into a vector to support more then 2 controllers...
 	bool controllers_state[2];
 	Ref<XRPositionalTracker> controllers[2];
 	bool touching[5];
 
-	RID _create_texture(GLES3::TextureStorage *texture_storage, unsigned int p_texture_id);
+	RID _get_texture(unsigned int p_texture_id);
 	Transform3D _js_matrix_to_transform(float *p_js_matrix);
 	void _update_tracker(int p_controller_id);
 
@@ -104,6 +102,7 @@ public:
 	virtual Transform3D get_camera_transform() override;
 	virtual Transform3D get_transform_for_view(uint32_t p_view, const Transform3D &p_cam_transform) override;
 	virtual Projection get_projection_for_view(uint32_t p_view, double p_aspect, double p_z_near, double p_z_far) override;
+	virtual bool pre_draw_viewport(RID p_render_target) override;
 	virtual Vector<BlitToScreen> post_draw_viewport(RID p_render_target, const Rect2 &p_screen_rect) override;
 	virtual RID get_color_texture() override;
 	virtual RID get_depth_texture() override;

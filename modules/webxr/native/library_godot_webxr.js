@@ -354,15 +354,14 @@ const GodotWebXR = {
 	godot_webxr_get_render_target_size__proxy: 'sync',
 	godot_webxr_get_render_target_size__sig: 'i',
 	godot_webxr_get_render_target_size: function () {
-		const layer = GodotWebXR.getLayer();
-		if (layer === null) {
+		const subimage = GodotWebXR.getSubImage();
+		if (subimage === null) {
 			return 0;
 		}
 
 		const buf = GodotRuntime.malloc(2 * 4);
-		//GodotRuntime.setHeapValue(buf + 0, Math.floor(layer.textureWidth / 2.0), 'i32');
-		GodotRuntime.setHeapValue(buf + 0, layer.textureWidth, 'i32');
-		GodotRuntime.setHeapValue(buf + 4, layer.textureHeight, 'i32');
+		GodotRuntime.setHeapValue(buf + 0, subimage.viewport.width, 'i32');
+		GodotRuntime.setHeapValue(buf + 4, subimage.viewport.height, 'i32');
 		return buf;
 	},
 

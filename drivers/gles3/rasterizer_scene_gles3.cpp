@@ -1882,12 +1882,10 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 
 	if (!fb_cleared) {
 		glClearDepth(1.0f);
-		// DRS
 		glClear(GL_DEPTH_BUFFER_BIT);
 	}
 
 	if (!keep_color) {
-		// DRS
 		glClearBufferfv(GL_COLOR, 0, clear_color.components);
 	}
 	RENDER_TIMESTAMP("Render Opaque Pass");
@@ -2244,7 +2242,6 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 		} else {
 			// Using regular Mesh.
 			if (use_index_buffer) {
-				// DRS
 				glDrawElements(primitive_gl, mesh_storage->mesh_surface_get_vertices_drawn_count(mesh_surface), mesh_storage->mesh_surface_get_index_type(mesh_surface), 0);
 			} else {
 				glDrawArrays(primitive_gl, 0, mesh_storage->mesh_surface_get_vertices_drawn_count(mesh_surface));

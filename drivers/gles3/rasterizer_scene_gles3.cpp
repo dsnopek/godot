@@ -1826,7 +1826,6 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 		}
 	}
 
-	printf("rt->fbo = %d\n", rt->fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, rt->fbo);
 	glViewport(0, 0, rb->width, rb->height);
 

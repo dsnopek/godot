@@ -348,6 +348,7 @@ struct RenderTarget {
 			Vector<GLuint> allocated_textures;
 		};
 		RBMap<uint32_t, FBOCacheEntry> fbo_cache;
+		bool fbo_cache_enabled = true;
 	} overridden;
 
 	RID texture;

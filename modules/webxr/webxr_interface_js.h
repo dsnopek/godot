@@ -39,6 +39,10 @@
 	The WebXR interface is a VR/AR interface that can be used on the web.
 */
 
+namespace GLES3 {
+class TextureStorage;
+}
+
 class WebXRInterfaceJS : public WebXRInterface {
 	GDCLASS(WebXRInterfaceJS, WebXRInterface);
 
@@ -54,14 +58,16 @@ private:
 	String reference_space_type;
 
 	Size2 render_targetsize;
-	RBMap<unsigned int, RID> texture_cache;
+	RID last_color_texture;
+	RID last_depth_texture;
+	RID last_velocity_texture;
 
 	// TODO maybe turn into a vector to support more then 2 controllers...
 	bool controllers_state[2];
 	Ref<XRPositionalTracker> controllers[2];
 	bool touching[5];
 
-	RID _get_texture(unsigned int p_texture_id);
+	RID _create_texture(GLES3::TextureStorage *texture_storage, unsigned int p_texture_id);
 	Transform3D _js_matrix_to_transform(float *p_js_matrix);
 	void _update_tracker(int p_controller_id);
 

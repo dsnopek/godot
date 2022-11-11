@@ -1572,7 +1572,6 @@ void TextureStorage::_update_render_target(RenderTarget *rt) {
 				texture->tex_id = 0;
 				texture->active = false;
 			}
-			printf("Render target has incomplete buffer\n");
 			WARN_PRINT("Could not create render target, status: " + get_framebuffer_error(status));
 			return;
 		}
@@ -1603,7 +1602,6 @@ void TextureStorage::_update_render_target(RenderTarget *rt) {
 	}
 
 	glClearColor(0, 0, 0, 0);
-	printf("About to clear new render target after creation\n");
 	glClear(GL_COLOR_BUFFER_BIT);
 	glBindFramebuffer(GL_FRAMEBUFFER, system_fbo);
 }
@@ -1711,6 +1709,7 @@ void TextureStorage::_clear_render_target_overridden_fbo_cache(RenderTarget *rt)
 		glDeleteFramebuffers(1, &E.value.fbo);
 	}
 	rt->overridden.fbo_cache.clear();
+	rt->overridden.fbo_cache_enabled = true;
 }
 
 RID TextureStorage::render_target_create() {
@@ -1792,21 +1791,11 @@ void TextureStorage::render_target_set_override(RID p_render_target, RID p_color
 
 	rt->overridden.velocity = p_velocity_texture;
 
-	_clear_render_target(rt);
-
-	rt->overridden.color = p_color_texture;
-	rt->overridden.depth = p_depth_texture;
-	if (p_color_texture.is_valid() || p_depth_texture.is_valid()) {
-		rt->overridden.is_overridden = true;
-	}
-
-	_update_render_target(rt);
-
-/*
-
 	if (rt->overridden.color == p_color_texture && rt->overridden.depth == p_depth_texture) {
 		return;
 	}
+
+	//printf("color texture: %llu - depth texture: %llu\n", p_color_texture.get_id(), p_depth_texture.get_id());
 
 	if (p_color_texture.is_null() && p_depth_texture.is_null()) {
 		_clear_render_target(rt);
@@ -1818,7 +1807,57 @@ void TextureStorage::render_target_set_override(RID p_render_target, RID p_color
 		return;
 	}
 
+	if (!rt->overridden.fbo_cache_enabled) {
+		if (rt->overridden.color.is_valid() == p_color_texture.is_valid() && rt->overridden.depth.is_valid() == p_depth_texture.is_valid()) {
+			// If the FBO cache is disabled, and we're changing textures that
+			// were already overriden, rather than destroying and creating a new
+			// FBO (which could happen every frame), we change the attachements
+			// in place.
+
+			Config *config = Config::get_singleton();
+			bool use_multiview = rt->view_count > 1 && config->multiview_supported;
+
+			glBindFramebuffer(GL_FRAMEBUFFER, rt->fbo);
+			if (p_color_texture.is_valid()) {
+				Texture *texture = get_texture(p_color_texture);
+				if (texture != nullptr) {
+					rt->color = texture->tex_id;
+					rt->size = Size2i(texture->width, texture->height);
+					rt->texture = p_color_texture;
+					if (use_multiview) {
+						glFramebufferTextureMultiviewOVR(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rt->color, 0, 0, rt->view_count);
+					} else {
+						glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rt->color, 0);
+					}
+				}
+			}
+			if (p_depth_texture.is_valid()) {
+				Texture *texture = get_texture(p_depth_texture);
+				if (texture != nullptr) {
+					rt->depth = texture->tex_id;
+					if (p_color_texture.is_null()) {
+						rt->size = Size2i(texture->width, texture->height);
+					}
+					if (use_multiview) {
+						glFramebufferTextureMultiviewOVR(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, rt->depth, 0, 0, rt->view_count);
+					} else {
+						glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, rt->depth, 0);
+					}
+				}
+			}
+
+			rt->overridden.color = p_color_texture;
+			rt->overridden.depth = p_depth_texture;
+			return;
+		} else {
+			// Otherwise, we have to clear and recreate it.
+			_clear_render_target(rt);
+		}
+	}
+
 	if (!rt->overridden.is_overridden) {
+		// If we're switching from not overridden to overridden, then we need to
+		// clear out the old resources.
 		_clear_render_target(rt);
 	}
 
@@ -1826,32 +1865,45 @@ void TextureStorage::render_target_set_override(RID p_render_target, RID p_color
 	rt->overridden.depth = p_depth_texture;
 	rt->overridden.is_overridden = true;
 
-	uint32_t hash_key = hash_murmur3_one_64(p_color_texture.get_id());
-	hash_key = hash_murmur3_one_64(p_depth_texture.get_id(), hash_key);
-	hash_key = hash_fmix32(hash_key);
+	uint32_t hash_key;
+	if (rt->overridden.fbo_cache_enabled) {
+		hash_key = hash_murmur3_one_64(p_color_texture.get_id());
+		hash_key = hash_murmur3_one_64(p_depth_texture.get_id(), hash_key);
+		hash_key = hash_fmix32(hash_key);
 
-	RBMap<uint32_t, RenderTarget::RTOverridden::FBOCacheEntry>::Element *cache;
-	if ((cache = rt->overridden.fbo_cache.find(hash_key)) != nullptr) {
-		rt->fbo = cache->get().fbo;
-		rt->size = cache->get().size;
-		rt->texture = p_color_texture;
-		return;
+		RBMap<uint32_t, RenderTarget::RTOverridden::FBOCacheEntry>::Element *cache;
+		if ((cache = rt->overridden.fbo_cache.find(hash_key)) != nullptr) {
+			rt->fbo = cache->get().fbo;
+			rt->size = cache->get().size;
+			rt->texture = p_color_texture;
+			return;
+		}
 	}
 
 	_update_render_target(rt);
 
-	RenderTarget::RTOverridden::FBOCacheEntry new_entry;
-	new_entry.fbo = rt->fbo;
-	new_entry.size = rt->size;
-	// Keep track of any textures we had to allocate because they weren't overridden.
-	if (p_color_texture.is_null()) {
-		new_entry.allocated_textures.push_back(rt->color);
+	if (rt->overridden.fbo_cache_enabled) {
+		// The FBO cache exists because we are frequently setting overriden
+		// textures from a swap chain. However, we don't want the cache to grow
+		// forever! A swap chain wouldn't usually have 5 or more buffers, so
+		// we disable caching for this render target.
+		if (rt->overridden.fbo_cache.size() >= 5) {
+			_clear_render_target_overridden_fbo_cache(rt);
+			rt->overridden.fbo_cache_enabled = false;
+		} else {
+			RenderTarget::RTOverridden::FBOCacheEntry new_entry;
+			new_entry.fbo = rt->fbo;
+			new_entry.size = rt->size;
+			// Keep track of any textures we had to allocate because they weren't overridden.
+			if (p_color_texture.is_null()) {
+				new_entry.allocated_textures.push_back(rt->color);
+			}
+			if (p_depth_texture.is_null()) {
+				new_entry.allocated_textures.push_back(rt->depth);
+			}
+			rt->overridden.fbo_cache.insert(hash_key, new_entry);
+		}
 	}
-	if (p_depth_texture.is_null()) {
-		new_entry.allocated_textures.push_back(rt->depth);
-	}
-	rt->overridden.fbo_cache.insert(hash_key, new_entry);
-	*/
 }
 
 RID TextureStorage::render_target_get_override_color(RID p_render_target) const {

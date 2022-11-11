@@ -333,10 +333,9 @@ Size2 WebXRInterfaceJS::get_render_target_size() {
 
 	int *js_size = godot_webxr_get_render_target_size();
 	if (!initialized || js_size == nullptr) {
-		// As a temporary default (until WebXR is fully initialized), use half the window size.
-		Size2 temp = DisplayServer::get_singleton()->window_get_size();
-		temp.width /= 2.0;
-		return temp;
+		// As a temporary default (until WebXR is fully initialized), use the
+		// window size.
+		return DisplayServer::get_singleton()->window_get_size();
 	}
 
 	render_targetsize.width = js_size[0];
@@ -419,21 +418,65 @@ Projection WebXRInterfaceJS::get_projection_for_view(uint32_t p_view, double p_a
 Vector<BlitToScreen> WebXRInterfaceJS::post_draw_viewport(RID p_render_target, const Rect2 &p_screen_rect) {
 	Vector<BlitToScreen> blit_to_screen;
 
-	if (!initialized) {
-		return blit_to_screen;
-	}
-
-	GLES3::TextureStorage *texture_storage = dynamic_cast<GLES3::TextureStorage *>(RSG::texture_storage);
-	if (!texture_storage) {
-		return blit_to_screen;
-	}
-
-	GLES3::RenderTarget *rt = texture_storage->get_render_target(p_render_target);
-
-	godot_webxr_commit(rt->color);
+	// We don't need to do anything here.
 
 	return blit_to_screen;
 };
+
+RID WebXRInterfaceJS::_get_texture(unsigned int p_texture_id) {
+	RBMap<unsigned int, RID>::Element *cache = texture_cache.find(p_texture_id);
+	if (cache != nullptr) {
+		return cache->get();
+	}
+
+	GLES3::TextureStorage *texture_storage = dynamic_cast<GLES3::TextureStorage *>(RSG::texture_storage);
+	if (texture_storage == nullptr) {
+		return RID();
+	}
+
+	uint32_t view_count = get_view_count();
+	Size2 texture_size = get_render_target_size();
+
+	RID texture = texture_storage->texture_create_external(
+			view_count == 1 ? GLES3::Texture::TYPE_2D : GLES3::Texture::TYPE_LAYERED,
+			Image::FORMAT_RGBA8,
+			p_texture_id,
+			(int)texture_size.width,
+			(int)texture_size.height,
+			1,
+			view_count);
+
+	texture_cache.insert(p_texture_id, texture);
+
+	return texture;
+}
+
+RID WebXRInterfaceJS::get_color_texture() {
+	unsigned int texture_id = godot_webxr_get_color_texture();
+	if (texture_id == 0) {
+		return RID();
+	}
+
+	return _get_texture(texture_id);
+}
+
+RID WebXRInterfaceJS::get_depth_texture() {
+	unsigned int texture_id = godot_webxr_get_depth_texture();
+	if (texture_id == 0) {
+		return RID();
+	}
+
+	return _get_texture(texture_id);
+}
+
+RID WebXRInterfaceJS::get_velocity_texture() {
+	unsigned int texture_id = godot_webxr_get_velocity_texture();
+	if (texture_id == 0) {
+		return RID();
+	}
+
+	return _get_texture(texture_id);
+}
 
 void WebXRInterfaceJS::process() {
 	if (initialized) {

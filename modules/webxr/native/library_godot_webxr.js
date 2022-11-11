@@ -33,6 +33,8 @@ const GodotWebXR = {
 		gl: null,
 
 		session: null,
+		gl_binding: null,
+		layer: null,
 		space: null,
 		frame: null,
 		pose: null,
@@ -74,6 +76,53 @@ const GodotWebXR = {
 				runtimeKeepalivePop(); // eslint-disable-line no-undef
 				Browser.mainLoop.resume();
 			}, 0);
+		},
+
+		getLayer: () => {
+			if (GodotWebXR.layer) {
+				return GodotWebXR.layer;
+			}
+			if (!GodotWebXR.session || !GodotWebXR.pose || !GodotWebXR.gl_binding) {
+				return null;
+			}
+
+			const gl = GodotWebXR.gl;
+			const layer = GodotWebXR.gl_binding.createProjectionLayer({
+				textureType: GodotWebXR.pose.views.length > 1 ? "texture-array" : "texture",
+				colorFormat: gl.RGBA8,
+				depthFormat: gl.DEPTH_COMPONENT24
+			});
+			GodotWebXR.session.updateRenderState({ layers: [layer] });
+
+			GodotWebXR.layer = layer;
+			return layer;
+		},
+
+		getSubImage: () => {
+			const layer = GodotWebXR.getLayer();
+			if (layer === null) {
+				return null;
+			}
+
+			// Because we always use "texture-array" for multiview and "texture"
+			// when there is only 1 view, it should be safe to only grab the
+			// subimage for the first view.
+			return GodotWebXR.gl_binding.getViewSubImage(GodotWebXR.layer, GodotWebXR.pose.views[0]);
+		},
+
+		getTextureId: (texture) => {
+			if (typeof texture.name !== 'undefined') {
+				return texture.name;
+			}
+
+			const id = GL.getNewId(GL.textures);
+			texture.name = id;
+			GL.textures[id] = texture;
+
+			// @todo remove!
+			console.log("Generating ID for texture: ", id);
+
+			return id;
 		},
 
 		// Holds the controllers list between function calls.
@@ -147,10 +196,10 @@ const GodotWebXR = {
 		const oninputevent = GodotRuntime.get_func(p_on_input_event);
 		const onsimpleevent = GodotRuntime.get_func(p_on_simple_event);
 
-		const session_init = {};
-		if (required_features.length > 0) {
-			session_init['requiredFeatures'] = required_features;
-		}
+		required_features.unshift("layers");
+		const session_init = {
+			requiredFeatures: required_features
+		};
 		if (optional_features.length > 0) {
 			session_init['optionalFeatures'] = optional_features;
 		}
@@ -196,6 +245,10 @@ const GodotWebXR = {
 			GodotWebXR.gl = gl;
 
 			gl.makeXRCompatible().then(function () {
+				GodotWebXR.gl_binding = new XRWebGLBinding(session, gl);
+
+				// Temporarily setup baseLayer until we know how many views
+				// we're going to get (and whether to use multiview or not).
 				session.updateRenderState({
 					baseLayer: new XRWebGLLayer(session, gl),
 				});
@@ -267,6 +320,8 @@ const GodotWebXR = {
 		}
 
 		GodotWebXR.session = null;
+		GodotWebXR.gl_binding = null;
+		GodotWebXR.layer = null;
 		GodotWebXR.space = null;
 		GodotWebXR.frame = null;
 		GodotWebXR.pose = null;
@@ -289,17 +344,14 @@ const GodotWebXR = {
 	godot_webxr_get_render_target_size__proxy: 'sync',
 	godot_webxr_get_render_target_size__sig: 'i',
 	godot_webxr_get_render_target_size: function () {
-		if (!GodotWebXR.session || !GodotWebXR.pose) {
+		const layer = GodotWebXR.getLayer();
+		if (layer === null) {
 			return 0;
 		}
 
-		const glLayer = GodotWebXR.session.renderState.baseLayer;
-		const view = GodotWebXR.pose.views[0];
-		const viewport = glLayer.getViewport(view);
-
 		const buf = GodotRuntime.malloc(2 * 4);
-		GodotRuntime.setHeapValue(buf + 0, viewport.width, 'i32');
-		GodotRuntime.setHeapValue(buf + 4, viewport.height, 'i32');
+		GodotRuntime.setHeapValue(buf + 0, layer.textureWidth, 'i32');
+		GodotRuntime.setHeapValue(buf + 4, layer.textureHeight, 'i32');
 		return buf;
 	},
 
@@ -340,59 +392,40 @@ const GodotWebXR = {
 		return buf;
 	},
 
-	godot_webxr_commit__proxy: 'sync',
-	godot_webxr_commit__sig: 'vi',
-	godot_webxr_commit: function (p_texture) {
-		if (!GodotWebXR.session || !GodotWebXR.pose) {
-			return;
+	godot_webxr_get_color_texture__proxy: 'sync',
+	godot_webxr_get_color_texture__sig: 'i',
+	godot_webxr_get_color_texture: function () {
+		const subimage = GodotWebXR.getSubImage();
+		if (subimage === null) {
+			return 0;
 		}
+		return GodotWebXR.getTextureId(subimage.colorTexture);
+	},
 
-		const glLayer = GodotWebXR.session.renderState.baseLayer;
-		const views = GodotWebXR.pose.views;
-		const gl = GodotWebXR.gl;
-
-		const texture = GL.textures[p_texture];
-		console.log("p_texture = ", p_texture);
-		console.log("texture = ", texture);
-		console.log("glLayer.framebuffer = ", glLayer.framebuffer);
-
-		const orig_framebuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING);
-		const orig_read_framebuffer = gl.getParameter(gl.READ_FRAMEBUFFER_BINDING);
-		const orig_read_buffer = gl.getParameter(gl.READ_BUFFER);
-		const orig_draw_framebuffer = gl.getParameter(gl.DRAW_FRAMEBUFFER_BINDING);
-
-		// Copy from Godot render target into framebuffer from WebXR.
-		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-		console.log("views.length = ", views.length);
-		for (let i = 0; i < views.length; i++) {
-			const viewport = glLayer.getViewport(views[i]);
-			console.log("viewport = ", viewport.x, ", ", viewport.y, ", ", viewport.width, ", ", viewport.height);
-
-			const read_fbo = gl.createFramebuffer();
-			gl.bindFramebuffer(gl.READ_FRAMEBUFFER, read_fbo);
-			if (views.length > 1) {
-				gl.framebufferTextureLayer(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, texture, 0, i);
-			} else {
-				gl.bindTexture(gl.TEXTURE_2D, texture);
-				gl.framebufferTexture2D(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-			}
-			gl.readBuffer(gl.COLOR_ATTACHMENT0);
-			gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, glLayer.framebuffer);
-
-			// Flip Y upside down on destination.
-			gl.blitFramebuffer(0, 0, viewport.width, viewport.height,
-				viewport.x, viewport.y + viewport.height, viewport.x + viewport.width, viewport.y,
-				gl.COLOR_BUFFER_BIT, gl.NEAREST);
-
-			gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
-			gl.deleteFramebuffer(read_fbo);
+	godot_webxr_get_depth_texture__proxy: 'sync',
+	godot_webxr_get_depth_texture__sig: 'i',
+	godot_webxr_get_depth_texture: function () {
+		const subimage = GodotWebXR.getSubImage();
+		if (subimage === null) {
+			return 0;
 		}
+		if (subimage.depthStencilTexture === null) {
+			return 0;
+		}
+		return GodotWebXR.getTextureId(subimage.depthStencilTexture);
+	},
 
-		// Restore state.
-		gl.bindFramebuffer(gl.FRAMEBUFFER, orig_framebuffer);
-		gl.bindFramebuffer(gl.READ_FRAMEBUFFER, orig_read_framebuffer);
-		gl.readBuffer(orig_read_buffer);
-		gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, orig_draw_framebuffer);
+	godot_webxr_get_velocity_texture__proxy: 'sync',
+	godot_webxr_get_velocity_texture__sig: 'i',
+	godot_webxr_get_velocity_texture: function () {
+		const subimage = GodotWebXR.getSubImage();
+		if (subimage === null) {
+			return 0;
+		}
+		if (subimage.motionVectorTexture === null) {
+			return 0;
+		}
+		return GodotWebXR.getTextureId(subimage.motionVectorTexture);
 	},
 
 	godot_webxr_sample_controller_data__proxy: 'sync',

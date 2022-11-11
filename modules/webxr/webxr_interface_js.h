@@ -53,12 +53,15 @@ private:
 	String requested_reference_space_types;
 	String reference_space_type;
 
+	Size2 render_targetsize;
+	RBMap<unsigned int, RID> texture_cache;
+
 	// TODO maybe turn into a vector to support more then 2 controllers...
 	bool controllers_state[2];
 	Ref<XRPositionalTracker> controllers[2];
 	bool touching[5];
-	Size2 render_targetsize;
 
+	RID _get_texture(unsigned int p_texture_id);
 	Transform3D _js_matrix_to_transform(float *p_js_matrix);
 	void _update_tracker(int p_controller_id);
 
@@ -96,6 +99,9 @@ public:
 	virtual Transform3D get_transform_for_view(uint32_t p_view, const Transform3D &p_cam_transform) override;
 	virtual Projection get_projection_for_view(uint32_t p_view, double p_aspect, double p_z_near, double p_z_far) override;
 	virtual Vector<BlitToScreen> post_draw_viewport(RID p_render_target, const Rect2 &p_screen_rect) override;
+	virtual RID get_color_texture() override;
+	virtual RID get_depth_texture() override;
+	virtual RID get_velocity_texture() override;
 
 	virtual void process() override;
 

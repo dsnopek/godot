@@ -559,9 +559,9 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 	if (godot_webxr_is_controller_connected(p_controller_id)) {
 		if (tracker.is_null()) {
 			tracker.instantiate();
-			tracker->set_tracker_type(XRServer::TRACKER_CONTROLLER);
 			// Controller id's 0 and 1 are always the left and right hands.
 			if (p_controller_id < 2) {
+				tracker->set_tracker_type(XRServer::TRACKER_CONTROLLER);
 				tracker->set_tracker_name(p_controller_id == 0 ? "left_hand" : "right_hand");
 				tracker->set_tracker_desc(p_controller_id == 0 ? "Left hand controller" : "Right hand controller");
 				tracker->set_tracker_hand(p_controller_id == 0 ? XRPositionalTracker::TRACKER_HAND_LEFT : XRPositionalTracker::TRACKER_HAND_RIGHT);
@@ -607,6 +607,9 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 					Vector2 joy_vector = _get_joy_vector_from_axes(axes);
 					Vector2 previous_joy_vector(tracker->get_input("axis_0"), tracker->get_input("axis_1"));
 
+					printf("joy_vector = (%f, %f)\n", joy_vector.x, joy_vector.y);
+					printf("previous_joy_vector = (%f, %f)\n", previous_joy_vector.x, previous_joy_vector.y);
+
 					if (!joy_vector.is_equal_approx(previous_joy_vector)) {
 						Vector2 position = _get_screen_position_from_joy_vector(joy_vector);
 						Vector2 previous_position = _get_screen_position_from_joy_vector(previous_joy_vector);
@@ -649,6 +652,11 @@ void WebXRInterfaceJS::_on_controller_changed() {
 }
 
 void WebXRInterfaceJS::_on_input_event(int p_event_type, int p_input_source) {
+	XRServer *xr_server = XRServer::get_singleton();
+	ERR_FAIL_NULL(xr_server);
+
+	Input *input = Input::get_singleton();
+
 	if (p_event_type == WEBXR_INPUT_EVENT_SELECTSTART || p_event_type == WEBXR_INPUT_EVENT_SELECTEND) {
 		int target_ray_mode = godot_webxr_get_controller_target_ray_mode(p_input_source);
 		if (target_ray_mode == WebXRInterface::TARGET_RAY_MODE_SCREEN) {
@@ -661,9 +669,29 @@ void WebXRInterfaceJS::_on_input_event(int p_event_type, int p_input_source) {
 			if (axes) {
 				Vector2 joy_vector = _get_joy_vector_from_axes(axes);
 				Vector2 position = _get_screen_position_from_joy_vector(joy_vector);
-				free(axes);
 
-				Input *input = Input::get_singleton();
+				// TODO again just a temporary fix, split these between proper float and vector2 inputs
+				/*
+				Ref<XRPositionalTracker> tracker = controllers[p_input_source];
+				if (tracker.is_null()) {
+					tracker.instantiate();
+
+					char name[1024];
+					sprintf(name, "tracker_%i", p_input_source);
+					tracker->set_tracker_name(name);
+					tracker->set_tracker_desc(name);
+
+					xr_server->add_tracker(tracker);
+				}
+				for (int i = 0; i < axes[0]; i++) {
+					char name[1024];
+					sprintf(name, "axis_%i", i);
+
+					float value = *((float *)axes + (i + 1));
+					tracker->set_input(name, value);
+				}
+				*/
+				free(axes);
 
 				Ref<InputEventScreenTouch> event;
 				event.instantiate();
@@ -735,7 +763,7 @@ Vector2 WebXRInterfaceJS::_get_screen_position_from_joy_vector(const Vector2 &p_
 
 	// Invert the y-axis.
 	Vector2 position_percentage((p_joy_vector.x + 1.0f) / 2.0f, ((-p_joy_vector.y) + 1.0f) / 2.0f);
-	Vector2 position = viewport->get_size() * position_percentage;
+	Vector2 position = (Size2)viewport->get_size() * position_percentage;
 
 	return position;
 }

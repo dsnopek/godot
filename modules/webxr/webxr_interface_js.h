@@ -60,10 +60,11 @@ private:
 	Size2 render_targetsize;
 	RBMap<unsigned int, RID> texture_cache;
 
-	// TODO maybe turn into a vector to support more then 2 controllers...
-	bool controllers_state[2];
-	Ref<XRPositionalTracker> controllers[2];
-	bool touching[5];
+	struct Touch {
+		bool is_touching = false;
+		Vector2 previous_position;
+	};
+	Touch touches[5];
 
 	RID _get_texture(unsigned int p_texture_id);
 	Transform3D _js_matrix_to_transform(float *p_js_matrix);
@@ -85,7 +86,7 @@ public:
 	virtual String get_requested_reference_space_types() const override;
 	void _set_reference_space_type(String p_reference_space_type);
 	virtual String get_reference_space_type() const override;
-	virtual Ref<XRPositionalTracker> get_controller(int p_controller_id) const override;
+	//virtual Ref<XRPositionalTracker> get_controller(int p_controller_id) const override;
 	virtual TargetRayMode get_controller_target_ray_mode(int p_controller_id) const override;
 	virtual String get_visibility_state() const override;
 	virtual PackedVector3Array get_bounds_geometry() const override;

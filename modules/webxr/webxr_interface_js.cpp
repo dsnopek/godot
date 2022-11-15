@@ -166,6 +166,7 @@ String WebXRInterfaceJS::get_reference_space_type() const {
 	return reference_space_type;
 }
 
+/*
 Ref<XRPositionalTracker> WebXRInterfaceJS::get_controller(int p_controller_id) const {
 	XRServer *xr_server = XRServer::get_singleton();
 	ERR_FAIL_NULL_V(xr_server, Ref<XRPositionalTracker>());
@@ -177,6 +178,7 @@ Ref<XRPositionalTracker> WebXRInterfaceJS::get_controller(int p_controller_id) c
 
 	return Ref<XRPositionalTracker>();
 }
+*/
 
 WebXRInterface::TargetRayMode WebXRInterfaceJS::get_controller_target_ray_mode(int p_controller_id) const {
 	XRServer *xr_server = XRServer::get_singleton();
@@ -257,8 +259,7 @@ bool WebXRInterfaceJS::initialize() {
 		xr_server->set_primary_interface(this);
 
 		// Clear state variables.
-		memset(controllers_state, 0, sizeof controllers_state);
-		memset(touching, 0, sizeof touching);
+		memset(touches, 0, sizeof touches);
 
 		// Clear render_targetsize to make sure it gets reset to the new size.
 		// Clearing in uninitialize() doesn't work because a frame can still be
@@ -547,29 +548,68 @@ void WebXRInterfaceJS::process() {
 };
 
 void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
-	XRServer *xr_server = XRServer::get_singleton();
-	ERR_FAIL_NULL(xr_server);
+	WebXRInterface::TargetRayMode target_ray_mode = (WebXRInterface::TargetRayMode)godot_webxr_get_controller_target_ray_mode(p_controller_id);
 
-	// need to support more then two controllers...
-	if (p_controller_id < 0 || p_controller_id > 1) {
+	if (target_ray_mode == WebXRInterface::TARGET_RAY_MODE_SCREEN) {
+		int touch_index = _get_touch_index(p_controller_id);
+		if (touch_index < 5 && touches[touch_index].is_touching) {
+			int *axes = godot_webxr_get_controller_axes(p_controller_id);
+			if (axes) {
+				// @todo Combine these into a single function call?
+				Vector2 joy_vector = _get_joy_vector_from_axes(axes);
+				Vector2 position = _get_screen_position_from_joy_vector(joy_vector);
+				Vector2 delta = position - touches[touch_index].previous_position;
+
+				// If position has changed by at least 1 pixel, generate a drag event.
+				if (abs(delta.x) >= 1.0 || abs(delta.y) >= 1.0) {
+					Ref<InputEventScreenDrag> event;
+					event.instantiate();
+					event->set_index(touch_index);
+					event->set_position(position);
+					event->set_relative(delta);
+					Input::get_singleton()->parse_input_event(event);
+
+					touches[touch_index].previous_position = position;
+				}
+			}
+			free(axes);
+		}
 		return;
 	}
 
-	Ref<XRPositionalTracker> tracker = controllers[p_controller_id];
+	XRServer *xr_server = XRServer::get_singleton();
+	ERR_FAIL_NULL(xr_server);
+
+	StringName tracker_name;
+	switch (p_controller_id) {
+		case 0: {
+			tracker_name = SNAME("left_hand");
+		} break;
+
+		case 1: {
+			tracker_name = SNAME("right_hand");
+		} break;
+
+		default: {
+			char tmp[16];
+			sprintf(tmp, "tracker_%i", p_controller_id);
+			tracker_name = tmp;
+		}
+	}
+
+	Ref<XRPositionalTracker> tracker = xr_server->get_tracker(tracker_name);
 	if (godot_webxr_is_controller_connected(p_controller_id)) {
 		if (tracker.is_null()) {
 			tracker.instantiate();
 			// Controller id's 0 and 1 are always the left and right hands.
 			if (p_controller_id < 2) {
 				tracker->set_tracker_type(XRServer::TRACKER_CONTROLLER);
-				tracker->set_tracker_name(p_controller_id == 0 ? "left_hand" : "right_hand");
+				tracker->set_tracker_name(tracker_name);
 				tracker->set_tracker_desc(p_controller_id == 0 ? "Left hand controller" : "Right hand controller");
 				tracker->set_tracker_hand(p_controller_id == 0 ? XRPositionalTracker::TRACKER_HAND_LEFT : XRPositionalTracker::TRACKER_HAND_RIGHT);
 			} else {
-				char name[1024];
-				sprintf(name, "tracker_%i", p_controller_id);
-				tracker->set_tracker_name(name);
-				tracker->set_tracker_desc(name);
+				tracker->set_tracker_name(tracker_name);
+				tracker->set_tracker_desc(tracker_name);
 			}
 			xr_server->add_tracker(tracker);
 		}
@@ -600,30 +640,6 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 
 		int *axes = godot_webxr_get_controller_axes(p_controller_id);
 		if (axes) {
-			WebXRInterface::TargetRayMode target_ray_mode = (WebXRInterface::TargetRayMode)godot_webxr_get_controller_target_ray_mode(p_controller_id);
-			if (target_ray_mode == WebXRInterface::TARGET_RAY_MODE_SCREEN) {
-				int touch_index = _get_touch_index(p_controller_id);
-				if (touch_index < 5 && touching[touch_index]) {
-					Vector2 joy_vector = _get_joy_vector_from_axes(axes);
-					Vector2 previous_joy_vector(tracker->get_input("axis_0"), tracker->get_input("axis_1"));
-
-					printf("joy_vector = (%f, %f)\n", joy_vector.x, joy_vector.y);
-					printf("previous_joy_vector = (%f, %f)\n", previous_joy_vector.x, previous_joy_vector.y);
-
-					if (!joy_vector.is_equal_approx(previous_joy_vector)) {
-						Vector2 position = _get_screen_position_from_joy_vector(joy_vector);
-						Vector2 previous_position = _get_screen_position_from_joy_vector(previous_joy_vector);
-
-						Ref<InputEventScreenDrag> event;
-						event.instantiate();
-						event->set_index(touch_index);
-						event->set_position(position);
-						event->set_relative(position - previous_position);
-						Input::get_singleton()->parse_input_event(event);
-					}
-				}
-			}
-
 			// TODO again just a temporary fix, split these between proper float and vector2 inputs
 			for (int i = 0; i < axes[0]; i++) {
 				char name[1024];
@@ -636,12 +652,13 @@ void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
 		}
 	} else if (tracker.is_valid()) {
 		xr_server->remove_tracker(tracker);
-		controllers[p_controller_id].unref();
+		tracker.unref();
 	}
 }
 
 void WebXRInterfaceJS::_on_controller_changed() {
 	// Register "virtual" gamepads with Godot for the ones we get from WebXR.
+	/*
 	godot_webxr_sample_controller_data();
 	for (int i = 0; i < 2; i++) {
 		bool controller_connected = godot_webxr_is_controller_connected(i);
@@ -649,6 +666,7 @@ void WebXRInterfaceJS::_on_controller_changed() {
 			controllers_state[i] = controller_connected;
 		}
 	}
+	*/
 }
 
 void WebXRInterfaceJS::_on_input_event(int p_event_type, int p_input_source) {
@@ -662,47 +680,28 @@ void WebXRInterfaceJS::_on_input_event(int p_event_type, int p_input_source) {
 		if (target_ray_mode == WebXRInterface::TARGET_RAY_MODE_SCREEN) {
 			int touch_index = _get_touch_index(p_input_source);
 			if (touch_index < 5) {
-				touching[touch_index] = (p_event_type == WEBXR_INPUT_EVENT_SELECTSTART);
-			}
+				touches[touch_index].is_touching = (p_event_type == WEBXR_INPUT_EVENT_SELECTSTART);
 
-			int *axes = godot_webxr_get_controller_axes(p_input_source);
-			if (axes) {
-				Vector2 joy_vector = _get_joy_vector_from_axes(axes);
-				Vector2 position = _get_screen_position_from_joy_vector(joy_vector);
+				int *axes = godot_webxr_get_controller_axes(p_input_source);
+				if (axes) {
+					// @todo Combine these into a single function call?
+					Vector2 joy_vector = _get_joy_vector_from_axes(axes);
+					Vector2 position = _get_screen_position_from_joy_vector(joy_vector);
 
-				// TODO again just a temporary fix, split these between proper float and vector2 inputs
-				/*
-				Ref<XRPositionalTracker> tracker = controllers[p_input_source];
-				if (tracker.is_null()) {
-					tracker.instantiate();
+					Ref<InputEventScreenTouch> event;
+					event.instantiate();
+					event->set_index(touch_index);
+					event->set_position(position);
+					event->set_pressed(p_event_type == WEBXR_INPUT_EVENT_SELECTSTART);
+					input->parse_input_event(event);
 
-					char name[1024];
-					sprintf(name, "tracker_%i", p_input_source);
-					tracker->set_tracker_name(name);
-					tracker->set_tracker_desc(name);
-
-					xr_server->add_tracker(tracker);
+					touches[touch_index].previous_position = position;
 				}
-				for (int i = 0; i < axes[0]; i++) {
-					char name[1024];
-					sprintf(name, "axis_%i", i);
-
-					float value = *((float *)axes + (i + 1));
-					tracker->set_input(name, value);
-				}
-				*/
-				free(axes);
-
-				Ref<InputEventScreenTouch> event;
-				event.instantiate();
-				event->set_index(touch_index);
-				event->set_position(position);
-				event->set_pressed(p_event_type == WEBXR_INPUT_EVENT_SELECTSTART);
-				input->parse_input_event(event);
 			}
 		}
 	}
 
+	// @todo Don't use controller id for this! Use the tracker? Or, set input on the tracker?
 	int controller_id = p_input_source + 1;
 	switch (p_event_type) {
 		case WEBXR_INPUT_EVENT_SELECTSTART:

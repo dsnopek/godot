@@ -78,13 +78,17 @@ extern unsigned int godot_webxr_get_color_texture();
 extern unsigned int godot_webxr_get_depth_texture();
 extern unsigned int godot_webxr_get_velocity_texture();
 
-extern void godot_webxr_sample_controller_data();
-extern int godot_webxr_get_controller_count();
-extern int godot_webxr_is_controller_connected(int p_controller);
-extern float *godot_webxr_get_controller_transform(int p_controller);
-extern int *godot_webxr_get_controller_buttons(int p_controller);
-extern int *godot_webxr_get_controller_axes(int p_controller);
-extern int godot_webxr_get_controller_target_ray_mode(int p_controller);
+extern bool godot_webxr_update_input_source(
+		int p_input_source_id,
+		float *r_target_pose,
+		int *r_target_ray_mode,
+		int *r_has_grip_pose,
+		float *r_grip_pose,
+		int *r_has_standard_mapping,
+		int *r_button_count,
+		int *r_buttons,
+		int *r_axes_count,
+		int *r_axes);
 
 extern char *godot_webxr_get_visibility_state();
 extern int *godot_webxr_get_bounds_geometry();

@@ -59,16 +59,22 @@ private:
 
 	Size2 render_targetsize;
 	RBMap<unsigned int, RID> texture_cache;
-
 	struct Touch {
 		bool is_touching = false;
 		Vector2 previous_position;
-	};
-	Touch touches[5];
+	} touches[5];
+
+	static constexpr uint8_t input_source_count = 16;
+
+	struct InputSource {
+		Ref<XRPositionalTracker> tracker;
+		bool active = false;
+		TargetRayMode target_ray_mode;
+	} input_sources[input_source_count];
 
 	RID _get_texture(unsigned int p_texture_id);
 	Transform3D _js_matrix_to_transform(float *p_js_matrix);
-	void _update_tracker(int p_controller_id);
+	void _update_input_source(int p_input_source_id);
 
 	Vector2 _get_joy_vector_from_axes(int *p_axes);
 	int _get_touch_index(int p_input_source);
@@ -86,8 +92,9 @@ public:
 	virtual String get_requested_reference_space_types() const override;
 	void _set_reference_space_type(String p_reference_space_type);
 	virtual String get_reference_space_type() const override;
-	//virtual Ref<XRPositionalTracker> get_controller(int p_controller_id) const override;
-	virtual TargetRayMode get_controller_target_ray_mode(int p_controller_id) const override;
+	virtual bool is_input_source_active(int p_input_source_id) const override;
+	virtual Ref<XRPositionalTracker> get_input_source_tracker(int p_input_source_id) const override;
+	virtual TargetRayMode get_input_source_target_ray_mode(int p_input_source_id) const override;
 	virtual String get_visibility_state() const override;
 	virtual PackedVector3Array get_bounds_geometry() const override;
 

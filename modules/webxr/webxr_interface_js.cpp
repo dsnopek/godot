@@ -166,27 +166,22 @@ String WebXRInterfaceJS::get_reference_space_type() const {
 	return reference_space_type;
 }
 
-/*
-Ref<XRPositionalTracker> WebXRInterfaceJS::get_controller(int p_controller_id) const {
-	XRServer *xr_server = XRServer::get_singleton();
-	ERR_FAIL_NULL_V(xr_server, Ref<XRPositionalTracker>());
-
-	// TODO support more then two controllers
-	if (p_controller_id >= 0 && p_controller_id < 2) {
-		return controllers[p_controller_id];
-	};
-
-	return Ref<XRPositionalTracker>();
+bool WebXRInterfaceJS::is_input_source_active(int p_input_source_id) const {
+	ERR_FAIL_INDEX_V(p_input_source_id, input_source_count, false);
+	return input_sources[p_input_source_id].active;
 }
-*/
 
-WebXRInterface::TargetRayMode WebXRInterfaceJS::get_controller_target_ray_mode(int p_controller_id) const {
-	XRServer *xr_server = XRServer::get_singleton();
-	ERR_FAIL_NULL_V(xr_server, WebXRInterface::TARGET_RAY_MODE_UNKNOWN);
+Ref<XRPositionalTracker> WebXRInterfaceJS::get_input_source_tracker(int p_input_source_id) const {
+	ERR_FAIL_INDEX_V(p_input_source_id, input_source_count, Ref<XRPositionalTracker>());
+	return input_sources[p_input_source_id].tracker;
+}
 
-	ERR_FAIL_COND_V(p_controller_id <= 0, WebXRInterface::TARGET_RAY_MODE_UNKNOWN);
-
-	return (WebXRInterface::TargetRayMode)godot_webxr_get_controller_target_ray_mode(p_controller_id - 1);
+WebXRInterface::TargetRayMode WebXRInterfaceJS::get_input_source_target_ray_mode(int p_input_source_id) const {
+	ERR_FAIL_INDEX_V(p_input_source_id, input_source_count, WebXRInterface::TARGET_RAY_MODE_UNKNOWN);
+	if (!input_sources[p_input_source_id].active) {
+		return WebXRInterface::TARGET_RAY_MODE_UNKNOWN;
+	}
+	return input_sources[p_input_source_id].target_ray_mode;
 }
 
 String WebXRInterfaceJS::get_visibility_state() const {
@@ -539,15 +534,13 @@ void WebXRInterfaceJS::process() {
 			head_tracker->set_pose("default", head_transform, Vector3(), Vector3());
 		}
 
-		godot_webxr_sample_controller_data();
-		int controller_count = godot_webxr_get_controller_count();
-		for (int i = 0; i < controller_count; i++) {
-			_update_tracker(i);
+		for (int i = 0; i < input_source_count; i++) {
+			_update_input_source(i);
 		}
 	};
 };
 
-void WebXRInterfaceJS::_update_tracker(int p_controller_id) {
+void WebXRInterfaceJS::_update_input_source(int p_input_source_id) {
 	WebXRInterface::TargetRayMode target_ray_mode = (WebXRInterface::TargetRayMode)godot_webxr_get_controller_target_ray_mode(p_controller_id);
 
 	if (target_ray_mode == WebXRInterface::TARGET_RAY_MODE_SCREEN) {

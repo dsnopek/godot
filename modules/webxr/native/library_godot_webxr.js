@@ -40,6 +40,7 @@ const GodotWebXR = {
 		pose: null,
 		view_count: 1,
 		input_sources: new Array(16),
+		touches: new Array(5),
 
 		// Monkey-patch the requestAnimationFrame() used by Emscripten for the main
 		// loop, so that we can swap it out for XRSession.requestAnimationFrame()
@@ -126,7 +127,7 @@ const GodotWebXR = {
 		},
 
 		getTextureId: (texture) => {
-			if (typeof texture.name !== 'undefined') {
+			if ('name' in texture) {
 				return texture.name;
 			}
 
@@ -157,31 +158,36 @@ const GodotWebXR = {
 				GodotWebXR.input_sources[name] = input_source;
 				input_source.name = name;
 
-				// Get the touch index of a "screen" input source by looping
-				// over the session.inputSources and seeing which nth one it is.
+				// Find a free touch index for screen sources.
 				if (input_source.targetRayMode === 'screen') {
-					let touch_index = 0;
-					GodotWebXR.session.inputSources.forEach((e) => {
-						if (e === input_source) {
-							input_source.touch_index = touch_index;
-							return;
+					let touch_index = -1;
+					for (let i = 0; i < 5; i++) {
+						if (!GodotWebXR.touches[i]) {
+							touch_index = i;
+							break;
 						}
-						if (e.targetRayMode === 'screen') {
-							touch_index++;
-						}
-					});
+					}
+					if (touch_index >= 0) {
+						GodotWebXR.touches[touch_index] = input_source;
+						input_source.touch_index = touch_index;
+					}
 				}
 			}
 			return name;
 		},
 
 		removeInputSource: (input_source) => {
-			if (input_source.name) {
+			if ('name' in input_source) {
 				const name = input_source.name;
-				delete input_source.name;
-
 				if (name >= 0 && name < 16) {
 					GodotWebXR.input_sources[name] = null;
+				}
+
+				if ('touch_index' in input_source) {
+					const touch_index = input_source.touch_index;
+					if (touch_index >= 0 && touch_index < 5) {
+						GodotWebXR.touches[touch_index] = null;
+					}
 				}
 				return name;
 			}
@@ -351,7 +357,8 @@ const GodotWebXR = {
 		GodotWebXR.frame = null;
 		GodotWebXR.pose = null;
 		GodotWebXR.view_count = 1;
-		GodotWebXR.input_sources = [];
+		GodotWebXR.input_sources = new Array(16);
+		GodotWebXR.touches = new Array(5);
 
 		// Disable the monkey-patched window.requestAnimationFrame() and
 		// pause/restart the main loop to activate it on all platforms.
@@ -500,7 +507,7 @@ const GodotWebXR = {
 
 		// Touch index.
 		let touch_index = -1;
-		if (target_ray_mode === 3 && typeof input_source.touch_index !== 'undefined') {
+		if (target_ray_mode === 3 && 'touch_index' in input_source) {
 			touch_index = input_source.touch_index;
 		}
 		GodotRuntime.setHeapValue(r_touch_index, touch_index, 'i32');

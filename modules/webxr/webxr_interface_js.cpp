@@ -664,7 +664,7 @@ void WebXRInterfaceJS::_on_input_event(int p_event_type, int p_input_source_id) 
 		const InputSource &input_source = input_sources[p_input_source_id];
 		if (input_source.target_ray_mode == WebXRInterface::TARGET_RAY_MODE_SCREEN) {
 			int touch_index = input_source.touch_index;
-			if (touch_index < 5) {
+			if (touch_index >= 0 && touch_index < 5) {
 				touches[touch_index].is_touching = (p_event_type == WEBXR_INPUT_EVENT_SELECTSTART);
 
 				Ref<InputEventScreenTouch> event;

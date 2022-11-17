@@ -156,6 +156,21 @@ const GodotWebXR = {
 			if (name >= 0) {
 				GodotWebXR.input_sources[name] = input_source;
 				input_source.name = name;
+
+				// Get the touch index of a "screen" input source by looping
+				// over the session.inputSources and seeing which nth one it is.
+				if (input_source.targetRayMode === 'screen') {
+					let touch_index = 0;
+					GodotWebXR.session.inputSources.each(() => {
+						if (this === input_source) {
+							input_source.touch_index = touch_index;
+							return;
+						}
+						if (this.targetRayMode === 'screen') {
+							touch_index++;
+						}
+					});
+				}
 			}
 			return name;
 		},
@@ -178,7 +193,7 @@ const GodotWebXR = {
 				return input_source.name;
 			}
 			return -1;
-		}
+		},
 	},
 
 	godot_webxr_is_supported__proxy: 'sync',
@@ -207,8 +222,8 @@ const GodotWebXR = {
 
 	godot_webxr_initialize__deps: ['emscripten_webgl_get_current_context'],
 	godot_webxr_initialize__proxy: 'sync',
-	godot_webxr_initialize__sig: 'viiiiiiiiii',
-	godot_webxr_initialize: function (p_session_mode, p_required_features, p_optional_features, p_requested_reference_spaces, p_on_session_started, p_on_session_ended, p_on_session_failed, p_on_controller_changed, p_on_input_event, p_on_simple_event) {
+	godot_webxr_initialize__sig: 'viiiiiiiii',
+	godot_webxr_initialize: function (p_session_mode, p_required_features, p_optional_features, p_requested_reference_spaces, p_on_session_started, p_on_session_ended, p_on_session_failed, p_on_input_event, p_on_simple_event) {
 		GodotWebXR.monkeyPatchRequestAnimationFrame(true);
 
 		const session_mode = GodotRuntime.parseString(p_session_mode);
@@ -218,7 +233,6 @@ const GodotWebXR = {
 		const onstarted = GodotRuntime.get_func(p_on_session_started);
 		const onended = GodotRuntime.get_func(p_on_session_ended);
 		const onfailed = GodotRuntime.get_func(p_on_session_failed);
-		const oncontroller = GodotRuntime.get_func(p_on_controller_changed);
 		const oninputevent = GodotRuntime.get_func(p_on_input_event);
 		const onsimpleevent = GodotRuntime.get_func(p_on_simple_event);
 
@@ -442,8 +456,8 @@ const GodotWebXR = {
 	},
 
 	godot_webxr_update_input_source__proxy: 'sync',
-	godot_webxr_update_input_source__sig: 'iiiiiiiiiii',
-	godot_webxr_update_input_source: function (p_input_source_id, r_target_pose, r_target_ray_mode, r_has_grip_pose, r_grip_pose, r_has_standard_mapping, r_button_count, r_buttons, r_axes_count, r_axes) {
+	godot_webxr_update_input_source__sig: 'iiiiiiiiiiii',
+	godot_webxr_update_input_source: function (p_input_source_id, r_target_pose, r_target_ray_mode, r_touch_index, r_has_grip_pose, r_grip_pose, r_has_standard_mapping, r_button_count, r_buttons, r_axes_count, r_axes) {
 		if (!GodotWebXR.session || !GodotWebXR.frame) {
 			return 0;
 		}
@@ -482,7 +496,14 @@ const GodotWebXR = {
 				target_ray_mode = 3;
 				break;
 		}
-		GodotRuntime.setHeapValue(r_target_ray_mode, target_ray_mode, 'float');
+		GodotRuntime.setHeapValue(r_target_ray_mode, target_ray_mode, 'i32');
+
+		// Touch index.
+		let touch_index = -1;
+		if (target_ray_mode === 3 && typeof input_source.touch_index !== 'undefined') {
+			touch_index = input_source.touch_index;
+		}
+		GodotRuntime.setHeapValue(r_touch_index, touch_index, 'i32');
 
 		// Grip pose.
 		let has_grip_pose = false;

@@ -50,7 +50,6 @@ typedef void (*GodotWebXRSupportedCallback)(char *p_session_mode, int p_supporte
 typedef void (*GodotWebXRStartedCallback)(char *p_reference_space_type);
 typedef void (*GodotWebXREndedCallback)();
 typedef void (*GodotWebXRFailedCallback)(char *p_message);
-typedef void (*GodotWebXRControllerCallback)();
 typedef void (*GodotWebXRInputEventCallback)(int p_event_type, int p_controller_id);
 typedef void (*GodotWebXRSimpleEventCallback)(char *p_signal_name);
 
@@ -65,7 +64,6 @@ extern void godot_webxr_initialize(
 		GodotWebXRStartedCallback p_on_session_started,
 		GodotWebXREndedCallback p_on_session_ended,
 		GodotWebXRFailedCallback p_on_session_failed,
-		GodotWebXRControllerCallback p_on_controller_changed,
 		GodotWebXRInputEventCallback p_on_input_event,
 		GodotWebXRSimpleEventCallback p_on_simple_event);
 extern void godot_webxr_uninitialize();
@@ -82,13 +80,14 @@ extern bool godot_webxr_update_input_source(
 		int p_input_source_id,
 		float *r_target_pose,
 		int *r_target_ray_mode,
+		int *r_touch_index,
 		int *r_has_grip_pose,
 		float *r_grip_pose,
 		int *r_has_standard_mapping,
 		int *r_button_count,
-		int *r_buttons,
+		float *r_buttons,
 		int *r_axes_count,
-		int *r_axes);
+		float *r_axes);
 
 extern char *godot_webxr_get_visibility_state();
 extern int *godot_webxr_get_bounds_geometry();

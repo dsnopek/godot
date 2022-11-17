@@ -61,7 +61,7 @@ private:
 	RBMap<unsigned int, RID> texture_cache;
 	struct Touch {
 		bool is_touching = false;
-		Vector2 previous_position;
+		Vector2 position;
 	} touches[5];
 
 	static constexpr uint8_t input_source_count = 16;
@@ -70,14 +70,13 @@ private:
 		Ref<XRPositionalTracker> tracker;
 		bool active = false;
 		TargetRayMode target_ray_mode;
+		int touch_index = -1;
 	} input_sources[input_source_count];
 
 	RID _get_texture(unsigned int p_texture_id);
 	Transform3D _js_matrix_to_transform(float *p_js_matrix);
 	void _update_input_source(int p_input_source_id);
 
-	Vector2 _get_joy_vector_from_axes(int *p_axes);
-	int _get_touch_index(int p_input_source);
 	Vector2 _get_screen_position_from_joy_vector(const Vector2 &p_joy_vector);
 
 public:
@@ -118,8 +117,7 @@ public:
 
 	virtual void process() override;
 
-	void _on_controller_changed();
-	void _on_input_event(int p_event_type, int p_input_source);
+	void _on_input_event(int p_event_type, int p_input_source_id);
 
 	WebXRInterfaceJS();
 	~WebXRInterfaceJS();

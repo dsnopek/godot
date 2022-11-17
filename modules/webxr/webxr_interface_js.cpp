@@ -623,7 +623,7 @@ void WebXRInterfaceJS::_update_input_source(int p_input_source_id) {
 	}
 
 	for (int i = 0; i < axes_count; i++) {
-		// TODO again just a temporary fix, split these between proper float and vector2 inputs
+		// @todo buttons should be named properly, this is just a temporary fix
 		char name[1024];
 		sprintf(name, "axis_%i", i);
 

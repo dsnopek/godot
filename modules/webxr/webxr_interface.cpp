@@ -42,8 +42,9 @@ void WebXRInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_reference_space_type"), &WebXRInterface::get_reference_space_type);
 	ClassDB::bind_method(D_METHOD("set_requested_reference_space_types", "requested_reference_space_types"), &WebXRInterface::set_requested_reference_space_types);
 	ClassDB::bind_method(D_METHOD("get_requested_reference_space_types"), &WebXRInterface::get_requested_reference_space_types);
-	//ClassDB::bind_method(D_METHOD("get_controller", "controller_id"), &WebXRInterface::get_controller);
-	ClassDB::bind_method(D_METHOD("get_controller_target_ray_mode", "controller_id"), &WebXRInterface::get_controller_target_ray_mode);
+	ClassDB::bind_method(D_METHOD("is_input_source_active", "input_source_id"), &WebXRInterface::is_input_source_active);
+	ClassDB::bind_method(D_METHOD("get_input_source_tracker", "input_source_id"), &WebXRInterface::get_input_source_tracker);
+	ClassDB::bind_method(D_METHOD("get_input_source_target_ray_mode", "input_source_id"), &WebXRInterface::get_input_source_target_ray_mode);
 	ClassDB::bind_method(D_METHOD("get_visibility_state"), &WebXRInterface::get_visibility_state);
 	ClassDB::bind_method(D_METHOD("get_bounds_geometry"), &WebXRInterface::get_bounds_geometry);
 
@@ -60,12 +61,12 @@ void WebXRInterface::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("session_ended"));
 	ADD_SIGNAL(MethodInfo("session_failed", PropertyInfo(Variant::STRING, "message")));
 
-	ADD_SIGNAL(MethodInfo("selectstart", PropertyInfo(Variant::INT, "controller_id")));
-	ADD_SIGNAL(MethodInfo("select", PropertyInfo(Variant::INT, "controller_id")));
-	ADD_SIGNAL(MethodInfo("selectend", PropertyInfo(Variant::INT, "controller_id")));
-	ADD_SIGNAL(MethodInfo("squeezestart", PropertyInfo(Variant::INT, "controller_id")));
-	ADD_SIGNAL(MethodInfo("squeeze", PropertyInfo(Variant::INT, "controller_id")));
-	ADD_SIGNAL(MethodInfo("squeezeend", PropertyInfo(Variant::INT, "controller_id")));
+	ADD_SIGNAL(MethodInfo("selectstart", PropertyInfo(Variant::INT, "input_source_id")));
+	ADD_SIGNAL(MethodInfo("select", PropertyInfo(Variant::INT, "input_source_id")));
+	ADD_SIGNAL(MethodInfo("selectend", PropertyInfo(Variant::INT, "input_source_id")));
+	ADD_SIGNAL(MethodInfo("squeezestart", PropertyInfo(Variant::INT, "input_source_id")));
+	ADD_SIGNAL(MethodInfo("squeeze", PropertyInfo(Variant::INT, "input_source_id")));
+	ADD_SIGNAL(MethodInfo("squeezeend", PropertyInfo(Variant::INT, "input_source_id")));
 
 	ADD_SIGNAL(MethodInfo("visibility_state_changed"));
 	ADD_SIGNAL(MethodInfo("reference_space_reset"));

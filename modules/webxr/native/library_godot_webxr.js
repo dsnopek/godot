@@ -258,7 +258,7 @@ const GodotWebXR = {
 
 			['selectstart', 'selectend', 'select', 'squeezestart', 'squeezeend', 'squeeze'].forEach((input_event, index) => {
 				session.addEventListener(input_event, function (evt) {
-					oninputevent(index, GodotWebXR.getControllerId(evt.inputSource));
+					oninputevent(index, GodotWebXR.getInputSourceId(evt.inputSource));
 				});
 			});
 
@@ -472,7 +472,7 @@ const GodotWebXR = {
 
 		// Target pose.
 		const target_pose = frame.getPose(input_source.targetRaySpace, space);
-		if (!pose) {
+		if (!target_pose) {
 			// This can mean that the controller lost tracking.
 			return false;
 		}
@@ -510,7 +510,7 @@ const GodotWebXR = {
 		if (input_source.gripSpace) {
 			const grip_pose = frame.getPose(input_source.gripSpace, space);
 			if (grip_pose) {
-				const grip_pose_matrix = pose.transform.matrix;
+				const grip_pose_matrix = grip_pose.transform.matrix;
 				for (let i = 0; i < 16; i++) {
 					GodotRuntime.setHeapValue(r_grip_pose + (i * 4), grip_pose_matrix[i], 'float');
 				}
@@ -535,21 +535,21 @@ const GodotWebXR = {
 
 			axes_count = Math.min(input_source.gamepad.axes.length, 10);
 			for (let i = 0; i < axes_count; i++) {
-				let value = controller.gamepad.axes[i];
+				let value = input_source.gamepad.axes[i];
 				if (has_standard_mapping && (i === 1 || i === 3)) {
 					// @todo Move this to C++?
 					// Invert the Y-axis on thumbsticks and trackpads, in order to
 					// match OpenXR and other XR platform SDKs.
 					value *= -1.0;
 				}
-				GodotRuntime.setHeapValue(buf + 4 + (i * 4), value, 'float');
+				GodotRuntime.setHeapValue(r_axes + (i * 4), value, 'float');
 			}
 		}
 		GodotRuntime.setHeapValue(r_has_standard_mapping, has_standard_mapping ? 1 : 0, 'i32');
 		GodotRuntime.setHeapValue(r_button_count, button_count, 'i32');
 		GodotRuntime.setHeapValue(r_axes_count, axes_count, 'i32');
 
-		return buf;
+		return true;
 
 	},
 

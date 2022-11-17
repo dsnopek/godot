@@ -655,19 +655,6 @@ void WebXRInterfaceJS::_update_input_source(int p_input_source_id) {
 	}
 }
 
-void WebXRInterfaceJS::_on_controller_changed() {
-	// Register "virtual" gamepads with Godot for the ones we get from WebXR.
-	/*
-	godot_webxr_sample_controller_data();
-	for (int i = 0; i < 2; i++) {
-		bool controller_connected = godot_webxr_is_controller_connected(i);
-		if (controllers_state[i] != controller_connected) {
-			controllers_state[i] = controller_connected;
-		}
-	}
-	*/
-}
-
 void WebXRInterfaceJS::_on_input_event(int p_event_type, int p_input_source_id) {
 	// Get the latest data for this input source. For transient input sources,
 	// we may not have any data at all yet!

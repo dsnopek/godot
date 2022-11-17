@@ -146,7 +146,7 @@ const GodotWebXR = {
 				name = 1;
 			}
 			else {
-				for (let i = 0; i < 16; i++) {
+				for (let i = 2; i < 16; i++) {
 					if (!GodotWebXR.input_sources[i]) {
 						name = i;
 						break;
@@ -161,12 +161,12 @@ const GodotWebXR = {
 				// over the session.inputSources and seeing which nth one it is.
 				if (input_source.targetRayMode === 'screen') {
 					let touch_index = 0;
-					GodotWebXR.session.inputSources.each(() => {
-						if (this === input_source) {
+					GodotWebXR.session.inputSources.forEach((e) => {
+						if (e === input_source) {
 							input_source.touch_index = touch_index;
 							return;
 						}
-						if (this.targetRayMode === 'screen') {
+						if (e.targetRayMode === 'screen') {
 							touch_index++;
 						}
 					});

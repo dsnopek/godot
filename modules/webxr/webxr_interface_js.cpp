@@ -632,7 +632,7 @@ void WebXRInterfaceJS::_update_input_source(int p_input_source_id) {
 	}
 
 	if (input_source.target_ray_mode == WebXRInterface::TARGET_RAY_MODE_SCREEN) {
-		if (touch_index < 5 && axes_count > 2) {
+		if (touch_index < 5 && axes_count >= 2) {
 			Vector2 joy_vector = Vector2(axes[0], axes[1]);
 			Vector2 position = _get_screen_position_from_joy_vector(joy_vector);
 

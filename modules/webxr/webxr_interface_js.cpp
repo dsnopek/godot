@@ -484,7 +484,6 @@ RID WebXRInterfaceJS::_get_texture(unsigned int p_texture_id) {
 RID WebXRInterfaceJS::get_color_texture() {
 	unsigned int texture_id = godot_webxr_get_color_texture();
 	if (texture_id == 0) {
-		//texture_cache.clear();
 		return RID();
 	}
 

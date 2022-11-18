@@ -536,10 +536,9 @@ XRLayerEvent.prototype.layer;
 
 /**
  * @constructor XRCompositionLayer
+ * @extends {XRLayer}
  */
 function XRCompositionLayer() {};
-XRCompositionLayer.prototype = Object.create(XRLayer.prototype);
-XRCompositionLayer.prototype.constructor = XRCompositionLayer;
 
 /**
  * @type {string}
@@ -583,10 +582,9 @@ XRCompositionLayer.prototype.destroy = function () {};
 
 /**
  * @constructor XRProjectionLayer
+ * @extends {XRCompositionLayer}
  */
 function XRProjectionLayer() {}
-XRProjectionLayer.prototype = Object.create(XRCompositionLayer.prototype);
-XRProjectionLayer.prototype.constructor = XRProjectionLayer;
 
 /**
  * @type {number}
@@ -620,10 +618,9 @@ XRProjectionLayer.prototype.deltaPose;
 
 /**
  * @constructor XRQuadLayer
+ * @extends {XRCompositionLayer}
  */
 function XRQuadLayer() {}
-XRQuadLayer.prototype = Object.create(XRCompositionLayer.prototype);
-XRQuadLayer.prototype.constructor = XRQuadLayer;
 
 /**
  * @type {XRSpace}
@@ -652,10 +649,9 @@ XRQuadLayer.prototype.onredraw;
 
 /**
  * @constructor XRCylinderLayer
+ * @extends {XRCompositionLayer}
  */
 function XRCylinderLayer() {}
-XRCylinderLayer.prototype = Object.create(XRCompositionLayer.prototype);
-XRCylinderLayer.prototype.constructor = XRCylinderLayer;
 
 /**
  * @type {XRSpace}
@@ -689,10 +685,9 @@ XRCylinderLayer.prototype.onredraw;
 
 /**
  * @constructor XREquirectLayer
+ * @extends {XRCompositionLayer}
  */
 function XREquirectLayer() {}
-XREquirectLayer.prototype = Object.create(XRCompositionLayer.prototype);
-XREquirectLayer.prototype.constructor = XREquirectLayer;
 
 /**
  * @type {XRSpace}
@@ -731,10 +726,9 @@ XREquirectLayer.prototype.onredraw;
 
 /**
  * @constructor XRCubeLayer
+ * @extends {XRCompositionLayer}
  */
 function XRCubeLayer() {}
-XRCubeLayer.prototype = Object.create(XRCompositionLayer.prototype);
-XRCubeLayer.prototype.constructor = XRCubeLayer;
 
 /**
  * @type {XRSpace}
@@ -763,10 +757,9 @@ XRSubImage.prototype.viewport;
 
 /**
  * @constructor XRWebGLSubImage
+ * @extends {XRSubImage}
  */
 function XRWebGLSubImage () {}
-XRWebGLSubImage.prototype = Object.create(XRSubImage.prototype);
-XRWebGLSubImage.prototype.constructor = XRWebGLSubImage;
 
 /**
  * @type {WebGLTexture}
@@ -891,10 +884,9 @@ XRLayerInit.prototype.isStatic;
 
 /**
  * @constructor XRQuadLayerInit
+ * @extends {XRLayerInit}
  */
 function XRQuadLayerInit() {}
-XRQuadLayerInit.prototype = Object.create(XRLayerInit.prototype);
-XRQuadLayerInit.prototype.constructor = XRQuadLayerInit;
 
 /**
  * @type {string}
@@ -918,10 +910,9 @@ XRQuadLayerInit.prototype.height;
 
 /**
  * @constructor XRCylinderLayerInit
+ * @extends {XRLayerInit}
  */
 function XRCylinderLayerInit() {}
-XRCylinderLayerInit.prototype = Object.create(XRLayerInit.prototype);
-XRCylinderLayerInit.prototype.constructor = XRCylinderLayerInit;
 
 /**
  * @type {string}
@@ -950,10 +941,9 @@ XRCylinderLayerInit.prototype.aspectRatio;
 
 /**
  * @constructor XREquirectLayerInit
+ * @extends {XRLayerInit}
  */
 function XREquirectLayerInit() {}
-XREquirectLayerInit.prototype = Object.create(XRLayerInit.prototype);
-XREquirectLayerInit.prototype.constructor = XREquirectLayerInit;
 
 /**
  * @type {string}
@@ -987,10 +977,9 @@ XREquirectLayerInit.prototype.lowerVerticalAngle;
 
 /**
  * @constructor XRCubeLayerInit
+ * @extends {XRLayerInit}
  */
 function XRCubeLayerInit() {}
-XRCubeLayerInit.prototype = Object.create(XRLayerInit.prototype);
-XRCubeLayerInit.prototype.constructor = XRCubeLayerInit;
 
 /**
  * @type {DOMPointReadOnly}
@@ -1082,10 +1071,9 @@ XRMediaLayerInit.prototype.invertStereo;
 
 /**
  * @constructor XRMediaQuadLayerInit
+ * @extends {XRMediaLayerInit}
  */
 function XRMediaQuadLayerInit() {}
-XRMediaQuadLayerInit.prototype = Object.create(XRMediaLayerInit.prototype);
-XRMediaQuadLayerInit.prototype.constructor = XRMediaQuadLayerInit;
 
 /**
  * @type {XRRigidTransform}
@@ -1104,10 +1092,9 @@ XRMediaQuadLayerInit.prototype.height;
 
 /**
  * @constructor XRMediaCylinderLayerInit
+ * @extends {XRMediaLayerInit}
  */
 function XRMediaCylinderLayerInit() {}
-XRMediaCylinderLayerInit.prototype = Object.create(XRMediaLayerInit.prototype);
-XRMediaCylinderLayerInit.prototype.constructor = XRMediaCylinderLayerInit;
 
 /**
  * @type {XRRigidTransform}
@@ -1131,10 +1118,9 @@ XRMediaCylinderLayerInit.prototype.aspectRatio;
 
 /**
  * @constructor XRMediaEquirectLayerInit
+ * @extends {XRMediaLayerInit}
  */
 function XRMediaEquirectLayerInit() {}
-XRMediaEquirectLayerInit.prototype = Object.create(XRMediaLayerInit.prototype);
-XRMediaEquirectLayerInit.prototype.constructor = XRMediaEquirectLayerInit;
 
 /**
  * @type {XRRigidTransform}

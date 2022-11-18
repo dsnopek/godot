@@ -310,8 +310,8 @@ void RasterizerCanvasGLES3::canvas_render_items(RID p_to_render_target, Item *p_
 
 		Size2i ssize = texture_storage->render_target_get_size(p_to_render_target);
 
-		// If we've overridden the render target's color texture, the we need to
-		// invert the Y axis, so 2D texture appear right side up.
+		// If we've overridden the render target's color texture, then we need
+		// to invert the Y axis, so 2D texture appear right side up.
 		// We're probably rendering directly to an XR device.
 		float y_scale = texture_storage->render_target_get_override_color(p_to_render_target).is_valid() ? -2.0f : 2.0f;
 

@@ -94,11 +94,11 @@
 		<link title="How to make a VR game for WebXR with Godot">https://www.snopekgames.com/blog/2020/how-make-vr-game-webxr-godot</link>
 	</tutorials>
 	<methods>
-		<method name="get_controller" qualifiers="const">
+		<method name="get_input_source_tracker" qualifiers="const">
 			<return type="XRPositionalTracker" />
-			<param index="0" name="controller_id" type="int" />
+			<param index="0" name="input_source_id" type="int" />
 			<description>
-				Gets an [XRPositionalTracker] for the given [code]controller_id[/code].
+				Gets an [XRPositionalTracker] for the given [code]input_source_id[/code].
 				In the context of WebXR, a "controller" can be an advanced VR controller like the Oculus Touch or Index controllers, or even a tap on the screen, a spoken voice command or a button press on the device itself. When a non-traditional controller is used, interpret the position and orientation of the [XRPositionalTracker] as a ray pointing at the object the user wishes to interact with.
 				Use this method to get information about the controller that triggered one of these signals:
 				- [signal selectstart]
@@ -109,11 +109,11 @@
 				- [signal squeezestart]
 			</description>
 		</method>
-		<method name="get_controller_target_ray_mode" qualifiers="const">
+		<method name="get_input_source_target_ray_mode" qualifiers="const">
 			<return type="int" enum="WebXRInterface.TargetRayMode" />
-			<argument index="0" name="controller_id" type="int" />
+			<argument index="0" name="input_source_id" type="int" />
 			<description>
-				Returns the target ray mode for the given [code]controller_id[/code].
+				Returns the target ray mode for the given [code]input_source_id[/code].
 				This can help interpret the input coming from that controller. See [url=https://developer.mozilla.org/en-US/docs/Web/API/XRInputSource/targetRayMode]XRInputSource.targetRayMode[/url] for more information.
 			</description>
 		</method>
@@ -177,21 +177,21 @@
 			<param index="0" name="controller_id" type="int" />
 			<description>
 				Emitted after one of the "controllers" has finished its "primary action".
-				Use [method get_controller] to get more information about the controller.
+				Use [method get_input_source_tracker] to get more information about the controller.
 			</description>
 		</signal>
 		<signal name="selectend">
 			<param index="0" name="controller_id" type="int" />
 			<description>
 				Emitted when one of the "controllers" has finished its "primary action".
-				Use [method get_controller] to get more information about the controller.
+				Use [method get_input_source_tracker] to get more information about the controller.
 			</description>
 		</signal>
 		<signal name="selectstart">
 			<param index="0" name="controller_id" type="int" />
 			<description>
 				Emitted when one of the "controllers" has started its "primary action".
-				Use [method get_controller] to get more information about the controller.
+				Use [method get_input_source_tracker] to get more information about the controller.
 			</description>
 		</signal>
 		<signal name="session_ended">
@@ -224,21 +224,21 @@
 			<param index="0" name="controller_id" type="int" />
 			<description>
 				Emitted after one of the "controllers" has finished its "primary squeeze action".
-				Use [method get_controller] to get more information about the controller.
+				Use [method get_input_source_tracker] to get more information about the controller.
 			</description>
 		</signal>
 		<signal name="squeezeend">
 			<param index="0" name="controller_id" type="int" />
 			<description>
 				Emitted when one of the "controllers" has finished its "primary squeeze action".
-				Use [method get_controller] to get more information about the controller.
+				Use [method get_input_source_tracker] to get more information about the controller.
 			</description>
 		</signal>
 		<signal name="squeezestart">
 			<param index="0" name="controller_id" type="int" />
 			<description>
 				Emitted when one of the "controllers" has started its "primary squeeze action".
-				Use [method get_controller] to get more information about the controller.
+				Use [method get_input_source_tracker] to get more information about the controller.
 			</description>
 		</signal>
 		<signal name="visibility_state_changed">

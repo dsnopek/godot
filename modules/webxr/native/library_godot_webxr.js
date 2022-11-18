@@ -127,7 +127,7 @@ const GodotWebXR = {
 		},
 
 		getTextureId: (texture) => {
-			if ('name' in texture) {
+			if (texture.name !== undefined) {
 				return texture.name;
 			}
 
@@ -177,13 +177,13 @@ const GodotWebXR = {
 		},
 
 		removeInputSource: (input_source) => {
-			if ('name' in input_source) {
+			if (input_source.name !== undefined) {
 				const name = input_source.name;
 				if (name >= 0 && name < 16) {
 					GodotWebXR.input_sources[name] = null;
 				}
 
-				if ('touch_index' in input_source) {
+				if (input_source.touch_index !== undefined) {
 					const touch_index = input_source.touch_index;
 					if (touch_index >= 0 && touch_index < 5) {
 						GodotWebXR.touches[touch_index] = null;
@@ -195,14 +195,14 @@ const GodotWebXR = {
 		},
 
 		getInputSourceId: (input_source) => {
-			if ('name' in input_source) {
+			if (input_source !== undefined) {
 				return input_source.name;
 			}
 			return -1;
 		},
 
 		getTouchIndex: (input_source) => {
-			if ('touch_index' in input_source) {
+			if (input_source.touch_index !== undefined) {
 				return input_source.touch_index;
 			}
 			return -1;

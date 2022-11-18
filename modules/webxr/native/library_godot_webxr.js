@@ -269,7 +269,7 @@ const GodotWebXR = {
 				evt.removed.forEach(GodotWebXR.removeInputSource);
 			});
 
-			['selectstart', 'selectend', 'select', 'squeezestart', 'squeezeend', 'squeeze'].forEach((input_event, index) => {
+			['selectstart', 'selectend', 'squeezestart', 'squeezeend'].forEach((input_event, index) => {
 				session.addEventListener(input_event, function (evt) {
 					// Since this happens in-between normal frames, we need to
 					// grab the frame from the event in order to get poses for

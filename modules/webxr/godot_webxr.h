@@ -40,10 +40,8 @@ extern "C" {
 enum WebXRInputEvent {
 	WEBXR_INPUT_EVENT_SELECTSTART,
 	WEBXR_INPUT_EVENT_SELECTEND,
-	WEBXR_INPUT_EVENT_SELECT,
 	WEBXR_INPUT_EVENT_SQUEEZESTART,
 	WEBXR_INPUT_EVENT_SQUEEZEEND,
-	WEBXR_INPUT_EVENT_SQUEEZE,
 };
 
 typedef void (*GodotWebXRSupportedCallback)(char *p_session_mode, int p_supported);

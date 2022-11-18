@@ -243,9 +243,6 @@ bool WebXRInterfaceJS::initialize() {
 		// make this our primary interface
 		xr_server->set_primary_interface(this);
 
-		// Clear state variables.
-		memset(touches, 0, sizeof touches);
-
 		// Clear render_targetsize to make sure it gets reset to the new size.
 		// Clearing in uninitialize() doesn't work because a frame can still be
 		// rendered after it's called, which will fill render_targetsize again.
@@ -676,9 +673,9 @@ void WebXRInterfaceJS::_on_input_event(int p_event_type, int p_input_source_id) 
 
 		case WEBXR_INPUT_EVENT_SELECTEND:
 			emit_signal("selectend", p_input_source_id);
-			break;
-
-		case WEBXR_INPUT_EVENT_SELECT:
+			// Emit the 'select' event on our own (rather than intercepting the
+			// one from JavaScript) so that we don't have to needlessly call
+			// _update_input_source() a second time.
 			emit_signal("select", p_input_source_id);
 			break;
 
@@ -688,9 +685,7 @@ void WebXRInterfaceJS::_on_input_event(int p_event_type, int p_input_source_id) 
 
 		case WEBXR_INPUT_EVENT_SQUEEZEEND:
 			emit_signal("squeezeend", p_input_source_id);
-			break;
-
-		case WEBXR_INPUT_EVENT_SQUEEZE:
+			// Again, we emit the 'squeeze' event on our own to avoid extra work.
 			emit_signal("squeeze", p_input_source_id);
 			break;
 	}

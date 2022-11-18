@@ -181,17 +181,17 @@ private:
 		StringName("button_9"),
 	};
 
-	StringName standard_button_axis_names[10] = {
-		StringName("trigger_axis"),
-		StringName("squeeze_axis"),
-		StringName("touchpad_press_axis"),
-		StringName("thumbstick_press_axis"),
-		StringName("ax_button_axis"),
-		StringName("by_button_axis"),
-		StringName("button_axis_6"),
-		StringName("button_axis_7"),
-		StringName("button_axis_8"),
-		StringName("button_axis_9"),
+	StringName standard_button_pressure_names[10] = {
+		StringName("trigger_pressure"),
+		StringName("squeeze_pressure"),
+		StringName("touchpad_press_pressure"),
+		StringName("thumbstick_press_pressure"),
+		StringName("ax_button_pressure"),
+		StringName("by_button_pressure"),
+		StringName("button_pressure_6"),
+		StringName("button_pressure_7"),
+		StringName("button_pressure_8"),
+		StringName("button_pressure_9"),
 	};
 
 	StringName unknown_button_names[10] = {
@@ -220,17 +220,17 @@ private:
 		StringName("axis_9"),
 	};
 
-	StringName unknown_button_axis_names[10] = {
-		StringName("button_axis_0"),
-		StringName("button_axis_1"),
-		StringName("button_axis_2"),
-		StringName("button_axis_3"),
-		StringName("button_axis_4"),
-		StringName("button_axis_5"),
-		StringName("button_axis_6"),
-		StringName("button_axis_7"),
-		StringName("button_axis_8"),
-		StringName("button_axis_9"),
+	StringName unknown_button_pressure_names[10] = {
+		StringName("button_pressure_0"),
+		StringName("button_pressure_1"),
+		StringName("button_pressure_2"),
+		StringName("button_pressure_3"),
+		StringName("button_pressure_4"),
+		StringName("button_pressure_5"),
+		StringName("button_pressure_6"),
+		StringName("button_pressure_7"),
+		StringName("button_pressure_8"),
+		StringName("button_pressure_9"),
 	};
 };
 

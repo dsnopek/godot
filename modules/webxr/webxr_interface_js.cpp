@@ -617,11 +617,11 @@ void WebXRInterfaceJS::_update_input_source(int p_input_source_id) {
 
 	for (int i = 0; i < button_count; i++) {
 		StringName button_name = has_standard_mapping ? standard_button_names[i] : unknown_button_names[i];
-		StringName button_axis_name = has_standard_mapping ? standard_button_axis_names[i] : unknown_button_axis_names[i];
+		StringName button_pressure_name = has_standard_mapping ? standard_button_pressure_names[i] : unknown_button_pressure_names[i];
 		float value = buttons[i];
 		bool state = value > 0.0;
 		tracker->set_input(button_name, state);
-		tracker->set_input(button_axis_name, value);
+		tracker->set_input(button_pressure_name, value);
 	}
 
 	for (int i = 0; i < axes_count; i++) {

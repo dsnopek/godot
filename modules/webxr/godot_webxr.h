@@ -67,9 +67,9 @@ extern void godot_webxr_initialize(
 extern void godot_webxr_uninitialize();
 
 extern int godot_webxr_get_view_count();
-extern int *godot_webxr_get_render_target_size();
-extern float *godot_webxr_get_transform_for_eye(int p_eye);
-extern float *godot_webxr_get_projection_for_eye(int p_eye);
+extern bool godot_webxr_get_render_target_size(int *r_size);
+extern bool godot_webxr_get_transform_for_view(int p_view, float *r_transform);
+extern bool godot_webxr_get_projection_for_view(int p_view, float *r_transform);
 extern unsigned int godot_webxr_get_color_texture();
 extern unsigned int godot_webxr_get_depth_texture();
 extern unsigned int godot_webxr_get_velocity_texture();
@@ -88,7 +88,7 @@ extern bool godot_webxr_update_input_source(
 		float *r_axes);
 
 extern char *godot_webxr_get_visibility_state();
-extern int *godot_webxr_get_bounds_geometry();
+extern int godot_webxr_get_bounds_geometry(float **r_points);
 
 #ifdef __cplusplus
 }

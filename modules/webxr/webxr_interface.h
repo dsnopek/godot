@@ -66,7 +66,6 @@ public:
 	virtual Ref<XRPositionalTracker> get_input_source_tracker(int p_input_source_id) const = 0;
 	virtual TargetRayMode get_input_source_target_ray_mode(int p_input_source_id) const = 0;
 	virtual String get_visibility_state() const = 0;
-	virtual PackedVector3Array get_bounds_geometry() const = 0;
 };
 
 VARIANT_ENUM_CAST(WebXRInterface::TargetRayMode);

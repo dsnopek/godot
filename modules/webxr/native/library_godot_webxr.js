@@ -388,54 +388,55 @@ const GodotWebXR = {
 	},
 
 	godot_webxr_get_render_target_size__proxy: 'sync',
-	godot_webxr_get_render_target_size__sig: 'i',
-	godot_webxr_get_render_target_size: function () {
+	godot_webxr_get_render_target_size__sig: 'ii',
+	godot_webxr_get_render_target_size: function (r_size) {
 		const subimage = GodotWebXR.getSubImage();
 		if (subimage === null) {
-			return 0;
+			return false;
 		}
 
-		const buf = GodotRuntime.malloc(2 * 4);
-		GodotRuntime.setHeapValue(buf + 0, subimage.viewport.width, 'i32');
-		GodotRuntime.setHeapValue(buf + 4, subimage.viewport.height, 'i32');
-		return buf;
+		GodotRuntime.setHeapValue(r_size + 0, subimage.viewport.width, 'i32');
+		GodotRuntime.setHeapValue(r_size + 4, subimage.viewport.height, 'i32');
+
+		return true;
 	},
 
-	godot_webxr_get_transform_for_eye__proxy: 'sync',
-	godot_webxr_get_transform_for_eye__sig: 'ii',
-	godot_webxr_get_transform_for_eye: function (p_eye) {
+	godot_webxr_get_transform_for_view__proxy: 'sync',
+	godot_webxr_get_transform_for_view__sig: 'iii',
+	godot_webxr_get_transform_for_view: function (p_view, r_transform) {
 		if (!GodotWebXR.session || !GodotWebXR.pose) {
-			return 0;
+			return false;
 		}
 
 		const views = GodotWebXR.pose.views;
 		let matrix;
-		if (p_eye === 0) {
-			matrix = GodotWebXR.pose.transform.matrix;
+		if (p_view >= 0) {
+			matrix = views[p_view].transform.matrix;
 		} else {
-			matrix = views[p_eye - 1].transform.matrix;
+			// For -1 (or any other negative value) return the HMD transform.
+			matrix = GodotWebXR.pose.transform.matrix;
 		}
-		const buf = GodotRuntime.malloc(16 * 4);
+
 		for (let i = 0; i < 16; i++) {
-			GodotRuntime.setHeapValue(buf + (i * 4), matrix[i], 'float');
+			GodotRuntime.setHeapValue(r_transform + (i * 4), matrix[i], 'float');
 		}
-		return buf;
+
+		return true;
 	},
 
-	godot_webxr_get_projection_for_eye__proxy: 'sync',
-	godot_webxr_get_projection_for_eye__sig: 'ii',
-	godot_webxr_get_projection_for_eye: function (p_eye) {
+	godot_webxr_get_projection_for_view__proxy: 'sync',
+	godot_webxr_get_projection_for_view__sig: 'iii',
+	godot_webxr_get_projection_for_view: function (p_view, r_transform) {
 		if (!GodotWebXR.session || !GodotWebXR.pose) {
-			return 0;
+			return false;
 		}
 
-		const view_index = (p_eye === 2 /* ARVRInterface::EYE_RIGHT */) ? 1 : 0;
-		const matrix = GodotWebXR.pose.views[view_index].projectionMatrix;
-		const buf = GodotRuntime.malloc(16 * 4);
+		const matrix = GodotWebXR.pose.views[p_view].projectionMatrix;
 		for (let i = 0; i < 16; i++) {
-			GodotRuntime.setHeapValue(buf + (i * 4), matrix[i], 'float');
+			GodotRuntime.setHeapValue(r_transform + (i * 4), matrix[i], 'float');
 		}
-		return buf;
+
+		return true;
 	},
 
 	godot_webxr_get_color_texture__proxy: 'sync',
@@ -572,8 +573,8 @@ const GodotWebXR = {
 	},
 
 	godot_webxr_get_bounds_geometry__proxy: 'sync',
-	godot_webxr_get_bounds_geometry__sig: 'i',
-	godot_webxr_get_bounds_geometry: function () {
+	godot_webxr_get_bounds_geometry__sig: 'ii',
+	godot_webxr_get_bounds_geometry: function (r_points) {
 		if (!GodotWebXR.space || !GodotWebXR.space.boundsGeometry) {
 			return 0;
 		}
@@ -583,7 +584,7 @@ const GodotWebXR = {
 			return 0;
 		}
 
-		const buf = GodotRuntime.malloc(((point_count * 3) + 1) * 4);
+		const buf = GodotRuntime.malloc(point_count * 3 * 4);
 		GodotRuntime.setHeapValue(buf, point_count, 'i32');
 		for (let i = 0; i < point_count; i++) {
 			const point = GodotWebXR.space.boundsGeometry[i];
@@ -591,8 +592,9 @@ const GodotWebXR = {
 			GodotRuntime.setHeapValue(buf + ((i * 3) + 2) * 4, point.y, 'float');
 			GodotRuntime.setHeapValue(buf + ((i * 3) + 3) * 4, point.z, 'float');
 		}
+		GodotRuntime.setHeapValue(r_points, buf, 'i32')
 
-		return buf;
+		return point_count;
 	},
 };
 

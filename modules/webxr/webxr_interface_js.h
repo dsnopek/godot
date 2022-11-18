@@ -95,7 +95,7 @@ public:
 	virtual Ref<XRPositionalTracker> get_input_source_tracker(int p_input_source_id) const override;
 	virtual TargetRayMode get_input_source_target_ray_mode(int p_input_source_id) const override;
 	virtual String get_visibility_state() const override;
-	virtual PackedVector3Array get_bounds_geometry() const override;
+	virtual PackedVector3Array get_play_area() const override;
 
 	virtual StringName get_name() const override;
 	virtual uint32_t get_capabilities() const override;

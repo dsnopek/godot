@@ -185,17 +185,18 @@ String WebXRInterfaceJS::get_visibility_state() const {
 	return String();
 }
 
-PackedVector3Array WebXRInterfaceJS::get_bounds_geometry() const {
+PackedVector3Array WebXRInterfaceJS::get_play_area() const {
 	PackedVector3Array ret;
 
-	int *js_bounds = godot_webxr_get_bounds_geometry();
-	if (js_bounds) {
-		ret.resize(js_bounds[0]);
-		for (int i = 0; i < js_bounds[0]; i++) {
-			float *js_vector3 = ((float *)js_bounds) + (i * 3) + 1;
+	float *points;
+	int point_count = godot_webxr_get_bounds_geometry(&points);
+	if (point_count > 0) {
+		ret.resize(point_count);
+		for (int i = 0; i < point_count; i++) {
+			float *js_vector3 = points + (i * 3);
 			ret.set(i, Vector3(js_vector3[0], js_vector3[1], js_vector3[2]));
 		}
-		free(js_bounds);
+		free(points);
 	}
 
 	return ret;
@@ -325,26 +326,26 @@ Size2 WebXRInterfaceJS::get_render_target_size() {
 		return render_targetsize;
 	}
 
-	int *js_size = godot_webxr_get_render_target_size();
-	if (!initialized || js_size == nullptr) {
+	int js_size[2];
+	bool has_size = godot_webxr_get_render_target_size(js_size);
+
+	if (!initialized || !has_size) {
 		// As a temporary default (until WebXR is fully initialized), use the
 		// window size.
 		return DisplayServer::get_singleton()->window_get_size();
 	}
 
-	render_targetsize.width = js_size[0];
-	render_targetsize.height = js_size[1];
-
-	free(js_size);
+	render_targetsize.width = (float)js_size[0];
+	render_targetsize.height = (float)js_size[1];
 
 	return render_targetsize;
 };
 
 Transform3D WebXRInterfaceJS::get_camera_transform() {
-	Transform3D transform_for_eye;
+	Transform3D camera_transform;
 
 	XRServer *xr_server = XRServer::get_singleton();
-	ERR_FAIL_NULL_V(xr_server, transform_for_eye);
+	ERR_FAIL_NULL_V(xr_server, camera_transform);
 
 	if (initialized) {
 		float world_scale = xr_server->get_world_scale();
@@ -353,60 +354,59 @@ Transform3D WebXRInterfaceJS::get_camera_transform() {
 		Transform3D _head_transform = head_transform;
 		_head_transform.origin *= world_scale;
 
-		transform_for_eye = (xr_server->get_reference_frame()) * _head_transform;
+		camera_transform = (xr_server->get_reference_frame()) * _head_transform;
 	}
 
-	return transform_for_eye;
+	return camera_transform;
 };
 
 Transform3D WebXRInterfaceJS::get_transform_for_view(uint32_t p_view, const Transform3D &p_cam_transform) {
-	Transform3D transform_for_eye;
-
 	XRServer *xr_server = XRServer::get_singleton();
-	ERR_FAIL_NULL_V(xr_server, transform_for_eye);
+	ERR_FAIL_NULL_V(xr_server, p_cam_transform);
+	ERR_FAIL_COND_V(!initialized, p_cam_transform);
 
-	float *js_matrix = godot_webxr_get_transform_for_eye(p_view + 1);
-	if (!initialized || js_matrix == nullptr) {
-		transform_for_eye = p_cam_transform;
-		return transform_for_eye;
+	float js_matrix[16];
+	bool has_transform = godot_webxr_get_transform_for_view(p_view, js_matrix);
+	if (!has_transform) {
+		return p_cam_transform;
 	}
 
-	transform_for_eye = _js_matrix_to_transform(js_matrix);
-	free(js_matrix);
+	Transform3D transform_for_view = _js_matrix_to_transform(js_matrix);
 
 	float world_scale = xr_server->get_world_scale();
 	// Scale only the center point of our eye transform, so we don't scale the
 	// distance between the eyes.
 	Transform3D _head_transform = head_transform;
-	transform_for_eye.origin -= _head_transform.origin;
+	transform_for_view.origin -= _head_transform.origin;
 	_head_transform.origin *= world_scale;
-	transform_for_eye.origin += _head_transform.origin;
+	transform_for_view.origin += _head_transform.origin;
 
-	return p_cam_transform * xr_server->get_reference_frame() * transform_for_eye;
+	return p_cam_transform * xr_server->get_reference_frame() * transform_for_view;
 };
 
 Projection WebXRInterfaceJS::get_projection_for_view(uint32_t p_view, double p_aspect, double p_z_near, double p_z_far) {
-	Projection eye;
+	Projection view;
 
-	float *js_matrix = godot_webxr_get_projection_for_eye(p_view + 1);
-	if (!initialized || js_matrix == nullptr) {
-		return eye;
+	ERR_FAIL_COND_V(!initialized, view);
+
+	float js_matrix[16];
+	bool has_projection = godot_webxr_get_projection_for_view(p_view, js_matrix);
+	if (!has_projection) {
+		return view;
 	}
 
 	int k = 0;
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
-			eye.columns[i][j] = js_matrix[k++];
+			view.columns[i][j] = js_matrix[k++];
 		}
 	}
 
-	free(js_matrix);
-
 	// Copied from godot_oculus_mobile's ovr_mobile_session.cpp
-	eye.columns[2][2] = -(p_z_far + p_z_near) / (p_z_far - p_z_near);
-	eye.columns[3][2] = -(2.0f * p_z_far * p_z_near) / (p_z_far - p_z_near);
+	view.columns[2][2] = -(p_z_far + p_z_near) / (p_z_far - p_z_near);
+	view.columns[3][2] = -(2.0f * p_z_far * p_z_near) / (p_z_far - p_z_near);
 
-	return eye;
+	return view;
 }
 
 bool WebXRInterfaceJS::pre_draw_viewport(RID p_render_target) {
@@ -511,15 +511,15 @@ RID WebXRInterfaceJS::get_velocity_texture() {
 void WebXRInterfaceJS::process() {
 	if (initialized) {
 		// Get the "head" position.
-		float *js_matrix = godot_webxr_get_transform_for_eye(0);
-		if (js_matrix != nullptr) {
+		float js_matrix[16];
+		if (godot_webxr_get_transform_for_view(-1, js_matrix)) {
 			head_transform = _js_matrix_to_transform(js_matrix);
-			free(js_matrix);
 		}
 		if (head_tracker.is_valid()) {
 			head_tracker->set_pose("default", head_transform, Vector3(), Vector3());
 		}
 
+		// Update all input sources.
 		for (int i = 0; i < input_source_count; i++) {
 			_update_input_source(i);
 		}

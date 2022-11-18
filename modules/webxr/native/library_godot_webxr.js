@@ -41,6 +41,8 @@ const GodotWebXR = {
 		view_count: 1,
 		input_sources: new Array(16),
 		touches: new Array(5),
+		color_texture: null,
+		depth_texture: null,
 
 		// Monkey-patch the requestAnimationFrame() used by Emscripten for the main
 		// loop, so that we can swap it out for XRSession.requestAnimationFrame()
@@ -128,6 +130,7 @@ const GodotWebXR = {
 
 		getTextureId: (texture) => {
 			if ('name' in texture) {
+				GL.textures[texture.name] = texture;
 				return texture.name;
 			}
 

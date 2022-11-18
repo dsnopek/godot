@@ -344,6 +344,8 @@ struct RenderTarget {
 
 		struct FBOCacheEntry {
 			GLuint fbo;
+			GLuint color;
+			GLuint depth;
 			Size2i size;
 			Vector<GLuint> allocated_textures;
 		};

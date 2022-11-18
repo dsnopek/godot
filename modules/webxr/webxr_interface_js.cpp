@@ -420,13 +420,21 @@ bool WebXRInterfaceJS::pre_draw_viewport(RID p_render_target) {
 		return false;
 	}
 
-	RID color_texture = get_color_texture();
-	RID depth_texture = get_depth_texture();
+	// Cache the resources so we don't have to get them from JS twice.
+	color_texture = _get_color_texture();
+	depth_texture = _get_depth_texture();
 
-	// If the texture resources don't change, we need to re-attach the color and
-	// depth textures every frame. WebXR is doing something tricky where the
-	// 'texture' object is the same, but it changes internally to move to the
-	// next buffer in the swap chain.
+	// Per the WebXR spec, it returns "opaque textures" to us, which may be the
+	// same WebGLTexture object (which would be the same GLuint in C++) but
+	// represent a different underlying resource (probably the next texture in
+	// the XR device's swap chain). In order to render to this texture, we need
+	// to re-attach it to the FBO, otherwise we get an "incomplete FBO" error.
+	//
+	// See: https://immersive-web.github.io/layers/#xropaquetextures
+	//
+	// This is why we're doing this sort of silly check: if the color and depth
+	// textures are the same this frame as last frame, we need to attach them
+	// again, despite the fact that the GLuint for them hasn't changed.
 	if (rt->overridden.is_overridden && rt->overridden.color == color_texture && rt->overridden.depth == depth_texture) {
 		GLES3::Config *config = GLES3::Config::get_singleton();
 		bool use_multiview = rt->view_count > 1 && config->multiview_supported;
@@ -452,6 +460,24 @@ Vector<BlitToScreen> WebXRInterfaceJS::post_draw_viewport(RID p_render_target, c
 
 	return blit_to_screen;
 };
+
+RID WebXRInterfaceJS::_get_color_texture() {
+	unsigned int texture_id = godot_webxr_get_color_texture();
+	if (texture_id == 0) {
+		return RID();
+	}
+
+	return _get_texture(texture_id);
+}
+
+RID WebXRInterfaceJS::_get_depth_texture() {
+	unsigned int texture_id = godot_webxr_get_depth_texture();
+	if (texture_id == 0) {
+		return RID();
+	}
+
+	return _get_texture(texture_id);
+}
 
 RID WebXRInterfaceJS::_get_texture(unsigned int p_texture_id) {
 	RBMap<unsigned int, RID>::Element *cache = texture_cache.find(p_texture_id);
@@ -482,21 +508,11 @@ RID WebXRInterfaceJS::_get_texture(unsigned int p_texture_id) {
 }
 
 RID WebXRInterfaceJS::get_color_texture() {
-	unsigned int texture_id = godot_webxr_get_color_texture();
-	if (texture_id == 0) {
-		return RID();
-	}
-
-	return _get_texture(texture_id);
+	return color_texture;
 }
 
 RID WebXRInterfaceJS::get_depth_texture() {
-	unsigned int texture_id = godot_webxr_get_depth_texture();
-	if (texture_id == 0) {
-		return RID();
-	}
-
-	return _get_texture(texture_id);
+	return depth_texture;
 }
 
 RID WebXRInterfaceJS::get_velocity_texture() {

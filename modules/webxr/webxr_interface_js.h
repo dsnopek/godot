@@ -73,6 +73,11 @@ private:
 		int touch_index = -1;
 	} input_sources[input_source_count];
 
+	RID color_texture;
+	RID depth_texture;
+
+	RID _get_color_texture();
+	RID _get_depth_texture();
 	RID _get_texture(unsigned int p_texture_id);
 	Transform3D _js_matrix_to_transform(float *p_js_matrix);
 	void _update_input_source(int p_input_source_id);

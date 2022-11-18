@@ -489,7 +489,7 @@ RID WebXRInterfaceJS::_get_texture(unsigned int p_texture_id) {
 		return RID();
 	}
 
-	uint32_t view_count = get_view_count();
+	uint32_t view_count = godot_webxr_get_view_count();
 	Size2 texture_size = get_render_target_size();
 
 	RID texture = texture_storage->texture_create_external(

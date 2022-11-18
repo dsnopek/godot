@@ -207,7 +207,7 @@ StringName WebXRInterfaceJS::get_name() const {
 };
 
 uint32_t WebXRInterfaceJS::get_capabilities() const {
-	return XRInterface::XR_STEREO | XRInterface::XR_MONO;
+	return XRInterface::XR_STEREO | XRInterface::XR_MONO | XRInterface::XR_VR | XRInterface::XR_AR;
 };
 
 uint32_t WebXRInterfaceJS::get_view_count() {

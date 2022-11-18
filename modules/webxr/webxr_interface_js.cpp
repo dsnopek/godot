@@ -421,8 +421,6 @@ bool WebXRInterfaceJS::pre_draw_viewport(RID p_render_target) {
 	}
 
 	RID color_texture = get_color_texture();
-	printf("color texture RID is valid: %d\n", color_texture.is_valid());
-	printf("color texture RID = %llu\n", color_texture.get_id());
 	RID depth_texture = get_depth_texture();
 
 	// If the texture resources don't change, we need to re-attach the color and
@@ -485,7 +483,6 @@ RID WebXRInterfaceJS::_get_texture(unsigned int p_texture_id) {
 
 RID WebXRInterfaceJS::get_color_texture() {
 	unsigned int texture_id = godot_webxr_get_color_texture();
-	printf("color texture id = %d\n", texture_id);
 	if (texture_id == 0) {
 		//texture_cache.clear();
 		return RID();

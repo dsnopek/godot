@@ -48,7 +48,7 @@ typedef void (*GodotWebXRSupportedCallback)(char *p_session_mode, int p_supporte
 typedef void (*GodotWebXRStartedCallback)(char *p_reference_space_type);
 typedef void (*GodotWebXREndedCallback)();
 typedef void (*GodotWebXRFailedCallback)(char *p_message);
-typedef void (*GodotWebXRInputEventCallback)(int p_event_type, int p_controller_id);
+typedef void (*GodotWebXRInputEventCallback)(int p_event_type, int p_input_source_id);
 typedef void (*GodotWebXRSimpleEventCallback)(char *p_signal_name);
 
 extern int godot_webxr_is_supported();

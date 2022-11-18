@@ -382,9 +382,10 @@ const GodotWebXR = {
 	godot_webxr_get_view_count__sig: 'i',
 	godot_webxr_get_view_count: function () {
 		if (!GodotWebXR.session || !GodotWebXR.pose) {
-			return 0;
+			return 1;
 		}
-		return GodotWebXR.pose.views.length;
+		const view_count = GodotWebXR.pose.views.length;
+		return view_count > 0 ? view_count : 1;
 	},
 
 	godot_webxr_get_render_target_size__proxy: 'sync',

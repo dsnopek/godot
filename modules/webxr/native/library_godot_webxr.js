@@ -550,14 +550,7 @@ const GodotWebXR = {
 
 			axes_count = Math.min(input_source.gamepad.axes.length, 10);
 			for (let i = 0; i < axes_count; i++) {
-				let value = input_source.gamepad.axes[i];
-				if (has_standard_mapping && (i === 1 || i === 3)) {
-					// @todo Move this to C++?
-					// Invert the Y-axis on thumbsticks and trackpads, in order to
-					// match OpenXR and other XR platform SDKs.
-					value *= -1.0;
-				}
-				GodotRuntime.setHeapValue(r_axes + (i * 4), value, 'float');
+				GodotRuntime.setHeapValue(r_axes + (i * 4), input_source.gamepad.axes[i], 'float');
 			}
 		}
 		GodotRuntime.setHeapValue(r_has_standard_mapping, has_standard_mapping ? 1 : 0, 'i32');

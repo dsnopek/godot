@@ -614,6 +614,11 @@ void WebXRInterfaceJS::_update_input_source(int p_input_source_id) {
 	for (int i = 0; i < axes_count; i++) {
 		StringName axis_name = has_standard_mapping ? standard_axis_names[i] : unknown_axis_names[i];
 		float value = axes[i];
+		if (has_standard_mapping && (i == 1 || i == 3)) {
+			// Invert the Y-axis on thumbsticks and trackpads, in order to
+			// match OpenXR and other XR platform SDKs.
+			value = -value;
+		}
 		tracker->set_input(axis_name, value);
 	}
 
@@ -699,8 +704,7 @@ Vector2 WebXRInterfaceJS::_get_screen_position_from_joy_vector(const Vector2 &p_
 
 	Window *viewport = scene_tree->get_root();
 
-	// Invert the y-axis.
-	Vector2 position_percentage((p_joy_vector.x + 1.0f) / 2.0f, ((-p_joy_vector.y) + 1.0f) / 2.0f);
+	Vector2 position_percentage((p_joy_vector.x + 1.0f) / 2.0f, ((p_joy_vector.y) + 1.0f) / 2.0f);
 	Vector2 position = (Size2)viewport->get_size() * position_percentage;
 
 	return position;

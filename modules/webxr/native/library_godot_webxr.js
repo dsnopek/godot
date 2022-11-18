@@ -195,11 +195,18 @@ const GodotWebXR = {
 		},
 
 		getInputSourceId: (input_source) => {
-			if (input_source.name) {
+			if ('name' in input_source) {
 				return input_source.name;
 			}
 			return -1;
 		},
+
+		getTouchIndex: (input_source) => {
+			if ('touch_index' in input_source) {
+				return input_source.touch_index;
+			}
+			return -1;
+		}
 	},
 
 	godot_webxr_is_supported__proxy: 'sync',
@@ -511,11 +518,7 @@ const GodotWebXR = {
 		GodotRuntime.setHeapValue(r_target_ray_mode, target_ray_mode, 'i32');
 
 		// Touch index.
-		let touch_index = -1;
-		if (target_ray_mode === 3 && 'touch_index' in input_source) {
-			touch_index = input_source.touch_index;
-		}
-		GodotRuntime.setHeapValue(r_touch_index, touch_index, 'i32');
+		GodotRuntime.setHeapValue(r_touch_index, GodotWebXR.getTouchIndex(input_source), 'i32');
 
 		// Grip pose.
 		let has_grip_pose = false;

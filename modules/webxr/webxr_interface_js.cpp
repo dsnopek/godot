@@ -575,22 +575,11 @@ void WebXRInterfaceJS::_update_input_source(int p_input_source_id) {
 	if (tracker.is_null()) {
 		tracker.instantiate();
 
-		// @todo Prebuild all possible tracker names.
 		StringName tracker_name;
-		switch (p_input_source_id) {
-			case 0: {
-				tracker_name = SNAME("left_hand");
-			} break;
-
-			case 1: {
-				tracker_name = SNAME("right_hand");
-			} break;
-
-			default: {
-				char tmp[16];
-				sprintf(tmp, "tracker_%i", p_input_source_id);
-				tracker_name = tmp;
-			}
+		if (input_source.target_ray_mode == WebXRInterface::TargetRayMode::TARGET_RAY_MODE_SCREEN) {
+			tracker_name = touch_names[touch_index];
+		} else {
+			tracker_name = tracker_names[p_input_source_id];
 		}
 
 		// Input source id's 0 and 1 are always the left and right hands.
@@ -606,29 +595,26 @@ void WebXRInterfaceJS::_update_input_source(int p_input_source_id) {
 		xr_server->add_tracker(tracker);
 	}
 
-	// @todo Should "default" really be called "aim"?
-	tracker->set_pose("default", _js_matrix_to_transform(target_pose), Vector3(), Vector3());
+	Transform3D aim_transform = _js_matrix_to_transform(target_pose);
+	tracker->set_pose(SNAME("default"), aim_transform, Vector3(), Vector3());
+	tracker->set_pose(SNAME("aim"), aim_transform, Vector3(), Vector3());
 	if (has_grip_pose) {
-		tracker->set_pose("grip", _js_matrix_to_transform(grip_pose), Vector3(), Vector3());
+		tracker->set_pose(SNAME("grip"), _js_matrix_to_transform(grip_pose), Vector3(), Vector3());
 	}
 
 	for (int i = 0; i < button_count; i++) {
-		// @todo buttons should be named properly, this is just a temporary fix
-		char name[1024];
-		sprintf(name, "button_%i", i);
-
+		StringName button_name = has_standard_mapping ? standard_button_names[i] : unknown_button_names[i];
+		StringName button_axis_name = has_standard_mapping ? standard_button_axis_names[i] : unknown_button_axis_names[i];
 		float value = buttons[i];
 		bool state = value > 0.0;
-		tracker->set_input(name, state);
+		tracker->set_input(button_name, state);
+		tracker->set_input(button_axis_name, value);
 	}
 
 	for (int i = 0; i < axes_count; i++) {
-		// @todo buttons should be named properly, this is just a temporary fix
-		char name[1024];
-		sprintf(name, "axis_%i", i);
-
+		StringName axis_name = has_standard_mapping ? standard_axis_names[i] : unknown_axis_names[i];
 		float value = axes[i];
-		tracker->set_input(name, value);
+		tracker->set_input(axis_name, value);
 	}
 
 	if (input_source.target_ray_mode == WebXRInterface::TARGET_RAY_MODE_SCREEN) {

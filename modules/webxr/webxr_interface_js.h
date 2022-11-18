@@ -121,6 +121,112 @@ public:
 
 	WebXRInterfaceJS();
 	~WebXRInterfaceJS();
+
+private:
+	StringName tracker_names[16] = {
+		StringName("left_hand"),
+		StringName("right_hand"),
+		StringName("tracker_2"),
+		StringName("tracker_3"),
+		StringName("tracker_4"),
+		StringName("tracker_5"),
+		StringName("tracker_6"),
+		StringName("tracker_7"),
+		StringName("tracker_8"),
+		StringName("tracker_9"),
+		StringName("tracker_10"),
+		StringName("tracker_11"),
+		StringName("tracker_12"),
+		StringName("tracker_13"),
+		StringName("tracker_14"),
+		StringName("tracker_15"),
+	};
+
+	StringName touch_names[5] = {
+		StringName("touch_0"),
+		StringName("touch_1"),
+		StringName("touch_2"),
+		StringName("touch_3"),
+		StringName("touch_4"),
+	};
+
+	StringName standard_axis_names[10] = {
+		StringName("touchpad_x"),
+		StringName("touchpad_y"),
+		StringName("thumbstick_x"),
+		StringName("thumbstick_y"),
+		StringName("axis_4"),
+		StringName("axis_5"),
+		StringName("axis_6"),
+		StringName("axis_7"),
+		StringName("axis_8"),
+		StringName("axis_9"),
+	};
+
+	StringName standard_button_names[10] = {
+		StringName("trigger"),
+		StringName("squeeze"),
+		StringName("touchpad_press"),
+		StringName("thumbstick_press"),
+		StringName("ax_button"),
+		StringName("by_button"),
+		StringName("button_6"),
+		StringName("button_7"),
+		StringName("button_8"),
+		StringName("button_9"),
+	};
+
+	StringName standard_button_axis_names[10] = {
+		StringName("trigger_axis"),
+		StringName("squeeze_axis"),
+		StringName("touchpad_press_axis"),
+		StringName("thumbstick_press_axis"),
+		StringName("ax_button_axis"),
+		StringName("by_button_axis"),
+		StringName("button_axis_6"),
+		StringName("button_axis_7"),
+		StringName("button_axis_8"),
+		StringName("button_axis_9"),
+	};
+
+	StringName unknown_button_names[10] = {
+		StringName("button_0"),
+		StringName("button_1"),
+		StringName("button_2"),
+		StringName("button_3"),
+		StringName("button_4"),
+		StringName("button_5"),
+		StringName("button_6"),
+		StringName("button_7"),
+		StringName("button_8"),
+		StringName("button_9"),
+	};
+
+	StringName unknown_axis_names[10] = {
+		StringName("axis_0"),
+		StringName("axis_1"),
+		StringName("axis_2"),
+		StringName("axis_3"),
+		StringName("axis_4"),
+		StringName("axis_5"),
+		StringName("axis_6"),
+		StringName("axis_7"),
+		StringName("axis_8"),
+		StringName("axis_9"),
+	};
+
+	StringName unknown_button_axis_names[10] = {
+		StringName("button_axis_0"),
+		StringName("button_axis_1"),
+		StringName("button_axis_2"),
+		StringName("button_axis_3"),
+		StringName("button_axis_4"),
+		StringName("button_axis_5"),
+		StringName("button_axis_6"),
+		StringName("button_axis_7"),
+		StringName("button_axis_8"),
+		StringName("button_axis_9"),
+	};
 };
 
 #endif // WEB_ENABLED

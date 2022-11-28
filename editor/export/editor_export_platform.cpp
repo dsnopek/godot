@@ -927,13 +927,6 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 		features_psa.push_back(feature);
 	}
 
-	for (int i = 0; i < export_plugins.size(); i++) {
-		PackedStringArray plugin_features = export_plugins[i]->_get_export_features(Ref<EditorExportPlatform>(this), p_debug);
-		if (plugin_features.size() > 0) {
-			features_psa.append_array(plugin_features);
-		}
-	}
-
 	// Check if custom processing is needed
 	uint32_t custom_resources_hash = HASH_MURMUR3_SEED;
 	uint32_t custom_scene_hash = HASH_MURMUR3_SEED;
@@ -1220,6 +1213,9 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 				custom_list.push_back(f);
 			}
 		}
+	}
+	for (int i = 0; i < export_plugins.size(); i++) {
+		custom_list.append_array(export_plugins[i]->_get_export_features(Ref<EditorExportPlatform>(this), p_debug));
 	}
 
 	ProjectSettings::CustomMap custom_map;

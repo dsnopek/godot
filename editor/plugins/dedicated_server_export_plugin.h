@@ -37,6 +37,10 @@ class DedicatedServerExportPlugin : public EditorExportPlugin {
 protected:
 	String _get_name() const override { return "DedicatedServer"; }
 	PackedStringArray _get_export_features(const Ref<EditorExportPlatform> &p_platform, bool p_debug) const override;
+	uint64_t _get_customization_configuration_hash() const override;
+
+	bool _begin_customize_resources(const Ref<EditorExportPlatform> &p_platform, const Vector<String> &p_features) const override;
+	Ref<Resource> _customize_resource(const Ref<Resource> &p_resource, const String &p_path) override;
 
 	bool is_dedicated_server() const;
 

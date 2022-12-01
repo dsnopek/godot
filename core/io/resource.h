@@ -53,6 +53,13 @@ public:
 	static void register_custom_data_to_otdb() { ClassDB::add_resource_base_extension("res", get_class_static()); }
 	virtual String get_base_extension() const { return "res"; }
 
+#ifdef TOOLS_ENABLED
+	enum DedicatedServerExportType {
+		DEDICATED_SERVER_EXPORT_STRIP,
+		DEDICATED_SERVER_EXPORT_KEEP,
+	};
+#endif
+
 private:
 	HashSet<ObjectID> owners;
 
@@ -67,6 +74,7 @@ private:
 	uint64_t last_modified_time = 0;
 	uint64_t import_last_modified_time = 0;
 	String import_path;
+	DedicatedServerExportType dedicated_server_export_type = DEDICATED_SERVER_EXPORT_STRIP;
 #endif
 
 	bool local_to_scene = false;
@@ -132,6 +140,9 @@ public:
 
 	void set_import_path(const String &p_path) { import_path = p_path; }
 	String get_import_path() const { return import_path; }
+
+	void set_dedicated_server_export_type(DedicatedServerExportType p_server_export_type) { dedicated_server_export_type = p_server_export_type; }
+	DedicatedServerExportType get_dedicated_server_export_type() const { return dedicated_server_export_type; }
 
 #endif
 

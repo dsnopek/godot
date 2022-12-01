@@ -30,14 +30,23 @@
 
 #include "dedicated_server_export_plugin.h"
 
-#define PRESET_DEDICATED_SERVER_PROPERTY "dedicated_server/is_server"
+#define EXPORT_OPTION_IS_DEDICATED_SERVER "dedicated_server/is_server"
+#define IMPORT_OPTION_RESOURCE_EXPORT_TYPE "dedicated_server/server_export_type"
+
+void DedicatedServerExportPlugin::add_export_options(List<EditorExportPlatform::ExportOption> *r_options) {
+	r_options->push_back(EditorExportPlatform::ExportOption(PropertyInfo(Variant::BOOL, EXPORT_OPTION_IS_DEDICATED_SERVER), false));
+}
+
+void DedicatedServerExportPlugin::add_import_options(List<ResourceImporter::ImportOption> *r_options) {
+	r_options->push_back(ResourceImporter::ImportOption(PropertyInfo(Variant::INT, IMPORT_OPTION_RESOURCE_EXPORT_TYPE, PROPERTY_HINT_ENUM, "Strip,Keep"), 0));
+}
 
 bool DedicatedServerExportPlugin::is_dedicated_server() const {
 	Ref<EditorExportPreset> preset = get_export_preset();
 	ERR_FAIL_COND_V(preset.is_null(), false);
 
 	bool valid_prop = false;
-	bool is_server = preset->get(PRESET_DEDICATED_SERVER_PROPERTY, &valid_prop);
+	bool is_server = preset->get(EXPORT_OPTION_IS_DEDICATED_SERVER, &valid_prop);
 
 	if (valid_prop) {
 		return is_server;
@@ -56,10 +65,6 @@ PackedStringArray DedicatedServerExportPlugin::_get_export_features(const Ref<Ed
 
 uint64_t DedicatedServerExportPlugin::_get_customization_configuration_hash() const {
 	return (uint64_t)is_dedicated_server();
-}
-
-void DedicatedServerExportPlugin::add_export_option(List<EditorExportPlatform::ExportOption> *r_options) {
-	r_options->push_back(EditorExportPlatform::ExportOption(PropertyInfo(Variant::BOOL, PRESET_DEDICATED_SERVER_PROPERTY), false));
 }
 
 bool DedicatedServerExportPlugin::_begin_customize_resources(const Ref<EditorExportPlatform> &p_platform, const Vector<String> &p_features) const {

@@ -43,6 +43,9 @@ class ResourceFormatImporter : public ResourceFormatLoader {
 		String group_file;
 		Variant metadata;
 		uint64_t uid = ResourceUID::INVALID_ID;
+#ifdef TOOLS_ENABLED
+		Resource::DedicatedServerExportType dedicated_server_export_type;
+#endif
 	};
 
 	Error _get_path_and_type(const String &p_path, PathAndType &r_path_and_type, bool *r_valid = nullptr) const;

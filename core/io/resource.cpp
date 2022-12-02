@@ -437,6 +437,9 @@ void Resource::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "resource_local_to_scene"), "set_local_to_scene", "is_local_to_scene");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "resource_path", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR), "set_path", "get_path");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "resource_name"), "set_name", "get_name");
+#ifdef TOOLS_ENABLED
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "dedicated_server_export_type", PROPERTY_HINT_ENUM, "Strip,Keep", PROPERTY_USAGE_EDITOR), "set_dedicated_server_export_type", "get_dedicated_server_export_type");
+#endif
 
 	MethodInfo get_rid_bind("_get_rid");
 	get_rid_bind.return_val.type = Variant::RID;

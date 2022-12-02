@@ -492,6 +492,15 @@ void ResourceImporter::_bind_methods() {
 	BIND_ENUM_CONSTANT(IMPORT_ORDER_SCENE);
 }
 
+#ifdef TOOLS_ENABLED
+void ResourceImporter::get_editor_import_options(const String &p_path, List<ImportOption> *r_options, int p_preset) {
+	get_import_options(p_path, r_options, p_preset);
+
+	// Add default editor options.
+	r_options->push_back(ResourceImporter::ImportOption(PropertyInfo(Variant::INT, "dedicated_server/server_export_type", PROPERTY_HINT_ENUM, "Strip,Keep"), 0));
+}
+#endif
+
 void ResourceFormatImporter::add_importer(const Ref<ResourceImporter> &p_importer, bool p_first_priority) {
 	ERR_FAIL_COND(p_importer.is_null());
 	if (p_first_priority) {

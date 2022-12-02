@@ -31,14 +31,9 @@
 #include "dedicated_server_export_plugin.h"
 
 #define EXPORT_OPTION_IS_DEDICATED_SERVER "dedicated_server/is_server"
-#define IMPORT_OPTION_RESOURCE_EXPORT_TYPE "dedicated_server/server_export_type"
 
 void DedicatedServerExportPlugin::add_export_options(List<EditorExportPlatform::ExportOption> *r_options) {
 	r_options->push_back(EditorExportPlatform::ExportOption(PropertyInfo(Variant::BOOL, EXPORT_OPTION_IS_DEDICATED_SERVER), false));
-}
-
-void DedicatedServerExportPlugin::add_import_options(List<ResourceImporter::ImportOption> *r_options) {
-	r_options->push_back(ResourceImporter::ImportOption(PropertyInfo(Variant::INT, IMPORT_OPTION_RESOURCE_EXPORT_TYPE, PROPERTY_HINT_ENUM, "Strip,Keep"), 0));
 }
 
 bool DedicatedServerExportPlugin::is_dedicated_server() const {
@@ -72,6 +67,10 @@ bool DedicatedServerExportPlugin::_begin_customize_resources(const Ref<EditorExp
 }
 
 Ref<Resource> DedicatedServerExportPlugin::_customize_resource(const Ref<Resource> &p_resource, const String &p_path) {
+	if (p_resource->get_dedicated_server_export_type() == Resource::DEDICATED_SERVER_EXPORT_KEEP) {
+		return Ref<Resource>();
+	}
+
 	if (const Texture2D *texture = Object::cast_to<Texture2D>(p_resource.ptr())) {
 		Ref<PlaceholderTexture2D> placeholder;
 		placeholder.instantiate();

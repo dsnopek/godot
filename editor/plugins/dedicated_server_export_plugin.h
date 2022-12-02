@@ -31,7 +31,6 @@
 #ifndef DEDICATED_SERVER_EXPORT_PLUGIN_H
 #define DEDICATED_SERVER_EXPORT_PLUGIN_H
 
-#include "core/io/resource_importer.h"
 #include "editor/export/editor_export.h"
 
 class DedicatedServerExportPlugin : public EditorExportPlugin {
@@ -47,7 +46,6 @@ protected:
 
 public:
 	static void add_export_options(List<EditorExportPlatform::ExportOption> *r_options);
-	static void add_import_options(List<ResourceImporter::ImportOption> *r_options);
 };
 
 #endif // DEDICATED_SERVER_EXPORT_PLUGIN_H

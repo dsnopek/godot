@@ -141,7 +141,10 @@ public:
 	void set_import_path(const String &p_path) { import_path = p_path; }
 	String get_import_path() const { return import_path; }
 
-	void set_dedicated_server_export_type(DedicatedServerExportType p_server_export_type) { dedicated_server_export_type = p_server_export_type; }
+	void set_dedicated_server_export_type(DedicatedServerExportType p_server_export_type) {
+		dedicated_server_export_type = p_server_export_type;
+		emit_changed();
+	}
 	DedicatedServerExportType get_dedicated_server_export_type() const { return dedicated_server_export_type; }
 
 #endif

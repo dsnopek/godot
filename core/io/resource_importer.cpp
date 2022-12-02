@@ -62,6 +62,7 @@ Error ResourceFormatImporter::_get_path_and_type(const String &p_path, PathAndTy
 
 	int lines = 0;
 	String error_text;
+	String section;
 	bool path_found = false; //first match must have priority
 	while (true) {
 		assign = Variant();
@@ -77,10 +78,13 @@ Error ResourceFormatImporter::_get_path_and_type(const String &p_path, PathAndTy
 		}
 
 		if (assign.is_empty()) {
+			if (!next_tag.name.is_empty()) {
+				section = next_tag.name;
+			}
 			continue;
 		}
 
-		if (next_tag.name == "remap") {
+		if (section == "remap") {
 			if (!path_found && assign.begins_with("path.") && r_path_and_type.path.is_empty()) {
 				String feature = assign.get_slicec('.', 1);
 				if (OS::get_singleton()->has_feature(feature)) {
@@ -109,14 +113,12 @@ Error ResourceFormatImporter::_get_path_and_type(const String &p_path, PathAndTy
 
 		} else {
 #ifdef TOOLS_ENABLED
-			if (next_tag.name == "params" && assign == "dedicated_server/server_export_type") {
+			if (section == "params" && assign == "dedicated_server/server_export_type") {
 				r_path_and_type.dedicated_server_export_type = (Resource::DedicatedServerExportType)(int)value;
 				break;
 			}
 #else
-			if (next_tag.name != "remap") {
-				break;
-			}
+			break;
 #endif // TOOLS_ENABLED
 		}
 	}

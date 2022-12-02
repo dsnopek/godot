@@ -161,6 +161,10 @@ public:
 	~Resource();
 };
 
+#ifdef TOOLS_ENABLED
+VARIANT_ENUM_CAST(Resource::DedicatedServerExportType);
+#endif
+
 class ResourceCache {
 	friend class Resource;
 	friend class ResourceLoader; //need the lock

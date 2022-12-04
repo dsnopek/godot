@@ -168,6 +168,7 @@ void OpenXROpenGLExtension::get_usable_depth_formats(Vector<int64_t> &p_usable_d
 	p_usable_depth_formats.push_back(GL_DEPTH_COMPONENT32F);
 	p_usable_depth_formats.push_back(GL_DEPTH24_STENCIL8);
 	p_usable_depth_formats.push_back(GL_DEPTH32F_STENCIL8);
+	p_usable_depth_formats.push_back(GL_DEPTH_COMPONENT24);
 }
 
 bool OpenXROpenGLExtension::get_swapchain_image_data(XrSwapchain p_swapchain, int64_t p_swapchain_format, uint32_t p_width, uint32_t p_height, uint32_t p_sample_count, uint32_t p_array_size, void **r_swapchain_graphics_data) {

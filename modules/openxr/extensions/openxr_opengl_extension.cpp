@@ -215,6 +215,11 @@ bool OpenXROpenGLExtension::get_swapchain_image_data(XrSwapchain p_swapchain, in
 	*r_swapchain_graphics_data = data;
 	data->is_multiview = (p_array_size > 1);
 
+	bool keep_3d_linear = p_swapchain_format != GL_SRGB8_ALPHA8;
+	if (!keep_3d_linear) {
+		glDisable(GL_FRAMEBUFFER_SRGB);
+	}
+
 	Image::Format format = Image::FORMAT_RGBA8;
 
 	Vector<RID> texture_rids;

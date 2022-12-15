@@ -30,24 +30,10 @@
 
 #include "dedicated_server_export_plugin.h"
 
-#define EXPORT_OPTION_IS_DEDICATED_SERVER "dedicated_server/is_server"
-
-void DedicatedServerExportPlugin::add_export_options(List<EditorExportPlatform::ExportOption> *r_options) {
-	r_options->push_back(EditorExportPlatform::ExportOption(PropertyInfo(Variant::BOOL, EXPORT_OPTION_IS_DEDICATED_SERVER), false));
-}
-
 bool DedicatedServerExportPlugin::is_dedicated_server() const {
-	Ref<EditorExportPreset> preset = get_export_preset();
-	ERR_FAIL_COND_V(preset.is_null(), false);
-
-	bool valid_prop = false;
-	bool is_server = preset->get(EXPORT_OPTION_IS_DEDICATED_SERVER, &valid_prop);
-
-	if (valid_prop) {
-		return is_server;
-	}
-
-	return false;
+	// TEMP: for now just assume true!
+	// @todo add a way to enable and disable this
+	return true;
 }
 
 PackedStringArray DedicatedServerExportPlugin::_get_export_features(const Ref<EditorExportPlatform> &p_platform, bool p_debug) const {
@@ -67,60 +53,7 @@ bool DedicatedServerExportPlugin::_begin_customize_resources(const Ref<EditorExp
 }
 
 Ref<Resource> DedicatedServerExportPlugin::_customize_resource(const Ref<Resource> &p_resource, const String &p_path) {
-	if (p_resource->get_dedicated_server_export_type() == Resource::DEDICATED_SERVER_EXPORT_KEEP) {
-		return Ref<Resource>();
-	}
+	// @todo Check if resource should be stripped or not
 
-	if (const Texture2D *texture = Object::cast_to<Texture2D>(p_resource.ptr())) {
-		Ref<PlaceholderTexture2D> placeholder;
-		placeholder.instantiate();
-		placeholder->set_size(texture->get_size());
-		return placeholder;
-	}
-
-	if (const Texture2DArray *texture = Object::cast_to<Texture2DArray>(p_resource.ptr())) {
-		Ref<PlaceholderTexture2DArray> placeholder;
-		placeholder.instantiate();
-		placeholder->set_size(Size2i(texture->get_width(), texture->get_height()));
-		placeholder->set_layers(texture->get_layers());
-		return placeholder;
-	}
-
-	if (const Texture3D *texture = Object::cast_to<Texture3D>(p_resource.ptr())) {
-		Ref<PlaceholderTexture3D> placeholder;
-		placeholder.instantiate();
-		placeholder->set_size(Vector3i(texture->get_width(), texture->get_height(), texture->get_depth()));
-		return placeholder;
-	}
-
-	if (const Cubemap *cubemap = Object::cast_to<Cubemap>(p_resource.ptr())) {
-		Ref<PlaceholderCubemap> placeholder;
-		placeholder.instantiate();
-		placeholder->set_size(Size2i(cubemap->get_width(), cubemap->get_height()));
-		placeholder->set_layers(cubemap->get_layers());
-		return placeholder;
-	}
-
-	if (const CubemapArray *cubemap = Object::cast_to<CubemapArray>(p_resource.ptr())) {
-		Ref<PlaceholderCubemapArray> placeholder;
-		placeholder.instantiate();
-		placeholder->set_size(Size2i(cubemap->get_width(), cubemap->get_height()));
-		placeholder->set_layers(cubemap->get_layers());
-		return placeholder;
-	}
-
-	if (Object::cast_to<Material>(p_resource.ptr()) != nullptr) {
-		Ref<PlaceholderMaterial> placeholder;
-		placeholder.instantiate();
-		return placeholder;
-	}
-
-	if (const Mesh *mesh = Object::cast_to<Mesh>(p_resource.ptr())) {
-		Ref<PlaceholderMesh> placeholder;
-		placeholder.instantiate();
-		placeholder->set_aabb(mesh->get_aabb());
-		return placeholder;
-	}
-
-	return Ref<Resource>();
+	return p_resource->create_placeholder();
 }

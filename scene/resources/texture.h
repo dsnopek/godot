@@ -82,6 +82,8 @@ public:
 
 	virtual Ref<Image> get_image() const { return Ref<Image>(); }
 
+	virtual Ref<Resource> create_placeholder() const override;
+
 	Texture2D();
 };
 
@@ -453,6 +455,8 @@ class Texture2DArray : public ImageTextureLayered {
 public:
 	Texture2DArray() :
 			ImageTextureLayered(LAYERED_TYPE_2D_ARRAY) {}
+
+	virtual Ref<Resource> create_placeholder() const override;
 };
 
 class Cubemap : public ImageTextureLayered {
@@ -461,6 +465,8 @@ class Cubemap : public ImageTextureLayered {
 public:
 	Cubemap() :
 			ImageTextureLayered(LAYERED_TYPE_CUBEMAP) {}
+
+	virtual Ref<Resource> create_placeholder() const override;
 };
 
 class CubemapArray : public ImageTextureLayered {
@@ -469,6 +475,8 @@ class CubemapArray : public ImageTextureLayered {
 public:
 	CubemapArray() :
 			ImageTextureLayered(LAYERED_TYPE_CUBEMAP_ARRAY) {}
+
+	virtual Ref<Resource> create_placeholder() const override;
 };
 
 class CompressedTextureLayered : public TextureLayered {
@@ -580,6 +588,7 @@ public:
 	virtual int get_depth() const;
 	virtual bool has_mipmaps() const;
 	virtual Vector<Ref<Image>> get_data() const;
+	virtual Ref<Resource> create_placeholder() const;
 };
 
 class ImageTexture3D : public Texture3D {

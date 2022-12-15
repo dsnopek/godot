@@ -1216,6 +1216,10 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 		}
 	}
 
+	for (int i = 0; i < export_plugins.size(); i++) {
+		custom_list.append_array(export_plugins[i]->_get_export_features(Ref<EditorExportPlatform>(this), p_debug));
+	}
+
 	ProjectSettings::CustomMap custom_map;
 	if (path_remaps.size()) {
 		if (true) { //new remap mode, use always as it's friendlier with multiple .pck exports

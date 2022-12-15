@@ -43,9 +43,6 @@ protected:
 	Ref<Resource> _customize_resource(const Ref<Resource> &p_resource, const String &p_path) override;
 
 	bool is_dedicated_server() const;
-
-public:
-	static void add_export_options(List<EditorExportPlatform::ExportOption> *r_options);
 };
 
 #endif // DEDICATED_SERVER_EXPORT_PLUGIN_H

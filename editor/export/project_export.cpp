@@ -801,7 +801,6 @@ bool ProjectExportDialog::_fill_tree(EditorFileSystemDirectory *p_dir, TreeItem 
 			file->set_cell_mode(1, TreeItem::CELL_MODE_CUSTOM);
 			//file->set_text(1, file_mode_popup->get_item_index(current->get_file_export_mode(path)))
 			file->set_text(1, "Test");
-			file->set_custom_as_button(1, true);
 			file->set_editable(1, true);
 		} else {
 			file->set_checked(0, current->has_export_file(path));
@@ -849,7 +848,13 @@ void ProjectExportDialog::_check_propagated_to_item(Object *p_obj, int column) {
 }
 
 void ProjectExportDialog::_tree_popup_edited(bool p_arrow_clicked) {
-	file_mode_popup->popup(include_files->get_custom_popup_rect());
+	Rect2 bounds = include_files->get_custom_popup_rect();
+	bounds.position += get_global_canvas_transform().get_origin();
+	bounds.size *= get_global_canvas_transform().get_scale();
+	if (!is_embedding_subwindows()) {
+		bounds.position += get_position();
+	}
+	file_mode_popup->popup(bounds);
 }
 
 void ProjectExportDialog::_set_file_export_mode(int p_pid) {

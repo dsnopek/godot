@@ -30,6 +30,7 @@
 
 #include "visual_instance_3d.h"
 
+#include "core/core_string_names.h"
 #include "scene/scene_string_names.h"
 
 AABB VisualInstance3D::get_aabb() const {
@@ -134,7 +135,13 @@ VisualInstance3D::~VisualInstance3D() {
 }
 
 void GeometryInstance3D::set_material_override(const Ref<Material> &p_material) {
+	if (material_override.is_valid()) {
+		material_override->disconnect(CoreStringNames::get_singleton()->property_list_changed, callable_mp((Object *)this, &Object::notify_property_list_changed));
+	}
 	material_override = p_material;
+	if (material_override.is_valid()) {
+		material_override->connect(CoreStringNames::get_singleton()->property_list_changed, callable_mp((Object *)this, &Object::notify_property_list_changed));
+	}
 	RS::get_singleton()->instance_geometry_set_material_override(get_instance(), p_material.is_valid() ? p_material->get_rid() : RID());
 }
 
@@ -331,8 +338,16 @@ Variant GeometryInstance3D::get_instance_shader_parameter(const StringName &p_na
 	return RS::get_singleton()->instance_geometry_get_shader_parameter(get_instance(), p_name);
 }
 
-void GeometryInstance3D::set_custom_aabb(AABB aabb) {
-	RS::get_singleton()->instance_set_custom_aabb(get_instance(), aabb);
+void GeometryInstance3D::set_custom_aabb(AABB p_aabb) {
+	if (p_aabb == custom_aabb) {
+		return;
+	}
+	custom_aabb = p_aabb;
+	RS::get_singleton()->instance_set_custom_aabb(get_instance(), custom_aabb);
+}
+
+AABB GeometryInstance3D::get_custom_aabb() const {
+	return custom_aabb;
 }
 
 void GeometryInstance3D::set_lightmap_scale(LightmapScale p_scale) {
@@ -442,6 +457,7 @@ void GeometryInstance3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_ignoring_occlusion_culling"), &GeometryInstance3D::is_ignoring_occlusion_culling);
 
 	ClassDB::bind_method(D_METHOD("set_custom_aabb", "aabb"), &GeometryInstance3D::set_custom_aabb);
+	ClassDB::bind_method(D_METHOD("get_custom_aabb"), &GeometryInstance3D::get_custom_aabb);
 
 	ClassDB::bind_method(D_METHOD("get_aabb"), &GeometryInstance3D::get_aabb);
 
@@ -451,6 +467,7 @@ void GeometryInstance3D::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "transparency", PROPERTY_HINT_RANGE, "0.0,1.0,0.01"), "set_transparency", "get_transparency");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "cast_shadow", PROPERTY_HINT_ENUM, "Off,On,Double-Sided,Shadows Only"), "set_cast_shadows_setting", "get_cast_shadows_setting");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "extra_cull_margin", PROPERTY_HINT_RANGE, "0,16384,0.01,suffix:m"), "set_extra_cull_margin", "get_extra_cull_margin");
+	ADD_PROPERTY(PropertyInfo(Variant::AABB, "custom_aabb", PROPERTY_HINT_NONE, "suffix:m"), "set_custom_aabb", "get_custom_aabb");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "lod_bias", PROPERTY_HINT_RANGE, "0.001,128,0.001"), "set_lod_bias", "get_lod_bias");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "ignore_occlusion_culling"), "set_ignore_occlusion_culling", "is_ignoring_occlusion_culling");
 

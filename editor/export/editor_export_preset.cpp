@@ -158,6 +158,12 @@ bool EditorExportPreset::has_export_file(const String &p_path) {
 	return selected_files.has(p_path);
 }
 
+void EditorExportPreset::set_file_export_mode(const String &p_path, EditorExportPreset::FileExportMode p_mode) {
+}
+
+EditorExportPreset::FileExportMode EditorExportPreset::get_file_export_mode(const String &p_path) const {
+}
+
 void EditorExportPreset::set_custom_features(const String &p_custom_features) {
 	custom_features = p_custom_features;
 	EditorExport::singleton->save_presets();

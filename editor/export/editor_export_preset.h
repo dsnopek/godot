@@ -44,6 +44,14 @@ public:
 		EXPORT_SELECTED_SCENES,
 		EXPORT_SELECTED_RESOURCES,
 		EXCLUDE_SELECTED_RESOURCES,
+		EXPORT_CUSTOMIZED,
+	};
+
+	enum FileExportMode {
+		MODE_FILE_NOT_CUSTOMIZED,
+		MODE_FILE_STRIP,
+		MODE_FILE_KEEP,
+		MODE_FILE_REMOVE,
 	};
 
 	enum ScriptExportMode {
@@ -60,7 +68,9 @@ private:
 
 	String exporter;
 	HashSet<String> selected_files;
+	HashMap<String, FileExportMode> customized_files;
 	bool runnable = false;
+	bool dedicated_server = false;
 
 	friend class EditorExport;
 	friend class EditorExportPlatform;
@@ -99,11 +109,17 @@ public:
 	void remove_export_file(const String &p_path);
 	bool has_export_file(const String &p_path);
 
+	void set_file_export_mode(const String &p_path, FileExportMode p_mode);
+	FileExportMode get_file_export_mode(const String &p_path) const;
+
 	void set_name(const String &p_name);
 	String get_name() const;
 
 	void set_runnable(bool p_enable);
 	bool is_runnable() const;
+
+	void set_dedicated_server(bool p_enable);
+	bool is_dedicated_server() const;
 
 	void set_export_filter(ExportFilter p_filter);
 	ExportFilter get_export_filter() const;

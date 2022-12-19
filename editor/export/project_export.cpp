@@ -796,11 +796,11 @@ bool ProjectExportDialog::_fill_tree(EditorFileSystemDirectory *p_dir, TreeItem 
 		file->set_metadata(0, path);
 
 		if (p_export_filter == EditorExportPreset::EXPORT_CUSTOMIZED) {
-			file->set_checked(0, current->get_file_export_mode(path) != EditorExportPreset::MODE_FILE_NOT_CUSTOMIZED);
+			EditorExportPreset::FileExportMode file_mode = current->get_file_export_mode(path);
 
+			file->set_checked(0, file_mode != EditorExportPreset::MODE_FILE_NOT_CUSTOMIZED);
 			file->set_cell_mode(1, TreeItem::CELL_MODE_CUSTOM);
-			//file->set_text(1, file_mode_popup->get_item_index(current->get_file_export_mode(path)))
-			file->set_text(1, "Test");
+			file->set_text(1, file_mode != EditorExportPreset::MODE_FILE_NOT_CUSTOMIZED ? file_mode_popup->get_item_text(file_mode_popup->get_item_index(file_mode)) : "");
 			file->set_editable(1, true);
 		} else {
 			file->set_checked(0, current->has_export_file(path));
@@ -857,8 +857,18 @@ void ProjectExportDialog::_tree_popup_edited(bool p_arrow_clicked) {
 	file_mode_popup->popup(bounds);
 }
 
-void ProjectExportDialog::_set_file_export_mode(int p_pid) {
-	print_line("file mode selected: ", p_pid);
+void ProjectExportDialog::_set_file_export_mode(int p_id) {
+	Ref<EditorExportPreset> current = get_current_preset();
+	if (current.is_null()) {
+		return;
+	}
+
+	TreeItem *item = include_files->get_edited();
+	String path = item->get_text(0);
+
+	current->set_file_export_mode(path, (EditorExportPreset::FileExportMode)p_id);
+
+	item->set_text(1, file_mode_popup->get_item_text(file_mode_popup->get_item_index(p_id)));
 }
 
 void ProjectExportDialog::_export_pck_zip() {

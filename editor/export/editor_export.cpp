@@ -64,6 +64,11 @@ void EditorExport::_save() {
 				config->set_value(section, "export_filter", "exclude");
 				save_files = true;
 			} break;
+			case EditorExportPreset::EXPORT_CUSTOMIZED: {
+				config->set_value(section, "export_filter", "customized");
+				config->set_value(section, "customized_files", preset->get_customized_files());
+				save_files = false;
+			};
 		}
 
 		if (save_files) {
@@ -228,6 +233,10 @@ void EditorExport::load_config() {
 		} else if (export_filter == "exclude") {
 			preset->set_export_filter(EditorExportPreset::EXCLUDE_SELECTED_RESOURCES);
 			get_files = true;
+		} else if (export_filter == "customized") {
+			preset->set_export_filter(EditorExportPreset::EXPORT_CUSTOMIZED);
+			preset->set_customized_files(config->get_value(section, "customized_files"));
+			get_files = false;
 		}
 
 		if (get_files) {

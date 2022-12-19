@@ -104,7 +104,8 @@ public:
 	void update_files_to_export();
 
 	Vector<String> get_files_to_export() const;
-	Vector<String> get_customized_files() const;
+	Dictionary get_customized_files() const;
+	void set_customized_files(const Dictionary &p_files);
 
 	void add_export_file(const String &p_path);
 	void remove_export_file(const String &p_path);

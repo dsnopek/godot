@@ -86,12 +86,39 @@ Vector<String> EditorExportPreset::get_files_to_export() const {
 	return files;
 }
 
-Vector<String> EditorExportPreset::get_customized_files() const {
-	Vector<String> files;
+Dictionary EditorExportPreset::get_customized_files() const {
+	Dictionary files;
 	for (const KeyValue<String, FileExportMode> &E : customized_files) {
-		files.push_back(E.key);
+		String mode;
+		switch (E.value) {
+			case MODE_FILE_STRIP: {
+				mode = "strip";
+			} break;
+			case MODE_FILE_KEEP: {
+				mode = "keep";
+			} break;
+			case MODE_FILE_REMOVE: {
+				mode = "remove";
+			}
+		}
+		files[E.key] = mode;
 	}
 	return files;
+}
+
+void EditorExportPreset::set_customized_files(const Dictionary &p_files) {
+	for (const Variant *key = p_files.next(nullptr); key; key = p_files.next(key)) {
+		EditorExportPreset::FileExportMode mode = EditorExportPreset::MODE_FILE_NOT_CUSTOMIZED;
+		String value = p_files[*key];
+		if (value == "strip") {
+			mode = EditorExportPreset::MODE_FILE_STRIP;
+		} else if (value == "keep") {
+			mode = EditorExportPreset::MODE_FILE_KEEP;
+		} else if (value == "remove") {
+			mode = EditorExportPreset::MODE_FILE_REMOVE;
+		}
+		set_file_export_mode(*key, mode);
+	}
 }
 
 void EditorExportPreset::set_name(const String &p_name) {
@@ -174,6 +201,7 @@ void EditorExportPreset::set_file_export_mode(const String &p_path, EditorExport
 	} else {
 		customized_files.insert(p_path, p_mode);
 	}
+	EditorExport::singleton->save_presets();
 }
 
 EditorExportPreset::FileExportMode EditorExportPreset::get_file_export_mode(const String &p_path) const {

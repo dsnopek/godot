@@ -116,6 +116,7 @@ private:
 	void _export_type_changed(int p_which);
 	void _filter_changed(const String &p_filter);
 	void _fill_resource_tree();
+	void _setup_item_for_file_mode(TreeItem *p_item, EditorExportPreset::FileExportMode p_mode);
 	bool _fill_tree(EditorFileSystemDirectory *p_dir, TreeItem *p_item, Ref<EditorExportPreset> &current, EditorExportPreset::ExportFilter p_export_filter);
 	void _tree_changed();
 	void _check_propagated_to_item(Object *p_obj, int column);

@@ -743,20 +743,39 @@ void ProjectExportDialog::_fill_resource_tree() {
 
 	if (f == EditorExportPreset::EXPORT_ALL_RESOURCES) {
 		return;
-	} else if (f == EditorExportPreset::EXPORT_CUSTOMIZED) {
+	}
+
+	TreeItem *root = include_files->create_item();
+
+	if (f == EditorExportPreset::EXPORT_CUSTOMIZED) {
 		include_files->set_columns(2);
-	} else {
-		include_files->set_columns(1);
 		include_files->set_column_expand(1, false);
 		include_files->set_column_custom_minimum_width(1, 250 * EDSCALE);
+		_setup_item_for_file_mode(root, current->get_file_export_mode("/"));
+	} else {
+		include_files->set_columns(1);
 	}
 
 	include_label->show();
 	include_margin->show();
 
-	TreeItem *root = include_files->create_item();
-
 	_fill_tree(EditorFileSystem::get_singleton()->get_filesystem(), root, current, f);
+}
+
+void ProjectExportDialog::_setup_item_for_file_mode(TreeItem *p_item, EditorExportPreset::FileExportMode p_mode) {
+	if (p_mode == EditorExportPreset::MODE_FILE_NOT_CUSTOMIZED) {
+		p_item->set_checked(0, false);
+		p_item->set_cell_mode(1, TreeItem::CELL_MODE_STRING);
+		p_item->set_text(1, "");
+		p_item->set_editable(1, false);
+		p_item->set_selectable(1, false);
+	} else {
+		p_item->set_checked(0, true);
+		p_item->set_cell_mode(1, TreeItem::CELL_MODE_CUSTOM);
+		p_item->set_text(1, file_mode_popup->get_item_text(file_mode_popup->get_item_index(p_mode)));
+		p_item->set_editable(1, true);
+		p_item->set_selectable(1, true);
+	}
 }
 
 bool ProjectExportDialog::_fill_tree(EditorFileSystemDirectory *p_dir, TreeItem *p_item, Ref<EditorExportPreset> &current, EditorExportPreset::ExportFilter p_export_filter) {
@@ -796,12 +815,7 @@ bool ProjectExportDialog::_fill_tree(EditorFileSystemDirectory *p_dir, TreeItem 
 		file->set_metadata(0, path);
 
 		if (p_export_filter == EditorExportPreset::EXPORT_CUSTOMIZED) {
-			EditorExportPreset::FileExportMode file_mode = current->get_file_export_mode(path);
-
-			file->set_checked(0, file_mode != EditorExportPreset::MODE_FILE_NOT_CUSTOMIZED);
-			file->set_cell_mode(1, TreeItem::CELL_MODE_CUSTOM);
-			file->set_text(1, file_mode != EditorExportPreset::MODE_FILE_NOT_CUSTOMIZED ? file_mode_popup->get_item_text(file_mode_popup->get_item_index(file_mode)) : "");
-			file->set_editable(1, true);
+			_setup_item_for_file_mode(file, current->get_file_export_mode(path));
 		} else {
 			file->set_checked(0, current->has_export_file(path));
 			file->propagate_check(0);
@@ -827,7 +841,22 @@ void ProjectExportDialog::_tree_changed() {
 		return;
 	}
 
-	item->propagate_check(0);
+	if (current->get_export_filter() == EditorExportPreset::EXPORT_CUSTOMIZED) {
+		EditorExportPreset::FileExportMode file_mode = EditorExportPreset::MODE_FILE_NOT_CUSTOMIZED;
+		String path = item->get_metadata(0);
+
+		if (item->is_checked(0)) {
+			file_mode = current->get_file_export_mode(path);
+			if (file_mode == EditorExportPreset::MODE_FILE_NOT_CUSTOMIZED) {
+				file_mode = EditorExportPreset::MODE_FILE_STRIP;
+			}
+		}
+
+		_setup_item_for_file_mode(item, file_mode);
+		current->set_file_export_mode(path, file_mode);
+	} else {
+		item->propagate_check(0);
+	}
 }
 
 void ProjectExportDialog::_check_propagated_to_item(Object *p_obj, int column) {
@@ -864,7 +893,7 @@ void ProjectExportDialog::_set_file_export_mode(int p_id) {
 	}
 
 	TreeItem *item = include_files->get_edited();
-	String path = item->get_text(0);
+	String path = item->get_metadata(0);
 
 	current->set_file_export_mode(path, (EditorExportPreset::FileExportMode)p_id);
 

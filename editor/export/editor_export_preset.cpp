@@ -74,12 +74,22 @@ void EditorExportPreset::update_files_to_export() {
 	for (int i = 0; i < to_remove.size(); ++i) {
 		selected_files.erase(to_remove[i]);
 	}
+
+	// @todo Should probably update the customized files here too?
 }
 
 Vector<String> EditorExportPreset::get_files_to_export() const {
 	Vector<String> files;
 	for (const String &E : selected_files) {
 		files.push_back(E);
+	}
+	return files;
+}
+
+Vector<String> EditorExportPreset::get_customized_files() const {
+	Vector<String> files;
+	for (const KeyValue<String, FileExportMode> &E : customized_files) {
+		files.push_back(E.key);
 	}
 	return files;
 }
@@ -159,9 +169,19 @@ bool EditorExportPreset::has_export_file(const String &p_path) {
 }
 
 void EditorExportPreset::set_file_export_mode(const String &p_path, EditorExportPreset::FileExportMode p_mode) {
+	if (p_mode == FileExportMode::MODE_FILE_NOT_CUSTOMIZED) {
+		customized_files.erase(p_path);
+	} else {
+		customized_files.insert(p_path, p_mode);
+	}
 }
 
 EditorExportPreset::FileExportMode EditorExportPreset::get_file_export_mode(const String &p_path) const {
+	HashMap<String, FileExportMode>::ConstIterator i = customized_files.find(p_path);
+	if (i) {
+		return i->value;
+	}
+	return MODE_FILE_NOT_CUSTOMIZED;
 }
 
 void EditorExportPreset::set_custom_features(const String &p_custom_features) {

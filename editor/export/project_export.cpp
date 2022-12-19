@@ -45,6 +45,7 @@
 #include "scene/gui/link_button.h"
 #include "scene/gui/menu_button.h"
 #include "scene/gui/option_button.h"
+#include "scene/gui/popup_menu.h"
 #include "scene/gui/split_container.h"
 #include "scene/gui/texture_rect.h"
 #include "scene/gui/tree.h"
@@ -742,6 +743,12 @@ void ProjectExportDialog::_fill_resource_tree() {
 
 	if (f == EditorExportPreset::EXPORT_ALL_RESOURCES) {
 		return;
+	} else if (f == EditorExportPreset::EXPORT_CUSTOMIZED) {
+		include_files->set_columns(2);
+	} else {
+		include_files->set_columns(1);
+		include_files->set_column_expand(1, false);
+		include_files->set_column_custom_minimum_width(1, 250 * EDSCALE);
 	}
 
 	include_label->show();
@@ -749,10 +756,10 @@ void ProjectExportDialog::_fill_resource_tree() {
 
 	TreeItem *root = include_files->create_item();
 
-	_fill_tree(EditorFileSystem::get_singleton()->get_filesystem(), root, current, f == EditorExportPreset::EXPORT_SELECTED_SCENES);
+	_fill_tree(EditorFileSystem::get_singleton()->get_filesystem(), root, current, f);
 }
 
-bool ProjectExportDialog::_fill_tree(EditorFileSystemDirectory *p_dir, TreeItem *p_item, Ref<EditorExportPreset> &current, bool p_only_scenes) {
+bool ProjectExportDialog::_fill_tree(EditorFileSystemDirectory *p_dir, TreeItem *p_item, Ref<EditorExportPreset> &current, EditorExportPreset::ExportFilter p_export_filter) {
 	p_item->set_cell_mode(0, TreeItem::CELL_MODE_CHECK);
 	p_item->set_icon(0, presets->get_theme_icon(SNAME("folder"), SNAME("FileDialog")));
 	p_item->set_text(0, p_dir->get_name() + "/");
@@ -762,7 +769,7 @@ bool ProjectExportDialog::_fill_tree(EditorFileSystemDirectory *p_dir, TreeItem 
 	bool used = false;
 	for (int i = 0; i < p_dir->get_subdir_count(); i++) {
 		TreeItem *subdir = include_files->create_item(p_item);
-		if (_fill_tree(p_dir->get_subdir(i), subdir, current, p_only_scenes)) {
+		if (_fill_tree(p_dir->get_subdir(i), subdir, current, p_export_filter)) {
 			used = true;
 		} else {
 			memdelete(subdir);
@@ -771,7 +778,7 @@ bool ProjectExportDialog::_fill_tree(EditorFileSystemDirectory *p_dir, TreeItem 
 
 	for (int i = 0; i < p_dir->get_file_count(); i++) {
 		String type = p_dir->get_file_type(i);
-		if (p_only_scenes && type != "PackedScene") {
+		if (p_export_filter == EditorExportPreset::EXPORT_SELECTED_SCENES && type != "PackedScene") {
 			continue;
 		}
 		if (type == "TextFile") {
@@ -786,9 +793,20 @@ bool ProjectExportDialog::_fill_tree(EditorFileSystemDirectory *p_dir, TreeItem 
 
 		file->set_icon(0, EditorNode::get_singleton()->get_class_icon(type));
 		file->set_editable(0, true);
-		file->set_checked(0, current->has_export_file(path));
 		file->set_metadata(0, path);
-		file->propagate_check(0);
+
+		if (p_export_filter == EditorExportPreset::EXPORT_CUSTOMIZED) {
+			file->set_checked(0, current->get_file_export_mode(path) != EditorExportPreset::MODE_FILE_NOT_CUSTOMIZED);
+
+			file->set_cell_mode(1, TreeItem::CELL_MODE_CUSTOM);
+			//file->set_text(1, file_mode_popup->get_item_index(current->get_file_export_mode(path)))
+			file->set_text(1, "Test");
+			file->set_custom_as_button(1, true);
+			file->set_editable(1, true);
+		} else {
+			file->set_checked(0, current->has_export_file(path));
+			file->propagate_check(0);
+		}
 
 		used = true;
 	}
@@ -828,6 +846,14 @@ void ProjectExportDialog::_check_propagated_to_item(Object *p_obj, int column) {
 			current->remove_export_file(path);
 		}
 	}
+}
+
+void ProjectExportDialog::_tree_popup_edited(bool p_arrow_clicked) {
+	file_mode_popup->popup(include_files->get_custom_popup_rect());
+}
+
+void ProjectExportDialog::_set_file_export_mode(int p_pid) {
+	print_line("file mode selected: ", p_pid);
 }
 
 void ProjectExportDialog::_export_pck_zip() {
@@ -1103,6 +1129,14 @@ ProjectExportDialog::ProjectExportDialog() {
 	include_margin->add_child(include_files);
 	include_files->connect("item_edited", callable_mp(this, &ProjectExportDialog::_tree_changed));
 	include_files->connect("check_propagated_to_item", callable_mp(this, &ProjectExportDialog::_check_propagated_to_item));
+	include_files->connect("custom_popup_edited", callable_mp(this, &ProjectExportDialog::_tree_popup_edited));
+
+	file_mode_popup = memnew(PopupMenu);
+	add_child(file_mode_popup);
+	file_mode_popup->add_item(TTR("Strip"), EditorExportPreset::MODE_FILE_STRIP);
+	file_mode_popup->add_item(TTR("Keep"), EditorExportPreset::MODE_FILE_KEEP);
+	file_mode_popup->add_item(TTR("Remove"), EditorExportPreset::MODE_FILE_REMOVE);
+	file_mode_popup->connect("id_pressed", callable_mp(this, &ProjectExportDialog::_set_file_export_mode));
 
 	include_filters = memnew(LineEdit);
 	resources_vb->add_margin_child(

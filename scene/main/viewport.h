@@ -650,7 +650,6 @@ public:
 	bool get_canvas_cull_mask_bit(uint32_t p_layer) const;
 
 	virtual Transform2D get_screen_transform() const;
-	virtual Transform2D get_popup_transform() const { return Transform2D(); }
 
 #ifndef _3D_DISABLED
 	bool use_xr = false;
@@ -777,7 +776,6 @@ public:
 	ClearMode get_clear_mode() const;
 
 	virtual Transform2D get_screen_transform() const override;
-	virtual Transform2D get_popup_transform() const override;
 
 	SubViewport();
 	~SubViewport();

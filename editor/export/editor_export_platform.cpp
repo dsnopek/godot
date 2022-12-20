@@ -704,7 +704,7 @@ bool EditorExportPlatform::_export_customize_scene_resources(Node *p_root, Node 
 }
 
 String EditorExportPlatform::_export_customize(const String &p_path, LocalVector<Ref<EditorExportPlugin>> &customize_resources_plugins, LocalVector<Ref<EditorExportPlugin>> &customize_scenes_plugins, HashMap<String, FileExportCache> &export_cache, const String &export_base_path, bool p_force_save, bool p_strip) {
-	if (!p_force_save && customize_resources_plugins.is_empty() && customize_scenes_plugins.is_empty()) {
+	if (!p_force_save && !p_strip && customize_resources_plugins.is_empty() && customize_scenes_plugins.is_empty()) {
 		return p_path; // do none
 	}
 
@@ -803,8 +803,16 @@ String EditorExportPlatform::_export_customize(const String &p_path, LocalVector
 					break;
 				}
 			}
+		}
 
-			if (_export_customize_object(res.ptr(), customize_resources_plugins, p_strip)) {
+		if (_export_customize_object(res.ptr(), customize_resources_plugins, p_strip)) {
+			modified = true;
+		}
+
+		if (res.is_valid() && p_strip) {
+			Ref<Resource> new_res = res->create_placeholder();
+			if (new_res.is_valid()) {
+				res = new_res;
 				modified = true;
 			}
 		}

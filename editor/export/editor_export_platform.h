@@ -106,6 +106,7 @@ private:
 		uint64_t source_modified_time = 0;
 		String source_md5;
 		String saved_path;
+		bool stripped = false;
 		bool used = false;
 	};
 

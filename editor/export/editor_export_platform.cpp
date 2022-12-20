@@ -534,16 +534,17 @@ bool EditorExportPlatform::_export_customize_dictionary(Dictionary &dict, LocalV
 						}
 					}
 
-					// If it was not replaced, go through and see if there is something to replace.
-					if (res.is_valid() && !res->get_path().is_resource_file() && _export_customize_object(res.ptr(), customize_resources_plugins, p_strip), true) {
-						changed = true;
-					}
-
-					// After all other processing, strip this resource if requested.
-					if (res.is_valid() && p_strip) {
-						Ref<Resource> new_res = res->create_placeholder();
-						if (new_res.is_valid()) {
-							dict[K] = new_res;
+					if (res.is_valid() && !res->get_path().is_resource_file()) {
+						// After all other processing, strip this resource if requested.
+						if (p_strip) {
+							Ref<Resource> new_res = res->create_placeholder();
+							if (new_res.is_valid()) {
+								dict[K] = new_res;
+								changed = true;
+							}
+						}
+						// If it was not replaced, go through and see if there is something to replace.
+						else if (_export_customize_object(res.ptr(), customize_resources_plugins, p_strip)) {
 							changed = true;
 						}
 					}
@@ -590,16 +591,17 @@ bool EditorExportPlatform::_export_customize_array(Array &arr, LocalVector<Ref<E
 						}
 					}
 
-					// If it was not replaced, go through and see if there is something to replace.
-					if (res.is_valid() && !res->get_path().is_resource_file() && _export_customize_object(res.ptr(), customize_resources_plugins, p_strip), true) {
-						changed = true;
-					}
-
-					// After all other processing, strip this resource if requested.
-					if (res.is_valid() && p_strip) {
-						Ref<Resource> new_res = res->create_placeholder();
-						if (new_res.is_valid()) {
-							arr.set(i, new_res);
+					if (res.is_valid() && !res->get_path().is_resource_file()) {
+						// After all other processing, strip this resource if requested.
+						if (p_strip) {
+							Ref<Resource> new_res = res->create_placeholder();
+							if (new_res.is_valid()) {
+								arr.set(i, new_res);
+								changed = true;
+							}
+						}
+						// If it was not replaced, go through and see if there is something to replace.
+						else if (_export_customize_object(res.ptr(), customize_resources_plugins, p_strip)) {
 							changed = true;
 						}
 					}
@@ -646,16 +648,17 @@ bool EditorExportPlatform::_export_customize_object(Object *p_object, LocalVecto
 						}
 					}
 
-					// If it was not replaced, go through and see if there is something to replace.
-					if (res.is_valid() && !res->get_path().is_resource_file() && _export_customize_object(res.ptr(), customize_resources_plugins, p_strip), true) {
-						changed = true;
-					}
-
-					// After all other processing, strip this resource if requested.
-					if (res.is_valid() && p_strip) {
-						Ref<Resource> new_res = res->create_placeholder();
-						if (new_res.is_valid()) {
-							p_object->set(E.name, new_res);
+					if (res.is_valid() && !res->get_path().is_resource_file()) {
+						// After all other processing, strip this resource if requested.
+						if (p_strip) {
+							Ref<Resource> new_res = res->create_placeholder();
+							if (new_res.is_valid()) {
+								p_object->set(E.name, new_res);
+								changed = true;
+							}
+						}
+						// If it was not replaced, go through and see if there is something to replace.
+						else if (_export_customize_object(res.ptr(), customize_resources_plugins, p_strip)) {
 							changed = true;
 						}
 					}
@@ -712,7 +715,7 @@ String EditorExportPlatform::_export_customize(const String &p_path, LocalVector
 	if (export_cache.has(p_path)) {
 		FileExportCache &fec = export_cache[p_path];
 
-		if (fec.saved_path.is_empty() || FileAccess::exists(fec.saved_path)) {
+		if (fec.stripped == p_strip && (fec.saved_path.is_empty() || FileAccess::exists(fec.saved_path))) {
 			// Destination file exists (was not erased) or not needed
 
 			uint64_t mod_time = FileAccess::get_modified_time(p_path);
@@ -738,6 +741,7 @@ String EditorExportPlatform::_export_customize(const String &p_path, LocalVector
 
 	FileExportCache fec;
 	fec.used = true;
+	fec.stripped = p_strip;
 	fec.source_modified_time = FileAccess::get_modified_time(p_path);
 
 	String md5 = FileAccess::get_md5(p_path);
@@ -770,7 +774,7 @@ String EditorExportPlatform::_export_customize(const String &p_path, LocalVector
 				}
 			}
 		}
-		if (customize_resources_plugins.size()) {
+		if (customize_resources_plugins.size() || p_strip) {
 			if (_export_customize_scene_resources(node, node, customize_resources_plugins, p_strip)) {
 				modified = true;
 			}
@@ -805,16 +809,14 @@ String EditorExportPlatform::_export_customize(const String &p_path, LocalVector
 			}
 		}
 
-		if (_export_customize_object(res.ptr(), customize_resources_plugins, p_strip)) {
-			modified = true;
-		}
-
-		if (res.is_valid() && p_strip) {
+		if (p_strip) {
 			Ref<Resource> new_res = res->create_placeholder();
 			if (new_res.is_valid()) {
 				res = new_res;
 				modified = true;
 			}
+		} else if (_export_customize_object(res.ptr(), customize_resources_plugins, p_strip)) {
+			modified = true;
 		}
 
 		if (modified || p_force_save) {
@@ -1023,13 +1025,16 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 			String l = f->get_line();
 			while (l != String()) {
 				Vector<String> fields = l.split("::");
-				if (fields.size() == 4) {
+				if (fields.size() >= 4) {
 					FileExportCache fec;
 					String path = fields[0];
 					fec.source_md5 = fields[1].strip_edges();
 					fec.source_modified_time = fields[2].strip_edges().to_int();
 					fec.saved_path = fields[3];
 					fec.used = false; // Assume unused until used.
+					if (fields.size() == 5) {
+						fec.stripped = (bool)fields[4].strip_edges().to_int();
+					}
 					export_cache[path] = fec;
 				}
 				l = f->get_line();
@@ -1244,7 +1249,7 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 		if (f.is_valid()) {
 			for (const KeyValue<String, FileExportCache> &E : export_cache) {
 				if (E.value.used) { // May be old, unused
-					String l = E.key + "::" + E.value.source_md5 + "::" + itos(E.value.source_modified_time) + "::" + E.value.saved_path;
+					String l = E.key + "::" + E.value.source_md5 + "::" + itos(E.value.source_modified_time) + "::" + E.value.saved_path + "::" + itos(E.value.stripped);
 					f->store_line(l);
 				}
 			}

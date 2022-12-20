@@ -80,7 +80,7 @@ void EditorExportPreset::update_files() {
 	{
 		Vector<String> to_remove;
 		for (const KeyValue<String, FileExportMode> &E : customized_files) {
-			if (!FileAccess::exists(E.key)) {
+			if (!FileAccess::exists(E.key) && !DirAccess::exists(E.key)) {
 				to_remove.push_back(E.key);
 			}
 		}

@@ -754,7 +754,6 @@ void ProjectExportDialog::_fill_resource_tree() {
 		include_files->set_columns(2);
 		include_files->set_column_expand(1, false);
 		include_files->set_column_custom_minimum_width(1, 250 * EDSCALE);
-		_setup_item_for_file_mode(root, current->get_file_export_mode("/"));
 	} else {
 		include_files->set_columns(1);
 	}
@@ -787,6 +786,10 @@ bool ProjectExportDialog::_fill_tree(EditorFileSystemDirectory *p_dir, TreeItem 
 	p_item->set_text(0, p_dir->get_name() + "/");
 	p_item->set_editable(0, true);
 	p_item->set_metadata(0, p_dir->get_path());
+
+	if (p_export_filter == EditorExportPreset::EXPORT_CUSTOMIZED) {
+		_setup_item_for_file_mode(p_item, current->get_file_export_mode(p_dir->get_path()));
+	}
 
 	bool used = false;
 	for (int i = 0; i < p_dir->get_subdir_count(); i++) {

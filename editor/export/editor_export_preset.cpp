@@ -64,18 +64,30 @@ Ref<EditorExportPlatform> EditorExportPreset::get_platform() const {
 	return platform;
 }
 
-void EditorExportPreset::update_files_to_export() {
-	Vector<String> to_remove;
-	for (const String &E : selected_files) {
-		if (!FileAccess::exists(E)) {
-			to_remove.push_back(E);
+void EditorExportPreset::update_files() {
+	{
+		Vector<String> to_remove;
+		for (const String &E : selected_files) {
+			if (!FileAccess::exists(E)) {
+				to_remove.push_back(E);
+			}
+		}
+		for (int i = 0; i < to_remove.size(); ++i) {
+			selected_files.erase(to_remove[i]);
 		}
 	}
-	for (int i = 0; i < to_remove.size(); ++i) {
-		selected_files.erase(to_remove[i]);
-	}
 
-	// @todo Should probably update the customized files here too?
+	{
+		Vector<String> to_remove;
+		for (const KeyValue<String, FileExportMode> &E : customized_files) {
+			if (!FileAccess::exists(E.key)) {
+				to_remove.push_back(E.key);
+			}
+		}
+		for (int i = 0; i < to_remove.size(); ++i) {
+			customized_files.erase(to_remove[i]);
+		}
+	}
 }
 
 Vector<String> EditorExportPreset::get_files_to_export() const {
@@ -91,6 +103,9 @@ Dictionary EditorExportPreset::get_customized_files() const {
 	for (const KeyValue<String, FileExportMode> &E : customized_files) {
 		String mode;
 		switch (E.value) {
+			case MODE_FILE_NOT_CUSTOMIZED: {
+				continue;
+			} break;
 			case MODE_FILE_STRIP: {
 				mode = "strip";
 			} break;
@@ -204,12 +219,12 @@ void EditorExportPreset::set_file_export_mode(const String &p_path, EditorExport
 	EditorExport::singleton->save_presets();
 }
 
-EditorExportPreset::FileExportMode EditorExportPreset::get_file_export_mode(const String &p_path) const {
+EditorExportPreset::FileExportMode EditorExportPreset::get_file_export_mode(const String &p_path, EditorExportPreset::FileExportMode p_default) const {
 	HashMap<String, FileExportMode>::ConstIterator i = customized_files.find(p_path);
 	if (i) {
 		return i->value;
 	}
-	return MODE_FILE_NOT_CUSTOMIZED;
+	return p_default;
 }
 
 void EditorExportPreset::set_custom_features(const String &p_custom_features) {

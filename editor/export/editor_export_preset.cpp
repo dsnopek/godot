@@ -154,6 +154,15 @@ bool EditorExportPreset::is_runnable() const {
 	return runnable;
 }
 
+void EditorExportPreset::set_dedicated_server(bool p_enable) {
+	dedicated_server = p_enable;
+	EditorExport::singleton->save_presets();
+}
+
+bool EditorExportPreset::is_dedicated_server() const {
+	return dedicated_server;
+}
+
 void EditorExportPreset::set_export_filter(ExportFilter p_filter) {
 	export_filter = p_filter;
 	EditorExport::singleton->save_presets();

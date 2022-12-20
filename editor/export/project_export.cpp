@@ -587,6 +587,7 @@ void ProjectExportDialog::_duplicate_preset() {
 	if (make_runnable) {
 		preset->set_runnable(make_runnable);
 	}
+	preset->set_dedicated_server(current->is_dedicated_server());
 	preset->set_export_filter(current->get_export_filter());
 	preset->set_include_filter(current->get_include_filter());
 	preset->set_exclude_filter(current->get_exclude_filter());
@@ -710,6 +711,8 @@ void ProjectExportDialog::_export_type_changed(int p_which) {
 	}
 
 	current->set_export_filter(EditorExportPreset::ExportFilter(p_which));
+	current->set_dedicated_server(p_which == EditorExportPreset::EXPORT_CUSTOMIZED);
+
 	updating = true;
 	_fill_resource_tree();
 	updating = false;

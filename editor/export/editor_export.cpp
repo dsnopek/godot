@@ -45,6 +45,7 @@ void EditorExport::_save() {
 		config->set_value(section, "name", preset->get_name());
 		config->set_value(section, "platform", preset->get_platform()->get_name());
 		config->set_value(section, "runnable", preset->is_runnable());
+		config->set_value(section, "dedicated_server", preset->is_dedicated_server());
 		config->set_value(section, "custom_features", preset->get_custom_features());
 
 		bool save_files = false;
@@ -213,6 +214,7 @@ void EditorExport::load_config() {
 
 		preset->set_name(config->get_value(section, "name"));
 		preset->set_runnable(config->get_value(section, "runnable"));
+		preset->set_dedicated_server(config->get_value(section, "dedicated_server"));
 
 		if (config->has_section_key(section, "custom_features")) {
 			preset->set_custom_features(config->get_value(section, "custom_features"));

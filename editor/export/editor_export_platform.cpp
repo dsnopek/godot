@@ -1275,8 +1275,8 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 		}
 	}
 
-	for (int i = 0; i < export_plugins.size(); i++) {
-		custom_list.append_array(export_plugins[i]->_get_export_features(Ref<EditorExportPlatform>(this), p_debug));
+	if (p_preset->is_dedicated_server()) {
+		custom_list.push_back("dedicated_server");
 	}
 
 	ProjectSettings::CustomMap custom_map;

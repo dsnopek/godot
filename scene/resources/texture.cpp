@@ -94,6 +94,13 @@ bool Texture2D::get_rect_region(const Rect2 &p_rect, const Rect2 &p_src_rect, Re
 	return true;
 }
 
+Ref<Resource> Texture2D::create_placeholder() const {
+	Ref<PlaceholderTexture2D> placeholder;
+	placeholder.instantiate();
+	placeholder->set_size(get_size());
+	return placeholder;
+}
+
 void Texture2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_width"), &Texture2D::get_width);
 	ClassDB::bind_method(D_METHOD("get_height"), &Texture2D::get_height);
@@ -1145,6 +1152,14 @@ void Texture3D::_bind_methods() {
 	GDVIRTUAL_BIND(_has_mipmaps);
 	GDVIRTUAL_BIND(_get_data);
 }
+
+Ref<Resource> Texture3D::create_placeholder() const {
+	Ref<PlaceholderTexture3D> placeholder;
+	placeholder.instantiate();
+	placeholder->set_size(Vector3i(get_width(), get_height(), get_depth()));
+	return placeholder;
+}
+
 //////////////////////////////////////////
 
 Image::Format ImageTexture3D::get_format() const {
@@ -3046,6 +3061,30 @@ ImageTextureLayered::~ImageTextureLayered() {
 		ERR_FAIL_NULL(RenderingServer::get_singleton());
 		RS::get_singleton()->free(texture);
 	}
+}
+
+Ref<Resource> Texture2DArray::create_placeholder() const {
+	Ref<PlaceholderTexture2DArray> placeholder;
+	placeholder.instantiate();
+	placeholder->set_size(Size2i(get_width(), get_height()));
+	placeholder->set_layers(get_layers());
+	return placeholder;
+}
+
+Ref<Resource> Cubemap::create_placeholder() const {
+	Ref<PlaceholderCubemap> placeholder;
+	placeholder.instantiate();
+	placeholder->set_size(Size2i(get_width(), get_height()));
+	placeholder->set_layers(get_layers());
+	return placeholder;
+}
+
+Ref<Resource> CubemapArray::create_placeholder() const {
+	Ref<PlaceholderCubemapArray> placeholder;
+	placeholder.instantiate();
+	placeholder->set_size(Size2i(get_width(), get_height()));
+	placeholder->set_layers(get_layers());
+	return placeholder;
 }
 
 ///////////////////////////////////////////

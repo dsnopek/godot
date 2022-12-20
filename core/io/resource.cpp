@@ -319,6 +319,10 @@ void Resource::notify_change_to_owners() {
 	}
 }
 
+Ref<Resource> Resource::create_placeholder() const {
+	return Ref<Resource>();
+}
+
 #ifdef TOOLS_ENABLED
 
 uint32_t Resource::hash_edited_version() const {
@@ -427,6 +431,7 @@ void Resource::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_local_to_scene"), &Resource::is_local_to_scene);
 	ClassDB::bind_method(D_METHOD("get_local_scene"), &Resource::get_local_scene);
 	ClassDB::bind_method(D_METHOD("setup_local_to_scene"), &Resource::setup_local_to_scene);
+	ClassDB::bind_method(D_METHOD("create_placeholder"), &Resource::create_placeholder);
 	ClassDB::bind_method(D_METHOD("emit_changed"), &Resource::emit_changed);
 
 	ClassDB::bind_method(D_METHOD("duplicate", "subresources"), &Resource::duplicate, DEFVAL(false));

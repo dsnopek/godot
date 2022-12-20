@@ -120,6 +120,8 @@ public:
 
 	Node *get_local_scene() const;
 
+	virtual Ref<Resource> create_placeholder() const;
+
 #ifdef TOOLS_ENABLED
 
 	uint32_t hash_edited_version() const;

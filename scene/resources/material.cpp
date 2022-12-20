@@ -113,6 +113,12 @@ bool Material::_can_use_render_priority() const {
 	return ret;
 }
 
+Ref<Resource> Material::create_placeholder() const {
+	Ref<PlaceholderMaterial> placeholder;
+	placeholder.instantiate();
+	return placeholder;
+}
+
 void Material::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_next_pass", "next_pass"), &Material::set_next_pass);
 	ClassDB::bind_method(D_METHOD("get_next_pass"), &Material::get_next_pass);

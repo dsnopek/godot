@@ -688,10 +688,20 @@ bool EditorExportPlatform::_export_customize_object(Object *p_object, LocalVecto
 	return changed;
 }
 
+bool EditorExportPlatform::_is_editable_ancestor(Node *p_root, Node *p_node) {
+	while (p_node != nullptr) {
+		if (p_root->is_editable_instance(p_node)) {
+			return true;
+		}
+		p_node = p_node->get_owner();
+	}
+	return false;
+}
+
 bool EditorExportPlatform::_export_customize_scene_resources(Node *p_root, Node *p_node, LocalVector<Ref<EditorExportPlugin>> &customize_resources_plugins, bool p_strip) {
 	bool changed = false;
 
-	if (p_node == p_root || p_node->get_owner() == p_root) {
+	if (p_root == p_node || p_node->get_owner() == p_root || _is_editable_ancestor(p_root, p_node)) {
 		if (_export_customize_object(p_node, customize_resources_plugins, p_strip)) {
 			changed = true;
 		}

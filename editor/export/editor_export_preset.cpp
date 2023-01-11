@@ -121,6 +121,10 @@ Dictionary EditorExportPreset::get_customized_files() const {
 	return files;
 }
 
+int EditorExportPreset::get_customized_files_count() const {
+	return customized_files.size();
+}
+
 void EditorExportPreset::set_customized_files(const Dictionary &p_files) {
 	for (const Variant *key = p_files.next(nullptr); key; key = p_files.next(key)) {
 		EditorExportPreset::FileExportMode mode = EditorExportPreset::MODE_FILE_NOT_CUSTOMIZED;

@@ -105,6 +105,7 @@ public:
 
 	Vector<String> get_files_to_export() const;
 	Dictionary get_customized_files() const;
+	int get_customized_files_count() const;
 	void set_customized_files(const Dictionary &p_files);
 
 	void add_export_file(const String &p_path);

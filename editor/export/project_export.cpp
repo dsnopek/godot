@@ -710,8 +710,14 @@ void ProjectExportDialog::_export_type_changed(int p_which) {
 		return;
 	}
 
-	current->set_export_filter(EditorExportPreset::ExportFilter(p_which));
-	current->set_dedicated_server(p_which == EditorExportPreset::EXPORT_CUSTOMIZED);
+	EditorExportPreset::ExportFilter filter_type = (EditorExportPreset::ExportFilter)p_which;
+	current->set_export_filter(filter_type);
+	current->set_dedicated_server(filter_type == EditorExportPreset::EXPORT_CUSTOMIZED);
+
+	// Default to stripping everything when switching to server build.
+	if (filter_type == EditorExportPreset::EXPORT_CUSTOMIZED && current->get_customized_files_count() == 0) {
+		current->set_file_export_mode("res://", EditorExportPreset::MODE_FILE_STRIP);
+	}
 
 	updating = true;
 	_fill_resource_tree();

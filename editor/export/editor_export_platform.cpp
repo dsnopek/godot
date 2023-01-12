@@ -531,11 +531,9 @@ bool EditorExportPlatform::_export_customize_dictionary(Dictionary &dict, LocalV
 						}
 					}
 
-					if (res.is_valid() && !res->get_path().is_resource_file()) {
-						// If it was not replaced, go through and see if there is something to replace.
-						if (_export_customize_object(res.ptr(), customize_resources_plugins)) {
-							changed = true;
-						}
+					// If it was not replaced, go through and see if there is something to replace.
+					if (res.is_valid() && !res->get_path().is_resource_file() && _export_customize_object(res.ptr(), customize_resources_plugins), true) {
+						changed = true;
 					}
 				}
 
@@ -580,11 +578,9 @@ bool EditorExportPlatform::_export_customize_array(Array &arr, LocalVector<Ref<E
 						}
 					}
 
-					if (res.is_valid() && !res->get_path().is_resource_file()) {
-						// If it was not replaced, go through and see if there is something to replace.
-						if (_export_customize_object(res.ptr(), customize_resources_plugins)) {
-							changed = true;
-						}
+					// If it was not replaced, go through and see if there is something to replace.
+					if (res.is_valid() && !res->get_path().is_resource_file() && _export_customize_object(res.ptr(), customize_resources_plugins), true) {
+						changed = true;
 					}
 				}
 			} break;
@@ -629,11 +625,9 @@ bool EditorExportPlatform::_export_customize_object(Object *p_object, LocalVecto
 						}
 					}
 
-					if (res.is_valid() && !res->get_path().is_resource_file()) {
-						// If it was not replaced, go through and see if there is something to replace.
-						if (_export_customize_object(res.ptr(), customize_resources_plugins)) {
-							changed = true;
-						}
+					// If it was not replaced, go through and see if there is something to replace.
+					if (res.is_valid() && !res->get_path().is_resource_file() && _export_customize_object(res.ptr(), customize_resources_plugins), true) {
+						changed = true;
 					}
 				}
 
@@ -1000,7 +994,7 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 			String l = f->get_line();
 			while (l != String()) {
 				Vector<String> fields = l.split("::");
-				if (fields.size() >= 4) {
+				if (fields.size() == 4) {
 					FileExportCache fec;
 					String path = fields[0];
 					fec.source_md5 = fields[1].strip_edges();

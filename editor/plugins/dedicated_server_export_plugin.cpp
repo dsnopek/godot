@@ -48,7 +48,13 @@ EditorExportPreset::FileExportMode DedicatedServerExportPlugin::_get_export_mode
 
 	while (parts.size() > 0) {
 		parts.resize(parts.size() - 1);
-		mode = preset->get_file_export_mode(String("res://") + String("/").join(parts));
+
+		String test_path = "res://";
+		if (parts.size() > 0) {
+			test_path += String("/").join(parts) + "/";
+		}
+
+		mode = preset->get_file_export_mode(test_path);
 		if (mode != EditorExportPreset::MODE_FILE_NOT_CUSTOMIZED) {
 			break;
 		}

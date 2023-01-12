@@ -343,10 +343,10 @@ void EditorExportPlatform::_export_find_resources(EditorFileSystemDirectory *p_d
 	}
 }
 
-void EditorExportPlatform::_export_find_customized_resources(const Ref<EditorExportPreset> &p_preset, EditorFileSystemDirectory *p_dir, EditorExportPreset::FileExportMode p_mode, HashSet<String> &p_paths, HashSet<String> &p_strip_paths) {
+void EditorExportPlatform::_export_find_customized_resources(const Ref<EditorExportPreset> &p_preset, EditorFileSystemDirectory *p_dir, EditorExportPreset::FileExportMode p_mode, HashSet<String> &p_paths) {
 	for (int i = 0; i < p_dir->get_subdir_count(); i++) {
 		EditorFileSystemDirectory *subdir = p_dir->get_subdir(i);
-		_export_find_customized_resources(p_preset, subdir, p_preset->get_file_export_mode(subdir->get_path(), p_mode), p_paths, p_strip_paths);
+		_export_find_customized_resources(p_preset, subdir, p_preset->get_file_export_mode(subdir->get_path(), p_mode), p_paths);
 	}
 
 	for (int i = 0; i < p_dir->get_file_count(); i++) {
@@ -357,9 +357,6 @@ void EditorExportPlatform::_export_find_customized_resources(const Ref<EditorExp
 		EditorExportPreset::FileExportMode file_mode = p_preset->get_file_export_mode(path, p_mode);
 		if (file_mode != EditorExportPreset::MODE_FILE_REMOVE) {
 			p_paths.insert(path);
-		}
-		if (file_mode == EditorExportPreset::MODE_FILE_STRIP) {
-			p_strip_paths.insert(path);
 		}
 	}
 }
@@ -511,7 +508,7 @@ EditorExportPlatform::ExportNotifier::~ExportNotifier() {
 	}
 }
 
-bool EditorExportPlatform::_export_customize_dictionary(Dictionary &dict, LocalVector<Ref<EditorExportPlugin>> &customize_resources_plugins, bool p_strip) {
+bool EditorExportPlatform::_export_customize_dictionary(Dictionary &dict, LocalVector<Ref<EditorExportPlugin>> &customize_resources_plugins) {
 	bool changed = false;
 
 	List<Variant> keys;
@@ -535,16 +532,8 @@ bool EditorExportPlatform::_export_customize_dictionary(Dictionary &dict, LocalV
 					}
 
 					if (res.is_valid() && !res->get_path().is_resource_file()) {
-						// After all other processing, strip this resource if requested.
-						if (p_strip) {
-							Ref<Resource> new_res = res->create_placeholder();
-							if (new_res.is_valid()) {
-								dict[K] = new_res;
-								changed = true;
-							}
-						}
 						// If it was not replaced, go through and see if there is something to replace.
-						else if (_export_customize_object(res.ptr(), customize_resources_plugins, p_strip)) {
+						if (_export_customize_object(res.ptr(), customize_resources_plugins)) {
 							changed = true;
 						}
 					}
@@ -553,13 +542,13 @@ bool EditorExportPlatform::_export_customize_dictionary(Dictionary &dict, LocalV
 			} break;
 			case Variant::DICTIONARY: {
 				Dictionary d = v;
-				if (_export_customize_dictionary(d, customize_resources_plugins, p_strip)) {
+				if (_export_customize_dictionary(d, customize_resources_plugins)) {
 					changed = true;
 				}
 			} break;
 			case Variant::ARRAY: {
 				Array a = v;
-				if (_export_customize_array(a, customize_resources_plugins, p_strip)) {
+				if (_export_customize_array(a, customize_resources_plugins)) {
 					changed = true;
 				}
 			} break;
@@ -570,7 +559,7 @@ bool EditorExportPlatform::_export_customize_dictionary(Dictionary &dict, LocalV
 	return changed;
 }
 
-bool EditorExportPlatform::_export_customize_array(Array &arr, LocalVector<Ref<EditorExportPlugin>> &customize_resources_plugins, bool p_strip) {
+bool EditorExportPlatform::_export_customize_array(Array &arr, LocalVector<Ref<EditorExportPlugin>> &customize_resources_plugins) {
 	bool changed = false;
 
 	for (int i = 0; i < arr.size(); i++) {
@@ -592,16 +581,8 @@ bool EditorExportPlatform::_export_customize_array(Array &arr, LocalVector<Ref<E
 					}
 
 					if (res.is_valid() && !res->get_path().is_resource_file()) {
-						// After all other processing, strip this resource if requested.
-						if (p_strip) {
-							Ref<Resource> new_res = res->create_placeholder();
-							if (new_res.is_valid()) {
-								arr.set(i, new_res);
-								changed = true;
-							}
-						}
 						// If it was not replaced, go through and see if there is something to replace.
-						else if (_export_customize_object(res.ptr(), customize_resources_plugins, p_strip)) {
+						if (_export_customize_object(res.ptr(), customize_resources_plugins)) {
 							changed = true;
 						}
 					}
@@ -609,13 +590,13 @@ bool EditorExportPlatform::_export_customize_array(Array &arr, LocalVector<Ref<E
 			} break;
 			case Variant::DICTIONARY: {
 				Dictionary d = v;
-				if (_export_customize_dictionary(d, customize_resources_plugins, p_strip)) {
+				if (_export_customize_dictionary(d, customize_resources_plugins)) {
 					changed = true;
 				}
 			} break;
 			case Variant::ARRAY: {
 				Array a = v;
-				if (_export_customize_array(a, customize_resources_plugins, p_strip)) {
+				if (_export_customize_array(a, customize_resources_plugins)) {
 					changed = true;
 				}
 			} break;
@@ -626,7 +607,7 @@ bool EditorExportPlatform::_export_customize_array(Array &arr, LocalVector<Ref<E
 	return changed;
 }
 
-bool EditorExportPlatform::_export_customize_object(Object *p_object, LocalVector<Ref<EditorExportPlugin>> &customize_resources_plugins, bool p_strip) {
+bool EditorExportPlatform::_export_customize_object(Object *p_object, LocalVector<Ref<EditorExportPlugin>> &customize_resources_plugins) {
 	bool changed = false;
 
 	List<PropertyInfo> props;
@@ -649,16 +630,8 @@ bool EditorExportPlatform::_export_customize_object(Object *p_object, LocalVecto
 					}
 
 					if (res.is_valid() && !res->get_path().is_resource_file()) {
-						// After all other processing, strip this resource if requested.
-						if (p_strip) {
-							Ref<Resource> new_res = res->create_placeholder();
-							if (new_res.is_valid()) {
-								p_object->set(E.name, new_res);
-								changed = true;
-							}
-						}
 						// If it was not replaced, go through and see if there is something to replace.
-						else if (_export_customize_object(res.ptr(), customize_resources_plugins, p_strip)) {
+						if (_export_customize_object(res.ptr(), customize_resources_plugins)) {
 							changed = true;
 						}
 					}
@@ -667,7 +640,7 @@ bool EditorExportPlatform::_export_customize_object(Object *p_object, LocalVecto
 			} break;
 			case Variant::DICTIONARY: {
 				Dictionary d = p_object->get(E.name);
-				if (_export_customize_dictionary(d, customize_resources_plugins, p_strip)) {
+				if (_export_customize_dictionary(d, customize_resources_plugins)) {
 					// May have been generated, so set back just in case
 					p_object->set(E.name, d);
 					changed = true;
@@ -675,7 +648,7 @@ bool EditorExportPlatform::_export_customize_object(Object *p_object, LocalVecto
 			} break;
 			case Variant::ARRAY: {
 				Array a = p_object->get(E.name);
-				if (_export_customize_array(a, customize_resources_plugins, p_strip)) {
+				if (_export_customize_array(a, customize_resources_plugins)) {
 					// May have been generated, so set back just in case
 					p_object->set(E.name, a);
 					changed = true;
@@ -698,17 +671,17 @@ bool EditorExportPlatform::_is_editable_ancestor(Node *p_root, Node *p_node) {
 	return false;
 }
 
-bool EditorExportPlatform::_export_customize_scene_resources(Node *p_root, Node *p_node, LocalVector<Ref<EditorExportPlugin>> &customize_resources_plugins, bool p_strip) {
+bool EditorExportPlatform::_export_customize_scene_resources(Node *p_root, Node *p_node, LocalVector<Ref<EditorExportPlugin>> &customize_resources_plugins) {
 	bool changed = false;
 
 	if (p_root == p_node || p_node->get_owner() == p_root || _is_editable_ancestor(p_root, p_node)) {
-		if (_export_customize_object(p_node, customize_resources_plugins, p_strip)) {
+		if (_export_customize_object(p_node, customize_resources_plugins)) {
 			changed = true;
 		}
 	}
 
 	for (int i = 0; i < p_node->get_child_count(); i++) {
-		if (_export_customize_scene_resources(p_root, p_node->get_child(i), customize_resources_plugins, p_strip)) {
+		if (_export_customize_scene_resources(p_root, p_node->get_child(i), customize_resources_plugins)) {
 			changed = true;
 		}
 	}
@@ -716,8 +689,8 @@ bool EditorExportPlatform::_export_customize_scene_resources(Node *p_root, Node 
 	return changed;
 }
 
-String EditorExportPlatform::_export_customize(const String &p_path, LocalVector<Ref<EditorExportPlugin>> &customize_resources_plugins, LocalVector<Ref<EditorExportPlugin>> &customize_scenes_plugins, HashMap<String, FileExportCache> &export_cache, const String &export_base_path, bool p_force_save, bool p_strip) {
-	if (!p_force_save && !p_strip && customize_resources_plugins.is_empty() && customize_scenes_plugins.is_empty()) {
+String EditorExportPlatform::_export_customize(const String &p_path, LocalVector<Ref<EditorExportPlugin>> &customize_resources_plugins, LocalVector<Ref<EditorExportPlugin>> &customize_scenes_plugins, HashMap<String, FileExportCache> &export_cache, const String &export_base_path, bool p_force_save) {
+	if (!p_force_save && customize_resources_plugins.is_empty() && customize_scenes_plugins.is_empty()) {
 		return p_path; // do none
 	}
 
@@ -725,7 +698,7 @@ String EditorExportPlatform::_export_customize(const String &p_path, LocalVector
 	if (export_cache.has(p_path)) {
 		FileExportCache &fec = export_cache[p_path];
 
-		if (fec.stripped == p_strip && (fec.saved_path.is_empty() || FileAccess::exists(fec.saved_path))) {
+		if (fec.saved_path.is_empty() || FileAccess::exists(fec.saved_path)) {
 			// Destination file exists (was not erased) or not needed
 
 			uint64_t mod_time = FileAccess::get_modified_time(p_path);
@@ -751,7 +724,6 @@ String EditorExportPlatform::_export_customize(const String &p_path, LocalVector
 
 	FileExportCache fec;
 	fec.used = true;
-	fec.stripped = p_strip;
 	fec.source_modified_time = FileAccess::get_modified_time(p_path);
 
 	String md5 = FileAccess::get_md5(p_path);
@@ -784,8 +756,8 @@ String EditorExportPlatform::_export_customize(const String &p_path, LocalVector
 				}
 			}
 		}
-		if (customize_resources_plugins.size() || p_strip) {
-			if (_export_customize_scene_resources(node, node, customize_resources_plugins, p_strip)) {
+		if (customize_resources_plugins.size()) {
+			if (_export_customize_scene_resources(node, node, customize_resources_plugins)) {
 				modified = true;
 			}
 		}
@@ -819,13 +791,7 @@ String EditorExportPlatform::_export_customize(const String &p_path, LocalVector
 			}
 		}
 
-		if (p_strip) {
-			Ref<Resource> new_res = res->create_placeholder();
-			if (new_res.is_valid()) {
-				res = new_res;
-				modified = true;
-			}
-		} else if (_export_customize_object(res.ptr(), customize_resources_plugins, p_strip)) {
+		if (_export_customize_object(res.ptr(), customize_resources_plugins)) {
 			modified = true;
 		}
 
@@ -850,7 +816,6 @@ String EditorExportPlatform::_export_customize(const String &p_path, LocalVector
 Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &p_preset, bool p_debug, EditorExportSaveFunction p_func, void *p_udata, EditorExportSaveSharedObject p_so_func) {
 	//figure out paths of files that will be exported
 	HashSet<String> paths;
-	HashSet<String> strip_paths;
 	Vector<String> path_remaps;
 
 	if (p_preset->get_export_filter() == EditorExportPreset::EXPORT_ALL_RESOURCES) {
@@ -863,7 +828,7 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 			paths.erase(files[i]);
 		}
 	} else if (p_preset->get_export_filter() == EditorExportPreset::EXPORT_CUSTOMIZED) {
-		_export_find_customized_resources(p_preset, EditorFileSystem::get_singleton()->get_filesystem(), p_preset->get_file_export_mode("res://"), paths, strip_paths);
+		_export_find_customized_resources(p_preset, EditorFileSystem::get_singleton()->get_filesystem(), p_preset->get_file_export_mode("res://"), paths);
 	} else {
 		bool scenes_only = p_preset->get_export_filter() == EditorExportPreset::EXPORT_SELECTED_SCENES;
 
@@ -1042,9 +1007,6 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 					fec.source_modified_time = fields[2].strip_edges().to_int();
 					fec.saved_path = fields[3];
 					fec.used = false; // Assume unused until used.
-					if (fields.size() == 5) {
-						fec.stripped = (bool)fields[4].strip_edges().to_int();
-					}
 					export_cache[path] = fec;
 				}
 				l = f->get_line();
@@ -1068,7 +1030,7 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 		if (FileAccess::exists(path + ".import")) {
 			// Before doing this, try to see if it can be customized
 
-			String export_path = _export_customize(path, customize_resources_plugins, customize_scenes_plugins, export_cache, export_base_path, false, strip_paths.has(path));
+			String export_path = _export_customize(path, customize_resources_plugins, customize_scenes_plugins, export_cache, export_base_path, false);
 
 			if (export_path != path) {
 				// It was actually customized..
@@ -1231,7 +1193,7 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 			if (do_export) {
 				// Customization only happens if plugins did not take care of it before
 				bool force_binary = convert_text_to_binary && (path.get_extension().to_lower() == "tres" || path.get_extension().to_lower() == "tscn");
-				String export_path = _export_customize(path, customize_resources_plugins, customize_scenes_plugins, export_cache, export_base_path, force_binary, strip_paths.has(path));
+				String export_path = _export_customize(path, customize_resources_plugins, customize_scenes_plugins, export_cache, export_base_path, force_binary);
 
 				if (export_path != path) {
 					// Add a remap entry
@@ -1259,7 +1221,7 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 		if (f.is_valid()) {
 			for (const KeyValue<String, FileExportCache> &E : export_cache) {
 				if (E.value.used) { // May be old, unused
-					String l = E.key + "::" + E.value.source_md5 + "::" + itos(E.value.source_modified_time) + "::" + E.value.saved_path + "::" + itos(E.value.stripped);
+					String l = E.key + "::" + E.value.source_md5 + "::" + itos(E.value.source_modified_time) + "::" + E.value.saved_path;
 					f->store_line(l);
 				}
 			}
@@ -1291,10 +1253,6 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 	}
 	for (int i = 0; i < export_plugins.size(); i++) {
 		custom_list.append_array(export_plugins[i]->_get_export_features(Ref<EditorExportPlatform>(this), p_debug));
-	}
-
-	if (p_preset->is_dedicated_server()) {
-		custom_list.push_back("dedicated_server");
 	}
 
 	ProjectSettings::CustomMap custom_map;

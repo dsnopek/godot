@@ -37,7 +37,7 @@ class DedicatedServerExportPlugin : public EditorExportPlugin {
 private:
 	EditorExportPreset::FileExportMode current_export_mode;
 
-	void _set_current_export_mode_for_path(const String &p_path);
+	EditorExportPreset::FileExportMode _get_export_mode_for_path(const String &p_path);
 
 protected:
 	String _get_name() const override { return "DedicatedServer"; }

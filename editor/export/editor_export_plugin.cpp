@@ -140,7 +140,7 @@ void EditorExportPlugin::_export_end_script() {
 
 // Customization
 
-bool EditorExportPlugin::_begin_customize_resources(const Ref<EditorExportPlatform> &p_platform, const Vector<String> &p_features) const {
+bool EditorExportPlugin::_begin_customize_resources(const Ref<EditorExportPlatform> &p_platform, const Vector<String> &p_features) {
 	bool ret = false;
 	GDVIRTUAL_CALL(_begin_customize_resources, p_platform, p_features, ret);
 	return ret;
@@ -152,7 +152,7 @@ Ref<Resource> EditorExportPlugin::_customize_resource(const Ref<Resource> &p_res
 	return ret;
 }
 
-bool EditorExportPlugin::_begin_customize_scenes(const Ref<EditorExportPlatform> &p_platform, const Vector<String> &p_features) const {
+bool EditorExportPlugin::_begin_customize_scenes(const Ref<EditorExportPlatform> &p_platform, const Vector<String> &p_features) {
 	bool ret = false;
 	GDVIRTUAL_CALL(_begin_customize_scenes, p_platform, p_features, ret);
 	return ret;

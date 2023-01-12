@@ -972,14 +972,14 @@ Error EditorExportPlatform::export_project_files(const Ref<EditorExportPreset> &
 	LocalVector<Ref<EditorExportPlugin>> customize_scenes_plugins;
 
 	for (int i = 0; i < export_plugins.size(); i++) {
-		if (export_plugins[i]->_begin_customize_resources(Ref<EditorExportPlatform>(this), features_psa)) {
+		if (export_plugins.write[i]->_begin_customize_resources(Ref<EditorExportPlatform>(this), features_psa)) {
 			customize_resources_plugins.push_back(export_plugins[i]);
 
 			custom_resources_hash = hash_murmur3_one_64(export_plugins[i]->_get_name().hash64(), custom_resources_hash);
 			uint64_t hash = export_plugins[i]->_get_customization_configuration_hash();
 			custom_resources_hash = hash_murmur3_one_64(hash, custom_resources_hash);
 		}
-		if (export_plugins[i]->_begin_customize_scenes(Ref<EditorExportPlatform>(this), features_psa)) {
+		if (export_plugins.write[i]->_begin_customize_scenes(Ref<EditorExportPlatform>(this), features_psa)) {
 			customize_scenes_plugins.push_back(export_plugins[i]);
 
 			custom_resources_hash = hash_murmur3_one_64(export_plugins[i]->_get_name().hash64(), custom_resources_hash);

@@ -30,35 +30,77 @@
 
 #include "dedicated_server_export_plugin.h"
 
-bool DedicatedServerExportPlugin::is_dedicated_server() const {
-	Ref<EditorExportPreset> preset = get_export_preset();
-	ERR_FAIL_COND_V(preset.is_null(), false);
-
-	bool valid_prop = false;
-	bool is_server = preset->get(EXPORT_OPTION_IS_DEDICATED_SERVER, &valid_prop);
-
-	if (valid_prop) {
-		return is_server;
-	}
-
-	return false;
+void DedicatedServerExportPlugin::_set_current_export_mode_for_path(const String &p_path) {
+	// @todo!
 }
 
 PackedStringArray DedicatedServerExportPlugin::_get_export_features(const Ref<EditorExportPlatform> &p_platform, bool p_debug) const {
 	PackedStringArray ret;
-	if (is_dedicated_server()) {
+
+	Ref<EditorExportPreset> preset = get_export_preset();
+	ERR_FAIL_COND_V(preset.is_null(), ret);
+
+	if (preset->is_dedicated_server()) {
 		ret.append("dedicated_server");
 	}
 	return ret;
 }
 
 uint64_t DedicatedServerExportPlugin::_get_customization_configuration_hash() const {
-	return (uint64_t)is_dedicated_server();
+	Ref<EditorExportPreset> preset = get_export_preset();
+	ERR_FAIL_COND_V(preset.is_null(), 0);
+
+	if (preset->get_export_filter() != EditorExportPreset::EXPORT_CUSTOMIZED) {
+		return 0;
+	}
+
+	return preset->get_customized_files().hash();
 }
 
-bool DedicatedServerExportPlugin::_begin_customize_resources(const Ref<EditorExportPlatform> &p_platform, const Vector<String> &p_features) const {
-	return is_dedicated_server();
+bool DedicatedServerExportPlugin::_begin_customize_scenes(const Ref<EditorExportPlatform> &p_platform, const Vector<String> &p_features) {
+	Ref<EditorExportPreset> preset = get_export_preset();
+	ERR_FAIL_COND_V(preset.is_null(), false);
+
+	current_export_mode = EditorExportPreset::MODE_FILE_NOT_CUSTOMIZED;
+
+	return preset->get_export_filter() == EditorExportPreset::EXPORT_CUSTOMIZED;
+}
+
+bool DedicatedServerExportPlugin::_begin_customize_resources(const Ref<EditorExportPlatform> &p_platform, const Vector<String> &p_features) {
+	Ref<EditorExportPreset> preset = get_export_preset();
+	ERR_FAIL_COND_V(preset.is_null(), false);
+
+	current_export_mode = EditorExportPreset::MODE_FILE_NOT_CUSTOMIZED;
+
+	return preset->get_export_filter() == EditorExportPreset::EXPORT_CUSTOMIZED;
+}
+
+Node *DedicatedServerExportPlugin::_customize_scene(Node *p_root, const String &p_path) {
+	// Simply set the export mode based on the scene path. All the real
+	// customization happens in _customize_resource().
+	_set_current_export_mode_for_path(p_path);
+	return nullptr;
 }
 
 Ref<Resource> DedicatedServerExportPlugin::_customize_resource(const Ref<Resource> &p_resource, const String &p_path) {
+	// If the resource has a path, we use that to get our export mode. But if it
+	// doesn't, we assume that this resource is embedded in the last resource with
+	// a path.
+	if (p_path != "") {
+		_set_current_export_mode_for_path(p_path);
+	}
+
+	if (p_resource.is_valid() && current_export_mode == EditorExportPreset::MODE_FILE_STRIP) {
+		return p_resource->create_placeholder();
+	}
+
+	return Ref<Resource>();
+}
+
+void DedicatedServerExportPlugin::_end_customize_scenes() {
+	current_export_mode = EditorExportPreset::MODE_FILE_NOT_CUSTOMIZED;
+}
+
+void DedicatedServerExportPlugin::_end_customize_resources() {
+	current_export_mode = EditorExportPreset::MODE_FILE_NOT_CUSTOMIZED;
 }

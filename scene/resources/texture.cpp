@@ -110,6 +110,7 @@ void Texture2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("draw_rect", "canvas_item", "rect", "tile", "modulate", "transpose"), &Texture2D::draw_rect, DEFVAL(Color(1, 1, 1)), DEFVAL(false));
 	ClassDB::bind_method(D_METHOD("draw_rect_region", "canvas_item", "rect", "src_rect", "modulate", "transpose", "clip_uv"), &Texture2D::draw_rect_region, DEFVAL(Color(1, 1, 1)), DEFVAL(false), DEFVAL(true));
 	ClassDB::bind_method(D_METHOD("get_image"), &Texture2D::get_image);
+	ClassDB::bind_method(D_METHOD("create_placeholder"), &Texture2D::create_placeholder);
 
 	ADD_GROUP("", "");
 
@@ -1144,6 +1145,7 @@ void Texture3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_depth"), &Texture3D::get_depth);
 	ClassDB::bind_method(D_METHOD("has_mipmaps"), &Texture3D::has_mipmaps);
 	ClassDB::bind_method(D_METHOD("get_data"), &Texture3D::_get_datai);
+	ClassDB::bind_method(D_METHOD("create_placeholder"), &Texture3D::create_placeholder);
 
 	GDVIRTUAL_BIND(_get_format);
 	GDVIRTUAL_BIND(_get_width);
@@ -3063,6 +3065,10 @@ ImageTextureLayered::~ImageTextureLayered() {
 	}
 }
 
+void Texture2DArray::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("create_placeholder"), &Texture2DArray::create_placeholder);
+}
+
 Ref<Resource> Texture2DArray::create_placeholder() const {
 	Ref<PlaceholderTexture2DArray> placeholder;
 	placeholder.instantiate();
@@ -3071,12 +3077,20 @@ Ref<Resource> Texture2DArray::create_placeholder() const {
 	return placeholder;
 }
 
+void Cubemap::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("create_placeholder"), &Cubemap::create_placeholder);
+}
+
 Ref<Resource> Cubemap::create_placeholder() const {
 	Ref<PlaceholderCubemap> placeholder;
 	placeholder.instantiate();
 	placeholder->set_size(Size2i(get_width(), get_height()));
 	placeholder->set_layers(get_layers());
 	return placeholder;
+}
+
+void CubemapArray::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("create_placeholder"), &CubemapArray::create_placeholder);
 }
 
 Ref<Resource> CubemapArray::create_placeholder() const {

@@ -75,7 +75,7 @@ public:
 	virtual RID get_shader_rid() const;
 	virtual Shader::Mode get_shader_mode() const;
 
-	virtual Ref<Resource> create_placeholder() const override;
+	virtual Ref<Resource> create_placeholder() const;
 
 	Material();
 	virtual ~Material();

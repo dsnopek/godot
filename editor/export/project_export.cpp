@@ -245,6 +245,7 @@ void ProjectExportDialog::_edit_preset(int p_index) {
 	export_filter->select(current->get_export_filter());
 	include_filters->set_text(current->get_include_filter());
 	exclude_filters->set_text(current->get_exclude_filter());
+	server_strip_message->set_visible(current->get_export_filter() == EditorExportPreset::EXPORT_CUSTOMIZED);
 
 	_fill_resource_tree();
 
@@ -713,8 +714,9 @@ void ProjectExportDialog::_export_type_changed(int p_which) {
 	EditorExportPreset::ExportFilter filter_type = (EditorExportPreset::ExportFilter)p_which;
 	current->set_export_filter(filter_type);
 	current->set_dedicated_server(filter_type == EditorExportPreset::EXPORT_CUSTOMIZED);
+	server_strip_message->set_visible(filter_type == EditorExportPreset::EXPORT_CUSTOMIZED);
 
-	// Default to stripping everything when switching to server build.
+	// Default to stripping everything when first switching to server build.
 	if (filter_type == EditorExportPreset::EXPORT_CUSTOMIZED && current->get_customized_files_count() == 0) {
 		current->set_file_export_mode("res://", EditorExportPreset::MODE_FILE_STRIP);
 	}
@@ -1183,6 +1185,28 @@ ProjectExportDialog::ProjectExportDialog() {
 	include_files->connect("item_edited", callable_mp(this, &ProjectExportDialog::_tree_changed));
 	include_files->connect("check_propagated_to_item", callable_mp(this, &ProjectExportDialog::_check_propagated_to_item));
 	include_files->connect("custom_popup_edited", callable_mp(this, &ProjectExportDialog::_tree_popup_edited));
+
+	server_strip_message = memnew(Label);
+	server_strip_message->set_visible(false);
+	server_strip_message->set_autowrap_mode(TextServer::AUTOWRAP_WORD_SMART);
+	resources_vb->add_child(server_strip_message);
+
+	{
+		List<StringName> resource_names;
+		ClassDB::get_inheriters_from_class("Resource", &resource_names);
+
+		PackedStringArray strippable;
+		for (StringName resource_name : resource_names) {
+			if (ClassDB::has_method(resource_name, "create_placeholder", true)) {
+				strippable.push_back(resource_name);
+			}
+		}
+		strippable.sort();
+
+		String message = TTR("Strip will replace the following resources with placeholders: ");
+		message += String(", ").join(strippable);
+		server_strip_message->set_text(message);
+	}
 
 	file_mode_popup = memnew(PopupMenu);
 	add_child(file_mode_popup);

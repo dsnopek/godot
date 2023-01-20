@@ -19,12 +19,6 @@
 				Override this method to return a custom [RID] when [method get_rid] is called.
 			</description>
 		</method>
-		<method name="create_placeholder" qualifiers="const">
-			<return type="Resource" />
-			<description>
-				Creates a placeholder version of this resource if possible.
-			</description>
-		</method>
 		<method name="duplicate" qualifiers="const">
 			<return type="Resource" />
 			<param index="0" name="subresources" type="bool" default="false" />

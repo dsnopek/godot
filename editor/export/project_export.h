@@ -76,6 +76,7 @@ private:
 	LineEdit *include_filters = nullptr;
 	LineEdit *exclude_filters = nullptr;
 	Tree *include_files = nullptr;
+	Label *server_strip_message = nullptr;
 	PopupMenu *file_mode_popup = nullptr;
 
 	Label *include_label = nullptr;

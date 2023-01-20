@@ -220,7 +220,7 @@ public:
 	virtual int get_builtin_bind_pose_count() const;
 	virtual Transform3D get_builtin_bind_pose(int p_index) const;
 
-	virtual Ref<Resource> create_placeholder() const override;
+	virtual Ref<Resource> create_placeholder() const;
 
 	Mesh();
 };

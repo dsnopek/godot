@@ -569,9 +569,9 @@ protected:
 	void _setup_sky(const RenderDataGLES3 *p_render_data, const PagedArray<RID> &p_lights, const Projection &p_projection, const Transform3D &p_transform, const Size2i p_screen_size);
 	void _invalidate_sky(Sky *p_sky);
 	void _update_dirty_skys();
-	void _update_sky_radiance(RID p_env, const Projection &p_projection, const Transform3D &p_transform, float p_luminance_multiplier);
+	void _update_sky_radiance(RID p_env, const Projection &p_projection, const Transform3D &p_transform, float p_luminance_multiplier, bool p_use_multiview);
 	void _filter_sky_radiance(Sky *p_sky, int p_base_layer);
-	void _draw_sky(RID p_env, const Projection &p_projection, const Transform3D &p_transform, float p_luminance_multiplier);
+	void _draw_sky(RID p_env, const Projection &p_projection, const Transform3D &p_transform, float p_luminance_multiplier, bool p_use_multiview);
 	void _free_sky_data(Sky *p_sky);
 
 public:

@@ -40,8 +40,8 @@ uniform samplerCube radiance; //texunit:-1
 uniform samplerCube half_res; //texunit:-2
 uniform samplerCube quarter_res; //texunit:-3
 #elif defined(USE_MULTIVIEW)
-uniform texture2DArray half_res; //texunit:-2
-uniform texture2DArray quarter_res; //texunit:-3
+uniform sampler2DArray half_res; //texunit:-2
+uniform sampler2DArray quarter_res; //texunit:-3
 #else
 uniform sampler2D half_res; //texunit:-2
 uniform sampler2D quarter_res; //texunit:-3
@@ -131,10 +131,10 @@ void main() {
 	vec3 cube_normal;
 #ifdef USE_MULTIVIEW
 	// In multiview our projection matrices will contain positional and rotational offsets that we need to properly unproject.
-	vec4 unproject = vec4(uv_interp.x, -uv_interp.y, 1.0, 1.0);
-	vec4 unprojected = multiview_data.view_inv_projections[ViewIndex] * unproject;
+	vec4 unproject = vec4(uv_interp.x, uv_interp.y, 1.0, 1.0);
+	vec4 unprojected = multiview_data.inv_projection_matrix_view[ViewIndex] * unproject;
 	cube_normal = unprojected.xyz / unprojected.w;
-	cube_normal += multiview_data.view_eye_offsets[ViewIndex].xyz;
+	cube_normal += multiview_data.eye_offset[ViewIndex].xyz;
 #else
 	cube_normal.z = -1.0;
 	cube_normal.x = (uv_interp.x + projection.x) / projection.y;

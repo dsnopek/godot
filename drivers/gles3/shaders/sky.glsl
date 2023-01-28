@@ -108,11 +108,12 @@ uniform float z_far;
 uniform uint directional_light_count;
 
 #ifdef USE_MULTIVIEW
-layout(std140) uniform SkyMultiviewData { // ubo:8
+layout(std140) uniform MultiviewData { // ubo:5
+	highp mat4 projection_matrix_view[MAX_VIEWS];
 	highp mat4 inv_projection_matrix_view[MAX_VIEWS];
 	highp vec4 eye_offset[MAX_VIEWS];
 }
-sky_multiview_data;
+multiview_data;
 #endif
 
 layout(location = 0) out vec4 frag_color;
@@ -131,9 +132,9 @@ void main() {
 #ifdef USE_MULTIVIEW
 	// In multiview our projection matrices will contain positional and rotational offsets that we need to properly unproject.
 	vec4 unproject = vec4(uv_interp.x, -uv_interp.y, 1.0, 1.0);
-	vec4 unprojected = sky_multiview_data.view_inv_projections[ViewIndex] * unproject;
+	vec4 unprojected = multiview_data.view_inv_projections[ViewIndex] * unproject;
 	cube_normal = unprojected.xyz / unprojected.w;
-	cube_normal += sky_multiview_data.view_eye_offsets[ViewIndex].xyz;
+	cube_normal += multiview_data.view_eye_offsets[ViewIndex].xyz;
 #else
 	cube_normal.z = -1.0;
 	cube_normal.x = (uv_interp.x + projection.x) / projection.y;

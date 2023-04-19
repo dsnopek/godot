@@ -238,8 +238,6 @@ public:
 	}
 };
 
-static GDExtensionInterface gdextension_interface;
-
 void GDExtension::_register_extension_class(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_parent_class_name, const GDExtensionClassCreationInfo *p_extension_funcs) {
 	GDExtension *self = reinterpret_cast<GDExtension *>(p_library);
 
@@ -394,6 +392,19 @@ void GDExtension::_get_library_path(GDExtensionClassLibraryPtr p_library, GDExte
 	*(String *)r_path = self->library_path;
 }
 
+HashMap<StringName, void *> gdextension_interface_functions;
+
+void GDExtension::register_interface_function(StringName p_function_name, void *p_function_pointer) {
+	ERR_FAIL_COND_MSG(gdextension_interface_functions.has(p_function_name), "Attempt to register interface function '" + p_function_name + "', which appears to be already registered.");
+	gdextension_interface_functions.insert(p_function_name, p_function_pointer);
+}
+
+void *GDExtension::get_interface_function(StringName p_function_name) {
+	void **function = gdextension_interface_functions.getptr(p_function_name);
+	ERR_FAIL_COND_V_MSG(function == nullptr, nullptr, "Attempt to get non-existant interface function: " + p_function_name);
+	return *function;
+}
+
 Error GDExtension::open_library(const String &p_path, const String &p_entry_symbol) {
 	Error err = OS::get_singleton()->open_dynamic_library(p_path, library, true, &library_path);
 	if (err != OK) {
@@ -479,20 +490,21 @@ GDExtension::~GDExtension() {
 	}
 }
 
-extern void gdextension_setup_interface(GDExtensionInterface *p_interface);
+extern void gdextension_setup_interface();
+extern void gdextension_get_legacy_interface();
 
 void GDExtension::initialize_gdextensions() {
-	gdextension_setup_interface(&gdextension_interface);
+	gdextension_setup_interface();
 
-	gdextension_interface.classdb_register_extension_class = _register_extension_class;
-	gdextension_interface.classdb_register_extension_class_method = _register_extension_class_method;
-	gdextension_interface.classdb_register_extension_class_integer_constant = _register_extension_class_integer_constant;
-	gdextension_interface.classdb_register_extension_class_property = _register_extension_class_property;
-	gdextension_interface.classdb_register_extension_class_property_group = _register_extension_class_property_group;
-	gdextension_interface.classdb_register_extension_class_property_subgroup = _register_extension_class_property_subgroup;
-	gdextension_interface.classdb_register_extension_class_signal = _register_extension_class_signal;
-	gdextension_interface.classdb_unregister_extension_class = _unregister_extension_class;
-	gdextension_interface.get_library_path = _get_library_path;
+	register_interface_function("classdb_register_extension_class", &GDExtension::_register_extension_class);
+	register_interface_function("classdb_register_extension_class_method", &GDExtension::_register_extension_class_method);
+	register_interface_function("classdb_register_extension_class_integer_constant", &GDExtension::_register_extension_class_integer_constant);
+	register_interface_function("classdb_register_extension_class_property", &GDExtension::_register_extension_class_property);
+	register_interface_function("classdb_register_extension_class_property_group", &GDExtension::_register_extension_class_property_group);
+	register_interface_function("classdb_register_extension_class_property_subgroup", &GDExtension::_register_extension_class_property_subgroup);
+	register_interface_function("classdb_register_extension_class_signal", &GDExtension::_register_extension_class_signal);
+	register_interface_function("classdb_unregister_extension_class", &GDExtension::_unregister_extension_class);
+	register_interface_function("get_library_path", &GDExtension::_get_library_path);
 }
 
 Ref<Resource> GDExtensionResourceLoader::load(const String &p_path, const String &p_original_path, Error *r_error, bool p_use_sub_threads, float *r_progress, CacheMode p_cache_mode) {
@@ -519,6 +531,21 @@ Ref<Resource> GDExtensionResourceLoader::load(const String &p_path, const String
 	}
 
 	String entry_symbol = config->get_value("configuration", "entry_symbol");
+
+	uint32_t compatibility_minimum[3] = { 0, 0, 0 };
+	if (config->has_section_key("configuration", "compatibility_minimum")) {
+		String compat_string = config->get_value("configuration", "compatibility_minimum");
+		Vector<int> parts = compat_string.split_ints(".");
+		for (int i = 0; i < parts.size(); i++) {
+			if (i >= 3) {
+				break;
+			}
+			compatibility_minimum[i] = parts[i];
+		}
+	}
+	if (compatibility_minimum[0] < 4) {
+		compatibility_minimum[0] = 4;
+	}
 
 	String library_path = GDExtension::find_extension_library(p_path, config, [](String p_feature) { return OS::get_singleton()->has_feature(p_feature); });
 

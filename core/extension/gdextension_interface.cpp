@@ -41,6 +41,18 @@
 #include "core/variant/variant.h"
 #include "core/version.h"
 
+// Core interface functions.
+static void *gdextension_get_proc_address(const char *p_name) {
+	return GDExtension::get_interface_function(p_name);
+}
+
+static void gdextension_get_godot_version(GDExtensionGodotVersion *r_godot_version) {
+	r_godot_version->major = VERSION_MAJOR;
+	r_godot_version->minor = VERSION_MINOR;
+	r_godot_version->patch = VERSION_PATCH;
+	r_godot_version->string = VERSION_FULL_NAME;
+}
+
 // Memory Functions
 static void *gdextension_mem_alloc(size_t p_size) {
 	return memalloc(p_size);
@@ -1008,6 +1020,7 @@ static void *gdextension_classdb_get_class_tag(GDExtensionConstStringNamePtr p_c
 #define REGISTER_INTERFACE_FUNC(m_name) GDExtension::register_interface_function(#m_name, &gdextension_##m_name)
 
 void gdextension_setup_interface() {
+	REGISTER_INTERFACE_FUNC(get_godot_version);
 	REGISTER_INTERFACE_FUNC(mem_alloc);
 	REGISTER_INTERFACE_FUNC(mem_realloc);
 	REGISTER_INTERFACE_FUNC(mem_free);
@@ -1303,21 +1316,19 @@ static LegacyGDExtensionInterface *legacy_gdextension_interface = nullptr;
 
 #define SETUP_LEGACY_FUNC(m_name) *((void **)legacy_gdextension_interface->##m_name) = GDExtension::get_interface_function(#m_name)
 
-static LegacyGDExtensionInterface *gdextension_get_legacy_interface() {
+static void *gdextension_get_legacy_interface() {
 	if (legacy_gdextension_interface != nullptr) {
 		return legacy_gdextension_interface;
 	}
 
 	legacy_gdextension_interface = memnew(LegacyGDExtensionInterface);
 
-	legacy_gdextension_interface->version_major = VERSION_MAJOR;
-	legacy_gdextension_interface->version_minor = VERSION_MINOR;
-#if VERSION_PATCH
-	legacy_gdextension_interface->version_patch = VERSION_PATCH;
-#else
-	legacy_gdextension_interface->version_patch = 0;
-#endif
-	legacy_gdextension_interface->version_string = VERSION_FULL_NAME;
+	GDExtensionGodotVersion godot_version;
+	gdextension_get_godot_version(&godot_version);
+	legacy_gdextension_interface->version_major = godot_version.major;
+	legacy_gdextension_interface->version_minor = godot_version.minor;
+	legacy_gdextension_interface->version_patch = godot_version.patch;
+	legacy_gdextension_interface->version_string = godot_version.string;
 
 	SETUP_LEGACY_FUNC(mem_alloc);
 	SETUP_LEGACY_FUNC(mem_realloc);

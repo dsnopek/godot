@@ -34,6 +34,7 @@
 #include "core/object/class_db.h"
 #include "core/object/method_bind.h"
 #include "core/os/os.h"
+#include "core/version.h"
 
 String GDExtension::get_extension_list_config_file() {
 	return ProjectSettings::get_singleton()->get_project_data_path().path_join("extension_list.cfg");
@@ -405,7 +406,7 @@ void *GDExtension::get_interface_function(StringName p_function_name) {
 	return *function;
 }
 
-Error GDExtension::open_library(const String &p_path, const String &p_entry_symbol) {
+Error GDExtension::open_library(const String &p_path, const String &p_entry_symbol, bool p_use_legacy_interface) {
 	Error err = OS::get_singleton()->open_dynamic_library(p_path, library, true, &library_path);
 	if (err != OK) {
 		ERR_PRINT("GDExtension dynamic library not found: " + p_path);
@@ -423,6 +424,8 @@ Error GDExtension::open_library(const String &p_path, const String &p_entry_symb
 	}
 
 	GDExtensionInitializationFunction initialization_function = (GDExtensionInitializationFunction)entry_funcptr;
+
+	void *gdextension_interface = p_use_legacy_interface ? gdextension_get_legacy_interface() : (void *)&gdextension_get_proc_address;
 
 	if (initialization_function(&gdextension_interface, this, &initialization)) {
 		level_initialized = -1;
@@ -468,7 +471,7 @@ void GDExtension::deinitialize_library(InitializationLevel p_level) {
 }
 
 void GDExtension::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("open_library", "path", "entry_symbol"), &GDExtension::open_library);
+	ClassDB::bind_method(D_METHOD("open_library", "path", "entry_symbol", "use_legacy_interface"), &GDExtension::open_library);
 	ClassDB::bind_method(D_METHOD("close_library"), &GDExtension::close_library);
 	ClassDB::bind_method(D_METHOD("is_library_open"), &GDExtension::is_library_open);
 
@@ -491,7 +494,8 @@ GDExtension::~GDExtension() {
 }
 
 extern void gdextension_setup_interface();
-extern void gdextension_get_legacy_interface();
+extern void *gdextension_get_legacy_interface();
+extern void *gdextension_get_proc_address();
 
 void GDExtension::initialize_gdextensions() {
 	gdextension_setup_interface();
@@ -540,11 +544,29 @@ Ref<Resource> GDExtensionResourceLoader::load(const String &p_path, const String
 			if (i >= 3) {
 				break;
 			}
-			compatibility_minimum[i] = parts[i];
+			if (parts[i] >= 0) {
+				compatibility_minimum[i] = parts[i];
+			}
 		}
 	}
 	if (compatibility_minimum[0] < 4) {
 		compatibility_minimum[0] = 4;
+	}
+
+	bool compatible = true;
+	if (VERSION_MAJOR < compatibility_minimum[0]) {
+		compatible = false;
+	} else if (VERSION_MINOR < compatibility_minimum[1]) {
+		compatible = false;
+	} else if (VERSION_PATCH < compatibility_minimum[2]) {
+		compatible = false;
+	}
+	if (!compatible) {
+		if (r_error) {
+			*r_error = ERR_INVALID_DATA;
+		}
+		ERR_PRINT("GDExtension is incompatible with this version of Godot: " + p_path);
+		return Ref<Resource>();
 	}
 
 	String library_path = GDExtension::find_extension_library(p_path, config, [](String p_feature) { return OS::get_singleton()->has_feature(p_feature); });
@@ -562,10 +584,12 @@ Ref<Resource> GDExtensionResourceLoader::load(const String &p_path, const String
 		library_path = p_path.get_base_dir().path_join(library_path);
 	}
 
+	bool use_legacy_interface = compatibility_minimum[0] == 4 && compatibility_minimum[1] == 0;
+
 	Ref<GDExtension> lib;
 	lib.instantiate();
 	String abs_path = ProjectSettings::get_singleton()->globalize_path(library_path);
-	err = lib->open_library(abs_path, entry_symbol);
+	err = lib->open_library(abs_path, entry_symbol, use_legacy_interface);
 
 	if (r_error) {
 		*r_error = err;

@@ -403,10 +403,10 @@ typedef struct {
 /* INTERFACE */
 
 typedef struct {
-	uint32_t version_major;
-	uint32_t version_minor;
-	uint32_t version_patch;
-	const char *version_string;
+	uint32_t major;
+	uint32_t minor;
+	uint32_t patch;
+	const char *string;
 } GDExtensionGodotVersion;
 
 typedef void *(*GDExtensionInterfaceGetProcAddress)(const char *p_function_name);

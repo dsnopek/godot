@@ -409,7 +409,9 @@ typedef struct {
 	const char *string;
 } GDExtensionGodotVersion;
 
-typedef void *(*GDExtensionInterfaceGetProcAddress)(const char *p_function_name);
+typedef void (*GDExtensionInterfaceFunctionPtr)();
+
+typedef GDExtensionInterfaceFunctionPtr (*GDExtensionInterfaceGetProcAddress)(const char *p_function_name);
 typedef void (*GDExtensionInterfaceGetGodotVersion)(GDExtensionGodotVersion *r_godot_version);
 
 /* INTERFACE: Memory */
@@ -611,8 +613,6 @@ typedef enum {
 	GDEXTENSION_MAX_INITIALIZATION_LEVEL,
 } GDExtensionInitializationLevel;
 
-typedef void GDExtensionInterface;
-
 typedef struct {
 	/* Minimum initialization level required.
 	 * If Core or Servers, the extension needs editor or game restart to take effect */
@@ -629,7 +629,7 @@ typedef struct {
  * It can be used to set up different init levels, which are called during various stages of initialization/shutdown.
  * The function name must be a unique one specified in the .gdextension config file.
  */
-typedef GDExtensionBool (*GDExtensionInitializationFunction)(const GDExtensionInterface *p_interface, GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization);
+typedef GDExtensionBool (*GDExtensionInitializationFunction)(GDExtensionInterfaceGetProcAddress p_interface, GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization);
 
 #ifdef __cplusplus
 }

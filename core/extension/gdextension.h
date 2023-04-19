@@ -88,8 +88,8 @@ public:
 	void initialize_library(InitializationLevel p_level);
 	void deinitialize_library(InitializationLevel p_level);
 
-	static void register_interface_function(StringName p_function_name, void *p_function_pointer);
-	static void *get_interface_function(StringName p_function_name);
+	static void register_interface_function(StringName p_function_name, GDExtensionInterfaceFunctionPtr p_function_pointer);
+	static GDExtensionInterfaceFunctionPtr get_interface_function(StringName p_function_name);
 	static void initialize_gdextensions();
 
 	GDExtension();

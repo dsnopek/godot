@@ -393,15 +393,15 @@ void GDExtension::_get_library_path(GDExtensionClassLibraryPtr p_library, GDExte
 	*(String *)r_path = self->library_path;
 }
 
-HashMap<StringName, void *> gdextension_interface_functions;
+HashMap<StringName, GDExtensionInterfaceFunctionPtr> gdextension_interface_functions;
 
-void GDExtension::register_interface_function(StringName p_function_name, void *p_function_pointer) {
+void GDExtension::register_interface_function(StringName p_function_name, GDExtensionInterfaceFunctionPtr p_function_pointer) {
 	ERR_FAIL_COND_MSG(gdextension_interface_functions.has(p_function_name), "Attempt to register interface function '" + p_function_name + "', which appears to be already registered.");
 	gdextension_interface_functions.insert(p_function_name, p_function_pointer);
 }
 
-void *GDExtension::get_interface_function(StringName p_function_name) {
-	void **function = gdextension_interface_functions.getptr(p_function_name);
+GDExtensionInterfaceFunctionPtr GDExtension::get_interface_function(StringName p_function_name) {
+	GDExtensionInterfaceFunctionPtr *function = gdextension_interface_functions.getptr(p_function_name);
 	ERR_FAIL_COND_V_MSG(function == nullptr, nullptr, "Attempt to get non-existant interface function: " + p_function_name);
 	return *function;
 }

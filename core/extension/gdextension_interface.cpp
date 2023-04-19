@@ -1017,7 +1017,7 @@ static void *gdextension_classdb_get_class_tag(GDExtensionConstStringNamePtr p_c
 	return class_info ? class_info->class_ptr : nullptr;
 }
 
-#define REGISTER_INTERFACE_FUNC(m_name) GDExtension::register_interface_function(#m_name, &gdextension_##m_name)
+#define REGISTER_INTERFACE_FUNC(m_name) GDExtension::register_interface_function(#m_name, (GDExtensionInterfaceFunctionPtr)&gdextension_##m_name)
 
 void gdextension_setup_interface() {
 	REGISTER_INTERFACE_FUNC(get_godot_version);
@@ -1314,7 +1314,7 @@ typedef struct {
 
 static LegacyGDExtensionInterface *legacy_gdextension_interface = nullptr;
 
-#define SETUP_LEGACY_FUNC(m_name) *((void **)legacy_gdextension_interface->##m_name) = GDExtension::get_interface_function(#m_name)
+#define SETUP_LEGACY_FUNC(m_name) *((GDExtensionInterfaceFunctionPtr *)legacy_gdextension_interface->##m_name) = GDExtension::get_interface_function(#m_name)
 
 static void *gdextension_get_legacy_interface() {
 	if (legacy_gdextension_interface != nullptr) {

@@ -1323,7 +1323,7 @@ static void *gdextension_get_legacy_interface() {
 
 	legacy_gdextension_interface = memnew(LegacyGDExtensionInterface);
 
-	// Force to 4.0.2 to make it easier to detect this structure.
+	// Force to 4.0.999 to make it easier to detect this structure.
 	legacy_gdextension_interface->version_major = 4;
 	legacy_gdextension_interface->version_minor = 0;
 	legacy_gdextension_interface->version_patch = 999;

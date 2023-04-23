@@ -1326,8 +1326,8 @@ static void *gdextension_get_legacy_interface() {
 	// Force to 4.0.2 to make it easier to detect this structure.
 	legacy_gdextension_interface->version_major = 4;
 	legacy_gdextension_interface->version_minor = 0;
-	legacy_gdextension_interface->version_patch = 2;
-	legacy_gdextension_interface->version_string = "Godot Engine v4.0.2.stable.official [7a0977ce2]";
+	legacy_gdextension_interface->version_patch = 999;
+	legacy_gdextension_interface->version_string = "Godot Engine v4.0.999.stable.official [000000000]";
 
 	SETUP_LEGACY_FUNC(mem_alloc);
 	SETUP_LEGACY_FUNC(mem_realloc);

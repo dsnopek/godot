@@ -36,6 +36,12 @@
 #include "core/os/os.h"
 #include "core/version.h"
 
+extern void gdextension_setup_interface();
+extern void *gdextension_get_legacy_interface();
+extern GDExtensionInterfaceFunctionPtr gdextension_get_proc_address(const char *p_name);
+
+typedef GDExtensionBool (*GDExtensionLegacyInitializationFunction)(void *p_interface, GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization);
+
 String GDExtension::get_extension_list_config_file() {
 	return ProjectSettings::get_singleton()->get_project_data_path().path_join("extension_list.cfg");
 }
@@ -423,11 +429,17 @@ Error GDExtension::open_library(const String &p_path, const String &p_entry_symb
 		return err;
 	}
 
-	GDExtensionInitializationFunction initialization_function = (GDExtensionInitializationFunction)entry_funcptr;
+	GDExtensionBool ret = 0;
+	if (p_use_legacy_interface) {
+		GDExtensionLegacyInitializationFunction initialization_function = (GDExtensionLegacyInitializationFunction)entry_funcptr;
+		ret = initialization_function(gdextension_get_legacy_interface(), this, &initialization);
 
-	void *gdextension_interface = p_use_legacy_interface ? gdextension_get_legacy_interface() : (void *)&gdextension_get_proc_address;
+	} else {
+		GDExtensionInitializationFunction initialization_function = (GDExtensionInitializationFunction)entry_funcptr;
+		ret = initialization_function(&gdextension_get_proc_address, this, &initialization);
+	}
 
-	if (initialization_function(&gdextension_interface, this, &initialization)) {
+	if (ret) {
 		level_initialized = -1;
 		return OK;
 	} else {
@@ -493,22 +505,18 @@ GDExtension::~GDExtension() {
 	}
 }
 
-extern void gdextension_setup_interface();
-extern void *gdextension_get_legacy_interface();
-extern void *gdextension_get_proc_address();
-
 void GDExtension::initialize_gdextensions() {
 	gdextension_setup_interface();
 
-	register_interface_function("classdb_register_extension_class", &GDExtension::_register_extension_class);
-	register_interface_function("classdb_register_extension_class_method", &GDExtension::_register_extension_class_method);
-	register_interface_function("classdb_register_extension_class_integer_constant", &GDExtension::_register_extension_class_integer_constant);
-	register_interface_function("classdb_register_extension_class_property", &GDExtension::_register_extension_class_property);
-	register_interface_function("classdb_register_extension_class_property_group", &GDExtension::_register_extension_class_property_group);
-	register_interface_function("classdb_register_extension_class_property_subgroup", &GDExtension::_register_extension_class_property_subgroup);
-	register_interface_function("classdb_register_extension_class_signal", &GDExtension::_register_extension_class_signal);
-	register_interface_function("classdb_unregister_extension_class", &GDExtension::_unregister_extension_class);
-	register_interface_function("get_library_path", &GDExtension::_get_library_path);
+	register_interface_function("classdb_register_extension_class", (GDExtensionInterfaceFunctionPtr)&GDExtension::_register_extension_class);
+	register_interface_function("classdb_register_extension_class_method", (GDExtensionInterfaceFunctionPtr)&GDExtension::_register_extension_class_method);
+	register_interface_function("classdb_register_extension_class_integer_constant", (GDExtensionInterfaceFunctionPtr)&GDExtension::_register_extension_class_integer_constant);
+	register_interface_function("classdb_register_extension_class_property", (GDExtensionInterfaceFunctionPtr)&GDExtension::_register_extension_class_property);
+	register_interface_function("classdb_register_extension_class_property_group", (GDExtensionInterfaceFunctionPtr)&GDExtension::_register_extension_class_property_group);
+	register_interface_function("classdb_register_extension_class_property_subgroup", (GDExtensionInterfaceFunctionPtr)&GDExtension::_register_extension_class_property_subgroup);
+	register_interface_function("classdb_register_extension_class_signal", (GDExtensionInterfaceFunctionPtr)&GDExtension::_register_extension_class_signal);
+	register_interface_function("classdb_unregister_extension_class", (GDExtensionInterfaceFunctionPtr)&GDExtension::_unregister_extension_class);
+	register_interface_function("get_library_path", (GDExtensionInterfaceFunctionPtr)&GDExtension::_get_library_path);
 }
 
 Ref<Resource> GDExtensionResourceLoader::load(const String &p_path, const String &p_original_path, Error *r_error, bool p_use_sub_threads, float *r_progress, CacheMode p_cache_mode) {

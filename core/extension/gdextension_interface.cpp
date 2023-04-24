@@ -42,7 +42,7 @@
 #include "core/version.h"
 
 // Core interface functions.
-static void *gdextension_get_proc_address(const char *p_name) {
+GDExtensionInterfaceFunctionPtr gdextension_get_proc_address(const char *p_name) {
 	return GDExtension::get_interface_function(p_name);
 }
 
@@ -1314,9 +1314,9 @@ typedef struct {
 
 static LegacyGDExtensionInterface *legacy_gdextension_interface = nullptr;
 
-#define SETUP_LEGACY_FUNC(m_name) *((GDExtensionInterfaceFunctionPtr *)legacy_gdextension_interface->##m_name) = GDExtension::get_interface_function(#m_name)
+#define SETUP_LEGACY_FUNC(m_name) *((GDExtensionInterfaceFunctionPtr *)legacy_gdextension_interface->m_name) = GDExtension::get_interface_function(#m_name)
 
-static void *gdextension_get_legacy_interface() {
+void *gdextension_get_legacy_interface() {
 	if (legacy_gdextension_interface != nullptr) {
 		return legacy_gdextension_interface;
 	}

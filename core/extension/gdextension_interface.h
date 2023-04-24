@@ -629,7 +629,7 @@ typedef struct {
  * It can be used to set up different init levels, which are called during various stages of initialization/shutdown.
  * The function name must be a unique one specified in the .gdextension config file.
  */
-typedef GDExtensionBool (*GDExtensionInitializationFunction)(GDExtensionInterfaceGetProcAddress p_interface, GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization);
+typedef GDExtensionBool (*GDExtensionInitializationFunction)(GDExtensionInterfaceGetProcAddress p_get_proc_address, GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization);
 
 #ifdef __cplusplus
 }

@@ -511,13 +511,94 @@ typedef void (*GDExtensionInterfaceMemFree)(void *p_ptr);
 
 /* INTERFACE: Godot Core */
 
+/**
+ * @name print_error
+ *
+ * Logs an error to Godot's built-in debugger and to the OS terminal.
+ *
+ * @param p_description The code trigging the error.
+ * @param p_function The function name where the error occurred.
+ * @param p_file The file where the error occurred.
+ * @param p_line The line where the error occurred.
+ * @param p_editor_notify Whether or not to notify the editor.
+ */
 typedef void (*GDExtensionInterfacePrintError)(const char *p_description, const char *p_function, const char *p_file, int32_t p_line, GDExtensionBool p_editor_notify);
+
+/**
+ * @name print_error_with_message
+ *
+ * Logs an error with a message to Godot's built-in debugger and to the OS terminal.
+ *
+ * @param p_description The code trigging the error.
+ * @param p_message The message to show along with the error.
+ * @param p_function The function name where the error occurred.
+ * @param p_file The file where the error occurred.
+ * @param p_line The line where the error occurred.
+ * @param p_editor_notify Whether or not to notify the editor.
+ */
 typedef void (*GDExtensionInterfacePrintErrorWithMessage)(const char *p_description, const char *p_message, const char *p_function, const char *p_file, int32_t p_line, GDExtensionBool p_editor_notify);
+
+/**
+ * @name print_warning
+ *
+ * Logs a warning to Godot's built-in debugger and to the OS terminal.
+ *
+ * @param p_description The code trigging the warning.
+ * @param p_function The function name where the warning occurred.
+ * @param p_file The file where the warning occurred.
+ * @param p_line The line where the warning occurred.
+ * @param p_editor_notify Whether or not to notify the editor.
+ */
 typedef void (*GDExtensionInterfacePrintWarning)(const char *p_description, const char *p_function, const char *p_file, int32_t p_line, GDExtensionBool p_editor_notify);
+
+/**
+ * @name print_warning_with_message
+ *
+ * Logs a warning with a message to Godot's built-in debugger and to the OS terminal.
+ *
+ * @param p_description The code trigging the warning.
+ * @param p_message The message to show along with the warning.
+ * @param p_function The function name where the warning occurred.
+ * @param p_file The file where the warning occurred.
+ * @param p_line The line where the warning occurred.
+ * @param p_editor_notify Whether or not to notify the editor.
+ */
 typedef void (*GDExtensionInterfacePrintWarningWithMessage)(const char *p_description, const char *p_message, const char *p_function, const char *p_file, int32_t p_line, GDExtensionBool p_editor_notify);
+
+/**
+ * @name print_script_error
+ *
+ * Logs a script error to Godot's built-in debugger and to the OS terminal.
+ *
+ * @param p_description The code trigging the error.
+ * @param p_function The function name where the error occurred.
+ * @param p_file The file where the error occurred.
+ * @param p_line The line where the error occurred.
+ * @param p_editor_notify Whether or not to notify the editor.
+ */
 typedef void (*GDExtensionInterfacePrintScriptError)(const char *p_description, const char *p_function, const char *p_file, int32_t p_line, GDExtensionBool p_editor_notify);
+
+/**
+ * @name print_script_error_with_message
+ *
+ * Logs a script error with a message to Godot's built-in debugger and to the OS terminal.
+ *
+ * @param p_description The code trigging the error.
+ * @param p_message The message to show along with the error.
+ * @param p_function The function name where the error occurred.
+ * @param p_file The file where the error occurred.
+ * @param p_line The line where the error occurred.
+ * @param p_editor_notify Whether or not to notify the editor.
+ */
 typedef void (*GDExtensionInterfacePrintScriptErrorWithMessage)(const char *p_description, const char *p_message, const char *p_function, const char *p_file, int32_t p_line, GDExtensionBool p_editor_notify);
 
+/**
+ * @name get_native_struct_size
+ *
+ * Gets the size of a native struct (ex. ObjectID) in bytes.
+ *
+ * @param p_name A pointer to a StringName identifying the struct name.
+ */
 typedef uint64_t (*GDExtensionInterfaceGetNativeStructSize)(GDExtensionConstStringNamePtr p_name);
 
 /* INTERFACE: Variant */

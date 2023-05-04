@@ -425,26 +425,26 @@ typedef void (*GDExtensionInterfaceFunctionPtr)();
 typedef GDExtensionInterfaceFunctionPtr (*GDExtensionInterfaceGetProcAddress)(const char *p_function_name);
 
 /*
- * Each GDExtension should define a C function that matches the signature of the GDExtensionInitializationFunction,
- * and export it so that it can be loaded via dlopen() or the equivalent for the given platform.
+ * Each GDExtension should define a C function that matches the signature of GDExtensionInitializationFunction,
+ * and export it so that it can be loaded via dlopen() or equivalent for the given platform.
  *
  * For example:
  *
  *   GDExtensionBool my_extension_init(GDExtensionInterfaceGetProcAddress p_get_proc_address, GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization);
  *
- * The function name must be specified in the .gdextension file.
+ * This function's name must be specified as the 'entry_symbol' in the .gdextension file.
  *
- * This is the entry point of the GDExtension and will be called on initialization.
+ * This makes it the entry point of the GDExtension and will be called on initialization.
  *
  * The GDExtension can then modify the r_initialization structure, setting the minimum initialization level,
  * and providing pointers to functions that will be called at various stages of initialization/shutdown.
  *
- * The rest of the GDExtensions interface to Godot consists of function pointers that can be loaded
+ * The rest of the GDExtension's interface to Godot consists of function pointers that can be loaded
  * by calling p_get_proc_address("...") with the name of the function.
  *
  * For example:
  *
- *   GDExtensionInterfaceGetGodotVersion *get_godot_version = p_get_proc_address("get_godot_version");
+ *   GDExtensionInterfaceGetGodotVersion *get_godot_version = (GDExtensionInterfaceGetGodotVersion)p_get_proc_address("get_godot_version");
  *
  * You can then call it like a normal function:
  *
@@ -458,6 +458,7 @@ typedef GDExtensionInterfaceFunctionPtr (*GDExtensionInterfaceGetProcAddress)(co
 typedef GDExtensionBool (*GDExtensionInitializationFunction)(GDExtensionInterfaceGetProcAddress p_get_proc_address, GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization);
 
 /* INTERFACE */
+
 typedef struct {
 	uint32_t major;
 	uint32_t minor;

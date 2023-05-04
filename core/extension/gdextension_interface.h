@@ -598,13 +598,39 @@ typedef void (*GDExtensionInterfacePrintScriptErrorWithMessage)(const char *p_de
  * Gets the size of a native struct (ex. ObjectID) in bytes.
  *
  * @param p_name A pointer to a StringName identifying the struct name.
+ *
+ * @return The size in bytes.
  */
 typedef uint64_t (*GDExtensionInterfaceGetNativeStructSize)(GDExtensionConstStringNamePtr p_name);
 
 /* INTERFACE: Variant */
 
+/**
+ * @name variant_new_copy
+ *
+ * Copies one Variant into a another.
+ *
+ * @param r_dest A pointer to the destination Variant.
+ * @param p_src A pointer to the source Variant.
+ */
 typedef void (*GDExtensionInterfaceVariantNewCopy)(GDExtensionVariantPtr r_dest, GDExtensionConstVariantPtr p_src);
+
+/**
+ * @name variant_new_nil
+ *
+ * Creates a new Variant containing nil.
+ *
+ * @param r_dest A pointer to the destination Variant.
+ */
 typedef void (*GDExtensionInterfaceVariantNewNil)(GDExtensionVariantPtr r_dest);
+
+/**
+ * @name variant_destroy
+ *
+ * Destroys a Variant.
+ *
+ * @param p_self A pointer to the Variant to destroy.
+ */
 typedef void (*GDExtensionInterfaceVariantDestroy)(GDExtensionVariantPtr p_self);
 
 typedef void (*GDExtensionInterfaceVariantCall)(GDExtensionVariantPtr p_self, GDExtensionConstStringNamePtr p_method, const GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionVariantPtr r_return, GDExtensionCallError *r_error);

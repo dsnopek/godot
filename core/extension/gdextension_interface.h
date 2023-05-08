@@ -1174,216 +1174,254 @@ typedef GDExtensionPtrUtilityFunction (*GDExtensionInterfaceVariantGetPtrUtility
 /**
  * @name string_new_with_latin1_chars
  *
- * @param r_dest
- * @param p_contents
+ * Creates a String from a Latin-1 encoded C string.
+ *
+ * @param r_dest A pointer to a Variant to hold the newly created String.
+ * @param p_contents A pointer to a Latin-1 encoded C string (null terminated).
  */
 typedef void (*GDExtensionInterfaceStringNewWithLatin1Chars)(GDExtensionStringPtr r_dest, const char *p_contents);
 
 /**
  * @name string_new_with_utf8_chars
  *
- * @param r_dest
- * @param p_contents
+ * Creates a String from a UTF-8 encoded C string.
+ *
+ * @param r_dest A pointer to a Variant to hold the newly created String.
+ * @param p_contents A pointer to a UTF-8 encoded C string (null terminated).
  */
 typedef void (*GDExtensionInterfaceStringNewWithUtf8Chars)(GDExtensionStringPtr r_dest, const char *p_contents);
 
 /**
  * @name string_new_with_utf16_chars
  *
- * @param r_dest
- * @param p_contents
+ * Creates a String from a UTF-16 encoded C string.
+ *
+ * @param r_dest A pointer to a Variant to hold the newly created String.
+ * @param p_contents A pointer to a UTF-16 encoded C string (null terminated).
  */
 typedef void (*GDExtensionInterfaceStringNewWithUtf16Chars)(GDExtensionStringPtr r_dest, const char16_t *p_contents);
 
 /**
  * @name string_new_with_utf32_chars
  *
- * @param r_dest
- * @param p_contents
+ * Creates a String from a UTF-32 encoded C string.
+ *
+ * @param r_dest A pointer to a Variant to hold the newly created String.
+ * @param p_contents A pointer to a UTF-32 encoded C string (null terminated).
  */
 typedef void (*GDExtensionInterfaceStringNewWithUtf32Chars)(GDExtensionStringPtr r_dest, const char32_t *p_contents);
 
 /**
  * @name string_new_with_wide_chars
  *
- * @param r_dest
- * @param p_contents
+ * Creates a String from a wide C string.
+ *
+ * @param r_dest A pointer to a Variant to hold the newly created String.
+ * @param p_contents A pointer to a wide C string (null terminated).
  */
 typedef void (*GDExtensionInterfaceStringNewWithWideChars)(GDExtensionStringPtr r_dest, const wchar_t *p_contents);
 
 /**
  * @name string_new_with_latin1_chars_and_len
  *
- * @param r_dest
- * @param p_contents
- * @param p_size
+ * Creates a String from a Latin-1 encoded C string with the given length.
+ *
+ * @param r_dest A pointer to a Variant to hold the newly created String.
+ * @param p_contents A pointer to a Latin-1 encoded C string.
+ * @param p_size The number of characters.
  */
 typedef void (*GDExtensionInterfaceStringNewWithLatin1CharsAndLen)(GDExtensionStringPtr r_dest, const char *p_contents, GDExtensionInt p_size);
 
 /**
  * @name string_new_with_utf8_chars_and_len
  *
- * @param r_dest
- * @param p_contents
- * @param p_size
+ * Creates a String from a UTF-8 encoded C string with the given length.
+ *
+ * @param r_dest A pointer to a Variant to hold the newly created String.
+ * @param p_contents A pointer to a UTF-8 encoded C string.
+ * @param p_size The number of characters.
  */
 typedef void (*GDExtensionInterfaceStringNewWithUtf8CharsAndLen)(GDExtensionStringPtr r_dest, const char *p_contents, GDExtensionInt p_size);
 
 /**
  * @name string_new_with_utf16_chars_and_len
  *
- * @param r_dest
- * @param p_contents
- * @param p_size
+ * Creates a String from a UTF-16 encoded C string with the given length.
+ *
+ * @param r_dest A pointer to a Variant to hold the newly created String.
+ * @param p_contents A pointer to a UTF-16 encoded C string.
+ * @param p_size The number of characters.
  */
 typedef void (*GDExtensionInterfaceStringNewWithUtf16CharsAndLen)(GDExtensionStringPtr r_dest, const char16_t *p_contents, GDExtensionInt p_size);
 
 /**
  * @name string_new_with_utf32_chars_and_len
  *
- * @param r_dest
- * @param p_contents
- * @param p_size
+ * Creates a String from a UTF-32 encoded C string with the given length.
+ *
+ * @param r_dest A pointer to a Variant to hold the newly created String.
+ * @param p_contents A pointer to a UTF-32 encoded C string.
+ * @param p_size The number of characters.
  */
 typedef void (*GDExtensionInterfaceStringNewWithUtf32CharsAndLen)(GDExtensionStringPtr r_dest, const char32_t *p_contents, GDExtensionInt p_size);
 
 /**
  * @name string_new_with_wide_chars_and_len
  *
- * @param r_dest
- * @param p_contents
- * @param p_size
+ * Creates a String from a wide C string with the given length.
+ *
+ * @param r_dest A pointer to a Variant to hold the newly created String.
+ * @param p_contents A pointer to a wide C string.
+ * @param p_size The number of characters.
  */
 typedef void (*GDExtensionInterfaceStringNewWithWideCharsAndLen)(GDExtensionStringPtr r_dest, const wchar_t *p_contents, GDExtensionInt p_size);
-
-/* Information about the following functions:
-
- * - The return value is the resulting encoded string length.
-
- * - The length returned is in characters, not in bytes. It also does not include a trailing zero.
-
- * - These functions also do not write trailing zero, If you need it, write it yourself at the position indicated by the length (and make sure to allocate it).
-
- * - Passing NULL in r_text means only the length is computed (again, without including trailing zero).
-
- * - p_max_write_length argument is in characters, not bytes. It will be ignored if r_text is NULL.
-
- * - p_max_write_length argument does not affect the return value, it's only to cap write length.
-
- */
 
 /**
  * @name string_to_latin1_chars
  *
- * @param p_self
- * @param r_text
- * @param p_max_write_length
+ * Converts a String to a Latin-1 encoded C string.
  *
- * @return
+ * It doesn't write a null terminator.
+ *
+ * @param p_self A pointer to the String.
+ * @param r_text A pointer to the buffer to hold the resulting data. If NULL is passed in, only the length will be computed.
+ * @param p_max_write_length The maximum number of characters that can be written to r_text. It has no affect on the return value.
+ *
+ * @return The resulting encoded string length in characters (not bytes), not including a null terminator.
  */
 typedef GDExtensionInt (*GDExtensionInterfaceStringToLatin1Chars)(GDExtensionConstStringPtr p_self, char *r_text, GDExtensionInt p_max_write_length);
 
 /**
  * @name string_to_utf8_chars
  *
- * @param p_self
- * @param r_text
- * @param p_max_write_length
+ * Converts a String to a UTF-8 encoded C string.
  *
- * @return
+ * It doesn't write a null terminator.
+ *
+ * @param p_self A pointer to the String.
+ * @param r_text A pointer to the buffer to hold the resulting data. If NULL is passed in, only the length will be computed.
+ * @param p_max_write_length The maximum number of characters that can be written to r_text. It has no affect on the return value.
+ *
+ * @return The resulting encoded string length in characters (not bytes), not including a null terminator.
  */
 typedef GDExtensionInt (*GDExtensionInterfaceStringToUtf8Chars)(GDExtensionConstStringPtr p_self, char *r_text, GDExtensionInt p_max_write_length);
 
 /**
  * @name string_to_utf16_chars
  *
- * @param p_self
- * @param r_text
- * @param p_max_write_length
+ * Converts a String to a UTF-16 encoded C string.
  *
- * @return
+ * It doesn't write a null terminator.
+ *
+ * @param p_self A pointer to the String.
+ * @param r_text A pointer to the buffer to hold the resulting data. If NULL is passed in, only the length will be computed.
+ * @param p_max_write_length The maximum number of characters that can be written to r_text. It has no affect on the return value.
+ *
+ * @return The resulting encoded string length in characters (not bytes), not including a null terminator.
  */
 typedef GDExtensionInt (*GDExtensionInterfaceStringToUtf16Chars)(GDExtensionConstStringPtr p_self, char16_t *r_text, GDExtensionInt p_max_write_length);
 
 /**
  * @name string_to_utf32_chars
  *
- * @param p_self
- * @param r_text
- * @param p_max_write_length
+ * Converts a String to a UTF-32 encoded C string.
  *
- * @return
+ * It doesn't write a null terminator.
+ *
+ * @param p_self A pointer to the String.
+ * @param r_text A pointer to the buffer to hold the resulting data. If NULL is passed in, only the length will be computed.
+ * @param p_max_write_length The maximum number of characters that can be written to r_text. It has no affect on the return value.
+ *
+ * @return The resulting encoded string length in characters (not bytes), not including a null terminator.
  */
 typedef GDExtensionInt (*GDExtensionInterfaceStringToUtf32Chars)(GDExtensionConstStringPtr p_self, char32_t *r_text, GDExtensionInt p_max_write_length);
 
 /**
  * @name string_to_wide_chars
  *
- * @param p_self
- * @param r_text
- * @param p_max_write_length
+ * Converts a String to a wide C string.
  *
- * @return
+ * It doesn't write a null terminator.
+ *
+ * @param p_self A pointer to the String.
+ * @param r_text A pointer to the buffer to hold the resulting data. If NULL is passed in, only the length will be computed.
+ * @param p_max_write_length The maximum number of characters that can be written to r_text. It has no affect on the return value.
+ *
+ * @return The resulting encoded string length in characters (not bytes), not including a null terminator.
  */
 typedef GDExtensionInt (*GDExtensionInterfaceStringToWideChars)(GDExtensionConstStringPtr p_self, wchar_t *r_text, GDExtensionInt p_max_write_length);
 
 /**
  * @name string_operator_index
  *
- * @param p_self
- * @param p_index
+ * Gets a pointer to the character at the given index from a String.
  *
- * @return
+ * @param p_self A pointer to the String.
+ * @param p_index The index.
+ *
+ * @return Returns a pointer to the requested character.
  */
 typedef char32_t *(*GDExtensionInterfaceStringOperatorIndex)(GDExtensionStringPtr p_self, GDExtensionInt p_index);
 
 /**
  * @name string_operator_index_const
  *
- * @param p_self
- * @param p_index
+ * Gets a const pointer to the character at the given index from a String.
  *
- * @return
+ * @param p_self A pointer to the String.
+ * @param p_index The index.
+ *
+ * @return Returns a const pointer to the requested character.
  */
 typedef const char32_t *(*GDExtensionInterfaceStringOperatorIndexConst)(GDExtensionConstStringPtr p_self, GDExtensionInt p_index);
 
 /**
  * @name string_operator_plus_eq_string
  *
- * @param p_self
- * @param p_b
+ * Appends another String to a String.
+ *
+ * @param p_self A pointer to the String.
+ * @param p_b A pointer to the other String to append.
  */
 typedef void (*GDExtensionInterfaceStringOperatorPlusEqString)(GDExtensionStringPtr p_self, GDExtensionConstStringPtr p_b);
 
 /**
  * @name string_operator_plus_eq_char
  *
- * @param p_self
- * @param p_b
+ * Appends a character to a String.
+ *
+ * @param p_self A pointer to the String.
+ * @param p_b A pointer to the character to append.
  */
 typedef void (*GDExtensionInterfaceStringOperatorPlusEqChar)(GDExtensionStringPtr p_self, char32_t p_b);
 
 /**
  * @name string_operator_plus_eq_cstr
  *
- * @param p_self
- * @param p_b
+ * Appends a Latin-1 encoded C string to a String.
+ *
+ * @param p_self A pointer to the String.
+ * @param p_b A pointer to a Latin-1 encoded C string (null terminated).
  */
 typedef void (*GDExtensionInterfaceStringOperatorPlusEqCstr)(GDExtensionStringPtr p_self, const char *p_b);
 
 /**
  * @name string_operator_plus_eq_wcstr
  *
- * @param p_self
- * @param p_b
+ * Appends a wide C string to a String.
+ *
+ * @param p_self A pointer to the String.
+ * @param p_b A pointer to a wide C string (null terminated).
  */
 typedef void (*GDExtensionInterfaceStringOperatorPlusEqWcstr)(GDExtensionStringPtr p_self, const wchar_t *p_b);
 
 /**
  * @name string_operator_plus_eq_c32str
  *
- * @param p_self
- * @param p_b
+ * Appends a UTF-32 encoded C string to a String.
+ *
+ * @param p_self A pointer to the String.
+ * @param p_b A pointer to a UTF-32 encoded C string (null terminated).
  */
 typedef void (*GDExtensionInterfaceStringOperatorPlusEqC32str)(GDExtensionStringPtr p_self, const char32_t *p_b);
 

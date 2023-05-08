@@ -636,185 +636,243 @@ typedef void (*GDExtensionInterfaceVariantDestroy)(GDExtensionVariantPtr p_self)
 /**
  * @name variant_call
  *
- * @param p_self
- * @param p_method
- * @param p_args
- * @param p_argument_count
- * @param r_return
- * @param r_error
+ * Calls a method on a Variant.
+ *
+ * @param p_self A pointer to the Variant.
+ * @param p_method A pointer to a StringName identifying the method.
+ * @param p_args A pointer to a C array of Variant.
+ * @param p_argument_count The number of arguments.
+ * @param r_return A pointer a Variant which will be assigned the return value.
+ * @param r_error A pointer the structure which will hold error information.
+ *
+ * @see Variant::callp()
  */
 typedef void (*GDExtensionInterfaceVariantCall)(GDExtensionVariantPtr p_self, GDExtensionConstStringNamePtr p_method, const GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionVariantPtr r_return, GDExtensionCallError *r_error);
 
 /**
  * @name variant_call_static
  *
- * @param p_type
- * @param p_method
- * @param p_args
- * @param p_argument_count
- * @param r_return
- * @param r_error
+ * Calls a static method on a Variant.
+ *
+ * @param p_self A pointer to the Variant.
+ * @param p_method A pointer to a StringName identifying the method.
+ * @param p_args A pointer to a C array of Variant.
+ * @param p_argument_count The number of arguments.
+ * @param r_return A pointer a Variant which will be assigned the return value.
+ * @param r_error A pointer the structure which will hold error information.
+ *
+ * @see Variant::call_static()
  */
 typedef void (*GDExtensionInterfaceVariantCallStatic)(GDExtensionVariantType p_type, GDExtensionConstStringNamePtr p_method, const GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionVariantPtr r_return, GDExtensionCallError *r_error);
 
 /**
  * @name variant_evaluate
  *
- * @param p_op
- * @param p_a
- * @param p_b
- * @param r_return
- * @param r_valid
+ * Evaluate an operator on two Variants.
+ *
+ * @param p_op The operator to evaluate.
+ * @param p_a The first Variant.
+ * @param p_b The second Variant.
+ * @param r_return A pointer a Variant which will be assigned the return value.
+ * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
+ *
+ * @see Variant::evaluate()
  */
 typedef void (*GDExtensionInterfaceVariantEvaluate)(GDExtensionVariantOperator p_op, GDExtensionConstVariantPtr p_a, GDExtensionConstVariantPtr p_b, GDExtensionVariantPtr r_return, GDExtensionBool *r_valid);
 
 /**
  * @name variant_set
  *
- * @param p_self
- * @param p_key
- * @param p_value
- * @param r_valid
+ * Sets a key on a Variant to a value.
+ *
+ * @param p_self A pointer to the Variant.
+ * @param p_key A pointer to a Variant representing the key.
+ * @param p_value A pointer to a Variant representing the value.
+ * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
+ *
+ * @see Variant::set()
  */
 typedef void (*GDExtensionInterfaceVariantSet)(GDExtensionVariantPtr p_self, GDExtensionConstVariantPtr p_key, GDExtensionConstVariantPtr p_value, GDExtensionBool *r_valid);
 
 /**
  * @name variant_set_named
  *
- * @param p_self
- * @param p_key
- * @param p_value
- * @param r_valid
+ * Sets a named key on a Variant to a value.
+ *
+ * @param p_self A pointer to the Variant.
+ * @param p_key A pointer to a StringName representing the key.
+ * @param p_value A pointer to a Variant representing the value.
+ * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
+ *
+ * @see Variant::set_named()
  */
 typedef void (*GDExtensionInterfaceVariantSetNamed)(GDExtensionVariantPtr p_self, GDExtensionConstStringNamePtr p_key, GDExtensionConstVariantPtr p_value, GDExtensionBool *r_valid);
 
 /**
  * @name variant_set_keyed
  *
- * @param p_self
- * @param p_key
- * @param p_value
- * @param r_valid
+ * Sets a keyed property on a Variant to a value.
+ *
+ * @param p_self A pointer to the Variant.
+ * @param p_key A pointer to a Variant representing the key.
+ * @param p_value A pointer to a Variant representing the value.
+ * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
+ *
+ * @see Variant::set_keyed()
  */
 typedef void (*GDExtensionInterfaceVariantSetKeyed)(GDExtensionVariantPtr p_self, GDExtensionConstVariantPtr p_key, GDExtensionConstVariantPtr p_value, GDExtensionBool *r_valid);
 
 /**
  * @name variant_set_indexed
  *
- * @param p_self
- * @param p_index
- * @param p_value
- * @param r_valid
- * @param r_oob
+ * Sets an index on a Variant to a value.
+ *
+ * @param p_self A pointer to the Variant.
+ * @param p_index The index.
+ * @param p_value A pointer to a Variant representing the value.
+ * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
+ * @param r_oob A pointer to a boolean which will be set to true if the index is out of bounds.
  */
 typedef void (*GDExtensionInterfaceVariantSetIndexed)(GDExtensionVariantPtr p_self, GDExtensionInt p_index, GDExtensionConstVariantPtr p_value, GDExtensionBool *r_valid, GDExtensionBool *r_oob);
 
 /**
  * @name variant_get
  *
- * @param p_self
- * @param p_key
- * @param r_ret
- * @param r_valid
+ * Gets the value of a key from a Variant.
+ *
+ * @param p_self A pointer to the Variant.
+ * @param p_key A pointer to a Variant representing the key.
+ * @param r_ret A pointer to a Variant which will be assigned the value.
+ * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
  */
 typedef void (*GDExtensionInterfaceVariantGet)(GDExtensionConstVariantPtr p_self, GDExtensionConstVariantPtr p_key, GDExtensionVariantPtr r_ret, GDExtensionBool *r_valid);
 
 /**
  * @name variant_get_named
  *
- * @param p_self
- * @param p_key
- * @param r_ret
- * @param r_valid
+ * Gets the value of a named key from a Variant.
+ *
+ * @param p_self A pointer to the Variant.
+ * @param p_key A pointer to a StringName representing the key.
+ * @param r_ret A pointer to a Variant which will be assigned the value.
+ * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
  */
 typedef void (*GDExtensionInterfaceVariantGetNamed)(GDExtensionConstVariantPtr p_self, GDExtensionConstStringNamePtr p_key, GDExtensionVariantPtr r_ret, GDExtensionBool *r_valid);
 
 /**
  * @name variant_get_keyed
  *
- * @param p_self
- * @param p_key
- * @param r_ret
- * @param r_valid
+ * Gets the value of a keyed property from a Variant.
+ *
+ * @param p_self A pointer to the Variant.
+ * @param p_key A pointer to a Variant representing the key.
+ * @param r_ret A pointer to a Variant which will be assigned the value.
+ * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
  */
 typedef void (*GDExtensionInterfaceVariantGetKeyed)(GDExtensionConstVariantPtr p_self, GDExtensionConstVariantPtr p_key, GDExtensionVariantPtr r_ret, GDExtensionBool *r_valid);
 
 /**
  * @name variant_get_indexed
  *
- * @param p_self
- * @param p_index
- * @param r_ret
- * @param r_valid
- * @param r_oob
+ * Gets the value of an index from a Variant.
+ *
+ * @param p_self A pointer to the Variant.
+ * @param p_index The index.
+ * @param r_ret A pointer to a Variant which will be assigned the value.
+ * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
+ * @param r_oob A pointer to a boolean which will be set to true if the index is out of bounds.
  */
 typedef void (*GDExtensionInterfaceVariantGetIndexed)(GDExtensionConstVariantPtr p_self, GDExtensionInt p_index, GDExtensionVariantPtr r_ret, GDExtensionBool *r_valid, GDExtensionBool *r_oob);
 
 /**
  * @name variant_iter_init
  *
- * @param p_self
- * @param r_iter
- * @param r_valid
+ * Initializes an iterator over a Variant.
  *
- * @return
+ * @param p_self A pointer to the Variant.
+ * @param r_iter A pointer to a Variant which will be assigned the iterator.
+ * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
+ *
+ * @return Returns true if the operation is valid; otherwise false.
+ *
+ * @see Variant::iter_init()
  */
 typedef GDExtensionBool (*GDExtensionInterfaceVariantIterInit)(GDExtensionConstVariantPtr p_self, GDExtensionVariantPtr r_iter, GDExtensionBool *r_valid);
 
 /**
  * @name variant_iter_next
  *
- * @param p_self
- * @param r_iter
- * @param r_valid
+ * Gets the next value for an iterator over a Variant.
  *
- * @return
+ * @param p_self A pointer to the Variant.
+ * @param r_iter A pointer to a Variant which will be assigned the iterator.
+ * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
+ *
+ * @return Returns true if the operation is valid; otherwise false.
+ *
+ * @see Variant::iter_next()
  */
 typedef GDExtensionBool (*GDExtensionInterfaceVariantIterNext)(GDExtensionConstVariantPtr p_self, GDExtensionVariantPtr r_iter, GDExtensionBool *r_valid);
 
 /**
  * @name variant_iter_get
  *
- * @param p_self
- * @param r_iter
- * @param r_ret
- * @param r_valid
+ * Gets the next value for an iterator over a Variant.
+ *
+ * @param p_self A pointer to the Variant.
+ * @param r_iter A pointer to a Variant which will be assigned the iterator.
+ * @param r_ret A pointer to a Variant which will be assigned false if the operation is invalid.
+ * @param r_valid A pointer to a boolean which will be set to false if the operation is invalid.
+ *
+ * @see Variant::iter_next()
  */
 typedef void (*GDExtensionInterfaceVariantIterGet)(GDExtensionConstVariantPtr p_self, GDExtensionVariantPtr r_iter, GDExtensionVariantPtr r_ret, GDExtensionBool *r_valid);
 
 /**
  * @name variant_hash
  *
- * @param p_self
+ * Gets the hash of a Variant.
  *
- * @return
+ * @param p_self A pointer to the Variant.
+ *
+ * @return The hash value.
+ *
+ * @see Variant::hash()
  */
 typedef GDExtensionInt (*GDExtensionInterfaceVariantHash)(GDExtensionConstVariantPtr p_self);
 
 /**
  * @name variant_recursive_hash
  *
- * @param p_self
- * @param p_recursion_count
+ * Gets the recursive hash of a Variant.
  *
- * @return
+ * @param p_self A pointer to the Variant.
+ * @param p_recursion_count The number of recursive loops so far.
+ *
+ * @return The hash value.
+ *
+ * @see Variant::recursive_hash()
  */
 typedef GDExtensionInt (*GDExtensionInterfaceVariantRecursiveHash)(GDExtensionConstVariantPtr p_self, GDExtensionInt p_recursion_count);
 
 /**
  * @name variant_hash_compare
  *
- * @param p_self
- * @param p_other
+ * Compares two Variants by their hash.
  *
- * @return
+ * @param p_self A pointer to the Variant.
+ * @param p_other A pointer to the other Variant to compare it to.
+ *
+ * @return The hash value.
+ *
+ * @see Variant::hash_compare()
  */
 typedef GDExtensionBool (*GDExtensionInterfaceVariantHashCompare)(GDExtensionConstVariantPtr p_self, GDExtensionConstVariantPtr p_other);
 
 /**
  * @name variant_booleanize
  *
- * @param p_self
+ * @param p_self A pointer to the Variant.
  *
  * @return
  */
@@ -823,7 +881,7 @@ typedef GDExtensionBool (*GDExtensionInterfaceVariantBooleanize)(GDExtensionCons
 /**
  * @name variant_duplicate
  *
- * @param p_self
+ * @param p_self A pointer to the Variant.
  * @param r_ret
  * @param p_deep
  */
@@ -832,7 +890,7 @@ typedef void (*GDExtensionInterfaceVariantDuplicate)(GDExtensionConstVariantPtr 
 /**
  * @name variant_stringify
  *
- * @param p_self
+ * @param p_self A pointer to the Variant.
  * @param r_ret
  */
 typedef void (*GDExtensionInterfaceVariantStringify)(GDExtensionConstVariantPtr p_self, GDExtensionStringPtr r_ret);
@@ -840,7 +898,7 @@ typedef void (*GDExtensionInterfaceVariantStringify)(GDExtensionConstVariantPtr 
 /**
  * @name variant_get_type
  *
- * @param p_self
+ * @param p_self A pointer to the Variant.
  *
  * @return
  */
@@ -849,7 +907,7 @@ typedef GDExtensionVariantType (*GDExtensionInterfaceVariantGetType)(GDExtension
 /**
  * @name variant_has_method
  *
- * @param p_self
+ * @param p_self A pointer to the Variant.
  * @param p_method
  *
  * @return
@@ -869,6 +927,7 @@ typedef GDExtensionBool (*GDExtensionInterfaceVariantHasMember)(GDExtensionVaria
 /**
  * @name variant_has_key
  *
+ * @param p_self A pointer to the Variant.
  * @param p_self
  * @param p_key
  * @param r_valid

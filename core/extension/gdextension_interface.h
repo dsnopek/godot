@@ -918,7 +918,7 @@ typedef GDExtensionVariantType (*GDExtensionInterfaceVariantGetType)(GDExtension
  * Checks if a Variant has the given method.
  *
  * @param p_self A pointer to the Variant.
- * @param p_method A pointer to a StringName representing the method name.
+ * @param p_method A pointer to a StringName with the method name.
  *
  * @return
  */
@@ -930,7 +930,7 @@ typedef GDExtensionBool (*GDExtensionInterfaceVariantHasMethod)(GDExtensionConst
  * Checks if a type of Variant has the given member.
  *
  * @param p_type The Variant type.
- * @param p_member A pointer to a StringName representing the member name.
+ * @param p_member A pointer to a StringName with the member name.
  *
  * @return
  */
@@ -1024,7 +1024,7 @@ typedef GDExtensionPtrOperatorEvaluator (*GDExtensionInterfaceVariantGetPtrOpera
  * Gets a pointer to a function that can call a builtin method on a type of Variant.
  *
  * @param p_type The Variant type.
- * @param p_method A pointer to a StringName representing the method name.
+ * @param p_method A pointer to a StringName with the method name.
  * @param p_hash A hash representing the method signature.
  *
  * @return Returns a pointer to a function that can call a builtin method on a type of Variant.
@@ -1073,7 +1073,7 @@ typedef void (*GDExtensionInterfaceVariantConstruct)(GDExtensionVariantType p_ty
  * Gets a pointer to a function that can call a member's setter on the given Variant type.
  *
  * @param p_type The Variant type.
- * @param p_member A pointer to a StringName representing the member name.
+ * @param p_member A pointer to a StringName with the member name.
  *
  * @return Returns a pointer to a function that can call a member's setter on the given Variant type.
  */
@@ -1085,7 +1085,7 @@ typedef GDExtensionPtrSetter (*GDExtensionInterfaceVariantGetPtrSetter)(GDExtens
  * Gets a pointer to a function that can call a member's getter on the given Variant type.
  *
  * @param p_type The Variant type.
- * @param p_member A pointer to a StringName representing the member name.
+ * @param p_member A pointer to a StringName with the member name.
  *
  * @return Returns a pointer to a function that can call a member's getter on the given Variant type.
  */
@@ -1152,7 +1152,7 @@ typedef GDExtensionPtrKeyedChecker (*GDExtensionInterfaceVariantGetPtrKeyedCheck
  * Gets the value of a constant from the given Variant type.
  *
  * @param p_type The Variant type.
- * @param p_constant A pointer to a StringName representing the constant name.
+ * @param p_constant A pointer to a StringName with the constant name.
  * @param r_ret A pointer to a Variant to store the value.
  */
 typedef void (*GDExtensionInterfaceVariantGetConstantValue)(GDExtensionVariantType p_type, GDExtensionConstStringNamePtr p_constant, GDExtensionVariantPtr r_ret);
@@ -1162,7 +1162,7 @@ typedef void (*GDExtensionInterfaceVariantGetConstantValue)(GDExtensionVariantTy
  *
  * Gets a pointer to a function that can call a Variant utility function.
  *
- * @param p_function A pointer to a StringName representing the function name.
+ * @param p_function A pointer to a StringName with the function name.
  * @param p_hash A hash representing the function signature.
  *
  * @return Returns a pointer to a function that can call a Variant utility function.
@@ -1430,11 +1430,15 @@ typedef void (*GDExtensionInterfaceStringOperatorPlusEqC32str)(GDExtensionString
 /**
  * @name xml_parser_open_buffer
  *
- * @param p_instance
- * @param p_buffer
- * @param p_size
+ * Opens a raw XML buffer on an XMLParser instance.
  *
- * @return
+ * @param p_instance A pointer to an XMLParser object.
+ * @param p_buffer A pointer to the buffer.
+ * @param p_size The size of the buffer.
+ *
+ * @return Returns a Godot error code (ex. OK, ERR_INVALID_DATA, etc).
+ *
+ * @see XMLParser::open_buffer()
  */
 typedef GDExtensionInt (*GDExtensionInterfaceXmlParserOpenBuffer)(GDExtensionObjectPtr p_instance, const uint8_t *p_buffer, size_t p_size);
 
@@ -1443,20 +1447,26 @@ typedef GDExtensionInt (*GDExtensionInterfaceXmlParserOpenBuffer)(GDExtensionObj
 /**
  * @name file_access_store_buffer
  *
- * @param p_instance
- * @param p_src
- * @param p_length
+ * Stores the given buffer using an instance of FileAccess.
+ *
+ * @param p_instance A pointer to a FileAccess object.
+ * @param p_src A pointer to the buffer.
+ * @param p_length The size of the buffer.
+ *
+ * @see FileAccess::store_buffer()
  */
 typedef void (*GDExtensionInterfaceFileAccessStoreBuffer)(GDExtensionObjectPtr p_instance, const uint8_t *p_src, uint64_t p_length);
 
 /**
  * @name file_access_get_buffer
  *
- * @param p_instance
- * @param p_dst
- * @param p_length
+ * Reads the next p_length bytes into the given buffer using an instance of FileAccess.
  *
- * @return
+ * @param p_instance A pointer to a FileAccess object.
+ * @param p_dst A pointer to the buffer to store the data.
+ * @param p_length The requested number of bytes to read.
+ *
+ * @return The actual number of bytes read (may be less than requested).
  */
 typedef uint64_t (*GDExtensionInterfaceFileAccessGetBuffer)(GDExtensionConstObjectPtr p_instance, uint8_t *p_dst, uint64_t p_length);
 
@@ -1465,20 +1475,33 @@ typedef uint64_t (*GDExtensionInterfaceFileAccessGetBuffer)(GDExtensionConstObje
 /**
  * @name worker_thread_pool_add_native_group_task
  *
- * @param p_instance
- * @param (p_func
+ * Adds a group task to an instance of WorkerThreadPool.
  *
- * @return
+ * @param p_instance A pointer to a WorkerThreadPool object.
+ * @param p_func A pointer to a function to run in the thread pool.
+ * @param p_userdata A pointer to arbitrary data which will be passed to p_func.
+ * @param p_tasks The number of tasks needed in the group.
+ * @param p_high_priority Whether or not this is a high priority task.
+ * @param p_description A pointer to a String with the task description.
+ *
+ * @return The task group ID.
+ *
+ * @see WorkerThreadPool::add_group_task()
  */
 typedef int64_t (*GDExtensionInterfaceWorkerThreadPoolAddNativeGroupTask)(GDExtensionObjectPtr p_instance, void (*p_func)(void *, uint32_t), void *p_userdata, int p_elements, int p_tasks, GDExtensionBool p_high_priority, GDExtensionConstStringPtr p_description);
 
 /**
  * @name worker_thread_pool_add_native_task
  *
- * @param p_instance
- * @param (p_func
+ * Adds a task to an instance of WorkerThreadPool.
  *
- * @return
+ * @param p_instance A pointer to a WorkerThreadPool object.
+ * @param p_func A pointer to a function to run in the thread pool.
+ * @param p_userdata A pointer to arbitrary data which will be passed to p_func.
+ * @param p_high_priority Whether or not this is a high priority task.
+ * @param p_description A pointer to a String with the task description.
+ *
+ * @return The task ID.
  */
 typedef int64_t (*GDExtensionInterfaceWorkerThreadPoolAddNativeTask)(GDExtensionObjectPtr p_instance, void (*p_func)(void *), void *p_userdata, GDExtensionBool p_high_priority, GDExtensionConstStringPtr p_description);
 

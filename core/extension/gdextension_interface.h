@@ -1774,22 +1774,26 @@ typedef void (*GDExtensionInterfaceArraySetTyped)(GDExtensionTypePtr p_self, GDE
 /**
  * @name dictionary_operator_index
  *
- * @param p_self
- * @param p_key
+ * Gets a pointer to a Variant in a Dictionary with the given key.
  *
- * @return
+ * @param p_self A pointer to a Dictionary object.
+ * @param p_key A pointer to a Variant representing the key.
+ *
+ * @return Returns a pointer to a Variant representing the value at the given key.
  */
-typedef GDExtensionVariantPtr (*GDExtensionInterfaceDictionaryOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionConstVariantPtr p_key); // p_self should be an Dictionary ptr
+typedef GDExtensionVariantPtr (*GDExtensionInterfaceDictionaryOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionConstVariantPtr p_key);
 
 /**
  * @name dictionary_operator_index_const
  *
- * @param p_self
- * @param p_key
+ * Gets a const pointer to a Variant in a Dictionary with the given key.
  *
- * @return
+ * @param p_self A const pointer to a Dictionary object.
+ * @param p_key A pointer to a Variant representing the key.
+ *
+ * @return Returns a const pointer to a Variant representing the value at the given key.
  */
-typedef GDExtensionVariantPtr (*GDExtensionInterfaceDictionaryOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionConstVariantPtr p_key); // p_self should be an Dictionary ptr
+typedef GDExtensionVariantPtr (*GDExtensionInterfaceDictionaryOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionConstVariantPtr p_key);
 
 /* INTERFACE: Object */
 

@@ -44,6 +44,7 @@ public:
 	virtual HashMap<String, bool *> get_requested_extensions() override;
 	bool is_available();
 	virtual XrCompositionLayerBaseHeader *get_composition_layer() override;
+	virtual int get_composition_order() override;
 
 private:
 	static OpenXRCompositionLayerDepthExtension *singleton;

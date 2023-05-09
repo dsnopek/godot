@@ -40,6 +40,7 @@ void OpenXRExtensionWrapperExtension::_bind_methods() {
 	GDVIRTUAL_BIND(_set_swapchain_create_info_and_get_next_pointer, "next_pointer");
 	GDVIRTUAL_BIND(_set_hand_joint_locations_and_get_next_pointer, "hand_index", "next_pointer");
 	GDVIRTUAL_BIND(_get_composition_layer);
+	GDVIRTUAL_BIND(_get_composition_order);
 	GDVIRTUAL_BIND(_get_suggested_tracker_names);
 	GDVIRTUAL_BIND(_on_register_metadata);
 	GDVIRTUAL_BIND(_on_before_instance_created);
@@ -148,6 +149,12 @@ XrCompositionLayerBaseHeader *OpenXRExtensionWrapperExtension::get_composition_l
 	}
 
 	return nullptr;
+}
+
+int OpenXRExtensionWrapperExtension::get_composition_order() {
+	int order = 0;
+	GDVIRTUAL_CALL(_get_composition_order, order);
+	return order;
 }
 
 void OpenXRExtensionWrapperExtension::on_register_metadata() {

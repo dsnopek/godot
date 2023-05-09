@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  openxr_composition_layer_depth_extension.cpp                          */
+/*  openxr_composition_layer.h                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,39 +28,44 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "openxr_composition_layer_depth_extension.h"
+#ifndef OPENXR_COMPOSITION_LAYER_H
+#define OPENXR_COMPOSITION_LAYER_H
 
-OpenXRCompositionLayerDepthExtension *OpenXRCompositionLayerDepthExtension::singleton = nullptr;
+#include "scene/main/viewport.h"
 
-OpenXRCompositionLayerDepthExtension *OpenXRCompositionLayerDepthExtension::get_singleton() {
-	return singleton;
-}
+class OpenXRAPI;
+class ViewportCompositionLayerProvider;
 
-OpenXRCompositionLayerDepthExtension::OpenXRCompositionLayerDepthExtension() {
-	singleton = this;
-}
+class OpenXRCompositionLayer : public SubViewport {
+	GDCLASS(OpenXRCompositionLayer, SubViewport);
 
-OpenXRCompositionLayerDepthExtension::~OpenXRCompositionLayerDepthExtension() {
-	singleton = nullptr;
-}
+public:
+	enum CompositionLayerTypes {
+		COMPOSITION_LAYER_EQUIRECT2,
+		COMPOSITION_LAYER_MAX
+	};
 
-HashMap<String, bool *> OpenXRCompositionLayerDepthExtension::get_requested_extensions() {
-	HashMap<String, bool *> request_extensions;
+private:
+	OpenXRAPI *openxr_api = nullptr;
+	ViewportCompositionLayerProvider *openxr_layer_provider = nullptr;
 
-	request_extensions[XR_KHR_COMPOSITION_LAYER_DEPTH_EXTENSION_NAME] = &available;
+	CompositionLayerTypes composition_layer_type;
 
-	return request_extensions;
-}
+protected:
+	static void _bind_methods();
 
-bool OpenXRCompositionLayerDepthExtension::is_available() {
-	return available;
-}
+public:
+	OpenXRCompositionLayer();
+	~OpenXRCompositionLayer();
 
-XrCompositionLayerBaseHeader *OpenXRCompositionLayerDepthExtension::get_composition_layer() {
-	// Seems this is all done in our base layer... Just in case this changes...
-	return nullptr;
-}
+	void set_composition_layer_type(const CompositionLayerTypes p_type);
+	CompositionLayerTypes get_composition_layer_type() const { return composition_layer_type; };
 
-int OpenXRCompositionLayerDepthExtension::get_composition_order() {
-	return 0;
-}
+	bool is_supported();
+
+	void _notification(int p_what);
+};
+
+VARIANT_ENUM_CAST(OpenXRCompositionLayer::CompositionLayerTypes)
+
+#endif // OPENXR_COMPOSITION_LAYER_H

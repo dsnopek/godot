@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  openxr_composition_layer_depth_extension.cpp                          */
+/*  openxr_composition_layer_extension.h                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,39 +28,64 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "openxr_composition_layer_depth_extension.h"
+#ifndef OPENXR_COMPOSITION_LAYER_EXTENSION_H
+#define OPENXR_COMPOSITION_LAYER_EXTENSION_H
 
-OpenXRCompositionLayerDepthExtension *OpenXRCompositionLayerDepthExtension::singleton = nullptr;
+#include "openxr_composition_layer_provider.h"
+#include "openxr_extension_wrapper.h"
 
-OpenXRCompositionLayerDepthExtension *OpenXRCompositionLayerDepthExtension::get_singleton() {
-	return singleton;
-}
+#include "../openxr_api.h"
 
-OpenXRCompositionLayerDepthExtension::OpenXRCompositionLayerDepthExtension() {
-	singleton = this;
-}
+// This extension provides access to composition layers for displaying 2D content through the XR compositor.
 
-OpenXRCompositionLayerDepthExtension::~OpenXRCompositionLayerDepthExtension() {
-	singleton = nullptr;
-}
+// OpenXRCompositionLayerExtension enables the extensions related to this functionality
+class OpenXRCompositionLayerExtension : public OpenXRExtensionWrapper {
+public:
+	enum CompositionLayerExtensions {
+		COMPOSITION_LAYER_EQUIRECT_EXT,
+		COMPOSITION_LAYER_EXT_MAX
+	};
 
-HashMap<String, bool *> OpenXRCompositionLayerDepthExtension::get_requested_extensions() {
-	HashMap<String, bool *> request_extensions;
+	static OpenXRCompositionLayerExtension *get_singleton();
 
-	request_extensions[XR_KHR_COMPOSITION_LAYER_DEPTH_EXTENSION_NAME] = &available;
+	OpenXRCompositionLayerExtension();
+	virtual ~OpenXRCompositionLayerExtension() override;
 
-	return request_extensions;
-}
+	virtual HashMap<String, bool *> get_requested_extensions() override;
+	bool is_available(CompositionLayerExtensions p_which);
 
-bool OpenXRCompositionLayerDepthExtension::is_available() {
-	return available;
-}
+private:
+	static OpenXRCompositionLayerExtension *singleton;
 
-XrCompositionLayerBaseHeader *OpenXRCompositionLayerDepthExtension::get_composition_layer() {
-	// Seems this is all done in our base layer... Just in case this changes...
-	return nullptr;
-}
+	bool available[COMPOSITION_LAYER_EXT_MAX] = { false };
+};
 
-int OpenXRCompositionLayerDepthExtension::get_composition_order() {
-	return 0;
-}
+class ViewportCompositionLayerProvider : public OpenXRCompositionLayerProvider {
+public:
+	ViewportCompositionLayerProvider();
+	virtual ~ViewportCompositionLayerProvider() override;
+
+	bool is_supported();
+	void setup_for_type(XrStructureType p_type);
+	virtual XrCompositionLayerBaseHeader *get_composition_layer() override;
+	virtual int get_composition_order() override;
+	bool update_swapchain(uint32_t p_width, uint32_t p_height);
+	void free_swapchain();
+	RID get_image();
+
+private:
+	union {
+		XrCompositionLayerBaseHeader composition_layer;
+		XrCompositionLayerEquirect2KHR equirect_layer;
+	};
+	int sort_order = 1;
+
+	OpenXRAPI *openxr_api = nullptr;
+	OpenXRCompositionLayerExtension *composition_layer_extension = nullptr;
+
+	uint32_t width = 0;
+	uint32_t height = 0;
+	OpenXRAPI::OpenXRSwapChainInfo swapchain_info;
+};
+
+#endif // OPENXR_COMPOSITION_LAYER_EXTENSION_H

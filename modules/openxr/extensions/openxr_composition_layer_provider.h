@@ -39,6 +39,7 @@
 class OpenXRCompositionLayerProvider {
 public:
 	virtual XrCompositionLayerBaseHeader *get_composition_layer() = 0;
+	virtual int get_composition_order() = 0;
 
 	virtual ~OpenXRCompositionLayerProvider() {}
 };

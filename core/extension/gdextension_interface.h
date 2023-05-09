@@ -1510,220 +1510,264 @@ typedef int64_t (*GDExtensionInterfaceWorkerThreadPoolAddNativeTask)(GDExtension
 /**
  * @name packed_byte_array_operator_index
  *
- * @param p_self
- * @param p_index
+ * Gets a pointer to a byte in a PackedByteArray.
  *
- * @return
+ * @param p_self A pointer to a PackedByteArray object.
+ * @param p_index The index of the byte to get.
+ *
+ * @return Returns a pointer to the requested byte.
  */
-typedef uint8_t *(*GDExtensionInterfacePackedByteArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index); // p_self should be a PackedByteArray
+typedef uint8_t *(*GDExtensionInterfacePackedByteArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_byte_array_operator_index_const
  *
- * @param p_self
- * @param p_index
+ * Gets a const pointer to a byte in a PackedByteArray.
  *
- * @return
+ * @param p_self A const pointer to a PackedByteArray object.
+ * @param p_index The index of the byte to get.
+ *
+ * @return Returns a const pointer to the requested byte.
  */
-typedef const uint8_t *(*GDExtensionInterfacePackedByteArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index); // p_self should be a PackedByteArray
+typedef const uint8_t *(*GDExtensionInterfacePackedByteArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_color_array_operator_index
  *
- * @param p_self
- * @param p_index
+ * Gets a pointer to a color in a PackedColorArray.
  *
- * @return
+ * @param p_self A pointer to a PackedColorArray object.
+ * @param p_index The index of the Color to get.
+ *
+ * @return Returns a pointer to the requested Color.
  */
-typedef GDExtensionTypePtr (*GDExtensionInterfacePackedColorArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index); // p_self should be a PackedColorArray, returns Color ptr
+typedef GDExtensionTypePtr (*GDExtensionInterfacePackedColorArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_color_array_operator_index_const
  *
- * @param p_self
- * @param p_index
+ * Gets a const pointer to a color in a PackedColorArray.
  *
- * @return
+ * @param p_self A const pointer to a const PackedColorArray object.
+ * @param p_index The index of the Color to get.
+ *
+ * @return Returns a const pointer to the requested Color.
  */
-typedef GDExtensionTypePtr (*GDExtensionInterfacePackedColorArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index); // p_self should be a PackedColorArray, returns Color ptr
+typedef GDExtensionTypePtr (*GDExtensionInterfacePackedColorArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_float32_array_operator_index
  *
- * @param p_self
- * @param p_index
+ * Gets a pointer to a 32-bit float in a PackedFloat32Array.
  *
- * @return
+ * @param p_self A pointer to a PackedFloat32Array object.
+ * @param p_index The index of the float to get.
+ *
+ * @return Returns a pointer to the requested 32-bit float.
  */
-typedef float *(*GDExtensionInterfacePackedFloat32ArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index); // p_self should be a PackedFloat32Array
+typedef float *(*GDExtensionInterfacePackedFloat32ArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_float32_array_operator_index_const
  *
- * @param p_self
- * @param p_index
+ * Gets a const pointer to a 32-bit float in a PackedFloat32Array.
  *
- * @return
+ * @param p_self A const pointer to a PackedFloat32Array object.
+ * @param p_index The index of the float to get.
+ *
+ * @return Returns a const pointer to the requested 32-bit float.
  */
-typedef const float *(*GDExtensionInterfacePackedFloat32ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index); // p_self should be a PackedFloat32Array
+typedef const float *(*GDExtensionInterfacePackedFloat32ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_float64_array_operator_index
  *
- * @param p_self
- * @param p_index
+ * Gets a pointer to a 64-bit float in a PackedFloat64Array.
  *
- * @return
+ * @param p_self A pointer to a PackedFloat64Array object.
+ * @param p_index The index of the float to get.
+ *
+ * @return Returns a pointer to the requested 64-bit float.
  */
-typedef double *(*GDExtensionInterfacePackedFloat64ArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index); // p_self should be a PackedFloat64Array
+typedef double *(*GDExtensionInterfacePackedFloat64ArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_float64_array_operator_index_const
  *
- * @param p_self
- * @param p_index
+ * Gets a const pointer to a 64-bit float in a PackedFloat64Array.
  *
- * @return
+ * @param p_self A const pointer to a PackedFloat64Array object.
+ * @param p_index The index of the float to get.
+ *
+ * @return Returns a const pointer to the requested 64-bit float.
  */
-typedef const double *(*GDExtensionInterfacePackedFloat64ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index); // p_self should be a PackedFloat64Array
+typedef const double *(*GDExtensionInterfacePackedFloat64ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_int32_array_operator_index
  *
- * @param p_self
- * @param p_index
+ * Gets a pointer to a 32-bit integer in a PackedInt32Array.
  *
- * @return
+ * @param p_self A pointer to a PackedInt32Array object.
+ * @param p_index The index of the integer to get.
+ *
+ * @return Returns a pointer to the requested 32-bit integer.
  */
-typedef int32_t *(*GDExtensionInterfacePackedInt32ArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index); // p_self should be a PackedInt32Array
+typedef int32_t *(*GDExtensionInterfacePackedInt32ArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_int32_array_operator_index_const
  *
- * @param p_self
- * @param p_index
+ * Gets a const pointer to a 32-bit integer in a PackedInt32Array.
  *
- * @return
+ * @param p_self A const pointer to a PackedInt32Array object.
+ * @param p_index The index of the integer to get.
+ *
+ * @return Returns a const pointer to the requested 32-bit integer.
  */
-typedef const int32_t *(*GDExtensionInterfacePackedInt32ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index); // p_self should be a PackedInt32Array
+typedef const int32_t *(*GDExtensionInterfacePackedInt32ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_int64_array_operator_index
  *
- * @param p_self
- * @param p_index
+ * Gets a pointer to a 64-bit integer in a PackedInt64Array.
  *
- * @return
+ * @param p_self A pointer to a PackedInt64Array object.
+ * @param p_index The index of the integer to get.
+ *
+ * @return Returns a pointer to the requested 64-bit integer.
  */
-typedef int64_t *(*GDExtensionInterfacePackedInt64ArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index); // p_self should be a PackedInt32Array
+typedef int64_t *(*GDExtensionInterfacePackedInt64ArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_int64_array_operator_index_const
  *
- * @param p_self
- * @param p_index
+ * Gets a const pointer to a 64-bit integer in a PackedInt64Array.
  *
- * @return
+ * @param p_self A const pointer to a PackedInt64Array object.
+ * @param p_index The index of the integer to get.
+ *
+ * @return Returns a const pointer to the requested 64-bit integer.
  */
-typedef const int64_t *(*GDExtensionInterfacePackedInt64ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index); // p_self should be a PackedInt32Array
+typedef const int64_t *(*GDExtensionInterfacePackedInt64ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_string_array_operator_index
  *
- * @param p_self
- * @param p_index
+ * Gets a pointer to a string in a PackedStringArray.
  *
- * @return
+ * @param p_self A pointer to a PackedStringArray object.
+ * @param p_index The index of the String to get.
+ *
+ * @return Returns a pointer to the requested String.
  */
-typedef GDExtensionStringPtr (*GDExtensionInterfacePackedStringArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index); // p_self should be a PackedStringArray
+typedef GDExtensionStringPtr (*GDExtensionInterfacePackedStringArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_string_array_operator_index_const
  *
- * @param p_self
- * @param p_index
+ * Gets a const pointer to a string in a PackedStringArray.
  *
- * @return
+ * @param p_self A const pointer to a PackedStringArray object.
+ * @param p_index The index of the String to get.
+ *
+ * @return Returns a const pointer to the requested String.
  */
-typedef GDExtensionStringPtr (*GDExtensionInterfacePackedStringArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index); // p_self should be a PackedStringArray
+typedef GDExtensionStringPtr (*GDExtensionInterfacePackedStringArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_vector2_array_operator_index
  *
- * @param p_self
- * @param p_index
+ * Gets a pointer to a Vector2 in a PackedVector2Array.
  *
- * @return
+ * @param p_self A pointer to a PackedVector2Array object.
+ * @param p_index The index of the Vector2 to get.
+ *
+ * @return Returns a pointer to the requested Vector2.
  */
-typedef GDExtensionTypePtr (*GDExtensionInterfacePackedVector2ArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index); // p_self should be a PackedVector2Array, returns Vector2 ptr
+typedef GDExtensionTypePtr (*GDExtensionInterfacePackedVector2ArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_vector2_array_operator_index_const
  *
- * @param p_self
- * @param p_index
+ * Gets a const pointer to a Vector2 in a PackedVector2Array.
  *
- * @return
+ * @param p_self A const pointer to a PackedVector2Array object.
+ * @param p_index The index of the Vector2 to get.
+ *
+ * @return Returns a const pointer to the requested Vector2.
  */
-typedef GDExtensionTypePtr (*GDExtensionInterfacePackedVector2ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index); // p_self should be a PackedVector2Array, returns Vector2 ptr
+typedef GDExtensionTypePtr (*GDExtensionInterfacePackedVector2ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_vector3_array_operator_index
  *
- * @param p_self
- * @param p_index
+ * Gets a pointer to a Vector3 in a PackedVector3Array.
  *
- * @return
+ * @param p_self A pointer to a PackedVector3Array object.
+ * @param p_index The index of the Vector3 to get.
+ *
+ * @return Returns a pointer to the requested Vector3.
  */
-typedef GDExtensionTypePtr (*GDExtensionInterfacePackedVector3ArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index); // p_self should be a PackedVector3Array, returns Vector3 ptr
+typedef GDExtensionTypePtr (*GDExtensionInterfacePackedVector3ArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name packed_vector3_array_operator_index_const
  *
- * @param p_self
- * @param p_index
+ * Gets a const pointer to a Vector3 in a PackedVector3Array.
  *
- * @return
+ * @param p_self A const pointer to a PackedVector3Array object.
+ * @param p_index The index of the Vector3 to get.
+ *
+ * @return Returns a const pointer to the requested Vector3.
  */
-typedef GDExtensionTypePtr (*GDExtensionInterfacePackedVector3ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index); // p_self should be a PackedVector3Array, returns Vector3 ptr
+typedef GDExtensionTypePtr (*GDExtensionInterfacePackedVector3ArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name array_operator_index
  *
- * @param p_self
- * @param p_index
+ * Gets a pointer to a Variant in an Array.
  *
- * @return
+ * @param p_self A pointer to an Array object.
+ * @param p_index The index of the Variant to get.
+ *
+ * @return Returns a pointer to the requested Variant.
  */
-typedef GDExtensionVariantPtr (*GDExtensionInterfaceArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index); // p_self should be an Array ptr
+typedef GDExtensionVariantPtr (*GDExtensionInterfaceArrayOperatorIndex)(GDExtensionTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name array_operator_index_const
  *
- * @param p_self
- * @param p_index
+ * Gets a const pointer to a Variant in an Array.
  *
- * @return
+ * @param p_self A const pointer to an Array object.
+ * @param p_index The index of the Variant to get.
+ *
+ * @return Returns a const pointer to the requested Variant.
  */
-typedef GDExtensionVariantPtr (*GDExtensionInterfaceArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index); // p_self should be an Array ptr
+typedef GDExtensionVariantPtr (*GDExtensionInterfaceArrayOperatorIndexConst)(GDExtensionConstTypePtr p_self, GDExtensionInt p_index);
 
 /**
  * @name array_ref
  *
- * @param p_self
- * @param p_from
+ * Sets an Array to be a reference to another Array object.
+ *
+ * @param p_self A pointer to the Array object to update.
+ * @param p_from A pointer to the Array object to reference.
  */
-typedef void (*GDExtensionInterfaceArrayRef)(GDExtensionTypePtr p_self, GDExtensionConstTypePtr p_from); // p_self should be an Array ptr
+typedef void (*GDExtensionInterfaceArrayRef)(GDExtensionTypePtr p_self, GDExtensionConstTypePtr p_from);
 
 /**
  * @name array_set_typed
  *
- * @param p_self
- * @param p_type
- * @param p_class_name
- * @param p_script
+ * Makes an Array into a typed Array.
+ *
+ * @param p_self A pointer to the Array.
+ * @param p_type The type of Variant the Array will store.
+ * @param p_class_name A pointer to a StringName with the name of the object (if p_type is GDEXTENSION_VARIANT_TYPE_OBJECT).
+ * @param p_script A pointer to a Script object (if p_type is GDEXTENSION_VARIANT_TYPE_OBJECT and the base class is extended by a script).
  */
-typedef void (*GDExtensionInterfaceArraySetTyped)(GDExtensionTypePtr p_self, GDExtensionVariantType p_type, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstVariantPtr p_script); // p_self should be an Array ptr
+typedef void (*GDExtensionInterfaceArraySetTyped)(GDExtensionTypePtr p_self, GDExtensionVariantType p_type, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstVariantPtr p_script);
 
 /* INTERFACE: Dictionary */
 

@@ -906,25 +906,25 @@ bool OpenXRAPI::create_swapchains() {
 	{
 		// Build a vector with swapchain formats we want to use, from best fit to worst
 		Vector<int64_t> usable_swapchain_formats;
-		int64_t swapchain_format_to_use = 0;
+		color_swapchain_format = 0;
 
 		graphics_extension->get_usable_swapchain_formats(usable_swapchain_formats);
 
 		// now find out which one is supported
-		for (int i = 0; i < usable_swapchain_formats.size() && swapchain_format_to_use == 0; i++) {
+		for (int i = 0; i < usable_swapchain_formats.size() && color_swapchain_format == 0; i++) {
 			if (is_swapchain_format_supported(usable_swapchain_formats[i])) {
-				swapchain_format_to_use = usable_swapchain_formats[i];
+				color_swapchain_format = usable_swapchain_formats[i];
 			}
 		}
 
-		if (swapchain_format_to_use == 0) {
-			swapchain_format_to_use = usable_swapchain_formats[0]; // just use the first one and hope for the best...
-			print_line("Couldn't find usable color swap chain format, using", get_swapchain_format_name(swapchain_format_to_use), "instead.");
+		if (color_swapchain_format == 0) {
+			color_swapchain_format = usable_swapchain_formats[0]; // just use the first one and hope for the best...
+			print_line("Couldn't find usable color swap chain format, using", get_swapchain_format_name(color_swapchain_format), "instead.");
 		} else {
-			print_verbose(String("Using color swap chain format:") + get_swapchain_format_name(swapchain_format_to_use));
+			print_verbose(String("Using color swap chain format:") + get_swapchain_format_name(color_swapchain_format));
 		}
 
-		if (!create_swapchain(XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT | XR_SWAPCHAIN_USAGE_MUTABLE_FORMAT_BIT, swapchain_format_to_use, recommended_size.width, recommended_size.height, sample_count, view_count, swapchains[OPENXR_SWAPCHAIN_COLOR].swapchain, &swapchains[OPENXR_SWAPCHAIN_COLOR].swapchain_graphics_data)) {
+		if (!create_swapchain(XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT | XR_SWAPCHAIN_USAGE_MUTABLE_FORMAT_BIT, color_swapchain_format, recommended_size.width, recommended_size.height, sample_count, view_count, swapchains[OPENXR_SWAPCHAIN_COLOR].swapchain, &swapchains[OPENXR_SWAPCHAIN_COLOR].swapchain_graphics_data)) {
 			return false;
 		}
 	}
@@ -942,25 +942,25 @@ bool OpenXRAPI::create_swapchains() {
 	if (submit_depth_buffer && OpenXRCompositionLayerDepthExtension::get_singleton()->is_available()) {
 		// Build a vector with swapchain formats we want to use, from best fit to worst
 		Vector<int64_t> usable_swapchain_formats;
-		int64_t swapchain_format_to_use = 0;
+		int64_t depth_swapchain_format = 0;
 
 		graphics_extension->get_usable_depth_formats(usable_swapchain_formats);
 
 		// now find out which one is supported
-		for (int i = 0; i < usable_swapchain_formats.size() && swapchain_format_to_use == 0; i++) {
+		for (int i = 0; i < usable_swapchain_formats.size() && depth_swapchain_format == 0; i++) {
 			if (is_swapchain_format_supported(usable_swapchain_formats[i])) {
-				swapchain_format_to_use = usable_swapchain_formats[i];
+				depth_swapchain_format = usable_swapchain_formats[i];
 			}
 		}
 
-		if (swapchain_format_to_use == 0) {
+		if (depth_swapchain_format == 0) {
 			print_line("Couldn't find usable depth swap chain format, depth buffer will not be submitted.");
 		} else {
-			print_verbose(String("Using depth swap chain format:") + get_swapchain_format_name(swapchain_format_to_use));
+			print_verbose(String("Using depth swap chain format:") + get_swapchain_format_name(depth_swapchain_format));
 
 			// Note, if VK_FORMAT_D32_SFLOAT is used here but we're using the forward+ renderer, we should probably output a warning.
 
-			if (!create_swapchain(XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, swapchain_format_to_use, recommended_size.width, recommended_size.height, sample_count, view_count, swapchains[OPENXR_SWAPCHAIN_DEPTH].swapchain, &swapchains[OPENXR_SWAPCHAIN_DEPTH].swapchain_graphics_data)) {
+			if (!create_swapchain(XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, depth_swapchain_format, recommended_size.width, recommended_size.height, sample_count, view_count, swapchains[OPENXR_SWAPCHAIN_DEPTH].swapchain, &swapchains[OPENXR_SWAPCHAIN_DEPTH].swapchain_graphics_data)) {
 				return false;
 			}
 
@@ -1014,10 +1014,6 @@ void OpenXRAPI::destroy_session() {
 		xrEndSession(session);
 	}
 
-	if (graphics_extension) {
-		graphics_extension->cleanup_swapchain_graphics_data(&swapchains[OPENXR_SWAPCHAIN_COLOR].swapchain_graphics_data);
-	}
-
 	if (views != nullptr) {
 		memfree(views);
 		views = nullptr;
@@ -1034,10 +1030,7 @@ void OpenXRAPI::destroy_session() {
 	}
 
 	for (int i = 0; i < OPENXR_SWAPCHAIN_MAX; i++) {
-		if (swapchains[i].swapchain != XR_NULL_HANDLE) {
-			xrDestroySwapchain(swapchains[i].swapchain);
-			swapchains[i].swapchain = XR_NULL_HANDLE;
-		}
+		free_swapchain(swapchains[i]);
 	}
 
 	if (supported_swapchain_formats != nullptr) {
@@ -1805,6 +1798,21 @@ bool OpenXRAPI::process() {
 	return true;
 }
 
+void OpenXRAPI::free_swapchain(OpenXRSwapChainInfo &p_swapchain) {
+	if (p_swapchain.image_acquired) {
+		release_image(p_swapchain);
+	}
+
+	if (graphics_extension && p_swapchain.swapchain_graphics_data != nullptr) {
+		graphics_extension->cleanup_swapchain_graphics_data(&p_swapchain.swapchain_graphics_data);
+	}
+
+	if (p_swapchain.swapchain != XR_NULL_HANDLE) {
+		xrDestroySwapchain(p_swapchain.swapchain);
+		p_swapchain.swapchain = XR_NULL_HANDLE;
+	}
+}
+
 bool OpenXRAPI::acquire_image(OpenXRSwapChainInfo &p_swapchain) {
 	ERR_FAIL_COND_V(p_swapchain.image_acquired, true); // This was not released when it should be, error out and reuse...
 
@@ -1856,10 +1864,26 @@ bool OpenXRAPI::acquire_image(OpenXRSwapChainInfo &p_swapchain) {
 		p_swapchain.skip_acquire_swapchain = false;
 	}
 
+	p_swapchain.image_acquired = true;
 	return true;
 }
 
+RID OpenXRAPI::get_image(OpenXRSwapChainInfo &p_swapchain) {
+	if (p_swapchain.image_acquired) {
+		return graphics_extension->get_texture(p_swapchain.swapchain_graphics_data, p_swapchain.image_index);
+	} else {
+		return RID();
+	}
+}
+
 bool OpenXRAPI::release_image(OpenXRSwapChainInfo &p_swapchain) {
+	if (!p_swapchain.image_acquired) {
+		// already released or never acquired
+		return true;
+	}
+
+	p_swapchain.image_acquired = false; // whether we succeed or not, consider this released.
+
 	XrSwapchainImageReleaseInfo swapchain_image_release_info = {
 		XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO, // type
 		nullptr // next
@@ -1987,7 +2011,6 @@ bool OpenXRAPI::pre_draw_viewport(RID p_render_target) {
 			if (!acquire_image(swapchains[i])) {
 				return false;
 			}
-			swapchains[i].image_acquired = true;
 		}
 	}
 
@@ -2003,17 +2026,13 @@ XrSwapchain OpenXRAPI::get_color_swapchain() {
 }
 
 RID OpenXRAPI::get_color_texture() {
-	if (swapchains[OPENXR_SWAPCHAIN_COLOR].image_acquired) {
-		return graphics_extension->get_texture(swapchains[OPENXR_SWAPCHAIN_COLOR].swapchain_graphics_data, swapchains[OPENXR_SWAPCHAIN_COLOR].image_index);
-	} else {
-		return RID();
-	}
+	return get_image(swapchains[OPENXR_SWAPCHAIN_COLOR]);
 }
 
 RID OpenXRAPI::get_depth_texture() {
 	// Note, image will not be acquired if we didn't have a suitable swap chain format.
-	if (submit_depth_buffer && swapchains[OPENXR_SWAPCHAIN_DEPTH].image_acquired) {
-		return graphics_extension->get_texture(swapchains[OPENXR_SWAPCHAIN_DEPTH].swapchain_graphics_data, swapchains[OPENXR_SWAPCHAIN_DEPTH].image_index);
+	if (submit_depth_buffer) {
+		return get_image(swapchains[OPENXR_SWAPCHAIN_DEPTH]);
 	} else {
 		return RID();
 	}
@@ -2069,8 +2088,6 @@ void OpenXRAPI::end_frame() {
 	// release our swapchain image if we acquired it
 	for (int i = 0; i < OPENXR_SWAPCHAIN_MAX; i++) {
 		if (swapchains[i].image_acquired) {
-			swapchains[i].image_acquired = false; // whether we succeed or not, consider this released.
-
 			release_image(swapchains[i]);
 		}
 	}

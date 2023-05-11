@@ -634,5 +634,6 @@ EditorUndoRedoManager *EditorPlugin::get_undo_redo() {
 }
 
 EditorPluginCreateFunc EditorPlugins::creation_funcs[MAX_CREATE_FUNCS];
+Vector<StringName> EditorPlugins::extension_classes;
 
 int EditorPlugins::creation_func_count = 0;

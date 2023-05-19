@@ -41,6 +41,10 @@
 #include "core/variant/variant.h"
 #include "core/version.h"
 
+#ifdef TOOLS_ENABLED
+#include "editor/editor_node.h"
+#endif
+
 // Core interface functions.
 GDExtensionInterfaceFunctionPtr gdextension_get_proc_address(const char *p_name) {
 	return GDExtension::get_interface_function(p_name);
@@ -1071,6 +1075,32 @@ static void *gdextension_classdb_get_class_tag(GDExtensionConstStringNamePtr p_c
 	return class_info ? class_info->class_ptr : nullptr;
 }
 
+static void gdextension_editor_add_plugin(GDExtensionConstStringNamePtr p_classname) {
+#ifdef TOOLS_ENABLED
+	const StringName classname = *reinterpret_cast<const StringName *>(p_classname);
+
+	EditorNode *editor_node = EditorNode::get_singleton();
+	if (editor_node) {
+		editor_node->add_extension_editor_plugin(classname);
+	} else {
+		EditorPlugins::add_extension_class(classname);
+	}
+#endif
+}
+
+static void gdextension_editor_remove_plugin(GDExtensionConstStringNamePtr p_classname) {
+#ifdef TOOLS_ENABLED
+	const StringName classname = *reinterpret_cast<const StringName *>(p_classname);
+
+	EditorNode *editor_node = EditorNode::get_singleton();
+	if (editor_node) {
+		editor_node->remove_extension_editor_plugin(classname);
+	} else {
+		EditorPlugins::remove_extension_class(classname);
+	}
+#endif
+}
+
 #define REGISTER_INTERFACE_FUNC(m_name) GDExtension::register_interface_function(#m_name, (GDExtensionInterfaceFunctionPtr)&gdextension_##m_name)
 
 void gdextension_setup_interface() {
@@ -1199,6 +1229,8 @@ void gdextension_setup_interface() {
 	REGISTER_INTERFACE_FUNC(classdb_construct_object);
 	REGISTER_INTERFACE_FUNC(classdb_get_method_bind);
 	REGISTER_INTERFACE_FUNC(classdb_get_class_tag);
+	REGISTER_INTERFACE_FUNC(editor_add_plugin);
+	REGISTER_INTERFACE_FUNC(editor_remove_plugin);
 }
 
 #undef REGISTER_INTERFACE_FUNCTION

@@ -246,6 +246,7 @@ class EditorPlugins {
 	};
 
 	static EditorPluginCreateFunc creation_funcs[MAX_CREATE_FUNCS];
+	static Vector<StringName> extension_classes;
 	static int creation_func_count;
 
 	template <class T>
@@ -268,6 +269,16 @@ public:
 	static void add_create_func(EditorPluginCreateFunc p_func) {
 		ERR_FAIL_COND(creation_func_count >= MAX_CREATE_FUNCS);
 		creation_funcs[creation_func_count++] = p_func;
+	}
+
+	static void add_extension_class(const StringName &p_class_name) {
+		extension_classes.push_back(p_class_name);
+	}
+	static void remove_extension_class(const StringName &p_class_name) {
+		extension_classes.erase(p_class_name);
+	}
+	static const Vector<StringName> &get_extension_classes() {
+		return extension_classes;
 	}
 };
 

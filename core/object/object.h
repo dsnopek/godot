@@ -406,9 +406,14 @@ public:                                                                         
 	static _FORCE_INLINE_ String get_parent_class_static() {                                                                                     \
 		return m_inherits::get_class_static();                                                                                                   \
 	}                                                                                                                                            \
-	static void get_inheritance_list_static(List<String> *p_inheritance_list) {                                                                  \
+	static void get_inheritance_list_static(Vector<StringName> *p_inheritance_list) {                                                            \
 		m_inherits::get_inheritance_list_static(p_inheritance_list);                                                                             \
-		p_inheritance_list->push_back(String(#m_class));                                                                                         \
+		p_inheritance_list->push_back(StringName(#m_class));                                                                                     \
+	}                                                                                                                                            \
+	virtual Vector<StringName> get_inheritance_list() const override {                                                                           \
+		Vector<StringName> inheritance_list;                                                                                                     \
+		m_class::get_inheritance_list_static(&inheritance_list);                                                                                 \
+		return inheritance_list;                                                                                                                 \
 	}                                                                                                                                            \
 	virtual bool is_class(const String &p_class) const override {                                                                                \
 		if (_get_extension() && _get_extension()->is_class(p_class)) {                                                                           \
@@ -765,7 +770,7 @@ public:
 	};
 
 	/* TYPE API */
-	static void get_inheritance_list_static(List<String> *p_inheritance_list) { p_inheritance_list->push_back("Object"); }
+	static void get_inheritance_list_static(Vector<StringName> *p_inheritance_list) { p_inheritance_list->push_back("Object"); }
 
 	static String get_class_static() { return "Object"; }
 	static String get_parent_class_static() { return String(); }
@@ -800,17 +805,13 @@ public:
 		return *_class_name_ptr;
 	}
 
-	_FORCE_INLINE_ const StringName &get_class_name_for_extension(const GDExtension *p_library) const {
-		// Only return the class name per the extension if it matches the given p_library.
-		if (_extension && _extension->library == p_library) {
-			return _extension->class_name;
-		}
-		// Otherwise, return the name of the built-in class.
-		if (unlikely(!_class_name_ptr)) {
-			return *_get_class_namev();
-		}
-		return *_class_name_ptr;
+	virtual Vector<StringName> get_inheritance_list() const {
+		Vector<StringName> ret;
+		Object::get_inheritance_list_static(&ret);
+		return ret;
 	}
+
+	const StringName &get_class_name_for_extension(const GDExtension *p_library) const;
 
 	/* IAPI */
 

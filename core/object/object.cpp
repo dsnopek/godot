@@ -1719,6 +1719,29 @@ uint32_t Object::get_edited_version() const {
 }
 #endif
 
+const StringName &Object::get_class_name_for_extension(const GDExtension *p_library) const {
+	// Only return the class name per the extension if it matches the given p_library.
+	if (_extension && _extension->library == p_library) {
+		return _extension->class_name;
+	}
+
+	// Extensions can only wrap classes that are in the ClassDB.
+	const StringName *class_name = _get_class_namev();
+	if (ClassDB::class_exists(*class_name)) {
+		return *class_name;
+	}
+
+	// Find the nearest parent that's in the ClassDB.
+	Vector<StringName> inheritance_list = get_inheritance_list();
+	for (int i = inheritance_list.size() - 2; i >= 0; i--) {
+		if (ClassDB::class_exists(inheritance_list[i])) {
+			return inheritance_list[i];
+		}
+	}
+
+	return SNAME("Object");
+}
+
 void Object::set_instance_binding(void *p_token, void *p_binding, const GDExtensionInstanceBindingCallbacks *p_callbacks) {
 	// This is only meant to be used on creation by the binder.
 	ERR_FAIL_COND(_instance_bindings != nullptr);

@@ -38,14 +38,23 @@
 #include "core/io/resource_loader.h"
 #include "core/object/ref_counted.h"
 
+class GDExtensionMethodBind;
+
 class GDExtension : public Resource {
 	GDCLASS(GDExtension, Resource)
+
+	friend class GDExtensionManager;
 
 	void *library = nullptr; // pointer if valid,
 	String library_path;
 
 	struct Extension {
 		ObjectGDExtension gdextension;
+
+#ifdef TOOLS_ENABLED
+		bool is_reloading = false;
+		HashMap<StringName, GDExtensionMethodBind *> methods;
+#endif
 	};
 
 	HashMap<StringName, Extension> extension_classes;
@@ -63,6 +72,14 @@ class GDExtension : public Resource {
 
 	GDExtensionInitialization initialization;
 	int32_t level_initialized = -1;
+
+#ifdef TOOLS_ENABLED
+	bool is_reloading = false;
+
+	// Only called by GDExtensionManager during the reload process.
+	void prepare_reload();
+	void finish_reload();
+#endif
 
 protected:
 	static void _bind_methods();
@@ -101,6 +118,8 @@ VARIANT_ENUM_CAST(GDExtension::InitializationLevel)
 
 class GDExtensionResourceLoader : public ResourceFormatLoader {
 public:
+	static Error load_gdextension_resource(const String &p_path, Ref<GDExtension> &p_extension);
+
 	virtual Ref<Resource> load(const String &p_path, const String &p_original_path, Error *r_error, bool p_use_sub_threads = false, float *r_progress = nullptr, CacheMode p_cache_mode = CACHE_MODE_REUSE);
 	virtual void get_recognized_extensions(List<String> *p_extensions) const;
 	virtual bool handles_type(const String &p_type) const;

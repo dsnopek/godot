@@ -31,6 +31,36 @@
 #include "gdextension_manager.h"
 #include "core/io/file_access.h"
 
+GDExtensionManager::LoadStatus GDExtensionManager::_load_extension_internal(const Ref<GDExtension> &p_extension) {
+	if (level >= 0) { // Already initialized up to some level.
+		int32_t minimum_level = p_extension->get_minimum_library_initialization_level();
+		if (minimum_level < MIN(level, GDExtension::INITIALIZATION_LEVEL_SCENE)) {
+			return LOAD_STATUS_NEEDS_RESTART;
+		}
+		// Initialize up to current level.
+		for (int32_t i = minimum_level; i <= level; i++) {
+			p_extension->initialize_library(GDExtension::InitializationLevel(i));
+		}
+	}
+
+	for (const KeyValue<String, String> &kv : p_extension->class_icon_paths) {
+		gdextension_class_icon_paths[kv.key] = kv.value;
+	}
+}
+
+GDExtensionManager::LoadStatus GDExtensionManager::_unload_extension_internal(const Ref<GDExtension> &p_extension) {
+	if (level >= 0) { // Already initialized up to some level.
+		// Deinitialize down from current level.
+		for (int32_t i = level; i >= GDExtension::INITIALIZATION_LEVEL_CORE; i--) {
+			p_extension->deinitialize_library(GDExtension::InitializationLevel(i));
+		}
+	}
+
+	for (const KeyValue<String, String> &kv : p_extension->class_icon_paths) {
+		gdextension_class_icon_paths.erase(kv.key);
+	}
+}
+
 GDExtensionManager::LoadStatus GDExtensionManager::load_extension(const String &p_path) {
 	if (gdextension_map.has(p_path)) {
 		return LOAD_STATUS_ALREADY_LOADED;
@@ -40,19 +70,9 @@ GDExtensionManager::LoadStatus GDExtensionManager::load_extension(const String &
 		return LOAD_STATUS_FAILED;
 	}
 
-	if (level >= 0) { // Already initialized up to some level.
-		int32_t minimum_level = extension->get_minimum_library_initialization_level();
-		if (minimum_level < MIN(level, GDExtension::INITIALIZATION_LEVEL_SCENE)) {
-			return LOAD_STATUS_NEEDS_RESTART;
-		}
-		// Initialize up to current level.
-		for (int32_t i = minimum_level; i <= level; i++) {
-			extension->initialize_library(GDExtension::InitializationLevel(i));
-		}
-	}
-
-	for (const KeyValue<String, String> &kv : extension->class_icon_paths) {
-		gdextension_class_icon_paths[kv.key] = kv.value;
+	LoadStatus status = _load_extension_internal(extension);
+	if (status != LOAD_STATUS_OK) {
+		return status;
 	}
 
 	gdextension_map[p_path] = extension;
@@ -60,8 +80,41 @@ GDExtensionManager::LoadStatus GDExtensionManager::load_extension(const String &
 }
 
 GDExtensionManager::LoadStatus GDExtensionManager::reload_extension(const String &p_path) {
-	return LOAD_STATUS_OK; //TODO
+#ifndef TOOLS_ENABLED
+	ERR_FAIL_V_MSG("GDExtensions can only be reloaded in an editor build", LOAD_STATUS_FAILED);
+#else
+	if (!gdextension_map.has(p_path)) {
+		return LOAD_STATUS_NOT_LOADED;
+	}
+
+	Ref<GDExtension> extension = gdextension_map[p_path];
+	LoadStatus status;
+
+	extension->prepare_reload();
+	status = _unload_extension_internal(extension);
+	if (status != LOAD_STATUS_OK) {
+		return status;
+	}
+
+	// Do the actual reloading of the library.
+	extension->close_library();
+	Error err = GDExtensionResourceLoader::load_gdextension_resource(p_path, extension);
+	if (err != OK) {
+		extension->finish_reload();
+		return LOAD_STATUS_FAILED;
+	}
+
+	status = _load_extension_internal(extension);
+	// Always finish reload regardless of success or failure.
+	extension->finish_reload();
+	if (status != LOAD_STATUS_OK) {
+		return status;
+	}
+
+	return LOAD_STATUS_OK;
+#endif
 }
+
 GDExtensionManager::LoadStatus GDExtensionManager::unload_extension(const String &p_path) {
 	if (!gdextension_map.has(p_path)) {
 		return LOAD_STATUS_NOT_LOADED;
@@ -69,19 +122,9 @@ GDExtensionManager::LoadStatus GDExtensionManager::unload_extension(const String
 
 	Ref<GDExtension> extension = gdextension_map[p_path];
 
-	if (level >= 0) { // Already initialized up to some level.
-		int32_t minimum_level = extension->get_minimum_library_initialization_level();
-		if (minimum_level < MIN(level, GDExtension::INITIALIZATION_LEVEL_SCENE)) {
-			return LOAD_STATUS_NEEDS_RESTART;
-		}
-		// Deinitialize down to current level.
-		for (int32_t i = level; i >= minimum_level; i--) {
-			extension->deinitialize_library(GDExtension::InitializationLevel(i));
-		}
-	}
-
-	for (const KeyValue<String, String> &kv : extension->class_icon_paths) {
-		gdextension_class_icon_paths.erase(kv.key);
+	LoadStatus status = _unload_extension_internal(extension);
+	if (status != LOAD_STATUS_OK) {
+		return status;
 	}
 
 	gdextension_map.erase(p_path);

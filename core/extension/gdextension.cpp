@@ -179,6 +179,11 @@ protected:
 	}
 
 public:
+#ifdef TOOLS_ENABLED
+	bool is_reloading = false;
+	bool is_valid = true;
+#endif
+
 #ifdef DEBUG_METHODS_ENABLED
 	virtual GodotTypeInfo::Metadata get_argument_meta(int p_arg) const override {
 		if (p_arg < 0) {
@@ -243,7 +248,13 @@ public:
 		return false;
 	}
 
-	explicit GDExtensionMethodBind(const GDExtensionClassMethodInfo *p_method_info) {
+	bool try_update(const GDExtensionClassMethodInfo *p_method_info) {
+		// @todo Do something to check that this is safe
+		update(p_method_info);
+		return true;
+	}
+
+	void update(const GDExtensionClassMethodInfo *p_method_info) {
 		method_userdata = p_method_info->method_userdata;
 		call_func = p_method_info->call_func;
 		validated_call_func = nullptr;
@@ -255,6 +266,8 @@ public:
 			return_value_metadata = GodotTypeInfo::Metadata(p_method_info->return_value_metadata);
 		}
 
+		arguments_info.clear();
+		arguments_metadata.clear();
 		for (uint32_t i = 0; i < p_method_info->argument_count; i++) {
 			arguments_info.push_back(PropertyInfo(p_method_info->arguments_info[i]));
 			arguments_metadata.push_back(GodotTypeInfo::Metadata(p_method_info->arguments_metadata[i]));
@@ -278,6 +291,10 @@ public:
 		}
 
 		set_default_arguments(defargs);
+	}
+
+	explicit GDExtensionMethodBind(const GDExtensionClassMethodInfo *p_method_info) {
+		update(p_method_info);
 	}
 };
 
@@ -304,9 +321,19 @@ void GDExtension::_register_extension_class(GDExtensionClassLibraryPtr p_library
 		ERR_FAIL_MSG("Attempt to register an extension class '" + String(class_name) + "' using non-existing parent class '" + String(parent_class_name) + "'");
 	}
 
+#ifdef TOOLS_ENABLED
+	Extension *extension = nullptr;
+	if (self->is_reloading && self->extension_classes.has(class_name)) {
+		extension = &self->extension_classes[class_name];
+		extension->is_reloading = false;
+	} else {
+		self->extension_classes[class_name] = Extension();
+		extension = &self->extension_classes[class_name];
+	}
+#else
 	self->extension_classes[class_name] = Extension();
-
 	Extension *extension = &self->extension_classes[class_name];
+#endif
 
 	if (parent_extension) {
 		extension->gdextension.parent = &parent_extension->gdextension;
@@ -344,10 +371,31 @@ void GDExtension::_register_extension_class_method(GDExtensionClassLibraryPtr p_
 	StringName method_name = *reinterpret_cast<const StringName *>(p_method_info->name);
 	ERR_FAIL_COND_MSG(!self->extension_classes.has(class_name), "Attempt to register extension method '" + String(method_name) + "' for unexisting class '" + class_name + "'.");
 
-	//Extension *extension = &self->extension_classes[class_name];
+#ifdef TOOLS_ENABLED
+	Extension *extension = &self->extension_classes[class_name];
+	GDExtensionMethodBind *method = nullptr;
 
+	if (self->is_reloading && extension->methods.has(method_name)) {
+		method = extension->methods[method_name];
+
+		// Try to update the method bind. If it doesn't work (because it's incompatible) then
+		// mark as invalid and create a new one.
+		if (!method->try_update(p_method_info)) {
+			// @todo What will eventually free the memory used by this method bind?
+			method->is_valid = false;
+			method = nullptr;
+		}
+	}
+
+	if (method == nullptr) {
+		GDExtensionMethodBind *method = memnew(GDExtensionMethodBind(p_method_info));
+		method->set_instance_class(class_name);
+		extension->methods[method_name] = method;
+	}
+#else
 	GDExtensionMethodBind *method = memnew(GDExtensionMethodBind(p_method_info));
 	method->set_instance_class(class_name);
+#endif
 
 	ClassDB::bind_method_custom(class_name, method);
 }
@@ -430,7 +478,14 @@ void GDExtension::_unregister_extension_class(GDExtensionClassLibraryPtr p_libra
 	if (ext->gdextension.parent != nullptr) {
 		ext->gdextension.parent->children.erase(&ext->gdextension);
 	}
+
+#ifdef TOOLS_ENABLED
+	if (!self->is_reloading) {
+		self->extension_classes.erase(class_name);
+	}
+#else
 	self->extension_classes.erase(class_name);
+#endif
 }
 
 void GDExtension::_get_library_path(GDExtensionClassLibraryPtr p_library, GDExtensionUninitializedStringPtr r_path) {
@@ -486,6 +541,7 @@ void GDExtension::close_library() {
 	OS::get_singleton()->close_dynamic_library(library);
 
 	library = nullptr;
+	class_icon_paths.clear();
 }
 
 bool GDExtension::is_library_open() const {
@@ -553,27 +609,22 @@ void GDExtension::initialize_gdextensions() {
 	register_interface_function("get_library_path", (GDExtensionInterfaceFunctionPtr)&GDExtension::_get_library_path);
 }
 
-Ref<Resource> GDExtensionResourceLoader::load(const String &p_path, const String &p_original_path, Error *r_error, bool p_use_sub_threads, float *r_progress, CacheMode p_cache_mode) {
+Error GDExtensionResourceLoader::load_gdextension_resource(const String &p_path, Ref<GDExtension> &p_extension) {
+	ERR_FAIL_COND_V_MSG(p_extension.is_valid() && p_extension->is_library_open(), ERR_ALREADY_IN_USE, "Cannot load GDExtension resource into already opened library");
+
 	Ref<ConfigFile> config;
 	config.instantiate();
 
 	Error err = config->load(p_path);
 
-	if (r_error) {
-		*r_error = err;
-	}
-
 	if (err != OK) {
 		ERR_PRINT("Error loading GDExtension configuration file: " + p_path);
-		return Ref<Resource>();
+		return err;
 	}
 
 	if (!config->has_section_key("configuration", "entry_symbol")) {
-		if (r_error) {
-			*r_error = ERR_INVALID_DATA;
-		}
 		ERR_PRINT("GDExtension configuration file must contain a \"configuration/entry_symbol\" key: " + p_path);
-		return Ref<Resource>();
+		return ERR_INVALID_DATA;
 	}
 
 	String entry_symbol = config->get_value("configuration", "entry_symbol");
@@ -591,19 +642,13 @@ Ref<Resource> GDExtensionResourceLoader::load(const String &p_path, const String
 			}
 		}
 	} else {
-		if (r_error) {
-			*r_error = ERR_INVALID_DATA;
-		}
 		ERR_PRINT("GDExtension configuration file must contain a \"configuration/compatibility_minimum\" key: " + p_path);
-		return Ref<Resource>();
+		return ERR_INVALID_DATA;
 	}
 
 	if (compatibility_minimum[0] < 4 || (compatibility_minimum[0] == 4 && compatibility_minimum[1] == 0)) {
-		if (r_error) {
-			*r_error = ERR_INVALID_DATA;
-		}
 		ERR_PRINT(vformat("GDExtension's compatibility_minimum (%d.%d.%d) must be at least 4.1.0: %s", compatibility_minimum[0], compatibility_minimum[1], compatibility_minimum[2], p_path));
-		return Ref<Resource>();
+		return ERR_INVALID_DATA;
 	}
 
 	bool compatible = true;
@@ -615,40 +660,31 @@ Ref<Resource> GDExtensionResourceLoader::load(const String &p_path, const String
 		compatible = false;
 	}
 	if (!compatible) {
-		if (r_error) {
-			*r_error = ERR_INVALID_DATA;
-		}
 		ERR_PRINT(vformat("GDExtension only compatible with Godot version %d.%d.%d or later: %s", compatibility_minimum[0], compatibility_minimum[1], compatibility_minimum[2], p_path));
-		return Ref<Resource>();
+		return ERR_INVALID_DATA;
 	}
 
 	String library_path = GDExtension::find_extension_library(p_path, config, [](String p_feature) { return OS::get_singleton()->has_feature(p_feature); });
 
 	if (library_path.is_empty()) {
-		if (r_error) {
-			*r_error = ERR_FILE_NOT_FOUND;
-		}
 		const String os_arch = OS::get_singleton()->get_name().to_lower() + "." + Engine::get_singleton()->get_architecture_name();
 		ERR_PRINT(vformat("No GDExtension library found for current OS and architecture (%s) in configuration file: %s", os_arch, p_path));
-		return Ref<Resource>();
+		return ERR_FILE_NOT_FOUND;
 	}
 
 	if (!library_path.is_resource_file() && !library_path.is_absolute_path()) {
 		library_path = p_path.get_base_dir().path_join(library_path);
 	}
 
-	Ref<GDExtension> lib;
-	lib.instantiate();
-	String abs_path = ProjectSettings::get_singleton()->globalize_path(library_path);
-	err = lib->open_library(abs_path, entry_symbol);
-
-	if (r_error) {
-		*r_error = err;
+	if (p_extension.is_null()) {
+		p_extension.instantiate();
 	}
+	String abs_path = ProjectSettings::get_singleton()->globalize_path(library_path);
+	err = p_extension->open_library(abs_path, entry_symbol);
 
 	if (err != OK) {
 		// Errors already logged in open_library()
-		return Ref<Resource>();
+		return err;
 	}
 
 	// Handle icons if any are specified.
@@ -656,10 +692,20 @@ Ref<Resource> GDExtensionResourceLoader::load(const String &p_path, const String
 		List<String> keys;
 		config->get_section_keys("icons", &keys);
 		for (const String &key : keys) {
-			lib->class_icon_paths[key] = config->get_value("icons", key);
+			p_extension->class_icon_paths[key] = config->get_value("icons", key);
 		}
 	}
 
+	return OK;
+}
+
+Ref<Resource> GDExtensionResourceLoader::load(const String &p_path, const String &p_original_path, Error *r_error, bool p_use_sub_threads, float *r_progress, CacheMode p_cache_mode) {
+	Ref<GDExtension> lib;
+	Error err = load_gdextension_resource(p_path, lib);
+	if (err != OK && r_error) {
+		// Errors already logged in load_gdextension_resource().
+		*r_error = err;
+	}
 	return lib;
 }
 
@@ -680,6 +726,45 @@ String GDExtensionResourceLoader::get_resource_type(const String &p_path) const 
 }
 
 #ifdef TOOLS_ENABLED
+void GDExtension::prepare_reload() {
+	is_reloading = true;
+
+	// @todo Store state of existing classes and objects.
+
+	for (KeyValue<StringName, Extension> &E : extension_classes) {
+		E.value.is_reloading = true;
+
+		// Clear out heirarchy information because it may change.
+		E.value.gdextension.parent = nullptr;
+		E.value.gdextension.children.clear();
+
+		for (KeyValue<StringName, GDExtensionMethodBind *> &M : E.value.methods) {
+			M.value->is_reloading = true;
+		}
+	}
+
+	// @todo Clear out properties and method data in ClassDB.
+}
+
+void GDExtension::finish_reload() {
+	is_reloading = false;
+
+	for (KeyValue<StringName, Extension> &E : extension_classes) {
+		if (E.value.is_reloading) {
+			// @todo Class wasn't registered again, so create placeholder.
+			E.value.is_reloading = false;
+		}
+
+		for (KeyValue<StringName, GDExtensionMethodBind *> &M : E.value.methods) {
+			if (M.value->is_reloading) {
+				// @todo Method wasn't registered again, so mark bind as invalid.
+
+				M.value->is_reloading = false;
+			}
+		}
+	}
+}
+
 Vector<StringName> GDExtensionEditorPlugins::extension_classes;
 GDExtensionEditorPlugins::EditorPluginRegisterFunc GDExtensionEditorPlugins::editor_node_add_plugin = nullptr;
 GDExtensionEditorPlugins::EditorPluginRegisterFunc GDExtensionEditorPlugins::editor_node_remove_plugin = nullptr;

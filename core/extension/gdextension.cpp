@@ -181,7 +181,9 @@ protected:
 public:
 #ifdef TOOLS_ENABLED
 	bool is_reloading = false;
-	bool is_valid = true;
+	bool valid = true;
+
+	virtual bool is_valid() const { return valid; }
 #endif
 
 #ifdef DEBUG_METHODS_ENABLED
@@ -195,6 +197,9 @@ public:
 #endif
 
 	virtual Variant call(Object *p_object, const Variant **p_args, int p_arg_count, Callable::CallError &r_error) const override {
+#ifdef TOOLS_ENABLED
+		ERR_FAIL_COND_V_MSG(!valid, Variant(), "Cannot call invalid method bind from GDExtension");
+#endif
 		Variant ret;
 		GDExtensionClassInstancePtr extension_instance = is_static() ? nullptr : p_object->_get_extension_instance();
 		GDExtensionCallError ce{ GDEXTENSION_CALL_OK, 0, 0 };
@@ -205,6 +210,9 @@ public:
 		return ret;
 	}
 	virtual void validated_call(Object *p_object, const Variant **p_args, Variant *r_ret) const override {
+#ifdef TOOLS_ENABLED
+		ERR_FAIL_COND_MSG(!valid, "Cannot call invalid method bind from GDExtension");
+#endif
 		ERR_FAIL_COND_MSG(vararg, "Validated methods don't have ptrcall support. This is most likely an engine bug.");
 		GDExtensionClassInstancePtr extension_instance = is_static() ? nullptr : p_object->_get_extension_instance();
 
@@ -239,6 +247,9 @@ public:
 	}
 
 	virtual void ptrcall(Object *p_object, const void **p_args, void *r_ret) const override {
+#ifdef TOOLS_ENABLED
+		ERR_FAIL_COND_MSG(!valid, "Cannot call invalid method bind from GDExtension");
+#endif
 		ERR_FAIL_COND_MSG(vararg, "Vararg methods don't have ptrcall support. This is most likely an engine bug.");
 		GDExtensionClassInstancePtr extension_instance = p_object->_get_extension_instance();
 		ptrcall_func(method_userdata, extension_instance, reinterpret_cast<GDExtensionConstTypePtr *>(p_args), (GDExtensionTypePtr)r_ret);
@@ -381,14 +392,15 @@ void GDExtension::_register_extension_class_method(GDExtensionClassLibraryPtr p_
 		// Try to update the method bind. If it doesn't work (because it's incompatible) then
 		// mark as invalid and create a new one.
 		if (!method->try_update(p_method_info)) {
-			// @todo What will eventually free the memory used by this method bind?
-			method->is_valid = false;
+			method->valid = false;
+			self->invalid_methods.push_back(method);
+
 			method = nullptr;
 		}
 	}
 
 	if (method == nullptr) {
-		GDExtensionMethodBind *method = memnew(GDExtensionMethodBind(p_method_info));
+		method = memnew(GDExtensionMethodBind(p_method_info));
 		method->set_instance_class(class_name);
 		extension->methods[method_name] = method;
 	}
@@ -474,13 +486,18 @@ void GDExtension::_unregister_extension_class(GDExtensionClassLibraryPtr p_libra
 	Extension *ext = &self->extension_classes[class_name];
 	ERR_FAIL_COND_MSG(ext->gdextension.children.size(), "Attempt to unregister class '" + class_name + "' while other extension classes inherit from it.");
 
+#ifdef TOOLS_ENABLED
+	ClassDB::unregister_extension_class(class_name, !ext->is_reloading);
+#else
 	ClassDB::unregister_extension_class(class_name);
+#endif
+
 	if (ext->gdextension.parent != nullptr) {
 		ext->gdextension.parent->children.erase(&ext->gdextension);
 	}
 
 #ifdef TOOLS_ENABLED
-	if (!self->is_reloading) {
+	if (!ext->is_reloading) {
 		self->extension_classes.erase(class_name);
 	}
 #else
@@ -592,6 +609,12 @@ GDExtension::~GDExtension() {
 	if (library != nullptr) {
 		close_library();
 	}
+#ifdef TOOLS_ENABLED
+	// If we have any invalid method binds still laying around, we can finally free them!
+	for (GDExtensionMethodBind *E : invalid_methods) {
+		memdelete(E);
+	}
+#endif
 }
 
 void GDExtension::initialize_gdextensions() {

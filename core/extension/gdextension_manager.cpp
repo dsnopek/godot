@@ -46,6 +46,8 @@ GDExtensionManager::LoadStatus GDExtensionManager::_load_extension_internal(cons
 	for (const KeyValue<String, String> &kv : p_extension->class_icon_paths) {
 		gdextension_class_icon_paths[kv.key] = kv.value;
 	}
+
+	return LOAD_STATUS_OK;
 }
 
 GDExtensionManager::LoadStatus GDExtensionManager::_unload_extension_internal(const Ref<GDExtension> &p_extension) {
@@ -59,6 +61,8 @@ GDExtensionManager::LoadStatus GDExtensionManager::_unload_extension_internal(co
 	for (const KeyValue<String, String> &kv : p_extension->class_icon_paths) {
 		gdextension_class_icon_paths.erase(kv.key);
 	}
+
+	return LOAD_STATUS_OK;
 }
 
 GDExtensionManager::LoadStatus GDExtensionManager::load_extension(const String &p_path) {

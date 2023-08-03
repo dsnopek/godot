@@ -211,7 +211,7 @@ public:
 	}
 
 	static void register_extension_class(ObjectGDExtension *p_extension);
-	static void unregister_extension_class(const StringName &p_class);
+	static void unregister_extension_class(const StringName &p_class, bool free_method_binds = true);
 
 	template <class T>
 	static Object *_create_ptr_func() {

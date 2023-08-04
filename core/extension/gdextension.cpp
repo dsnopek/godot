@@ -397,6 +397,8 @@ void GDExtension::_register_extension_class_method(GDExtensionClassLibraryPtr p_
 
 			method = nullptr;
 		}
+
+		method->is_reloading = false;
 	}
 
 	if (method == nullptr) {
@@ -765,26 +767,35 @@ void GDExtension::prepare_reload() {
 			M.value->is_reloading = true;
 		}
 	}
-
-	// @todo Clear out properties and method data in ClassDB.
 }
 
 void GDExtension::finish_reload() {
 	is_reloading = false;
 
+	Vector<StringName> classes_to_remove;
 	for (KeyValue<StringName, Extension> &E : extension_classes) {
 		if (E.value.is_reloading) {
-			// @todo Class wasn't registered again, so create placeholder.
 			E.value.is_reloading = false;
+			classes_to_remove.push_back(E.key);
 		}
 
+		Vector<StringName> methods_to_remove;
 		for (KeyValue<StringName, GDExtensionMethodBind *> &M : E.value.methods) {
 			if (M.value->is_reloading) {
-				// @todo Method wasn't registered again, so mark bind as invalid.
+				M.value->valid = false;
+				invalid_methods.push_back(M.value);
 
 				M.value->is_reloading = false;
+				methods_to_remove.push_back(M.key);
 			}
 		}
+		for (const StringName &method_name : methods_to_remove) {
+			E.value.methods.erase(method_name);
+		}
+	}
+
+	for (const StringName &class_name : classes_to_remove) {
+		extension_classes.erase(class_name);
 	}
 }
 

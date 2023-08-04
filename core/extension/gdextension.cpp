@@ -372,6 +372,13 @@ void GDExtension::_register_extension_class(GDExtensionClassLibraryPtr p_library
 	extension->gdextension.free_instance = p_extension_funcs->free_instance_func;
 	extension->gdextension.get_virtual = p_extension_funcs->get_virtual_func;
 	extension->gdextension.get_rid = p_extension_funcs->get_rid_func;
+	extension->gdextension.recreate_instance = p_extension_funcs->recreate_instance_func;
+
+#ifdef TOOLS_ENABLED
+	extension->gdextension.tracking_userdata = extension;
+	extension->gdextension.track_instance = &GDExtension::_track_instance;
+	extension->gdextension.untrack_instance = &GDExtension::_untrack_instance;
+#endif
 
 	ClassDB::register_extension_class(&extension->gdextension);
 }
@@ -756,8 +763,6 @@ String GDExtensionResourceLoader::get_resource_type(const String &p_path) const 
 void GDExtension::prepare_reload() {
 	is_reloading = true;
 
-	// @todo Store state of existing classes and objects.
-
 	for (KeyValue<StringName, Extension> &E : extension_classes) {
 		E.value.is_reloading = true;
 
@@ -768,12 +773,24 @@ void GDExtension::prepare_reload() {
 		for (KeyValue<StringName, GDExtensionMethodBind *> &M : E.value.methods) {
 			M.value->is_reloading = true;
 		}
+
+		for (const ObjectID &obj_id : E.value.instances) {
+			Object *obj = ObjectDB::get_instance(obj_id);
+			if (!obj) {
+				continue;
+			}
+
+			// @todo Store instance state so it can be restored after reload.
+
+			obj->clear_internal_gdextension();
+		}
 	}
 }
 
 void GDExtension::finish_reload() {
 	is_reloading = false;
 
+	// Clean up any classes or methods that didn't get re-added.
 	Vector<StringName> classes_to_remove;
 	for (KeyValue<StringName, Extension> &E : extension_classes) {
 		if (E.value.is_reloading) {
@@ -795,10 +812,37 @@ void GDExtension::finish_reload() {
 			E.value.methods.erase(method_name);
 		}
 	}
-
 	for (const StringName &class_name : classes_to_remove) {
 		extension_classes.erase(class_name);
 	}
+
+	// Reset any instances used by the classes that remain.
+	for (KeyValue<StringName, Extension> &E : extension_classes) {
+		for (const ObjectID &obj_id : E.value.instances) {
+			Object *obj = ObjectDB::get_instance(obj_id);
+			if (!obj) {
+				continue;
+			}
+
+			obj->reset_internal_gdextension(&E.value.gdextension);
+
+			// @todo Restore state of properties for object.
+		}
+	}
+}
+
+void GDExtension::_track_instance(void *p_user_data, void *p_instance) {
+	Extension *extension = reinterpret_cast<Extension *>(p_user_data);
+	Object *obj = reinterpret_cast<Object *>(p_instance);
+
+	extension->instances.insert(obj->get_instance_id());
+}
+
+void GDExtension::_untrack_instance(void *p_user_data, void *p_instance) {
+	Extension *extension = reinterpret_cast<Extension *>(p_user_data);
+	Object *obj = reinterpret_cast<Object *>(p_instance);
+
+	extension->instances.erase(obj->get_instance_id());
 }
 
 Vector<StringName> GDExtensionEditorPlugins::extension_classes;

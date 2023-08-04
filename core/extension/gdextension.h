@@ -54,14 +54,11 @@ class GDExtension : public Resource {
 #ifdef TOOLS_ENABLED
 		bool is_reloading = false;
 		HashMap<StringName, GDExtensionMethodBind *> methods;
+		HashSet<ObjectID> instances;
 #endif
 	};
 
 	HashMap<StringName, Extension> extension_classes;
-
-#ifdef TOOLS_ENABLED
-	Vector<GDExtensionMethodBind *> invalid_methods;
-#endif
 
 	static void _register_extension_class(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_parent_class_name, const GDExtensionClassCreationInfo *p_extension_funcs);
 	static void _register_extension_class_method(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, const GDExtensionClassMethodInfo *p_method_info);
@@ -79,6 +76,10 @@ class GDExtension : public Resource {
 
 #ifdef TOOLS_ENABLED
 	bool is_reloading = false;
+	Vector<GDExtensionMethodBind *> invalid_methods;
+
+	static void _track_instance(void *p_user_data, void *p_instance);
+	static void _untrack_instance(void *p_user_data, void *p_instance);
 
 	// Only called by GDExtensionManager during the reload process.
 	void prepare_reload();

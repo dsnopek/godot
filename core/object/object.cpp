@@ -1805,6 +1805,35 @@ bool Object::has_instance_binding(void *p_token) {
 	return found;
 }
 
+void Object::clear_internal_gdextension() {
+	ERR_FAIL_COND(!_extension);
+
+	// Free the instance inside the GDExtension.
+	if (_extension->free_instance) {
+		_extension->free_instance(_extension->class_userdata, _extension_instance);
+	}
+	_extension = nullptr;
+	_extension_instance = nullptr;
+
+	// Clear the instance bindings.
+	_instance_binding_mutex.lock();
+	// @todo If this object is used by a different GDExtension, we should really leave those bindings in-place!
+	memfree(_instance_bindings);
+	_instance_bindings = nullptr;
+	_instance_binding_mutex.unlock();
+
+	// @todo Clear the virtual methods.
+}
+
+void Object::reset_internal_gdextension(ObjectGDExtension *p_extension) {
+	ERR_FAIL_COND(_extension != nullptr);
+
+	_extension = p_extension;
+	if (_extension && _extension->recreate_instance) {
+		_extension_instance = _extension->recreate_instance(_extension->class_userdata, (GDExtensionObjectPtr)this);
+	}
+}
+
 void Object::_construct_object(bool p_reference) {
 	type_is_reference = p_reference;
 	_instance_id = ObjectDB::add_instance(this);
@@ -1836,6 +1865,11 @@ Object::~Object() {
 	script_instance = nullptr;
 
 	if (_extension && _extension->free_instance) {
+#ifdef TOOLS_ENABLED
+		if (_extension->untrack_instance) {
+			_extension->untrack_instance(_extension->tracking_userdata, this);
+		}
+#endif
 		_extension->free_instance(_extension->class_userdata, _extension_instance);
 		_extension = nullptr;
 		_extension_instance = nullptr;

@@ -386,12 +386,14 @@ void GDExtension::_register_extension_class_method(GDExtensionClassLibraryPtr p_
 	Extension *extension = &self->extension_classes[class_name];
 	GDExtensionMethodBind *method = nullptr;
 
-	if (extension->is_reloading && extension->methods.has(method_name)) {
+	// We can't check extension->is_reloading because it would already have been reset,
+	// but we can check the method a little bit further down.
+	if (self->is_reloading && extension->methods.has(method_name)) {
 		method = extension->methods[method_name];
 
 		// Try to update the method bind. If it doesn't work (because it's incompatible) then
 		// mark as invalid and create a new one.
-		if (!method->try_update(p_method_info)) {
+		if (!method->is_reloading || !method->try_update(p_method_info)) {
 			method->valid = false;
 			self->invalid_methods.push_back(method);
 

@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  gdextension_manager.h                                                 */
+/*  gdextension_reload_node.cpp                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,56 +28,52 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef GDEXTENSION_MANAGER_H
-#define GDEXTENSION_MANAGER_H
+#include "gdextension_reload_node.h"
 
-#include "core/extension/gdextension.h"
+#include "core/extension/gdextension_manager.h"
+#include "editor/editor_inspector.h"
+#include "editor/editor_interface.h"
 
-class GDExtensionManager : public Object {
-	GDCLASS(GDExtensionManager, Object);
+void GDExtensionReloadNode::_bind_methods() {
+}
 
-	int32_t level = -1;
-	HashMap<String, Ref<GDExtension>> gdextension_map;
-	HashMap<String, String> gdextension_class_icon_paths;
+void GDExtensionReloadNode::_notification(int p_what) {
+	switch (p_what) {
+		case NOTIFICATION_APPLICATION_FOCUS_OUT: {
+			unfocused = true;
+		} break;
 
-	static void _bind_methods();
+		case NOTIFICATION_APPLICATION_FOCUS_IN: {
+			callable_mp(this, &GDExtensionReloadNode::_deferred_reload).call_deferred();
+		} break;
+	}
+}
 
-	static GDExtensionManager *singleton;
+void GDExtensionReloadNode::_deferred_reload() {
+	if (!unfocused) {
+		return;
+	}
+	unfocused = false;
 
-public:
-	enum LoadStatus {
-		LOAD_STATUS_OK,
-		LOAD_STATUS_FAILED,
-		LOAD_STATUS_ALREADY_LOADED,
-		LOAD_STATUS_NOT_LOADED,
-		LOAD_STATUS_NEEDS_RESTART,
-	};
+	GDExtensionManager *gdextension_manager = GDExtensionManager::get_singleton();
 
-private:
-	LoadStatus _load_extension_internal(const Ref<GDExtension> &p_extension);
-	LoadStatus _unload_extension_internal(const Ref<GDExtension> &p_extension);
+	Vector<String> extensions = gdextension_manager->get_loaded_extensions();
+	bool reloaded = false;
+	for (const String &extension_name : extensions) {
+		Ref<GDExtension> extension = gdextension_manager->get_extension(extension_name);
 
-public:
-	LoadStatus load_extension(const String &p_path);
-	LoadStatus reload_extension(const String &p_path);
-	LoadStatus unload_extension(const String &p_path);
-	bool is_extension_loaded(const String &p_path) const;
-	Vector<String> get_loaded_extensions() const;
-	Ref<GDExtension> get_extension(const String &p_path);
+		if (!extension->is_reloadable()) {
+			continue;
+		}
 
-	bool class_has_icon_path(const String &p_class) const;
-	String class_get_icon_path(const String &p_class) const;
+		if (extension->has_library_changed()) {
+			reloaded = true;
+			gdextension_manager->reload_extension(extension->get_path());
+		}
+	}
 
-	void initialize_extensions(GDExtension::InitializationLevel p_level);
-	void deinitialize_extensions(GDExtension::InitializationLevel p_level);
-
-	static GDExtensionManager *get_singleton();
-
-	void load_extensions();
-
-	GDExtensionManager();
-};
-
-VARIANT_ENUM_CAST(GDExtensionManager::LoadStatus)
-
-#endif // GDEXTENSION_MANAGER_H
+	if (reloaded) {
+		// In case the developer is inspecting a node whose class was reloaded.
+		EditorInterface::get_singleton()->get_inspector()->update_tree();
+	}
+}

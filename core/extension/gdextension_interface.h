@@ -266,6 +266,7 @@ typedef void (*GDExtensionClassReference)(GDExtensionClassInstancePtr p_instance
 typedef void (*GDExtensionClassUnreference)(GDExtensionClassInstancePtr p_instance);
 typedef void (*GDExtensionClassCallVirtual)(GDExtensionClassInstancePtr p_instance, const GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_ret);
 typedef GDExtensionObjectPtr (*GDExtensionClassCreateInstance)(void *p_userdata);
+typedef GDExtensionClassInstancePtr (*GDExtensionClassRecreateInstance)(void *p_userdata, GDExtensionObjectPtr p_object);
 typedef void (*GDExtensionClassFreeInstance)(void *p_userdata, GDExtensionClassInstancePtr p_instance);
 typedef GDExtensionClassCallVirtual (*GDExtensionClassGetVirtual)(void *p_userdata, GDExtensionConstStringNamePtr p_name);
 
@@ -306,6 +307,7 @@ typedef struct {
 	GDExtensionClassUnreference unreference_func;
 	GDExtensionClassCreateInstance create_instance_func; // (Default) constructor; mandatory. If the class is not instantiable, consider making it virtual or abstract.
 	GDExtensionClassFreeInstance free_instance_func; // Destructor; mandatory.
+	GDExtensionClassRecreateInstance recreate_instance_func;
 	GDExtensionClassGetVirtual get_virtual_func; // Queries a virtual function by name and returns a callback to invoke the requested virtual function.
 	GDExtensionClassGetRID get_rid_func;
 	void *class_userdata; // Per-class user data, later accessible in instance bindings.

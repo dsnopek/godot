@@ -780,8 +780,34 @@ void GDExtension::prepare_reload() {
 				continue;
 			}
 
-			// @todo Store instance state so it can be restored after reload.
+			// Store instance state so it can be restored after reload.
+			List<Pair<String, Variant>> state;
+			List<PropertyInfo> prop_list;
+			obj->get_property_list(&prop_list);
+			for (const PropertyInfo &P : prop_list) {
+				if (!(P.usage & PROPERTY_USAGE_STORAGE)) {
+					continue;
+				}
 
+				Variant value = obj->get(P.name);
+				Variant default_value = ClassDB::class_get_default_property_value(obj->get_class_name(), P.name);
+
+				if (default_value.get_type() != Variant::NIL && bool(Variant::evaluate(Variant::OP_EQUAL, value, default_value))) {
+					continue;
+				}
+
+				if (P.type == Variant::OBJECT && value.is_zero() && !(P.usage & PROPERTY_USAGE_STORE_IF_NULL)) {
+					continue;
+				}
+
+				state.push_back(Pair<String, Variant>(P.name, value));
+			}
+			if (state.size() > 0) {
+				E.value.instance_state[obj_id] = state;
+			}
+
+			// Clear the object of all GDExtension data. It will become its native parent class
+			// until the reload can reset the object with the new GDExtension data.
 			obj->clear_internal_gdextension();
 		}
 	}
@@ -826,7 +852,11 @@ void GDExtension::finish_reload() {
 
 			obj->reset_internal_gdextension(&E.value.gdextension);
 
-			// @todo Restore state of properties for object.
+			if (E.value.instance_state.has(obj_id)) {
+				for (const Pair<String, Variant> &state : E.value.instance_state[obj_id]) {
+					obj->set(state.first, state.second);
+				}
+			}
 		}
 	}
 }

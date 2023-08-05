@@ -53,6 +53,11 @@ public:
 		LOAD_STATUS_NEEDS_RESTART,
 	};
 
+private:
+	LoadStatus _load_extension_internal(const Ref<GDExtension> &p_extension);
+	LoadStatus _unload_extension_internal(const Ref<GDExtension> &p_extension);
+
+public:
 	LoadStatus load_extension(const String &p_path);
 	LoadStatus reload_extension(const String &p_path);
 	LoadStatus unload_extension(const String &p_path);

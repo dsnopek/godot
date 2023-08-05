@@ -342,6 +342,13 @@ struct ObjectGDExtension {
 	GDExtensionClassCreateInstance create_instance;
 	GDExtensionClassFreeInstance free_instance;
 	GDExtensionClassGetVirtual get_virtual;
+	GDExtensionClassRecreateInstance recreate_instance;
+
+#ifdef TOOLS_ENABLED
+	void *tracking_userdata = nullptr;
+	void (*track_instance)(void *p_userdata, void *p_instance);
+	void (*untrack_instance)(void *p_userdata, void *p_instance);
+#endif
 };
 
 #define GDVIRTUAL_CALL(m_name, ...) _gdvirtual_##m_name##_call<false>(__VA_ARGS__)
@@ -740,6 +747,16 @@ protected:
 
 	bool _disconnect(const StringName &p_signal, const Callable &p_callable, bool p_force = false);
 
+#ifdef TOOLS_ENABLED
+	struct VirtualMethodTracker {
+		void **method;
+		bool *initialized;
+		VirtualMethodTracker *next;
+	};
+
+	mutable VirtualMethodTracker *virtual_method_list = nullptr;
+#endif
+
 public: // Should be protected, but bug in clang++.
 	static void initialize_class();
 	_FORCE_INLINE_ static void register_custom_data_to_otdb() {}
@@ -941,6 +958,9 @@ public:
 	// Used on creation by binding only.
 	void set_instance_binding(void *p_token, void *p_binding, const GDExtensionInstanceBindingCallbacks *p_callbacks);
 	bool has_instance_binding(void *p_token);
+
+	void clear_internal_gdextension();
+	void reset_internal_gdextension(ObjectGDExtension *p_extension);
 
 	void clear_internal_resource_paths();
 

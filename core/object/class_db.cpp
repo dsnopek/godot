@@ -347,7 +347,13 @@ Object *ClassDB::instantiate(const StringName &p_class) {
 	}
 #endif
 	if (ti->gdextension && ti->gdextension->create_instance) {
-		return (Object *)ti->gdextension->create_instance(ti->gdextension->class_userdata);
+		Object *obj = (Object *)ti->gdextension->create_instance(ti->gdextension->class_userdata);
+#ifdef TOOLS_ENABLED
+		if (ti->gdextension->track_instance) {
+			ti->gdextension->track_instance(ti->gdextension->tracking_userdata, obj);
+		}
+#endif
+		return obj;
 	} else {
 		return ti->creation_func();
 	}
@@ -1671,11 +1677,13 @@ void ClassDB::register_extension_class(ObjectGDExtension *p_extension) {
 	classes[p_extension->class_name] = c;
 }
 
-void ClassDB::unregister_extension_class(const StringName &p_class) {
+void ClassDB::unregister_extension_class(const StringName &p_class, bool free_method_binds) {
 	ClassInfo *c = classes.getptr(p_class);
 	ERR_FAIL_COND_MSG(!c, "Class " + p_class + "does not exist");
-	for (KeyValue<StringName, MethodBind *> &F : c->method_map) {
-		memdelete(F.value);
+	if (free_method_binds) {
+		for (KeyValue<StringName, MethodBind *> &F : c->method_map) {
+			memdelete(F.value);
+		}
 	}
 	classes.erase(p_class);
 }

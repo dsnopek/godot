@@ -1,4 +1,15 @@
 proto = """
+#ifdef TOOLS_ENABLED
+#define GDVIRTUAL_TRACK(m_virtual, m_initialized) \\
+    VirtualMethodTracker *tracker = memnew(VirtualMethodTracker);\\
+    tracker->method = (void **)&m_virtual;\\
+    tracker->initialized = &m_initialized;\\
+    tracker->next = virtual_method_list;\\
+    virtual_method_list = tracker;
+#else
+#define GDVIRTUAL_TRACK(m_virtual)
+#endif
+
 #define GDVIRTUAL$VER($RET m_name $ARG) \\
 StringName _gdvirtual_##m_name##_sn = #m_name;\\
 mutable bool _gdvirtual_##m_name##_initialized = false;\\
@@ -18,6 +29,7 @@ _FORCE_INLINE_ bool _gdvirtual_##m_name##_call($CALLARGS) $CONST { \\
     if (unlikely(_get_extension() && !_gdvirtual_##m_name##_initialized)) {\\
         /* TODO: C-style cast because GDExtensionStringNamePtr's const qualifier is broken (see https://github.com/godotengine/godot/pull/67751) */\\
         _gdvirtual_##m_name = (_get_extension() && _get_extension()->get_virtual) ? _get_extension()->get_virtual(_get_extension()->class_userdata, (GDExtensionStringNamePtr)&_gdvirtual_##m_name##_sn) : (GDExtensionClassCallVirtual) nullptr;\\
+        GDVIRTUAL_TRACK(_gdvirtual_##m_name, _gdvirtual_##m_name##_initialized); \\
         _gdvirtual_##m_name##_initialized = true;\\
     }\\
 	if (_gdvirtual_##m_name) {\\
@@ -43,6 +55,7 @@ _FORCE_INLINE_ bool _gdvirtual_##m_name##_overridden() const { \\
     if (unlikely(_get_extension() && !_gdvirtual_##m_name##_initialized)) {\\
         /* TODO: C-style cast because GDExtensionStringNamePtr's const qualifier is broken (see https://github.com/godotengine/godot/pull/67751) */\\
         _gdvirtual_##m_name = (_get_extension() && _get_extension()->get_virtual) ? _get_extension()->get_virtual(_get_extension()->class_userdata, (GDExtensionStringNamePtr)&_gdvirtual_##m_name##_sn) : (GDExtensionClassCallVirtual) nullptr;\\
+        GDVIRTUAL_TRACK(_gdvirtual_##m_name, _gdvirtual_##m_name##_initialized); \\
         _gdvirtual_##m_name##_initialized = true;\\
     }\\
 	if (_gdvirtual_##m_name) {\\

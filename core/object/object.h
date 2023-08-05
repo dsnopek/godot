@@ -747,6 +747,16 @@ protected:
 
 	bool _disconnect(const StringName &p_signal, const Callable &p_callable, bool p_force = false);
 
+#ifdef TOOLS_ENABLED
+	struct VirtualMethodTracker {
+		void **method;
+		bool *initialized;
+		VirtualMethodTracker *next;
+	};
+
+	mutable VirtualMethodTracker *virtual_method_list = nullptr;
+#endif
+
 public: // Should be protected, but bug in clang++.
 	static void initialize_class();
 	_FORCE_INLINE_ static void register_custom_data_to_otdb() {}

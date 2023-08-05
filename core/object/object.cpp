@@ -1822,7 +1822,12 @@ void Object::clear_internal_gdextension() {
 	_instance_bindings = nullptr;
 	_instance_binding_mutex.unlock();
 
-	// @todo Clear the virtual methods.
+	// Clear the virtual methods.
+	while (virtual_method_list) {
+		(*virtual_method_list->method) = nullptr;
+		(*virtual_method_list->initialized) = false;
+		virtual_method_list = virtual_method_list->next;
+	}
 }
 
 void Object::reset_internal_gdextension(ObjectGDExtension *p_extension) {

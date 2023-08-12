@@ -44,7 +44,6 @@ class GDExtension : public Resource {
 	GDCLASS(GDExtension, Resource)
 
 	friend class GDExtensionManager;
-	friend class GDExtensionResourceLoader;
 
 	void *library = nullptr; // pointer if valid,
 	String library_path;

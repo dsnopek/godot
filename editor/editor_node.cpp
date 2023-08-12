@@ -103,6 +103,7 @@
 #include "editor/export/project_export.h"
 #include "editor/fbx_importer_manager.h"
 #include "editor/filesystem_dock.h"
+#include "editor/gdextension_reload_node.h"
 #include "editor/gui/editor_file_dialog.h"
 #include "editor/gui/editor_run_bar.h"
 #include "editor/gui/editor_title_bar.h"
@@ -7022,6 +7023,9 @@ EditorNode::EditorNode() {
 	}
 
 	editor_selection = memnew(EditorSelection);
+
+	GDExtensionReloadNode *gdern = memnew(GDExtensionReloadNode);
+	add_child(gdern);
 
 	EditorFileSystem *efs = memnew(EditorFileSystem);
 	add_child(efs);

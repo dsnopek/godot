@@ -713,6 +713,9 @@ Error GDExtensionResourceLoader::load_gdextension_resource(const String &p_path,
 	if (p_extension.is_null()) {
 		p_extension.instantiate();
 	}
+
+	p_extension->set_reloadable(config->get_value("configuration", "reloadable", false));
+
 	String abs_path = ProjectSettings::get_singleton()->globalize_path(library_path);
 	err = p_extension->open_library(abs_path, entry_symbol);
 
@@ -720,6 +723,10 @@ Error GDExtensionResourceLoader::load_gdextension_resource(const String &p_path,
 		// Errors already logged in open_library()
 		return err;
 	}
+
+	p_extension->update_last_modified_time(MAX(
+			FileAccess::get_modified_time(library_path),
+			FileAccess::get_modified_time(p_path)));
 
 	// Handle icons if any are specified.
 	if (config->has_section("icons")) {
@@ -760,6 +767,16 @@ String GDExtensionResourceLoader::get_resource_type(const String &p_path) const 
 }
 
 #ifdef TOOLS_ENABLED
+bool GDExtension::has_library_changed() const {
+	if (FileAccess::get_modified_time(get_path()) > last_modified_time) {
+		return true;
+	}
+	if (FileAccess::get_modified_time(library_path) > last_modified_time) {
+		return true;
+	}
+	return false;
+}
+
 void GDExtension::prepare_reload() {
 	is_reloading = true;
 

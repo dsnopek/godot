@@ -44,9 +44,11 @@ class GDExtension : public Resource {
 	GDCLASS(GDExtension, Resource)
 
 	friend class GDExtensionManager;
+	friend class GDExtensionResourceLoader;
 
 	void *library = nullptr; // pointer if valid,
 	String library_path;
+	bool reloadable = false;
 
 	struct Extension {
 		ObjectGDExtension gdextension;
@@ -76,6 +78,7 @@ class GDExtension : public Resource {
 	int32_t level_initialized = -1;
 
 #ifdef TOOLS_ENABLED
+	uint64_t last_modified_time = 0;
 	bool is_reloading = false;
 	Vector<GDExtensionMethodBind *> invalid_methods;
 
@@ -107,6 +110,16 @@ public:
 	};
 
 	bool is_library_open() const;
+
+#ifdef TOOLS_ENABLED
+	bool is_reloadable() const { return reloadable; }
+	void set_reloadable(bool p_reloadable) { reloadable = p_reloadable; }
+
+	bool has_library_changed() const;
+	void update_last_modified_time(uint64_t p_last_modified_time) {
+		last_modified_time = MAX(last_modified_time, p_last_modified_time);
+	}
+#endif
 
 	InitializationLevel get_minimum_library_initialization_level() const;
 	void initialize_library(InitializationLevel p_level);

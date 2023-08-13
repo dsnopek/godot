@@ -63,6 +63,10 @@ struct _ObjectDebugLock {
 
 #endif
 
+#ifdef TOOLS_ENABLED
+bool Object::track_virtual_methods = false;
+#endif
+
 PropertyInfo::operator Dictionary() const {
 	Dictionary d;
 	d["name"] = name;

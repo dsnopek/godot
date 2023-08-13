@@ -87,11 +87,15 @@ GDExtensionManager::LoadStatus GDExtensionManager::reload_extension(const String
 #ifndef TOOLS_ENABLED
 	ERR_FAIL_V_MSG(LOAD_STATUS_FAILED, "GDExtensions can only be reloaded in an editor build");
 #else
+	ERR_FAIL_COND_V_MSG(!Engine::get_singleton()->is_extension_reloading_enabled(), LOAD_STATUS_FAILED, "GDExtension reloading is disabled");
+
 	if (!gdextension_map.has(p_path)) {
 		return LOAD_STATUS_NOT_LOADED;
 	}
 
 	Ref<GDExtension> extension = gdextension_map[p_path];
+	ERR_FAIL_COND_V_MSG(!extension->is_reloadable(), LOAD_STATUS_FAILED, vformat("This GDExtension is not marked as 'reloadable': %s", p_path));
+
 	LoadStatus status;
 
 	extension->prepare_reload();

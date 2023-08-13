@@ -375,9 +375,15 @@ void GDExtension::_register_extension_class(GDExtensionClassLibraryPtr p_library
 	extension->gdextension.recreate_instance = p_extension_funcs->recreate_instance_func;
 
 #ifdef TOOLS_ENABLED
-	extension->gdextension.tracking_userdata = extension;
-	extension->gdextension.track_instance = &GDExtension::_track_instance;
-	extension->gdextension.untrack_instance = &GDExtension::_untrack_instance;
+	if (Engine::get_singleton()->is_extension_reloading_enabled()) {
+		extension->gdextension.tracking_userdata = extension;
+		extension->gdextension.track_instance = &GDExtension::_track_instance;
+		extension->gdextension.untrack_instance = &GDExtension::_untrack_instance;
+	} else {
+		extension->gdextension.tracking_userdata = nullptr;
+		extension->gdextension.track_instance = nullptr;
+		extension->gdextension.untrack_instance = nullptr;
+	}
 #endif
 
 	ClassDB::register_extension_class(&extension->gdextension);
@@ -875,6 +881,7 @@ void GDExtension::finish_reload() {
 				}
 			}
 		}
+		E.value.instance_state.clear();
 	}
 }
 

@@ -748,6 +748,8 @@ protected:
 	bool _disconnect(const StringName &p_signal, const Callable &p_callable, bool p_force = false);
 
 #ifdef TOOLS_ENABLED
+	friend class Engine;
+
 	struct VirtualMethodTracker {
 		void **method;
 		bool *initialized;
@@ -755,6 +757,7 @@ protected:
 	};
 
 	mutable VirtualMethodTracker *virtual_method_list = nullptr;
+	static bool track_virtual_methods;
 #endif
 
 public: // Should be protected, but bug in clang++.

@@ -1,15 +1,4 @@
 proto = """
-#ifdef TOOLS_ENABLED
-#define GDVIRTUAL_TRACK(m_virtual, m_initialized) \\
-    VirtualMethodTracker *tracker = memnew(VirtualMethodTracker);\\
-    tracker->method = (void **)&m_virtual;\\
-    tracker->initialized = &m_initialized;\\
-    tracker->next = virtual_method_list;\\
-    virtual_method_list = tracker;
-#else
-#define GDVIRTUAL_TRACK(m_virtual, m_initialized)
-#endif
-
 #define GDVIRTUAL$VER($RET m_name $ARG) \\
 StringName _gdvirtual_##m_name##_sn = #m_name;\\
 mutable bool _gdvirtual_##m_name##_initialized = false;\\
@@ -173,6 +162,18 @@ def run(target, source, env):
 #ifndef GDVIRTUAL_GEN_H
 #define GDVIRTUAL_GEN_H
 
+#ifdef TOOLS_ENABLED
+#define GDVIRTUAL_TRACK(m_virtual, m_initialized) \\
+    if (Object::track_virtual_methods) {\\
+        VirtualMethodTracker *tracker = memnew(VirtualMethodTracker);\\
+        tracker->method = (void **)&m_virtual;\\
+        tracker->initialized = &m_initialized;\\
+        tracker->next = virtual_method_list;\\
+        virtual_method_list = tracker;\\
+    }
+#else
+#define GDVIRTUAL_TRACK(m_virtual, m_initialized)
+#endif
 
 """
 

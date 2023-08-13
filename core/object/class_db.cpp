@@ -1550,6 +1550,14 @@ bool ClassDB::is_class_exposed(const StringName &p_class) {
 	return ti->exposed;
 }
 
+bool ClassDB::is_class_reloadable(const StringName &p_class) {
+	OBJTYPE_RLOCK;
+
+	ClassInfo *ti = classes.getptr(p_class);
+	ERR_FAIL_COND_V_MSG(!ti, false, "Cannot get class '" + String(p_class) + "'.");
+	return ti->reloadable;
+}
+
 void ClassDB::add_resource_base_extension(const StringName &p_extension, const StringName &p_class) {
 	if (resource_base_extensions.has(p_extension)) {
 		return;
@@ -1653,7 +1661,7 @@ Variant ClassDB::class_get_default_property_value(const StringName &p_class, con
 	return var;
 }
 
-void ClassDB::register_extension_class(ObjectGDExtension *p_extension) {
+void ClassDB::register_extension_class(ObjectGDExtension *p_extension, bool p_reloadable) {
 	GLOBAL_LOCK_FUNCTION;
 
 	ERR_FAIL_COND_MSG(classes.has(p_extension->class_name), "Class already registered: " + String(p_extension->class_name));
@@ -1673,6 +1681,7 @@ void ClassDB::register_extension_class(ObjectGDExtension *p_extension) {
 	c.class_ptr = parent->class_ptr;
 	c.inherits_ptr = parent;
 	c.exposed = true;
+	c.reloadable = p_reloadable && Engine::get_singleton()->is_extension_reloading_enabled();
 
 	classes[p_extension->class_name] = c;
 }

@@ -386,7 +386,7 @@ void GDExtension::_register_extension_class(GDExtensionClassLibraryPtr p_library
 	}
 #endif
 
-	ClassDB::register_extension_class(&extension->gdextension);
+	ClassDB::register_extension_class(&extension->gdextension, self->reloadable);
 }
 void GDExtension::_register_extension_class_method(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, const GDExtensionClassMethodInfo *p_method_info) {
 	GDExtension *self = reinterpret_cast<GDExtension *>(p_library);

@@ -715,6 +715,10 @@ void GDExtension::close_library() {
 
 	library = nullptr;
 	class_icon_paths.clear();
+
+#ifdef TOOLS_ENABLED
+	instance_bindings.clear();
+#endif
 }
 
 bool GDExtension::is_library_open() const {
@@ -1030,6 +1034,10 @@ void GDExtension::_clear_extension(Extension *p_extension) {
 
 void GDExtension::track_instance_binding(Object *p_object) {
 	instance_bindings.push_back(p_object->get_instance_id());
+}
+
+void GDExtension::untrack_instance_binding(Object *p_object) {
+	instance_bindings.erase(p_object->get_instance_id());
 }
 
 void GDExtension::clear_instance_bindings() {

@@ -142,6 +142,7 @@ public:
 	}
 
 	void track_instance_binding(Object *p_object);
+	void untrack_instance_binding(Object *p_object);
 #endif
 
 	InitializationLevel get_minimum_library_initialization_level() const;

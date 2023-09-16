@@ -1830,9 +1830,11 @@ void *Object::get_instance_binding(void *p_token, const GDExtensionInstanceBindi
 		_instance_bindings[_instance_binding_count].binding = binding;
 
 #ifdef TOOLS_ENABLED
-		GDExtension *library = (GDExtension *)p_token;
-		if (library->is_reloadable()) {
-			library->track_instance_binding(this);
+		if (!_extension) {
+			GDExtension *library = (GDExtension *)p_token;
+			if (library->is_reloadable()) {
+				library->track_instance_binding(this);
+			}
 		}
 #endif
 
@@ -1896,6 +1898,9 @@ void Object::clear_internal_extension() {
 
 	// Clear the instance bindings.
 	_instance_binding_mutex.lock();
+	if (_instance_bindings[0].free_callback) {
+		_instance_bindings[0].free_callback(_instance_bindings[0].token, this, _instance_bindings[0].binding);
+	}
 	_instance_bindings[0].binding = nullptr;
 	_instance_bindings[0].token = nullptr;
 	_instance_bindings[0].free_callback = nullptr;
@@ -1951,16 +1956,28 @@ Object::~Object() {
 	}
 	script_instance = nullptr;
 
-	if (_extension && _extension->free_instance) {
+	if (_extension) {
 #ifdef TOOLS_ENABLED
 		if (_extension->untrack_instance) {
 			_extension->untrack_instance(_extension->tracking_userdata, this);
 		}
 #endif
-		_extension->free_instance(_extension->class_userdata, _extension_instance);
+		if (_extension->free_instance) {
+			_extension->free_instance(_extension->class_userdata, _extension_instance);
+		}
 		_extension = nullptr;
 		_extension_instance = nullptr;
 	}
+#ifdef TOOLS_ENALED
+	else if (_instance_bindings != nullptr) {
+		for (uint32_t i = 0; i < _instance_binding_count; i++) {
+			GDExtension *library = (GDExtension *)_instance_bindings.token;
+			if (library->is_reloadable()) {
+				library->untrack_instance_binding(this);
+			}
+		}
+	}
+#endif
 
 	if (_emitting) {
 		//@todo this may need to actually reach the debugger prioritarily somehow because it may crash before

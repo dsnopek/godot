@@ -3271,8 +3271,7 @@ void EditorNode::remove_extension_editor_plugin(const StringName &p_class_name) 
 
 	EditorPlugin *plugin = singleton->editor_data.get_extension_editor_plugin(p_class_name);
 	remove_editor_plugin(plugin);
-	plugin->queue_free();
-	//memfree(plugin);
+	memdelete(plugin);
 	singleton->editor_data.remove_extension_editor_plugin(p_class_name);
 }
 

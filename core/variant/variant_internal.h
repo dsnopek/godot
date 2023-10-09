@@ -341,10 +341,10 @@ public:
 		}
 	}
 
-	_FORCE_INLINE_ static void *get_opaque_pointer(Variant *v) {
+	_FORCE_INLINE_ static void *get_opaque_pointer(Variant *v, bool ptr_to_null = false) {
 		switch (v->type) {
 			case Variant::NIL:
-				return v->_data._ptr;
+				return ptr_to_null ? v->_data._ptr : nullptr;
 			case Variant::BOOL:
 				return get_bool(v);
 			case Variant::INT:
@@ -428,7 +428,7 @@ public:
 	_FORCE_INLINE_ static const void *get_opaque_pointer(const Variant *v) {
 		switch (v->type) {
 			case Variant::NIL:
-				return v->_data._ptr;
+				return nullptr;
 			case Variant::BOOL:
 				return get_bool(v);
 			case Variant::INT:

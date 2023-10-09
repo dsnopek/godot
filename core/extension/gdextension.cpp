@@ -234,7 +234,8 @@ public:
 			void *ret_opaque = nullptr;
 			if (r_ret) {
 				VariantInternal::initialize(r_ret, return_value_info.type);
-				ret_opaque = VariantInternal::get_opaque_pointer(r_ret);
+				ret_opaque = VariantInternal::get_opaque_pointer(r_ret, true);
+				//ret_opaque = VariantInternal::get_opaque_pointer(r_ret);
 			}
 
 			ptrcall(p_object, argptrs, ret_opaque);

@@ -769,6 +769,28 @@ void TextureStorage::texture_2d_initialize(RID p_texture, const Ref<Image> &p_im
 	texture_set_data(p_texture, p_image);
 }
 
+void TextureStorage::texture_external_initialize(RID p_texture, int p_width, int p_height, uint64_t p_external_buffer) {
+	Texture texture;
+	texture.active = true;
+	texture.alloc_width = texture.width = p_width;
+	texture.alloc_height = texture.height = p_height;
+	texture.real_format = texture.format = Image::FORMAT_RGB8;
+	texture.type = Texture::TYPE_2D;
+	texture.target = _GL_TEXTURE_EXTERNAL_OES;
+
+	glGenTextures(1, &texture.tex_id);
+	glBindTexture(_GL_TEXTURE_EXTERNAL_OES, texture.tex_id);
+
+	// @todo Use glEGLImageTargetTexture2DOES() to attach p_external_buffer - this isn't needed in most cases, though
+
+	glTexParameteri(_GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(_GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(_GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(_GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	texture_owner.initialize_rid(p_texture, texture);
+}
+
 void TextureStorage::texture_2d_layered_initialize(RID p_texture, const Vector<Ref<Image>> &p_layers, RS::TextureLayeredType p_layered_type) {
 	ERR_FAIL_COND(p_layers.is_empty());
 
@@ -928,6 +950,17 @@ void TextureStorage::texture_3d_update(RID p_texture, const Vector<Ref<Image>> &
 	_texture_set_3d_data(p_texture, p_data, false);
 
 	GLES3::Utilities::get_singleton()->texture_resize_data(tex->tex_id, tex->total_data_size);
+}
+
+void TextureStorage::texture_external_update(RID p_texture, int p_width, int p_height, uint64_t p_external_buffer) {
+	Texture *tex = texture_owner.get_or_null(p_texture);
+	ERR_FAIL_NULL(tex);
+	ERR_FAIL_COND(tex->target != _GL_TEXTURE_EXTERNAL_OES);
+
+	tex->alloc_width = tex->width = p_width;
+	tex->alloc_height = tex->height = p_height;
+
+	// @todo Use glEGLImageTargetTexture2DOES() to attach p_external_buffer
 }
 
 void TextureStorage::texture_proxy_update(RID p_texture, RID p_proxy_to) {

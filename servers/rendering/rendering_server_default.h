@@ -177,6 +177,7 @@ public:
 	FUNCRIDTEX1(texture_2d, const Ref<Image> &)
 	FUNCRIDTEX2(texture_2d_layered, const Vector<Ref<Image>> &, TextureLayeredType)
 	FUNCRIDTEX6(texture_3d, Image::Format, int, int, int, bool, const Vector<Ref<Image>> &)
+	FUNCRIDTEX2(texture_external, int, int)
 	FUNCRIDTEX1(texture_proxy, RID)
 
 	// Called directly, not through the command queue.

@@ -179,8 +179,18 @@ private:
 	/* LIGHTMAP */
 
 	Vector<RID> lightmap_textures;
+	float lightmap_probe_capture_update_speed = 4;
 
 	mutable RID_Owner<Lightmap, true> lightmap_owner;
+
+	/* LIGHTMAP INSTANCE */
+
+	struct LightmapInstance {
+		RID lightmap;
+		Transform3D transform;
+	};
+
+	mutable RID_Owner<LightmapInstance> lightmap_instance_owner;
 
 	/* SHADOW ATLAS */
 

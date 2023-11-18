@@ -108,6 +108,7 @@ struct RenderDataGLES3 {
 	const PagedArray<RenderGeometryInstance *> *instances = nullptr;
 	const PagedArray<RID> *lights = nullptr;
 	const PagedArray<RID> *reflection_probes = nullptr;
+	const PagedArray<RID> *lightmaps = nullptr;
 	RID environment;
 	RID camera_attributes;
 	RID shadow_atlas;
@@ -514,6 +515,7 @@ private:
 	RenderList render_list[RENDER_LIST_MAX];
 
 	void _setup_lights(const RenderDataGLES3 *p_render_data, bool p_using_shadows, uint32_t &r_directional_light_count, uint32_t &r_omni_light_count, uint32_t &r_spot_light_count, uint32_t &r_directional_shadow_count);
+	void _setup_lightmaps(const RenderDataGLES3 *p_render_data, const PagedArray<RID> &p_lightmaps, const Transform3D &p_cam_transform);
 	void _setup_environment(const RenderDataGLES3 *p_render_data, bool p_no_fog, const Size2i &p_screen_size, bool p_flip_y, const Color &p_default_bg_color, bool p_pancake_shadows, float p_shadow_bias = 0.0);
 	void _fill_render_list(RenderListType p_render_list, const RenderDataGLES3 *p_render_data, PassMode p_pass_mode, bool p_append = false);
 	void _render_shadows(const RenderDataGLES3 *p_render_data, const Size2i &p_viewport_size = Size2i(1, 1));

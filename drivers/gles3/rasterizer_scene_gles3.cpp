@@ -1910,6 +1910,9 @@ void RasterizerSceneGLES3::_setup_lights(const RenderDataGLES3 *p_render_data, b
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
+void RasterizerSceneGLES3::_setup_lightmaps(const RenderDataGLES3 *p_render_data, const PagedArray<RID> &p_lightmaps, const Transform3D &p_cam_transform) {
+}
+
 // Render shadows
 void RasterizerSceneGLES3::_render_shadows(const RenderDataGLES3 *p_render_data, const Size2i &p_viewport_size) {
 	GLES3::LightStorage *light_storage = GLES3::LightStorage::get_singleton();
@@ -2193,6 +2196,7 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 
 		render_data.instances = &p_instances;
 		render_data.lights = &p_lights;
+		render_data.lightmaps = &p_lightmaps;
 		render_data.reflection_probes = &p_reflection_probes;
 		render_data.environment = p_environment;
 		render_data.camera_attributes = p_camera_attributes;
@@ -2217,6 +2221,7 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 
 	if (get_debug_draw_mode() == RS::VIEWPORT_DEBUG_DRAW_UNSHADED) {
 		render_data.lights = &empty;
+		render_data.lightmaps = &empty;
 		render_data.reflection_probes = &empty;
 	}
 
@@ -2279,6 +2284,7 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 	_render_shadows(&render_data, screen_size);
 
 	_setup_lights(&render_data, true, render_data.directional_light_count, render_data.omni_light_count, render_data.spot_light_count, render_data.directional_shadow_count);
+	_setup_lightmaps(&render_data, *render_data.lightmaps, render_data.cam_transform);
 	_setup_environment(&render_data, render_data.reflection_probe.is_valid(), screen_size, flip_y, clear_color, false);
 
 	_fill_render_list(RENDER_LIST_OPAQUE, &render_data, PASS_MODE_COLOR);

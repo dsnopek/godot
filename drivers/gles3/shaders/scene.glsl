@@ -1,7 +1,7 @@
 /* clang-format off */
 #[modes]
 
-mode_color = 
+mode_color =
 mode_color_instancing = \n#define USE_INSTANCING
 mode_depth = #define MODE_RENDER_DEPTH
 mode_depth_instancing = #define MODE_RENDER_DEPTH \n#define USE_INSTANCING
@@ -241,6 +241,15 @@ uniform highp mat4 world_transform;
 uniform highp vec3 compressed_aabb_position;
 uniform highp vec3 compressed_aabb_size;
 uniform highp vec4 uv_scale;
+
+#ifdef USE_LIGHTMAP
+uniform mediump sampler2DArray lightmap_textures; //texunit:-11
+uniform lowp uint gi_offset;
+#endif
+
+#ifdef USE_LIGHTMAP_CAPTURE
+uniform mediump vec4[12] lightmap_captures;
+#endif
 
 /* Varyings */
 
@@ -1395,7 +1404,6 @@ void main() {
 #endif
 
 	// Calculate Reflection probes
-	// Calculate Lightmaps
 
 #if defined(CUSTOM_RADIANCE_USED)
 	specular_light = mix(specular_light, custom_radiance.rgb, custom_radiance.a);
@@ -1419,6 +1427,66 @@ void main() {
 #if defined(CUSTOM_IRRADIANCE_USED)
 	ambient_light = mix(ambient_light, custom_irradiance.rgb, custom_irradiance.a);
 #endif // CUSTOM_IRRADIANCE_USED
+
+#ifdef USE_LIGHTMAP_CAPTURE
+	{
+		uint index = instances.data[draw_call.instance_index].gi_offset;
+
+		vec3 wnormal = mat3(scene_data.inv_view_matrix) * normal;
+		const float c1 = 0.429043;
+		const float c2 = 0.511664;
+		const float c3 = 0.743125;
+		const float c4 = 0.886227;
+		const float c5 = 0.247708;
+		ambient_light += (c1 * lightmap_captures.data[index].sh[8].rgb * (wnormal.x * wnormal.x - wnormal.y * wnormal.y) +
+								 c3 * lightmap_captures.data[index].sh[6].rgb * wnormal.z * wnormal.z +
+								 c4 * lightmap_captures.data[index].sh[0].rgb -
+								 c5 * lightmap_captures.data[index].sh[6].rgb +
+								 2.0 * c1 * lightmap_captures.data[index].sh[4].rgb * wnormal.x * wnormal.y +
+								 2.0 * c1 * lightmap_captures.data[index].sh[7].rgb * wnormal.x * wnormal.z +
+								 2.0 * c1 * lightmap_captures.data[index].sh[5].rgb * wnormal.y * wnormal.z +
+								 2.0 * c2 * lightmap_captures.data[index].sh[3].rgb * wnormal.x +
+								 2.0 * c2 * lightmap_captures.data[index].sh[1].rgb * wnormal.y +
+								 2.0 * c2 * lightmap_captures.data[index].sh[2].rgb * wnormal.z) *
+				scene_data.emissive_exposure_normalization;
+	}
+#else
+#ifdef USE_LIGHTMAP
+	{
+		bool uses_sh = bool(instances.data[draw_call.instance_index].flags & INSTANCE_FLAGS_USE_SH_LIGHTMAP);
+		uint ofs = instances.data[draw_call.instance_index].gi_offset & 0xFFFF;
+		uint slice = instances.data[draw_call.instance_index].gi_offset >> 16;
+		vec3 uvw;
+		uvw.xy = uv2 * instances.data[draw_call.instance_index].lightmap_uv_scale.zw + instances.data[draw_call.instance_index].lightmap_uv_scale.xy;
+		uvw.z = float(slice);
+
+		if (uses_sh) {
+			uvw.z *= 4.0; //SH textures use 4 times more data
+			vec3 lm_light_l0 = textureLod(sampler2DArray(lightmap_textures[ofs], SAMPLER_LINEAR_CLAMP), uvw + vec3(0.0, 0.0, 0.0), 0.0).rgb;
+			vec3 lm_light_l1n1 = textureLod(sampler2DArray(lightmap_textures[ofs], SAMPLER_LINEAR_CLAMP), uvw + vec3(0.0, 0.0, 1.0), 0.0).rgb;
+			vec3 lm_light_l1_0 = textureLod(sampler2DArray(lightmap_textures[ofs], SAMPLER_LINEAR_CLAMP), uvw + vec3(0.0, 0.0, 2.0), 0.0).rgb;
+			vec3 lm_light_l1p1 = textureLod(sampler2DArray(lightmap_textures[ofs], SAMPLER_LINEAR_CLAMP), uvw + vec3(0.0, 0.0, 3.0), 0.0).rgb;
+
+			vec3 n = normalize(lightmaps.data[ofs].normal_xform * normal);
+			float exposure_normalization = lightmaps.data[ofs].exposure_normalization;
+
+			ambient_light += lm_light_l0 * 0.282095f;
+			ambient_light += lm_light_l1n1 * 0.32573 * n.y * exposure_normalization;
+			ambient_light += lm_light_l1_0 * 0.32573 * n.z * exposure_normalization;
+			ambient_light += lm_light_l1p1 * 0.32573 * n.x * exposure_normalization;
+			if (metallic > 0.01) { // since the more direct bounced light is lost, we can kind of fake it with this trick
+				vec3 r = reflect(normalize(-vertex), normal);
+				specular_light += lm_light_l1n1 * 0.32573 * r.y * exposure_normalization;
+				specular_light += lm_light_l1_0 * 0.32573 * r.z * exposure_normalization;
+				specular_light += lm_light_l1p1 * 0.32573 * r.x * exposure_normalization;
+			}
+
+		} else {
+			ambient_light += textureLod(sampler2DArray(lightmap_textures[ofs], SAMPLER_LINEAR_CLAMP), uvw, 0.0).rgb * lightmaps.data[ofs].exposure_normalization;
+		}
+	}
+#endif // USE_LIGHTMAP
+#endif // USE_LIGHTMAP_CAPTURE
 
 	{
 #if defined(AMBIENT_LIGHT_DISABLED)

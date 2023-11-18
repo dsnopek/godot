@@ -1911,6 +1911,8 @@ void RasterizerSceneGLES3::_setup_lights(const RenderDataGLES3 *p_render_data, b
 }
 
 void RasterizerSceneGLES3::_setup_lightmaps(const RenderDataGLES3 *p_render_data, const PagedArray<RID> &p_lightmaps, const Transform3D &p_cam_transform) {
+	// @todo Write all lightmaps out to a UBO
+	// @note Later when rendering a particular bit of geometry, we need to put the index of the lightmap it uses in a uniform
 }
 
 // Render shadows

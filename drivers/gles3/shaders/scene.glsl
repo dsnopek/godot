@@ -248,7 +248,7 @@ uniform lowp uint gi_offset;
 #endif
 
 #ifdef USE_LIGHTMAP_CAPTURE
-uniform mediump vec4[12] lightmap_captures;
+uniform mediump vec4[9] lightmap_captures;
 #endif
 
 /* Varyings */

@@ -270,6 +270,10 @@ private:
 		GeometryInstanceGLES3 *owner = nullptr;
 	};
 
+	struct GeometryInstanceLightmapSH {
+		Color sh[9];
+	};
+
 	class GeometryInstanceGLES3 : public RenderGeometryInstanceBase {
 	public:
 		//used during rendering
@@ -296,6 +300,11 @@ private:
 		LocalVector<RID> paired_spot_lights;
 		LocalVector<uint32_t> omni_light_gl_cache;
 		LocalVector<uint32_t> spot_light_gl_cache;
+
+		RID lightmap_instance;
+		Rect2 lightmap_uv_scale;
+		uint32_t lightmap_slice_index;
+		GeometryInstanceLightmapSH *lightmap_sh = nullptr;
 
 		// Used during setup.
 		GeometryInstanceSurface *surface_caches = nullptr;

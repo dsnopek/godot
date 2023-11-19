@@ -130,9 +130,27 @@ void RasterizerSceneGLES3::GeometryInstanceGLES3::_mark_dirty() {
 }
 
 void RasterizerSceneGLES3::GeometryInstanceGLES3::set_use_lightmap(RID p_lightmap_instance, const Rect2 &p_lightmap_uv_scale, int p_lightmap_slice_index) {
+	lightmap_instance = p_lightmap_instance;
+	lightmap_uv_scale = p_lightmap_uv_scale;
+	lightmap_slice_index = p_lightmap_slice_index;
+
+	_mark_dirty();
 }
 
 void RasterizerSceneGLES3::GeometryInstanceGLES3::set_lightmap_capture(const Color *p_sh9) {
+	if (p_sh9) {
+		if (lightmap_sh == nullptr) {
+			lightmap_sh = memnew(GeometryInstanceLightmapSH);
+		}
+
+		memcpy(lightmap_sh->sh, p_sh9, sizeof(Color) * 9);
+	} else {
+		if (lightmap_sh != nullptr) {
+			memdelete(lightmap_sh);
+			lightmap_sh = nullptr;
+		}
+	}
+	_mark_dirty();
 }
 
 void RasterizerSceneGLES3::_update_dirty_geometry_instances() {

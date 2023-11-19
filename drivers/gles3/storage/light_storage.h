@@ -155,6 +155,11 @@ struct Lightmap {
 	Dependency dependency;
 };
 
+struct LightmapInstance {
+	RID lightmap;
+	Transform3D transform;
+};
+
 class LightStorage : public RendererLightStorage {
 public:
 	enum ShadowAtlastQuadrant {
@@ -184,11 +189,6 @@ private:
 	mutable RID_Owner<Lightmap, true> lightmap_owner;
 
 	/* LIGHTMAP INSTANCE */
-
-	struct LightmapInstance {
-		RID lightmap;
-		Transform3D transform;
-	};
 
 	mutable RID_Owner<LightmapInstance> lightmap_instance_owner;
 
@@ -631,6 +631,9 @@ public:
 	virtual float lightmap_get_probe_capture_update_speed() const override;
 
 	/* LIGHTMAP INSTANCE */
+
+	LightmapInstance *get_lightmap_instance(RID p_rid) { return lightmap_instance_owner.get_or_null(p_rid); };
+	bool owns_lightmap_instance(RID p_rid) { return lightmap_instance_owner.owns(p_rid); };
 
 	virtual RID lightmap_instance_create(RID p_lightmap) override;
 	virtual void lightmap_instance_free(RID p_lightmap) override;

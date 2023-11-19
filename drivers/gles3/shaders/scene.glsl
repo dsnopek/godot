@@ -14,6 +14,9 @@ DISABLE_LIGHT_OMNI = false
 DISABLE_LIGHT_SPOT = false
 DISABLE_FOG = false
 USE_RADIANCE_MAP = true
+USE_LIGHTMAP = false
+USE_SH_LIGHTMAP = false
+USE_LIGHTMAP_CAPTURE = false
 USE_MULTIVIEW = false
 RENDER_SHADOWS = false
 RENDER_SHADOWS_LINEAR = false
@@ -242,8 +245,9 @@ uniform highp vec3 compressed_aabb_position;
 uniform highp vec3 compressed_aabb_size;
 uniform highp vec4 uv_scale;
 
+#ifndef DISABLE_LIGHTMAP
 #ifdef USE_LIGHTMAP
-uniform mediump sampler2DArray lightmap_textures; //texunit:-11
+uniform mediump sampler2DArray lightmap_textures; //texunit:-4
 uniform lowp uint lightmap_slice;
 uniform highp vec4 lightmap_uv_scale;
 uniform float lightmap_exposure_normalization;
@@ -255,7 +259,8 @@ uniform mediump mat3 lightmap_normal_xform;
 
 #ifdef USE_LIGHTMAP_CAPTURE
 uniform mediump vec4[9] lightmap_captures;
-#endif
+#endif // USE_LIGHTMAP_CAPTURE
+#endif // DISABLE_LIGHTMAP
 
 /* Varyings */
 
@@ -1434,6 +1439,7 @@ void main() {
 	ambient_light = mix(ambient_light, custom_irradiance.rgb, custom_irradiance.a);
 #endif // CUSTOM_IRRADIANCE_USED
 
+#ifndef DISABLE_LIGHTMAP
 #ifdef USE_LIGHTMAP_CAPTURE
 	{
 		vec3 wnormal = mat3(scene_data.inv_view_matrix) * normal;
@@ -1486,6 +1492,7 @@ void main() {
 	}
 #endif // USE_LIGHTMAP
 #endif // USE_LIGHTMAP_CAPTURE
+#endif // DISABLE_LIGHTMAP
 
 	{
 #if defined(AMBIENT_LIGHT_DISABLED)

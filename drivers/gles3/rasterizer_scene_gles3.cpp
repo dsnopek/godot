@@ -2829,12 +2829,28 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 					if (p_render_data->directional_light_count == p_render_data->directional_shadow_count) {
 						spec_constants |= SceneShaderGLES3::DISABLE_LIGHT_DIRECTIONAL;
 					}
+
+					if (inst->lightmap_instance.is_valid()) {
+						spec_constants |= SceneShaderGLES3::USE_LIGHTMAP;
+
+						GLES3::LightmapInstance *li = GLES::LightStorage::get_singleton()->get_lightmap_instance(inst->lightmap_instance);
+						GLES3::Lightmap *lm = GLES::LightStorage::get_singleton()->get_lightmap(li->lightmap);
+
+						if (lm->uses_spherical_harmonics) {
+							spec_constants |= SceneShaderGLES3::USE_SH_LIGHTMAP;
+						}
+					} else if (inst->lightmap_sh) {
+						spec_constants |= SceneShaderGLES3::USE_LIGHTMAP_CAPTURE;
+					} else {
+						spec_constants |= SceneShaderGLES3::DISABLE_LIGHTMAP;
+					}
 				} else {
 					// Only base pass uses the radiance map.
 					spec_constants &= ~SceneShaderGLES3::USE_RADIANCE_MAP;
 					spec_constants |= SceneShaderGLES3::DISABLE_LIGHT_OMNI;
 					spec_constants |= SceneShaderGLES3::DISABLE_LIGHT_SPOT;
 					spec_constants |= SceneShaderGLES3::DISABLE_LIGHT_DIRECTIONAL;
+					spec_constants |= SceneShaderGLES3::DISABLE_LIGHTMAP;
 				}
 
 				if (uses_additive_lighting) {
@@ -2944,6 +2960,39 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 
 					if (inst->spot_light_gl_cache.size()) {
 						glUniform1uiv(material_storage->shaders.scene_shader.version_get_uniform(SceneShaderGLES3::SPOT_LIGHT_INDICES, shader->version, instance_variant, spec_constants), inst->spot_light_gl_cache.size(), inst->spot_light_gl_cache.ptr());
+					}
+
+					if (inst->lightmap_instance.is_valid()) {
+						GLES3::LightmapInstance *li = GLES::LightStorage::get_singleton()->get_lightmap_instance(inst->lightmap_instance);
+						GLES3::Lightmap *lm = GLES::LightStorage::get_singleton()->get_lightmap(li->lightmap);
+
+						GLuint tex = GLES3::TextureStorage::get_singleton()->texture_get_texid(lm->light_texture);
+						glActiveTexture(GL_TEXTURE0 + config->max_texture_image_units - 4);
+						glBindTexture(GL_TEXTURE_2D, tex);
+
+						material_storage->shaders.scene_shader.version_set_uniform(SceneShaderGLES3::LIGHTMAP_SLICE, inst->lightmap_slice_index, shader->version, instance_variant, spec_constants);
+						material_storage->shaders.scene_shader.version_set_uniform(SceneShaderGLES3::LIGHTMAP_UV_SCALE, inst->lightmap_uv_scale, shader->version, instance_variant, spec_constants);
+						//glUniform1ui(material_storage->shaders.scene_shader.version_get_uniform(SceneShaderGLES3::LIGHTMAP_SLICE), inst->lightmap_slice_index);
+						//glUniform4fv(material_storage->shaders.scene_shader.version_get_uniform(SceneShaderGLES3::LIGHTMAP_UV_SCALE), inst->lightmap_uv_scale);
+
+						// @todo Get this from somewhere (maybe lm->baked_exposure?)
+						//glUniform1f(material_storage->shaders.scene_shader.version_get_uniform(SceneShaderGLES3::LIGHTMAP_EXPOSURE_NORMALIZATION), 1.0);
+						material_storage->shaders.scene_shader.version_set_uniform(SceneShaderGLES3::LIGHTMAP_EXPOSURE_NORMALIZATION, 1.0, shader->version, instance_variant, spec_constants);
+
+						/*
+								Basis to_lm = light_storage->lightmap_instance_get_transform(p_lightmaps[i]).basis.inverse() * p_cam_transform.basis;
+								to_lm = to_lm.inverse().transposed(); //will transform normals
+								RendererRD::MaterialStorage::store_transform_3x3(to_lm, scene_state.lightmaps[i].normal_xform);
+								scene_state.lightmaps[i].exposure_normalization = 1.0;
+								if (p_render_data->camera_attributes.is_valid()) {
+									float baked_exposure = light_storage->lightmap_get_baked_exposure_normalization(lightmap);
+									float enf = RSG::camera_attributes->camera_attributes_get_exposure_normalization_factor(p_render_data->camera_attributes);
+									scene_state.lightmaps[i].exposure_normalization = enf / baked_exposure;
+								}
+						*/
+
+					} else if (inst->lightmap_sh) {
+						glUniform4fv(material_storage->shaders.scene_shader.version_get_uniform(SceneShaderGLES3::LIGHTMAP_CAPTURES, shader->version, instance_variant, spec_constants), 9, inst->lightmap_sh);
 					}
 
 					prev_inst = inst;

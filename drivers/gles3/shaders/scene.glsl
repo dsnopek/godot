@@ -244,8 +244,14 @@ uniform highp vec4 uv_scale;
 
 #ifdef USE_LIGHTMAP
 uniform mediump sampler2DArray lightmap_textures; //texunit:-11
-uniform lowp uint gi_offset;
-#endif
+uniform lowp uint lightmap_slice;
+uniform highp vec4 lightmap_uv_scale;
+uniform float lightmap_exposure_normalization;
+
+#ifdef USE_SH_LIGHTMAP
+uniform mediump mat3 lightmap_normal_xform;
+#endif // USE_SH_LIGHTMAP
+#endif // USE_LIGHTMAP
 
 #ifdef USE_LIGHTMAP_CAPTURE
 uniform mediump vec4[9] lightmap_captures;
@@ -1451,34 +1457,31 @@ void main() {
 #else
 #ifdef USE_LIGHTMAP
 	{
-		uint ofs = instances.data[draw_call.instance_index].gi_offset & 0xFFFF;
-		uint slice = instances.data[draw_call.instance_index].gi_offset >> 16;
 		vec3 uvw;
-		uvw.xy = uv2 * instances.data[draw_call.instance_index].lightmap_uv_scale.zw + instances.data[draw_call.instance_index].lightmap_uv_scale.xy;
-		uvw.z = float(slice);
+		uvw.xy = uv2 * lightmap_uv_scale.zw + lightmap_uv_scale.xy;
+		uvw.z = float(lightmap_slice);
 
 #ifdef USE_SH_LIGHTMAP
 		uvw.z *= 4.0; //SH textures use 4 times more data
-		vec3 lm_light_l0 = textureLod(sampler2DArray(lightmap_textures[ofs], SAMPLER_LINEAR_CLAMP), uvw + vec3(0.0, 0.0, 0.0), 0.0).rgb;
-		vec3 lm_light_l1n1 = textureLod(sampler2DArray(lightmap_textures[ofs], SAMPLER_LINEAR_CLAMP), uvw + vec3(0.0, 0.0, 1.0), 0.0).rgb;
-		vec3 lm_light_l1_0 = textureLod(sampler2DArray(lightmap_textures[ofs], SAMPLER_LINEAR_CLAMP), uvw + vec3(0.0, 0.0, 2.0), 0.0).rgb;
-		vec3 lm_light_l1p1 = textureLod(sampler2DArray(lightmap_textures[ofs], SAMPLER_LINEAR_CLAMP), uvw + vec3(0.0, 0.0, 3.0), 0.0).rgb;
+		vec3 lm_light_l0 = textureLod(lightmap_textures, uvw + vec3(0.0, 0.0, 0.0), 0.0).rgb;
+		vec3 lm_light_l1n1 = textureLod(lightmap_textures, uvw + vec3(0.0, 0.0, 1.0), 0.0).rgb;
+		vec3 lm_light_l1_0 = textureLod(lightmap_textures, uvw + vec3(0.0, 0.0, 2.0), 0.0).rgb;
+		vec3 lm_light_l1p1 = textureLod(lightmap_textures, uvw + vec3(0.0, 0.0, 3.0), 0.0).rgb;
 
-		vec3 n = normalize(lightmaps.data[ofs].normal_xform * normal);
-		float exposure_normalization = lightmaps.data[ofs].exposure_normalization;
+		vec3 n = normalize(lightmap_normal_xform * normal);
 
 		ambient_light += lm_light_l0 * 0.282095f;
-		ambient_light += lm_light_l1n1 * 0.32573 * n.y * exposure_normalization;
-		ambient_light += lm_light_l1_0 * 0.32573 * n.z * exposure_normalization;
-		ambient_light += lm_light_l1p1 * 0.32573 * n.x * exposure_normalization;
+		ambient_light += lm_light_l1n1 * 0.32573 * n.y * lightmap_exposure_normalization;
+		ambient_light += lm_light_l1_0 * 0.32573 * n.z * lightmap_exposure_normalization;
+		ambient_light += lm_light_l1p1 * 0.32573 * n.x * lightmap_exposure_normalization;
 		if (metallic > 0.01) { // since the more direct bounced light is lost, we can kind of fake it with this trick
 			vec3 r = reflect(normalize(-vertex), normal);
-			specular_light += lm_light_l1n1 * 0.32573 * r.y * exposure_normalization;
-			specular_light += lm_light_l1_0 * 0.32573 * r.z * exposure_normalization;
-			specular_light += lm_light_l1p1 * 0.32573 * r.x * exposure_normalization;
+			specular_light += lm_light_l1n1 * 0.32573 * r.y * lightmap_exposure_normalization;
+			specular_light += lm_light_l1_0 * 0.32573 * r.z * lightmap_exposure_normalization;
+			specular_light += lm_light_l1p1 * 0.32573 * r.x * lightmap_exposure_normalization;
 		}
 #else
-		ambient_light += textureLod(sampler2DArray(lightmap_textures[ofs], SAMPLER_LINEAR_CLAMP), uvw, 0.0).rgb * lightmaps.data[ofs].exposure_normalization;
+		ambient_light += textureLod(lightmap_textures, uvw, 0.0).rgb * lightmap_exposure_normalization;
 #endif
 	}
 #endif // USE_LIGHTMAP

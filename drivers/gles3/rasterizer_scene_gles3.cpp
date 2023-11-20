@@ -2833,8 +2833,8 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 					if (inst->lightmap_instance.is_valid()) {
 						spec_constants |= SceneShaderGLES3::USE_LIGHTMAP;
 
-						GLES3::LightmapInstance *li = GLES::LightStorage::get_singleton()->get_lightmap_instance(inst->lightmap_instance);
-						GLES3::Lightmap *lm = GLES::LightStorage::get_singleton()->get_lightmap(li->lightmap);
+						GLES3::LightmapInstance *li = GLES3::LightStorage::get_singleton()->get_lightmap_instance(inst->lightmap_instance);
+						GLES3::Lightmap *lm = GLES3::LightStorage::get_singleton()->get_lightmap(li->lightmap);
 
 						if (lm->uses_spherical_harmonics) {
 							spec_constants |= SceneShaderGLES3::USE_SH_LIGHTMAP;
@@ -2963,15 +2963,17 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 					}
 
 					if (inst->lightmap_instance.is_valid()) {
-						GLES3::LightmapInstance *li = GLES::LightStorage::get_singleton()->get_lightmap_instance(inst->lightmap_instance);
-						GLES3::Lightmap *lm = GLES::LightStorage::get_singleton()->get_lightmap(li->lightmap);
+						GLES3::LightmapInstance *li = GLES3::LightStorage::get_singleton()->get_lightmap_instance(inst->lightmap_instance);
+						GLES3::Lightmap *lm = GLES3::LightStorage::get_singleton()->get_lightmap(li->lightmap);
 
 						GLuint tex = GLES3::TextureStorage::get_singleton()->texture_get_texid(lm->light_texture);
 						glActiveTexture(GL_TEXTURE0 + config->max_texture_image_units - 4);
 						glBindTexture(GL_TEXTURE_2D, tex);
 
 						material_storage->shaders.scene_shader.version_set_uniform(SceneShaderGLES3::LIGHTMAP_SLICE, inst->lightmap_slice_index, shader->version, instance_variant, spec_constants);
-						material_storage->shaders.scene_shader.version_set_uniform(SceneShaderGLES3::LIGHTMAP_UV_SCALE, inst->lightmap_uv_scale, shader->version, instance_variant, spec_constants);
+
+						Vector4 uv_scale(inst->lightmap_uv_scale.position.x, inst->lightmap_uv_scale.position.y, inst->lightmap_uv_scale.size.x, inst->lightmap_uv_scale.size.y);
+						material_storage->shaders.scene_shader.version_set_uniform(SceneShaderGLES3::LIGHTMAP_UV_SCALE, uv_scale, shader->version, instance_variant, spec_constants);
 						//glUniform1ui(material_storage->shaders.scene_shader.version_get_uniform(SceneShaderGLES3::LIGHTMAP_SLICE), inst->lightmap_slice_index);
 						//glUniform4fv(material_storage->shaders.scene_shader.version_get_uniform(SceneShaderGLES3::LIGHTMAP_UV_SCALE), inst->lightmap_uv_scale);
 
@@ -2992,7 +2994,7 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 						*/
 
 					} else if (inst->lightmap_sh) {
-						glUniform4fv(material_storage->shaders.scene_shader.version_get_uniform(SceneShaderGLES3::LIGHTMAP_CAPTURES, shader->version, instance_variant, spec_constants), 9, inst->lightmap_sh);
+						glUniform4fv(material_storage->shaders.scene_shader.version_get_uniform(SceneShaderGLES3::LIGHTMAP_CAPTURES, shader->version, instance_variant, spec_constants), 9, reinterpret_cast<const GLfloat *>(inst->lightmap_sh->sh));
 					}
 
 					prev_inst = inst;

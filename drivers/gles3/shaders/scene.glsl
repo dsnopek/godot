@@ -841,7 +841,7 @@ uniform mediump mat3 lightmap_normal_xform;
 #ifdef USE_LIGHTMAP_CAPTURE
 uniform mediump vec4[9] lightmap_captures;
 #endif // USE_LIGHTMAP_CAPTURE
-#endif // DISABLE_LIGHTMAP
+#endif // !DISABLE_LIGHTMAP
 
 #ifdef USE_MULTIVIEW
 uniform highp sampler2DArray depth_buffer; // texunit:-6
@@ -1492,7 +1492,7 @@ void main() {
 	}
 #endif // USE_LIGHTMAP
 #endif // USE_LIGHTMAP_CAPTURE
-#endif // DISABLE_LIGHTMAP
+#endif // !DISABLE_LIGHTMAP
 
 	{
 #if defined(AMBIENT_LIGHT_DISABLED)

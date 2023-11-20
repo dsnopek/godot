@@ -245,23 +245,6 @@ uniform highp vec3 compressed_aabb_position;
 uniform highp vec3 compressed_aabb_size;
 uniform highp vec4 uv_scale;
 
-#ifndef DISABLE_LIGHTMAP
-#ifdef USE_LIGHTMAP
-uniform mediump sampler2DArray lightmap_textures; //texunit:-4
-uniform lowp uint lightmap_slice;
-uniform highp vec4 lightmap_uv_scale;
-uniform float lightmap_exposure_normalization;
-
-#ifdef USE_SH_LIGHTMAP
-uniform mediump mat3 lightmap_normal_xform;
-#endif // USE_SH_LIGHTMAP
-#endif // USE_LIGHTMAP
-
-#ifdef USE_LIGHTMAP_CAPTURE
-uniform mediump vec4[9] lightmap_captures;
-#endif // USE_LIGHTMAP_CAPTURE
-#endif // DISABLE_LIGHTMAP
-
 /* Varyings */
 
 out highp vec3 vertex_interp;
@@ -842,6 +825,23 @@ float sample_shadow(highp sampler2DShadow shadow, float shadow_pixel_size, vec4 
 #endif // USE_ADDITIVE_LIGHTING
 
 #endif // !MODE_RENDER_DEPTH
+
+#ifndef DISABLE_LIGHTMAP
+#ifdef USE_LIGHTMAP
+uniform mediump sampler2DArray lightmap_textures; //texunit:-4
+uniform lowp uint lightmap_slice;
+uniform highp vec4 lightmap_uv_scale;
+uniform float lightmap_exposure_normalization;
+
+#ifdef USE_SH_LIGHTMAP
+uniform mediump mat3 lightmap_normal_xform;
+#endif // USE_SH_LIGHTMAP
+#endif // USE_LIGHTMAP
+
+#ifdef USE_LIGHTMAP_CAPTURE
+uniform mediump vec4[9] lightmap_captures;
+#endif // USE_LIGHTMAP_CAPTURE
+#endif // DISABLE_LIGHTMAP
 
 #ifdef USE_MULTIVIEW
 uniform highp sampler2DArray depth_buffer; // texunit:-6

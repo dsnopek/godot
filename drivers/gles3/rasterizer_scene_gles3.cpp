@@ -2974,25 +2974,30 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 
 						Vector4 uv_scale(inst->lightmap_uv_scale.position.x, inst->lightmap_uv_scale.position.y, inst->lightmap_uv_scale.size.x, inst->lightmap_uv_scale.size.y);
 						material_storage->shaders.scene_shader.version_set_uniform(SceneShaderGLES3::LIGHTMAP_UV_SCALE, uv_scale, shader->version, instance_variant, spec_constants);
-						//glUniform1ui(material_storage->shaders.scene_shader.version_get_uniform(SceneShaderGLES3::LIGHTMAP_SLICE), inst->lightmap_slice_index);
-						//glUniform4fv(material_storage->shaders.scene_shader.version_get_uniform(SceneShaderGLES3::LIGHTMAP_UV_SCALE), inst->lightmap_uv_scale);
 
-						// @todo Get this from somewhere (maybe lm->baked_exposure?)
-						//glUniform1f(material_storage->shaders.scene_shader.version_get_uniform(SceneShaderGLES3::LIGHTMAP_EXPOSURE_NORMALIZATION), 1.0);
-						material_storage->shaders.scene_shader.version_set_uniform(SceneShaderGLES3::LIGHTMAP_EXPOSURE_NORMALIZATION, 1.0, shader->version, instance_variant, spec_constants);
+						float exposure_normalization = 1.0;
+						if (p_render_data->camera_attributes.is_valid()) {
+							float enf = RSG::camera_attributes->camera_attributes_get_exposure_normalization_factor(p_render_data->camera_attributes);
+							exposure_normalization = enf / lm->baked_exposure;
+						}
+						material_storage->shaders.scene_shader.version_set_uniform(SceneShaderGLES3::LIGHTMAP_EXPOSURE_NORMALIZATION, exposure_normalization, shader->version, instance_variant, spec_constants);
 
-						/*
-								Basis to_lm = light_storage->lightmap_instance_get_transform(p_lightmaps[i]).basis.inverse() * p_cam_transform.basis;
-								to_lm = to_lm.inverse().transposed(); //will transform normals
-								RendererRD::MaterialStorage::store_transform_3x3(to_lm, scene_state.lightmaps[i].normal_xform);
-								scene_state.lightmaps[i].exposure_normalization = 1.0;
-								if (p_render_data->camera_attributes.is_valid()) {
-									float baked_exposure = light_storage->lightmap_get_baked_exposure_normalization(lightmap);
-									float enf = RSG::camera_attributes->camera_attributes_get_exposure_normalization_factor(p_render_data->camera_attributes);
-									scene_state.lightmaps[i].exposure_normalization = enf / baked_exposure;
-								}
-						*/
-
+						if (lm->uses_spherical_harmonics) {
+							Basis to_lm = li->transform.basis.inverse() * p_render_data->cam_transform.basis;
+							to_lm = to_lm.inverse().transposed();
+							GLfloat matrix[9] = {
+								(GLfloat)to_lm.rows[0][0],
+								(GLfloat)to_lm.rows[1][0],
+								(GLfloat)to_lm.rows[2][0],
+								(GLfloat)to_lm.rows[0][1],
+								(GLfloat)to_lm.rows[1][1],
+								(GLfloat)to_lm.rows[2][1],
+								(GLfloat)to_lm.rows[0][2],
+								(GLfloat)to_lm.rows[1][2],
+								(GLfloat)to_lm.rows[2][2],
+							};
+							glUniformMatrix3fv(material_storage->shaders.scene_shader.version_get_uniform(SceneShaderGLES3::LIGHTMAP_NORMAL_XFORM, shader->version, instance_variant, spec_constants), 1, GL_FALSE, matrix);
+						}
 					} else if (inst->lightmap_sh) {
 						glUniform4fv(material_storage->shaders.scene_shader.version_get_uniform(SceneShaderGLES3::LIGHTMAP_CAPTURES, shader->version, instance_variant, spec_constants), 9, reinterpret_cast<const GLfloat *>(inst->lightmap_sh->sh));
 					}

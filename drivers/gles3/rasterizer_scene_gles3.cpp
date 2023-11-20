@@ -2960,7 +2960,7 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 
 						GLuint tex = GLES3::TextureStorage::get_singleton()->texture_get_texid(lm->light_texture);
 						glActiveTexture(GL_TEXTURE0 + config->max_texture_image_units - 4);
-						glBindTexture(GL_TEXTURE_2D, tex);
+						glBindTexture(GL_TEXTURE_2D_ARRAY, tex);
 
 						material_storage->shaders.scene_shader.version_set_uniform(SceneShaderGLES3::LIGHTMAP_SLICE, inst->lightmap_slice_index, shader->version, instance_variant, spec_constants);
 

@@ -345,7 +345,7 @@ StringName ClassDB::get_compatibility_class(const StringName &p_class) {
 	return StringName();
 }
 
-Object *ClassDB::instantiate(const StringName &p_class) {
+Object *ClassDB::instantiate(const StringName &p_class, bool p_create_real_extension_class) {
 	ClassInfo *ti;
 	{
 		OBJTYPE_RLOCK;
@@ -366,6 +366,21 @@ Object *ClassDB::instantiate(const StringName &p_class) {
 	}
 #endif
 	if (ti->gdextension && ti->gdextension->create_instance) {
+#ifdef TOOLS_ENABLED
+		if (ti->gdextension->is_gameplay && !p_create_real_extension_class && Engine::get_singleton()->is_editor_hint()) {
+			// Find the closest native parent.
+			ClassInfo *native_parent = ti->inherits_ptr;
+			while (native_parent->gdextension) {
+				native_parent = ti->inherits_ptr;
+			}
+
+			Object *placeholder = native_parent->creation_func();
+			// Setting the 2nd argument to nullptr makes this into a placeholder.
+			placeholder->_set_object_extension_instance(ti->gdextension, nullptr);
+			return placeholder;
+		}
+#endif
+
 		Object *obj = (Object *)ti->gdextension->create_instance(ti->gdextension->class_userdata);
 #ifdef TOOLS_ENABLED
 		if (ti->gdextension->track_instance) {
@@ -394,8 +409,7 @@ void ClassDB::set_object_extension_instance(Object *p_object, const StringName &
 		ERR_FAIL_NULL_MSG(ti->gdextension, "Class '" + String(p_class) + "' has no native extension.");
 	}
 
-	p_object->_extension = ti->gdextension;
-	p_object->_extension_instance = p_instance;
+	p_object->_set_object_extension_instance(ti->gdextension, p_instance);
 }
 
 bool ClassDB::can_instantiate(const StringName &p_class) {
@@ -1687,7 +1701,7 @@ Variant ClassDB::class_get_default_property_value(const StringName &p_class, con
 			c = Engine::get_singleton()->get_singleton_object(p_class);
 			cleanup_c = false;
 		} else if (ClassDB::can_instantiate(p_class) && !ClassDB::is_virtual(p_class)) { // Keep this condition in sync with doc_tools.cpp get_documentation_default_value.
-			c = ClassDB::instantiate(p_class);
+			c = ClassDB::instantiate(p_class, true);
 			cleanup_c = true;
 		}
 

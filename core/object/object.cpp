@@ -1791,6 +1791,16 @@ uint32_t Object::get_edited_version() const {
 #endif
 
 StringName Object::get_class_name_for_extension(const GDExtension *p_library) const {
+#ifdef TOOLS_ENABLED
+	// If this is the library this extension comes from and it's a placeholder, we
+	// have to return the closest native parent's class name, so that it doesn't try to
+	// use this like the real object.
+	if (_extension && _extension->library == p_library && _extension->is_placeholder) {
+		const StringName *class_name = _get_class_namev();
+		return *class_name;
+	}
+#endif
+
 	// Only return the class name per the extension if it matches the given p_library.
 	if (_extension && _extension->library == p_library) {
 		return _extension->class_name;

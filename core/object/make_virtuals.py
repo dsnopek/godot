@@ -28,10 +28,10 @@ proto = """#define GDVIRTUAL$VER($RET m_name $ARG)\\
 			$CALLPTRARGS\\
 			$CALLPTRRETDEF\\
 			if (_get_extension()->get_virtual_call_data && _get_extension()->call_virtual_with_data) {\\
-				_get_extension()->call_virtual_with_data(_get_extension_instance(), &_gdvirtual_##m_name##_sn, _gdvirtual_##m_name, $CALLPTRARGPASS, $CALLPTRRETPASS);\\
+				_get_extension()->call_virtual_with_data(_get_extension_instance()->get_binding_ptr(), &_gdvirtual_##m_name##_sn, _gdvirtual_##m_name, $CALLPTRARGPASS, $CALLPTRRETPASS);\\
 				$CALLPTRRET\\
 			} else {\\
-				((GDExtensionClassCallVirtual)_gdvirtual_##m_name)(_get_extension_instance(), $CALLPTRARGPASS, $CALLPTRRETPASS);\\
+				((GDExtensionClassCallVirtual)_gdvirtual_##m_name)(_get_extension_instance()->get_binding_ptr(), $CALLPTRARGPASS, $CALLPTRRETPASS);\\
 				$CALLPTRRET\\
 			}\\
 			return true;\\

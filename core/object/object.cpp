@@ -193,6 +193,273 @@ Object::Connection::Connection(const Variant &p_variant) {
 	}
 }
 
+ObjectGDExtensionInstance::ObjectGDExtensionInstance(ObjectGDExtension *p_extension, void *p_extension_instance) {
+	extension = p_extension;
+	extension_instance = p_extension_instance;
+#ifdef TOOLS_ENABLED
+	if (!extension_instance) {
+		placeholder_data = memnew(PlaceholderData);
+	}
+#endif
+}
+
+ObjectGDExtensionInstance::~ObjectGDExtensionInstance() {
+	if (extension_instance && extension->free_instance) {
+		extension->free_instance(extension->class_userdata, extension_instance);
+	}
+
+#ifdef TOOLS_ENABLED
+	if (placeholder_data) {
+		memdelete(placeholder_data);
+	}
+#endif
+}
+
+void ObjectGDExtensionInstance::reference() {
+#ifdef TOOLS_ENABLED
+	if (placeholder_data) {
+		return;
+	}
+#endif
+
+	if (extension->reference) {
+		extension->reference(extension_instance);
+	}
+}
+
+void ObjectGDExtensionInstance::unreference() {
+#ifdef TOOLS_ENABLED
+	if (placeholder_data) {
+		return;
+	}
+#endif
+
+	if (extension->unreference) {
+		extension->unreference(extension_instance);
+	}
+}
+
+RID ObjectGDExtensionInstance::get_rid() {
+	RID ret;
+
+#ifdef TOOLS_ENABLED
+	if (placeholder_data) {
+		return ret;
+	}
+#endif
+
+	if (extension->get_rid) {
+		ret.from_uint64(extension->get_rid(extension_instance));
+	}
+	return ret;
+}
+
+bool ObjectGDExtensionInstance::set(const StringName &p_name, const Variant &p_value) {
+#ifdef TOOLS_ENABLED
+	if (placeholder_data) {
+		bool is_default_valid = false;
+		Variant default_value = ClassDB::class_get_default_property_value(extension->class_name, p_name, &is_default_valid);
+
+		// If there's a default value, then we know it's a valid property.
+		if (is_default_valid) {
+			placeholder_data->properties[p_name] = p_value;
+		}
+
+		// We have to return true so Godot doesn't try to call the real setter function.
+		return true;
+	}
+#endif
+
+// C style pointer casts should never trigger a compiler warning because the risk is assumed by the user, so GCC should keep quiet about it.
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#endif
+
+	if (extension->set) {
+		return extension->set(extension_instance, (const GDExtensionStringNamePtr)&p_name, (const GDExtensionVariantPtr)&p_value);
+	}
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
+	return false;
+}
+
+bool ObjectGDExtensionInstance::get(const StringName &p_name, Variant &r_ret) {
+#ifdef TOOLS_ENABLED
+	if (placeholder_data) {
+		const Variant *value = placeholder_data->properties.getptr(p_name);
+		if (value) {
+			r_ret = *value;
+		} else {
+			bool is_default_valid = false;
+			Variant default_value = ClassDB::class_get_default_property_value(extension->class_name, p_name, &is_default_valid);
+			if (is_default_valid) {
+				r_ret = default_value;
+			}
+		}
+
+		// We have to return true so Godot doesn't try to call the real getter function.
+		return true;
+	}
+#endif
+
+// C style pointer casts should never trigger a compiler warning because the risk is assumed by the user, so GCC should keep quiet about it.
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#endif
+
+	if (extension->get) {
+		return extension->get(extension_instance, (const GDExtensionStringNamePtr)&p_name, (GDExtensionVariantPtr)&r_ret);
+	}
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
+	return false;
+}
+
+void ObjectGDExtensionInstance::get_property_list(const Object *p_object, List<PropertyInfo> *p_list) {
+	const ObjectGDExtension *current_extension = extension;
+	while (current_extension) {
+		p_list->push_back(PropertyInfo(Variant::NIL, current_extension->class_name, PROPERTY_HINT_NONE, current_extension->class_name, PROPERTY_USAGE_CATEGORY));
+
+		ClassDB::get_property_list(current_extension->class_name, p_list, true, p_object);
+
+#ifdef TOOLS_ENABLED
+		if (!placeholder_data) {
+#endif
+			if (current_extension->get_property_list) {
+				uint32_t pcount;
+				const GDExtensionPropertyInfo *pinfo = current_extension->get_property_list(extension_instance, &pcount);
+				for (uint32_t i = 0; i < pcount; i++) {
+					p_list->push_back(PropertyInfo(pinfo[i]));
+				}
+				if (current_extension->free_property_list) {
+					current_extension->free_property_list(extension_instance, pinfo);
+				}
+			}
+#ifdef TOOLS_ENABLED
+		}
+#endif
+
+		current_extension = current_extension->parent;
+	}
+}
+
+bool ObjectGDExtensionInstance::property_can_revert(const StringName &p_name) {
+#ifdef TOOLS_ENABLED
+	if (placeholder_data) {
+		return false;
+	}
+#endif
+
+// C style pointer casts should never trigger a compiler warning because the risk is assumed by the user, so GCC should keep quiet about it.
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#endif
+
+	if (extension->property_can_revert) {
+		return extension->property_can_revert(extension_instance, (const GDExtensionStringNamePtr)&p_name);
+	}
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
+	return false;
+}
+
+bool ObjectGDExtensionInstance::property_get_revert(const StringName &p_name, Variant &r_ret) {
+#ifdef TOOLS_ENABLED
+	if (placeholder_data) {
+		return false;
+	}
+#endif
+
+// C style pointer casts should never trigger a compiler warning because the risk is assumed by the user, so GCC should keep quiet about it.
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#endif
+
+	if (extension->property_get_revert) {
+		return extension->property_get_revert(extension_instance, (const GDExtensionStringNamePtr)&p_name, (GDExtensionVariantPtr)&r_ret);
+	}
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
+	return false;
+}
+
+void ObjectGDExtensionInstance::validate_property(PropertyInfo &p_property) const {
+#ifdef TOOLS_ENABLED
+	if (placeholder_data) {
+		return;
+	}
+#endif
+
+	if (extension->validate_property) {
+		// GDExtension uses a StringName rather than a String for property name.
+		StringName prop_name = p_property.name;
+		GDExtensionPropertyInfo gdext_prop = {
+			(GDExtensionVariantType)p_property.type,
+			&prop_name,
+			&p_property.class_name,
+			(uint32_t)p_property.hint,
+			&p_property.hint_string,
+			p_property.usage,
+		};
+		if (extension->validate_property(extension_instance, &gdext_prop)) {
+			p_property.type = (Variant::Type)gdext_prop.type;
+			p_property.name = *reinterpret_cast<StringName *>(gdext_prop.name);
+			p_property.class_name = *reinterpret_cast<StringName *>(gdext_prop.class_name);
+			p_property.hint = (PropertyHint)gdext_prop.hint;
+			p_property.hint_string = *reinterpret_cast<String *>(gdext_prop.hint_string);
+			p_property.usage = gdext_prop.usage;
+		};
+	}
+}
+
+void ObjectGDExtensionInstance::notification(int p_notification, bool p_reversed) {
+#ifdef TOOLS_ENABLED
+	if (placeholder_data) {
+		return;
+	}
+#endif
+
+	if (extension->notification2) {
+		extension->notification2(extension_instance, p_notification, static_cast<GDExtensionBool>(p_reversed));
+#ifndef DISABLE_DEPRECATED
+	} else if (extension->notification) {
+		extension->notification(extension_instance, p_notification);
+#endif // DISABLE_DEPRECATED
+	}
+}
+
+bool ObjectGDExtensionInstance::to_string(String &r_ret) {
+#ifdef TOOLS_ENABLED
+	if (placeholder_data) {
+		return false;
+	}
+#endif
+
+	if (extension->to_string) {
+		GDExtensionBool is_valid;
+		extension->to_string(extension_instance, &is_valid, &r_ret);
+		return is_valid;
+	}
+
+	return false;
+}
+
 bool Object::_predelete() {
 	_predelete_ok = 1;
 	notification(NOTIFICATION_PREDELETE, true);
@@ -235,21 +502,13 @@ void Object::set(const StringName &p_name, const Variant &p_value, bool *r_valid
 		}
 	}
 
-	if (_extension && _extension->set) {
-// C style pointer casts should never trigger a compiler warning because the risk is assumed by the user, so GCC should keep quiet about it.
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#endif
-		if (_extension->set(_extension_instance, (const GDExtensionStringNamePtr)&p_name, (const GDExtensionVariantPtr)&p_value)) {
+	if (_extension_instance) {
+		if (_extension_instance->set(p_name, p_value)) {
 			if (r_valid) {
 				*r_valid = true;
 			}
 			return;
 		}
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
 	}
 
 	// Try built-in setter.
@@ -322,22 +581,14 @@ Variant Object::get(const StringName &p_name, bool *r_valid) const {
 			return ret;
 		}
 	}
-	if (_extension && _extension->get) {
-// C style pointer casts should never trigger a compiler warning because the risk is assumed by the user, so GCC should keep quiet about it.
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#endif
 
-		if (_extension->get(_extension_instance, (const GDExtensionStringNamePtr)&p_name, (GDExtensionVariantPtr)&ret)) {
+	if (_extension_instance) {
+		if (_extension_instance->get(p_name, ret)) {
 			if (r_valid) {
 				*r_valid = true;
 			}
 			return ret;
 		}
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
 	}
 
 	// Try built-in getter.
@@ -484,26 +735,8 @@ void Object::get_property_list(List<PropertyInfo> *p_list, bool p_reversed) cons
 		script_instance->get_property_list(p_list);
 	}
 
-	if (_extension) {
-		const ObjectGDExtension *current_extension = _extension;
-		while (current_extension) {
-			p_list->push_back(PropertyInfo(Variant::NIL, current_extension->class_name, PROPERTY_HINT_NONE, current_extension->class_name, PROPERTY_USAGE_CATEGORY));
-
-			ClassDB::get_property_list(current_extension->class_name, p_list, true, this);
-
-			if (current_extension->get_property_list) {
-				uint32_t pcount;
-				const GDExtensionPropertyInfo *pinfo = current_extension->get_property_list(_extension_instance, &pcount);
-				for (uint32_t i = 0; i < pcount; i++) {
-					p_list->push_back(PropertyInfo(pinfo[i]));
-				}
-				if (current_extension->free_property_list) {
-					current_extension->free_property_list(_extension_instance, pinfo);
-				}
-			}
-
-			current_extension = current_extension->parent;
-		}
+	if (_extension_instance) {
+		_extension_instance->get_property_list(this, p_list);
 	}
 
 	_get_property_listv(p_list, p_reversed);
@@ -529,25 +762,8 @@ void Object::get_property_list(List<PropertyInfo> *p_list, bool p_reversed) cons
 void Object::validate_property(PropertyInfo &p_property) const {
 	_validate_propertyv(p_property);
 
-	if (_extension && _extension->validate_property) {
-		// GDExtension uses a StringName rather than a String for property name.
-		StringName prop_name = p_property.name;
-		GDExtensionPropertyInfo gdext_prop = {
-			(GDExtensionVariantType)p_property.type,
-			&prop_name,
-			&p_property.class_name,
-			(uint32_t)p_property.hint,
-			&p_property.hint_string,
-			p_property.usage,
-		};
-		if (_extension->validate_property(_extension_instance, &gdext_prop)) {
-			p_property.type = (Variant::Type)gdext_prop.type;
-			p_property.name = *reinterpret_cast<StringName *>(gdext_prop.name);
-			p_property.class_name = *reinterpret_cast<StringName *>(gdext_prop.class_name);
-			p_property.hint = (PropertyHint)gdext_prop.hint;
-			p_property.hint_string = *reinterpret_cast<String *>(gdext_prop.hint_string);
-			p_property.usage = gdext_prop.usage;
-		};
+	if (_extension_instance) {
+		_extension_instance->validate_property(p_property);
 	}
 
 	if (script_instance) { // Call it last to allow user altering already validated properties.
@@ -562,19 +778,11 @@ bool Object::property_can_revert(const StringName &p_name) const {
 		}
 	}
 
-// C style pointer casts should never trigger a compiler warning because the risk is assumed by the user, so GCC should keep quiet about it.
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#endif
-	if (_extension && _extension->property_can_revert) {
-		if (_extension->property_can_revert(_extension_instance, (const GDExtensionStringNamePtr)&p_name)) {
+	if (_extension_instance) {
+		if (_extension_instance->property_can_revert(p_name)) {
 			return true;
 		}
 	}
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
 
 	return _property_can_revertv(p_name);
 }
@@ -588,19 +796,11 @@ Variant Object::property_get_revert(const StringName &p_name) const {
 		}
 	}
 
-// C style pointer casts should never trigger a compiler warning because the risk is assumed by the user, so GCC should keep quiet about it.
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#endif
-	if (_extension && _extension->property_get_revert) {
-		if (_extension->property_get_revert(_extension_instance, (const GDExtensionStringNamePtr)&p_name, (GDExtensionVariantPtr)&ret)) {
+	if (_extension_instance) {
+		if (_extension_instance->property_get_revert(p_name, ret)) {
 			return ret;
 		}
 	}
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
 
 	if (_property_get_revertv(p_name, ret)) {
 		return ret;
@@ -837,14 +1037,8 @@ void Object::notification(int p_notification, bool p_reversed) {
 		_notificationv(p_notification, p_reversed);
 	}
 
-	if (_extension) {
-		if (_extension->notification2) {
-			_extension->notification2(_extension_instance, p_notification, static_cast<GDExtensionBool>(p_reversed));
-#ifndef DISABLE_DEPRECATED
-		} else if (_extension->notification) {
-			_extension->notification(_extension_instance, p_notification);
-#endif // DISABLE_DEPRECATED
-		}
+	if (_extension_instance) {
+		_extension_instance->notification(p_notification, p_reversed);
 	}
 
 	if (p_reversed) {
@@ -864,11 +1058,11 @@ String Object::to_string() {
 			return ret;
 		}
 	}
-	if (_extension && _extension->to_string) {
+	if (_extension_instance) {
 		String ret;
-		GDExtensionBool is_valid;
-		_extension->to_string(_extension_instance, &is_valid, &ret);
-		return ret;
+		if (_extension_instance->to_string(ret)) {
+			return ret;
+		}
 	}
 	return "<" + get_class() + "#" + itos(get_instance_id()) + ">";
 }
@@ -1909,12 +2103,9 @@ void Object::free_instance_binding(void *p_token) {
 void Object::clear_internal_extension() {
 	ERR_FAIL_NULL(_extension);
 
-	// Free the instance inside the GDExtension.
-	if (_extension->free_instance) {
-		_extension->free_instance(_extension->class_userdata, _extension_instance);
-	}
-	_extension = nullptr;
+	memdelete(_extension_instance);
 	_extension_instance = nullptr;
+	_extension = nullptr;
 
 	// Clear the instance bindings.
 	_instance_binding_mutex.lock();
@@ -1939,7 +2130,8 @@ void Object::reset_internal_extension(ObjectGDExtension *p_extension) {
 	ERR_FAIL_COND(_extension != nullptr);
 
 	if (p_extension) {
-		_extension_instance = p_extension->recreate_instance ? p_extension->recreate_instance(p_extension->class_userdata, (GDExtensionObjectPtr)this) : nullptr;
+		void *raw_extension_instance = p_extension->recreate_instance ? p_extension->recreate_instance(p_extension->class_userdata, (GDExtensionObjectPtr)this) : nullptr;
+		_extension_instance = raw_extension_instance ? memnew(ObjectGDExtensionInstance(p_extension, raw_extension_instance)) : nullptr;
 		ERR_FAIL_NULL_MSG(_extension_instance, "Unable to recreate GDExtension instance - does this extension support hot reloading?");
 		_extension = p_extension;
 	}
@@ -1982,11 +2174,9 @@ Object::~Object() {
 			_extension->untrack_instance(_extension->tracking_userdata, this);
 		}
 #endif
-		if (_extension->free_instance) {
-			_extension->free_instance(_extension->class_userdata, _extension_instance);
-		}
-		_extension = nullptr;
+		memdelete(_extension_instance);
 		_extension_instance = nullptr;
+		_extension = nullptr;
 	}
 #ifdef TOOLS_ENABLED
 	else if (_instance_bindings != nullptr && Engine::get_singleton()->is_extension_reloading_enabled()) {

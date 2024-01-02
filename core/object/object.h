@@ -317,6 +317,7 @@ struct ObjectGDExtension {
 	bool is_virtual = false;
 	bool is_abstract = false;
 	bool is_exposed = true;
+	bool is_gameplay = false;
 	GDExtensionClassSet set;
 	GDExtensionClassGet get;
 	GDExtensionClassGetPropertyList get_property_list;
@@ -357,6 +358,45 @@ struct ObjectGDExtension {
 	void (*track_instance)(void *p_userdata, void *p_instance);
 	void (*untrack_instance)(void *p_userdata, void *p_instance);
 #endif
+};
+
+class ObjectGDExtensionInstance {
+	ObjectGDExtension *extension;
+	void *extension_instance;
+
+#ifdef TOOLS_ENABLED
+	struct PlaceholderData {
+		HashMap<StringName, Variant> properties;
+	};
+	PlaceholderData *placeholder_data = nullptr;
+#endif
+
+public:
+	ObjectGDExtensionInstance(ObjectGDExtension *p_extension, void *p_extension_instance);
+	~ObjectGDExtensionInstance();
+
+	_FORCE_INLINE_ void *get_binding_ptr() {
+		return extension_instance;
+	}
+
+#ifdef TOOLS_ENABLED
+	_FORCE_INLINE_ bool is_placeholder() {
+		return placeholder_data != nullptr;
+	}
+#endif
+
+	void reference();
+	void unreference();
+	RID get_rid();
+
+	bool set(const StringName &p_name, const Variant &p_value);
+	bool get(const StringName &p_name, Variant &r_ret);
+	void get_property_list(const Object *p_object, List<PropertyInfo> *p_list);
+	bool property_can_revert(const StringName &p_name);
+	bool property_get_revert(const StringName &p_name, Variant &r_ret);
+	void validate_property(PropertyInfo &p_property) const;
+	void notification(int p_notification, bool p_reversed);
+	bool to_string(String &r_ret);
 };
 
 #define GDVIRTUAL_CALL(m_name, ...) _gdvirtual_##m_name##_call<false>(__VA_ARGS__)
@@ -604,7 +644,12 @@ private:
 	friend void postinitialize_handler(Object *);
 
 	ObjectGDExtension *_extension = nullptr;
-	GDExtensionClassInstancePtr _extension_instance = nullptr;
+	ObjectGDExtensionInstance *_extension_instance = nullptr;
+
+	_FORCE_INLINE_ void _set_object_extension_instance(ObjectGDExtension *p_extension, void *p_raw_extension_instance) {
+		_extension = p_extension;
+		_extension_instance = memnew(ObjectGDExtensionInstance(p_extension, p_raw_extension_instance));
+	}
 
 	struct SignalData {
 		struct Slot {
@@ -687,7 +732,7 @@ protected:
 
 	friend class GDExtensionMethodBind;
 	_ALWAYS_INLINE_ const ObjectGDExtension *_get_extension() const { return _extension; }
-	_ALWAYS_INLINE_ GDExtensionClassInstancePtr _get_extension_instance() const { return _extension_instance; }
+	_ALWAYS_INLINE_ ObjectGDExtensionInstance *_get_extension_instance() const { return _extension_instance; }
 	virtual void _initialize_classv() { initialize_class(); }
 	virtual bool _setv(const StringName &p_name, const Variant &p_property) { return false; };
 	virtual bool _getv(const StringName &p_name, Variant &r_property) const { return false; };

@@ -205,9 +205,10 @@ public:
 	virtual Variant call(Object *p_object, const Variant **p_args, int p_arg_count, Callable::CallError &r_error) const override {
 #ifdef TOOLS_ENABLED
 		ERR_FAIL_COND_V_MSG(!valid, Variant(), vformat("Cannot call invalid GDExtension method bind '%s'. It's probably cached - you may need to restart Godot.", name));
+		ERR_FAIL_COND_V_MSG(!is_static() && p_object->_get_extension_instance()->is_placeholder(), Variant(), vformat("Cannot call method on placeholder '%s'.", name));
 #endif
 		Variant ret;
-		GDExtensionClassInstancePtr extension_instance = is_static() ? nullptr : p_object->_get_extension_instance();
+		GDExtensionClassInstancePtr extension_instance = is_static() ? nullptr : p_object->_get_extension_instance()->get_binding_ptr();
 		GDExtensionCallError ce{ GDEXTENSION_CALL_OK, 0, 0 };
 		call_func(method_userdata, extension_instance, reinterpret_cast<GDExtensionConstVariantPtr *>(p_args), p_arg_count, (GDExtensionVariantPtr)&ret, &ce);
 		r_error.error = Callable::CallError::Error(ce.error);
@@ -218,9 +219,10 @@ public:
 	virtual void validated_call(Object *p_object, const Variant **p_args, Variant *r_ret) const override {
 #ifdef TOOLS_ENABLED
 		ERR_FAIL_COND_MSG(!valid, vformat("Cannot call invalid GDExtension method bind '%s'. It's probably cached - you may need to restart Godot.", name));
+		ERR_FAIL_COND_MSG(!is_static() && p_object->_get_extension_instance()->is_placeholder(), vformat("Cannot call method on placeholder '%s'.", name));
 #endif
 		ERR_FAIL_COND_MSG(vararg, "Vararg methods don't have validated call support. This is most likely an engine bug.");
-		GDExtensionClassInstancePtr extension_instance = is_static() ? nullptr : p_object->_get_extension_instance();
+		GDExtensionClassInstancePtr extension_instance = is_static() ? nullptr : p_object->_get_extension_instance()->get_binding_ptr();
 
 		if (validated_call_func) {
 			// This is added here, but it's unlikely to be provided by most extensions.
@@ -249,9 +251,10 @@ public:
 	virtual void ptrcall(Object *p_object, const void **p_args, void *r_ret) const override {
 #ifdef TOOLS_ENABLED
 		ERR_FAIL_COND_MSG(!valid, vformat("Cannot call invalid GDExtension method bind '%s'. It's probably cached - you may need to restart Godot.", name));
+		ERR_FAIL_COND_MSG(p_object->_get_extension_instance()->is_placeholder(), vformat("Cannot call method on placeholder '%s'.", name));
 #endif
 		ERR_FAIL_COND_MSG(vararg, "Vararg methods don't have ptrcall support. This is most likely an engine bug.");
-		GDExtensionClassInstancePtr extension_instance = p_object->_get_extension_instance();
+		GDExtensionClassInstancePtr extension_instance = p_object->_get_extension_instance()->get_binding_ptr();
 		ptrcall_func(method_userdata, extension_instance, reinterpret_cast<GDExtensionConstTypePtr *>(p_args), (GDExtensionTypePtr)r_ret);
 	}
 
@@ -341,10 +344,11 @@ public:
 
 #ifndef DISABLE_DEPRECATED
 void GDExtension::_register_extension_class(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_parent_class_name, const GDExtensionClassCreationInfo *p_extension_funcs) {
-	const GDExtensionClassCreationInfo2 class_info2 = {
+	const GDExtensionClassCreationInfo3 class_info3 = {
 		p_extension_funcs->is_virtual, // GDExtensionBool is_virtual;
 		p_extension_funcs->is_abstract, // GDExtensionBool is_abstract;
 		true, // GDExtensionBool is_exposed;
+		false, // GDExtensionBool is_gameplay;
 		p_extension_funcs->set_func, // GDExtensionClassSet set_func;
 		p_extension_funcs->get_func, // GDExtensionClassGet get_func;
 		p_extension_funcs->get_property_list_func, // GDExtensionClassGetPropertyList get_property_list_func;
@@ -369,15 +373,45 @@ void GDExtension::_register_extension_class(GDExtensionClassLibraryPtr p_library
 	const ClassCreationDeprecatedInfo legacy = {
 		p_extension_funcs->notification_func,
 	};
-	_register_extension_class_internal(p_library, p_class_name, p_parent_class_name, &class_info2, &legacy);
+	_register_extension_class_internal(p_library, p_class_name, p_parent_class_name, &class_info3, &legacy);
+}
+
+void GDExtension::_register_extension_class2(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_parent_class_name, const GDExtensionClassCreationInfo2 *p_extension_funcs) {
+	const GDExtensionClassCreationInfo3 class_info3 = {
+		p_extension_funcs->is_virtual, // GDExtensionBool is_virtual;
+		p_extension_funcs->is_abstract, // GDExtensionBool is_abstract;
+		p_extension_funcs->is_exposed, // GDExtensionBool is_exposed;
+		false, // GDExtensionBool is_gameplay;
+		p_extension_funcs->set_func, // GDExtensionClassSet set_func;
+		p_extension_funcs->get_func, // GDExtensionClassGet get_func;
+		p_extension_funcs->get_property_list_func, // GDExtensionClassGetPropertyList get_property_list_func;
+		p_extension_funcs->free_property_list_func, // GDExtensionClassFreePropertyList free_property_list_func;
+		p_extension_funcs->property_can_revert_func, // GDExtensionClassPropertyCanRevert property_can_revert_func;
+		p_extension_funcs->property_get_revert_func, // GDExtensionClassPropertyGetRevert property_get_revert_func;
+		p_extension_funcs->validate_property_func, // GDExtensionClassValidateProperty validate_property_func;
+		p_extension_funcs->notification_func, // GDExtensionClassNotification2 notification_func;
+		p_extension_funcs->to_string_func, // GDExtensionClassToString to_string_func;
+		p_extension_funcs->reference_func, // GDExtensionClassReference reference_func;
+		p_extension_funcs->unreference_func, // GDExtensionClassUnreference unreference_func;
+		p_extension_funcs->create_instance_func, // GDExtensionClassCreateInstance create_instance_func; /* this one is mandatory */
+		p_extension_funcs->free_instance_func, // GDExtensionClassFreeInstance free_instance_func; /* this one is mandatory */
+		p_extension_funcs->recreate_instance_func, // GDExtensionClassRecreateInstance recreate_instance_func;
+		p_extension_funcs->get_virtual_func, // GDExtensionClassGetVirtual get_virtual_func;
+		p_extension_funcs->get_virtual_call_data_func, // GDExtensionClassGetVirtualCallData get_virtual_call_data_func;
+		p_extension_funcs->call_virtual_with_data_func, // GDExtensionClassCallVirtualWithData call_virtual_func;
+		p_extension_funcs->get_rid_func, // GDExtensionClassGetRID get_rid;
+		p_extension_funcs->class_userdata, // void *class_userdata;
+	};
+
+	_register_extension_class_internal(p_library, p_class_name, p_parent_class_name, &class_info3);
 }
 #endif // DISABLE_DEPRECATED
 
-void GDExtension::_register_extension_class2(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_parent_class_name, const GDExtensionClassCreationInfo2 *p_extension_funcs) {
+void GDExtension::_register_extension_class3(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_parent_class_name, const GDExtensionClassCreationInfo3 *p_extension_funcs) {
 	_register_extension_class_internal(p_library, p_class_name, p_parent_class_name, p_extension_funcs);
 }
 
-void GDExtension::_register_extension_class_internal(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_parent_class_name, const GDExtensionClassCreationInfo2 *p_extension_funcs, const ClassCreationDeprecatedInfo *p_deprecated_funcs) {
+void GDExtension::_register_extension_class_internal(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_parent_class_name, const GDExtensionClassCreationInfo3 *p_extension_funcs, const ClassCreationDeprecatedInfo *p_deprecated_funcs) {
 	GDExtension *self = reinterpret_cast<GDExtension *>(p_library);
 
 	StringName class_name = *reinterpret_cast<const StringName *>(p_class_name);
@@ -405,7 +439,10 @@ void GDExtension::_register_extension_class_internal(GDExtensionClassLibraryPtr 
 	if (self->is_reloading && self->extension_classes.has(class_name)) {
 		extension = &self->extension_classes[class_name];
 		if (!parent_extension && parent_class_name != extension->gdextension.parent_class_name) {
-			ERR_FAIL_MSG(vformat("GDExtension class '%s' attempt to change parent type from '%s' to '%s' on hot reload. Restart Godot for this change to take effect.", class_name, extension->gdextension.parent_class_name, parent_class_name));
+			ERR_FAIL_MSG(vformat("GDExtension class '%s' cannot change parent type from '%s' to '%s' on hot reload. Restart Godot for this change to take effect.", class_name, extension->gdextension.parent_class_name, parent_class_name));
+		}
+		if (extension->gdextension.is_gameplay != (bool)p_extension_funcs->is_gameplay) {
+			ERR_FAIL_MSG(vformat("GDExtension class '%s' cannot change to/from gameplay class on hot reload. Restart Godot for this change to take effect.", class_name));
 		}
 		extension->is_reloading = false;
 	} else {
@@ -434,6 +471,7 @@ void GDExtension::_register_extension_class_internal(GDExtensionClassLibraryPtr 
 	extension->gdextension.is_virtual = p_extension_funcs->is_virtual;
 	extension->gdextension.is_abstract = p_extension_funcs->is_abstract;
 	extension->gdextension.is_exposed = p_extension_funcs->is_exposed;
+	extension->gdextension.is_gameplay = p_extension_funcs->is_gameplay;
 	extension->gdextension.set = p_extension_funcs->set_func;
 	extension->gdextension.get = p_extension_funcs->get_func;
 	extension->gdextension.get_property_list = p_extension_funcs->get_property_list_func;
@@ -829,8 +867,9 @@ void GDExtension::initialize_gdextensions() {
 
 #ifndef DISABLE_DEPRECATED
 	register_interface_function("classdb_register_extension_class", (GDExtensionInterfaceFunctionPtr)&GDExtension::_register_extension_class);
-#endif // DISABLE_DEPRECATED
 	register_interface_function("classdb_register_extension_class2", (GDExtensionInterfaceFunctionPtr)&GDExtension::_register_extension_class2);
+#endif // DISABLE_DEPRECATED
+	register_interface_function("classdb_register_extension_class3", (GDExtensionInterfaceFunctionPtr)&GDExtension::_register_extension_class3);
 	register_interface_function("classdb_register_extension_class_method", (GDExtensionInterfaceFunctionPtr)&GDExtension::_register_extension_class_method);
 	register_interface_function("classdb_register_extension_class_integer_constant", (GDExtensionInterfaceFunctionPtr)&GDExtension::_register_extension_class_integer_constant);
 	register_interface_function("classdb_register_extension_class_property", (GDExtensionInterfaceFunctionPtr)&GDExtension::_register_extension_class_property);

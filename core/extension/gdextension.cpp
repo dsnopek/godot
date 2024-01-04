@@ -205,10 +205,9 @@ public:
 	virtual Variant call(Object *p_object, const Variant **p_args, int p_arg_count, Callable::CallError &r_error) const override {
 #ifdef TOOLS_ENABLED
 		ERR_FAIL_COND_V_MSG(!valid, Variant(), vformat("Cannot call invalid GDExtension method bind '%s'. It's probably cached - you may need to restart Godot.", name));
-		ERR_FAIL_COND_V_MSG(!is_static() && p_object->_get_extension_instance()->is_placeholder(), Variant(), vformat("Cannot call method on placeholder '%s'.", name));
 #endif
 		Variant ret;
-		GDExtensionClassInstancePtr extension_instance = is_static() ? nullptr : p_object->_get_extension_instance()->get_binding_ptr();
+		GDExtensionClassInstancePtr extension_instance = is_static() ? nullptr : p_object->_get_extension_instance();
 		GDExtensionCallError ce{ GDEXTENSION_CALL_OK, 0, 0 };
 		call_func(method_userdata, extension_instance, reinterpret_cast<GDExtensionConstVariantPtr *>(p_args), p_arg_count, (GDExtensionVariantPtr)&ret, &ce);
 		r_error.error = Callable::CallError::Error(ce.error);
@@ -219,10 +218,9 @@ public:
 	virtual void validated_call(Object *p_object, const Variant **p_args, Variant *r_ret) const override {
 #ifdef TOOLS_ENABLED
 		ERR_FAIL_COND_MSG(!valid, vformat("Cannot call invalid GDExtension method bind '%s'. It's probably cached - you may need to restart Godot.", name));
-		ERR_FAIL_COND_MSG(!is_static() && p_object->_get_extension_instance()->is_placeholder(), vformat("Cannot call method on placeholder '%s'.", name));
 #endif
 		ERR_FAIL_COND_MSG(vararg, "Vararg methods don't have validated call support. This is most likely an engine bug.");
-		GDExtensionClassInstancePtr extension_instance = is_static() ? nullptr : p_object->_get_extension_instance()->get_binding_ptr();
+		GDExtensionClassInstancePtr extension_instance = is_static() ? nullptr : p_object->_get_extension_instance();
 
 		if (validated_call_func) {
 			// This is added here, but it's unlikely to be provided by most extensions.
@@ -251,10 +249,9 @@ public:
 	virtual void ptrcall(Object *p_object, const void **p_args, void *r_ret) const override {
 #ifdef TOOLS_ENABLED
 		ERR_FAIL_COND_MSG(!valid, vformat("Cannot call invalid GDExtension method bind '%s'. It's probably cached - you may need to restart Godot.", name));
-		ERR_FAIL_COND_MSG(p_object->_get_extension_instance()->is_placeholder(), vformat("Cannot call method on placeholder '%s'.", name));
 #endif
 		ERR_FAIL_COND_MSG(vararg, "Vararg methods don't have ptrcall support. This is most likely an engine bug.");
-		GDExtensionClassInstancePtr extension_instance = p_object->_get_extension_instance()->get_binding_ptr();
+		GDExtensionClassInstancePtr extension_instance = p_object->_get_extension_instance();
 		ptrcall_func(method_userdata, extension_instance, reinterpret_cast<GDExtensionConstTypePtr *>(p_args), (GDExtensionTypePtr)r_ret);
 	}
 

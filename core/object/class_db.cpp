@@ -371,6 +371,7 @@ Object *ClassDB::_instantiate_internal(const StringName &p_class, bool p_create_
 #endif
 	if (ti->gdextension && ti->gdextension->create_instance) {
 #ifdef TOOLS_ENABLED
+		/*
 		if (ti->gdextension->is_gameplay && !p_create_real_extension_class && Engine::get_singleton()->is_editor_hint()) {
 			// Find the closest native parent.
 			ClassInfo *native_parent = ti->inherits_ptr;
@@ -383,6 +384,7 @@ Object *ClassDB::_instantiate_internal(const StringName &p_class, bool p_create_
 			placeholder->_set_object_extension_instance(ti->gdextension, nullptr);
 			return placeholder;
 		}
+		*/
 #endif
 
 		Object *obj = (Object *)ti->gdextension->create_instance(ti->gdextension->class_userdata);
@@ -413,7 +415,8 @@ void ClassDB::set_object_extension_instance(Object *p_object, const StringName &
 		ERR_FAIL_NULL_MSG(ti->gdextension, "Class '" + String(p_class) + "' has no native extension.");
 	}
 
-	p_object->_set_object_extension_instance(ti->gdextension, p_instance);
+	p_object->_extension = ti->gdextension;
+	p_object->_extension_instance = p_instance;
 }
 
 bool ClassDB::can_instantiate(const StringName &p_class) {

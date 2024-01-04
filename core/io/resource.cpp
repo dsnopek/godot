@@ -329,9 +329,9 @@ RID Resource::get_rid() const {
 			return ret;
 		}
 	}
-
-	if (_get_extension_instance()) {
-		RID ret = _get_extension_instance()->get_rid();
+	if (_get_extension() && _get_extension()->get_rid) {
+		RID ret;
+		ret.from_uint64(_get_extension()->get_rid(_get_extension_instance()));
 		if (ret.is_valid()) {
 			return ret;
 		}

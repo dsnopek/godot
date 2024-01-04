@@ -22,8 +22,8 @@ proto = """#define GDVIRTUAL$VER($RET m_name $ARG)\\
 		if (_gdvirtual_##m_name) {\\
 			$CALLPTRARGS\\
 			$CALLPTRRETDEF\\
-            _get_extension_instance()->call_virtual(_gdvirtual_##m_name##_sn, _gdvirtual_##m_name, $CALLPTRARGPASS, $CALLPTRRETPASS);\\
-            $CALLPTRRET\\
+			_get_extension_instance()->call_virtual(_gdvirtual_##m_name##_sn, _gdvirtual_##m_name, $CALLPTRARGPASS, $CALLPTRRETPASS);\\
+			$CALLPTRRET\\
 			return true;\\
 		}\\
 		if (required) {\\
@@ -146,7 +146,7 @@ def generate_version(argcount, const=False, returns=False):
         s = s.replace("$CALLSIBEGIN", "")
         s = s.replace("\t\t\t\t$CALLSIRET\\\n", "")
         s = s.replace("$CALLPTRRETPASS", "nullptr")
-        s = s.replace("\t\t\t\t$CALLPTRRET\\\n", "")
+        s = s.replace("\t\t\t$CALLPTRRET\\\n", "")
 
     s = s.replace(" $ARG", argtext)
     s = s.replace("$CALLARGS", callargtext)

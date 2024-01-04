@@ -159,6 +159,8 @@ public:
 				required(p_required) {
 		}
 		ExportOption() {}
+
+		static bool from_dict(const Dictionary &p_dict, ExportOption &r_option);
 	};
 
 	virtual Ref<EditorExportPreset> create_preset();

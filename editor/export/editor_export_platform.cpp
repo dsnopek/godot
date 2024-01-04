@@ -61,6 +61,16 @@ static int _get_pad(int p_alignment, int p_n) {
 
 #define PCK_PADDING 16
 
+bool EditorExportPlatform::ExportOption::from_dict(const Dictionary &p_dict, EditorExportPlatform::ExportOption &r_option) {
+	ERR_FAIL_COND_V_MSG(!p_dict.has("option"), false, "Missing required element 'option'");
+	ERR_FAIL_COND_V_MSG(!p_dict.has("default_value"), false, "Missing required element 'default_value'");
+	PropertyInfo property_info = PropertyInfo::from_dict(p_dict["option"]);
+	Variant default_value = p_dict["default_value"];
+	bool update_visibility = p_dict.has("update_visibility") && p_dict["update_visibility"];
+	r_option = EditorExportPlatform::ExportOption(property_info, default_value, update_visibility);
+	return true;
+}
+
 bool EditorExportPlatform::fill_log_messages(RichTextLabel *p_log, Error p_err) {
 	bool has_messages = false;
 

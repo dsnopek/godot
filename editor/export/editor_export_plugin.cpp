@@ -263,13 +263,10 @@ void EditorExportPlugin::_get_export_options(const Ref<EditorExportPlatform> &p_
 	TypedArray<Dictionary> ret;
 	GDVIRTUAL_CALL(_get_export_options, p_platform, ret);
 	for (int i = 0; i < ret.size(); i++) {
-		Dictionary option = ret[i];
-		ERR_CONTINUE_MSG(!option.has("option"), "Missing required element 'option'");
-		ERR_CONTINUE_MSG(!option.has("default_value"), "Missing required element 'default_value'");
-		PropertyInfo property_info = PropertyInfo::from_dict(option["option"]);
-		Variant default_value = option["default_value"];
-		bool update_visibility = option.has("update_visibility") && option["update_visibility"];
-		r_options->push_back(EditorExportPlatform::ExportOption(property_info, default_value, update_visibility));
+		EditorExportPlatform::ExportOption option;
+		if (EditorExportPlatform::ExportOption::from_dict(ret[i], option)) {
+			r_options->push_back(option);
+		}
 	}
 }
 

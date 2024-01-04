@@ -369,6 +369,9 @@ class ObjectGDExtensionInstance {
 		HashMap<StringName, Variant> properties;
 	};
 	PlaceholderData *placeholder_data = nullptr;
+
+	bool placeholder_set(const StringName &p_name, const Variant &p_value);
+	bool placeholder_get(const StringName &p_name, Variant &r_ret);
 #endif
 
 public:
@@ -385,18 +388,132 @@ public:
 	}
 #endif
 
-	void reference();
-	void unreference();
-	RID get_rid();
-
-	bool set(const StringName &p_name, const Variant &p_value);
-	bool get(const StringName &p_name, Variant &r_ret);
 	void get_property_list(const Object *p_object, List<PropertyInfo> *p_list);
 	bool property_can_revert(const StringName &p_name);
 	bool property_get_revert(const StringName &p_name, Variant &r_ret);
 	void validate_property(PropertyInfo &p_property) const;
-	void notification(int p_notification, bool p_reversed);
 	bool to_string(String &r_ret);
+	RID get_rid();
+
+	// Inline the following functions for performance.
+
+	_FORCE_INLINE_ void reference() {
+#ifdef TOOLS_ENABLED
+		if (placeholder_data) {
+			return;
+		}
+#endif
+
+		if (extension->reference) {
+			extension->reference(extension_instance);
+		}
+	}
+
+	_FORCE_INLINE_ void unreference() {
+#ifdef TOOLS_ENABLED
+		if (placeholder_data) {
+			return;
+		}
+#endif
+
+		if (extension->unreference) {
+			extension->unreference(extension_instance);
+		}
+	}
+
+	_FORCE_INLINE_ bool set(const StringName &p_name, const Variant &p_value) {
+#ifdef TOOLS_ENABLED
+		if (placeholder_data) {
+			return placeholder_set(p_name, p_value);
+		}
+#endif
+
+// C style pointer casts should never trigger a compiler warning because the risk is assumed by the user, so GCC should keep quiet about it.
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#endif
+
+		if (extension->set) {
+			return extension->set(extension_instance, (const GDExtensionStringNamePtr)&p_name, (const GDExtensionVariantPtr)&p_value);
+		}
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
+		return false;
+	}
+
+	_FORCE_INLINE_ bool get(const StringName &p_name, Variant &r_ret) {
+#ifdef TOOLS_ENABLED
+		if (placeholder_data) {
+			return placeholder_get(p_name, r_ret);
+		}
+#endif
+
+// C style pointer casts should never trigger a compiler warning because the risk is assumed by the user, so GCC should keep quiet about it.
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#endif
+
+		if (extension->get) {
+			return extension->get(extension_instance, (const GDExtensionStringNamePtr)&p_name, (GDExtensionVariantPtr)&r_ret);
+		}
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
+		return false;
+	}
+
+	_FORCE_INLINE_ void notification(int p_notification, bool p_reversed) {
+#ifdef TOOLS_ENABLED
+		if (placeholder_data) {
+			return;
+		}
+#endif
+
+		if (extension->notification2) {
+			extension->notification2(extension_instance, p_notification, static_cast<GDExtensionBool>(p_reversed));
+#ifndef DISABLE_DEPRECATED
+		} else if (extension->notification) {
+			extension->notification(extension_instance, p_notification);
+#endif // DISABLE_DEPRECATED
+		}
+	}
+
+	_FORCE_INLINE_ void *get_virtual(const StringName &p_name) {
+#ifdef TOOLS_ENABLED
+		if (placeholder_data) {
+			return nullptr;
+		}
+#endif
+
+		if (extension->get_virtual_call_data && extension->call_virtual_with_data) {
+			return extension->get_virtual_call_data(extension->class_userdata, &p_name);
+		} else if (extension->get_virtual) {
+			return (void *)extension->get_virtual(extension->class_userdata, &p_name);
+		}
+
+		return nullptr;
+	}
+
+	_FORCE_INLINE_ void call_virtual(const StringName &p_name, void *p_data, GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_ret) {
+#ifdef TOOLS_ENABLED
+		if (placeholder_data) {
+			return;
+		}
+#endif
+
+		if (extension->get_virtual_call_data && extension->call_virtual_with_data) {
+			extension->call_virtual_with_data(extension_instance, &p_name, p_data, p_args, r_ret);
+		} else {
+			((GDExtensionClassCallVirtual)p_data)(extension_instance, p_args, r_ret);
+		}
+	}
 };
 
 #define GDVIRTUAL_CALL(m_name, ...) _gdvirtual_##m_name##_call<false>(__VA_ARGS__)

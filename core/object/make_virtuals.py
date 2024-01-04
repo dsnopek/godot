@@ -15,25 +15,15 @@ proto = """#define GDVIRTUAL$VER($RET m_name $ARG)\\
 			}\\
 		}\\
 		if (unlikely(_get_extension() && !_gdvirtual_##m_name##_initialized)) {\\
-			_gdvirtual_##m_name = nullptr;\\
-			if (_get_extension()->get_virtual_call_data && _get_extension()->call_virtual_with_data) {\\
-				_gdvirtual_##m_name = _get_extension()->get_virtual_call_data(_get_extension()->class_userdata, &_gdvirtual_##m_name##_sn);\\
-			} else if (_get_extension()->get_virtual) {\\
-				_gdvirtual_##m_name = (void *)_get_extension()->get_virtual(_get_extension()->class_userdata, &_gdvirtual_##m_name##_sn);\\
-			}\\
+			_gdvirtual_##m_name = _get_extension_instance()->get_virtual(_gdvirtual_##m_name##_sn);\\
 			GDVIRTUAL_TRACK(_gdvirtual_##m_name, _gdvirtual_##m_name##_initialized);\\
 			_gdvirtual_##m_name##_initialized = true;\\
 		}\\
 		if (_gdvirtual_##m_name) {\\
 			$CALLPTRARGS\\
 			$CALLPTRRETDEF\\
-			if (_get_extension()->get_virtual_call_data && _get_extension()->call_virtual_with_data) {\\
-				_get_extension()->call_virtual_with_data(_get_extension_instance()->get_binding_ptr(), &_gdvirtual_##m_name##_sn, _gdvirtual_##m_name, $CALLPTRARGPASS, $CALLPTRRETPASS);\\
-				$CALLPTRRET\\
-			} else {\\
-				((GDExtensionClassCallVirtual)_gdvirtual_##m_name)(_get_extension_instance()->get_binding_ptr(), $CALLPTRARGPASS, $CALLPTRRETPASS);\\
-				$CALLPTRRET\\
-			}\\
+            _get_extension_instance()->call_virtual(_gdvirtual_##m_name##_sn, _gdvirtual_##m_name, $CALLPTRARGPASS, $CALLPTRRETPASS);\\
+            $CALLPTRRET\\
 			return true;\\
 		}\\
 		if (required) {\\

@@ -215,113 +215,36 @@ ObjectGDExtensionInstance::~ObjectGDExtensionInstance() {
 #endif
 }
 
-void ObjectGDExtensionInstance::reference() {
 #ifdef TOOLS_ENABLED
-	if (placeholder_data) {
-		return;
-	}
-#endif
+bool ObjectGDExtensionInstance::placeholder_set(const StringName &p_name, const Variant &p_value) {
+	bool is_default_valid = false;
+	Variant default_value = ClassDB::class_get_default_property_value(extension->class_name, p_name, &is_default_valid);
 
-	if (extension->reference) {
-		extension->reference(extension_instance);
+	// If there's a default value, then we know it's a valid property.
+	if (is_default_valid) {
+		placeholder_data->properties[p_name] = p_value;
 	}
+
+	// We have to return true so Godot doesn't try to call the real setter function.
+	return true;
 }
 
-void ObjectGDExtensionInstance::unreference() {
-#ifdef TOOLS_ENABLED
-	if (placeholder_data) {
-		return;
-	}
-#endif
-
-	if (extension->unreference) {
-		extension->unreference(extension_instance);
-	}
-}
-
-RID ObjectGDExtensionInstance::get_rid() {
-	RID ret;
-
-#ifdef TOOLS_ENABLED
-	if (placeholder_data) {
-		return ret;
-	}
-#endif
-
-	if (extension->get_rid) {
-		ret.from_uint64(extension->get_rid(extension_instance));
-	}
-	return ret;
-}
-
-bool ObjectGDExtensionInstance::set(const StringName &p_name, const Variant &p_value) {
-#ifdef TOOLS_ENABLED
-	if (placeholder_data) {
+bool ObjectGDExtensionInstance::placeholder_get(const StringName &p_name, Variant &r_ret) {
+	const Variant *value = placeholder_data->properties.getptr(p_name);
+	if (value) {
+		r_ret = *value;
+	} else {
 		bool is_default_valid = false;
 		Variant default_value = ClassDB::class_get_default_property_value(extension->class_name, p_name, &is_default_valid);
-
-		// If there's a default value, then we know it's a valid property.
 		if (is_default_valid) {
-			placeholder_data->properties[p_name] = p_value;
+			r_ret = default_value;
 		}
-
-		// We have to return true so Godot doesn't try to call the real setter function.
-		return true;
-	}
-#endif
-
-// C style pointer casts should never trigger a compiler warning because the risk is assumed by the user, so GCC should keep quiet about it.
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#endif
-
-	if (extension->set) {
-		return extension->set(extension_instance, (const GDExtensionStringNamePtr)&p_name, (const GDExtensionVariantPtr)&p_value);
 	}
 
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
-
-	return false;
+	// We have to return true so Godot doesn't try to call the real getter function.
+	return true;
 }
-
-bool ObjectGDExtensionInstance::get(const StringName &p_name, Variant &r_ret) {
-#ifdef TOOLS_ENABLED
-	if (placeholder_data) {
-		const Variant *value = placeholder_data->properties.getptr(p_name);
-		if (value) {
-			r_ret = *value;
-		} else {
-			bool is_default_valid = false;
-			Variant default_value = ClassDB::class_get_default_property_value(extension->class_name, p_name, &is_default_valid);
-			if (is_default_valid) {
-				r_ret = default_value;
-			}
-		}
-
-		// We have to return true so Godot doesn't try to call the real getter function.
-		return true;
-	}
 #endif
-
-// C style pointer casts should never trigger a compiler warning because the risk is assumed by the user, so GCC should keep quiet about it.
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#endif
-
-	if (extension->get) {
-		return extension->get(extension_instance, (const GDExtensionStringNamePtr)&p_name, (GDExtensionVariantPtr)&r_ret);
-	}
-
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
-
-	return false;
-}
 
 void ObjectGDExtensionInstance::get_property_list(const Object *p_object, List<PropertyInfo> *p_list) {
 	const ObjectGDExtension *current_extension = extension;
@@ -428,22 +351,6 @@ void ObjectGDExtensionInstance::validate_property(PropertyInfo &p_property) cons
 	}
 }
 
-void ObjectGDExtensionInstance::notification(int p_notification, bool p_reversed) {
-#ifdef TOOLS_ENABLED
-	if (placeholder_data) {
-		return;
-	}
-#endif
-
-	if (extension->notification2) {
-		extension->notification2(extension_instance, p_notification, static_cast<GDExtensionBool>(p_reversed));
-#ifndef DISABLE_DEPRECATED
-	} else if (extension->notification) {
-		extension->notification(extension_instance, p_notification);
-#endif // DISABLE_DEPRECATED
-	}
-}
-
 bool ObjectGDExtensionInstance::to_string(String &r_ret) {
 #ifdef TOOLS_ENABLED
 	if (placeholder_data) {
@@ -458,6 +365,21 @@ bool ObjectGDExtensionInstance::to_string(String &r_ret) {
 	}
 
 	return false;
+}
+
+RID ObjectGDExtensionInstance::get_rid() {
+	RID ret;
+
+#ifdef TOOLS_ENABLED
+	if (placeholder_data) {
+		return ret;
+	}
+#endif
+
+	if (extension->get_rid) {
+		ret.from_uint64(extension->get_rid(extension_instance));
+	}
+	return ret;
 }
 
 bool Object::_predelete() {

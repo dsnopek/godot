@@ -468,7 +468,9 @@ void GDExtension::_register_extension_class_internal(GDExtensionClassLibraryPtr 
 	extension->gdextension.is_virtual = p_extension_funcs->is_virtual;
 	extension->gdextension.is_abstract = p_extension_funcs->is_abstract;
 	extension->gdextension.is_exposed = p_extension_funcs->is_exposed;
+#ifdef TOOLS_ENABLED
 	extension->gdextension.is_gameplay = p_extension_funcs->is_gameplay;
+#endif
 	extension->gdextension.set = p_extension_funcs->set_func;
 	extension->gdextension.get = p_extension_funcs->get_func;
 	extension->gdextension.get_property_list = p_extension_funcs->get_property_list_func;

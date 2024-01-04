@@ -317,7 +317,9 @@ struct ObjectGDExtension {
 	bool is_virtual = false;
 	bool is_abstract = false;
 	bool is_exposed = true;
+#ifdef TOOLS_ENABLED
 	bool is_gameplay = false;
+#endif
 	GDExtensionClassSet set;
 	GDExtensionClassGet get;
 	GDExtensionClassGetPropertyList get_property_list;

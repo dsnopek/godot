@@ -333,13 +333,19 @@ bool OpenXRAPI::create_instance() {
 		}
 	}
 
+	Vector<const char *> layer_ptrs;
+	bool enable_openxr_validation = false;
+	if (enable_openxr_validation) {
+		layer_ptrs.push_back("XR_APILAYER_LUNARG_core_validation");
+	}
+
 	XrInstanceCreateInfo instance_create_info = {
 		XR_TYPE_INSTANCE_CREATE_INFO, // type
 		next_pointer, // next
 		0, // createFlags
 		application_info, // applicationInfo
-		0, // enabledApiLayerCount, need to find out if we need support for this?
-		nullptr, // enabledApiLayerNames
+		uint32_t(layer_ptrs.size()), // enabledApiLayerCount
+		layer_ptrs.ptr(), // enabledApiLayerNames
 		uint32_t(extension_ptrs.size()), // enabledExtensionCount
 		extension_ptrs.ptr() // enabledExtensionNames
 	};

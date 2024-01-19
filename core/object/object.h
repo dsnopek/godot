@@ -319,6 +319,7 @@ struct ObjectGDExtension {
 	bool is_exposed = true;
 #ifdef TOOLS_ENABLED
 	bool is_gameplay = false;
+	bool is_placeholder = false;
 #endif
 	GDExtensionClassSet set;
 	GDExtensionClassGet get;

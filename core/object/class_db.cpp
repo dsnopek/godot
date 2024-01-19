@@ -345,11 +345,7 @@ StringName ClassDB::get_compatibility_class(const StringName &p_class) {
 	return StringName();
 }
 
-Object *ClassDB::instantiate(const StringName &p_class) {
-	return _instantiate_internal(p_class);
-}
-
-Object *ClassDB::_instantiate_internal(const StringName &p_class, bool p_create_real_extension_class) {
+Object *ClassDB::instantiate(const StringName &p_class, bool p_allow_placeholders) {
 	ClassInfo *ti;
 	{
 		OBJTYPE_RLOCK;
@@ -371,8 +367,26 @@ Object *ClassDB::_instantiate_internal(const StringName &p_class, bool p_create_
 #endif
 	if (ti->gdextension && ti->gdextension->create_instance) {
 #ifdef TOOLS_ENABLED
-		/*
-		if (ti->gdextension->is_gameplay && !p_create_real_extension_class && Engine::get_singleton()->is_editor_hint()) {
+		if (ti->gdextension->is_gameplay && p_allow_placeholders && Engine::get_singleton()->is_editor_hint()) {
+			ObjectGDExtension *placeholder_extension = placeholder_extensions.getptr(ti->name);
+			if (!placeholder_extension) {
+				placeholder_extensions[ti->name] = ObjectGDExtension();
+				placeholder_extension = placeholder_extensions.getptr(ti->name);
+
+				// Make a "fake" extension to act as a placeholder.
+				placeholder_extension->library = ti->gdextension->library;
+				placeholder_extension->parent = ti->gdextension->parent;
+				placeholder_extension->children = ti->gdextension->children;
+				placeholder_extension->parent_class_name = ti->gdextension->parent_class_name;
+				placeholder_extension->class_name = ti->gdextension->class_name;
+				placeholder_extension->editor_class = ti->gdextension->editor_class;
+				placeholder_extension->reloadable = ti->gdextension->reloadable;
+				placeholder_extension->is_virtual = ti->gdextension->is_virtual;
+				placeholder_extension->is_abstract = ti->gdextension->is_abstract;
+				placeholder_extension->is_exposed = ti->gdextension->is_exposed;
+				placeholder_extension->is_gameplay = ti->gdextension->is_gameplay;
+			}
+
 			// Find the closest native parent.
 			ClassInfo *native_parent = ti->inherits_ptr;
 			while (native_parent->gdextension) {
@@ -380,11 +394,11 @@ Object *ClassDB::_instantiate_internal(const StringName &p_class, bool p_create_
 			}
 
 			Object *placeholder = native_parent->creation_func();
-			// Setting the 2nd argument to nullptr makes this into a placeholder.
-			placeholder->_set_object_extension_instance(ti->gdextension, nullptr);
+			placeholder->_extension = placeholder_extension;
+			// @todo This is where it goes!
+			placeholder->_extension_instance = nullptr;
 			return placeholder;
 		}
-		*/
 #endif
 
 		Object *obj = (Object *)ti->gdextension->create_instance(ti->gdextension->class_userdata);

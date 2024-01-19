@@ -539,7 +539,6 @@ Object *ClassDB::instantiate(const StringName &p_class, bool p_allow_placeholder
 			Object *placeholder = native_parent->creation_func();
 			placeholder->_extension = placeholder_extension;
 			placeholder->_extension_instance = memnew(PlaceholderExtensionInstance(ti->name));
-			// @todo Call set_instance_binding so the GDExtension itself gets the intended instance
 			return placeholder;
 		}
 #endif

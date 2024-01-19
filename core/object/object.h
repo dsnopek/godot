@@ -981,6 +981,7 @@ public:
 #ifdef TOOLS_ENABLED
 	void clear_internal_extension();
 	void reset_internal_extension(ObjectGDExtension *p_extension);
+	bool is_extension_placeholder() const { return _extension && _extension->is_placeholder; }
 #endif
 
 	void clear_internal_resource_paths();

@@ -454,7 +454,7 @@ void EditorResourcePicker::_edit_menu_cbk(int p_which) {
 			if (ScriptServer::is_global_class(intype)) {
 				obj = EditorNode::get_editor_data().script_class_instance(intype);
 			} else {
-				obj = ClassDB::instantiate(intype);
+				obj = ClassDB::instantiate(intype, true);
 			}
 
 			if (!obj) {

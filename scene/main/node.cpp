@@ -2480,7 +2480,11 @@ Node *Node::_duplicate(int p_flags, HashMap<const Node *, Node *> *r_duplimap) c
 		instantiated = true;
 
 	} else {
+#ifdef TOOLS_ENABLED
+		Object *obj = ClassDB::instantiate(get_class(), is_extension_placeholder());
+#else
 		Object *obj = ClassDB::instantiate(get_class());
+#endif
 		ERR_FAIL_NULL_V(obj, nullptr);
 		node = Object::cast_to<Node>(obj);
 		if (!node) {

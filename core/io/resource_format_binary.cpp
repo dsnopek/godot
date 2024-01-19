@@ -749,7 +749,7 @@ Error ResourceLoaderBinary::load() {
 		if (res.is_null()) {
 			//did not replace
 
-			Object *obj = ClassDB::instantiate(t);
+			Object *obj = ClassDB::instantiate(t, true);
 			if (!obj) {
 				if (ResourceLoader::is_creating_missing_resources_if_class_unavailable_enabled()) {
 					//create a missing resource

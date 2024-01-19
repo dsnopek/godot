@@ -1275,14 +1275,14 @@ void SceneTreeDock::_tool_selected(int p_tool, bool p_confirm_override) {
 				if (ScriptServer::is_global_class(name)) {
 					Ref<Script> scr = ResourceLoader::load(ScriptServer::get_global_class_path(name), "Script");
 					if (scr.is_valid()) {
-						new_node = Object::cast_to<Node>(ClassDB::instantiate(scr->get_instance_base_type()));
+						new_node = Object::cast_to<Node>(ClassDB::instantiate(scr->get_instance_base_type(), true));
 						if (new_node) {
 							new_node->set_script(scr);
 							new_node->set_name(name);
 						}
 					}
 				} else {
-					new_node = Object::cast_to<Node>(ClassDB::instantiate(selected_favorite_root));
+					new_node = Object::cast_to<Node>(ClassDB::instantiate(selected_favorite_root, true));
 				}
 
 				if (!new_node) {
@@ -2637,7 +2637,7 @@ void SceneTreeDock::_replace_node(Node *p_node, Node *p_by_node, bool p_keep_pro
 	Node *newnode = p_by_node;
 
 	if (p_keep_properties) {
-		Node *default_oldnode = Object::cast_to<Node>(ClassDB::instantiate(n->get_class()));
+		Node *default_oldnode = Object::cast_to<Node>(ClassDB::instantiate(n->get_class(), true));
 		List<PropertyInfo> pinfo;
 		n->get_property_list(&pinfo);
 
@@ -2991,7 +2991,7 @@ void SceneTreeDock::_script_dropped(String p_file, NodePath p_to) {
 
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
 	if (Input::get_singleton()->is_key_pressed(Key::CMD_OR_CTRL)) {
-		Object *obj = ClassDB::instantiate(scr->get_instance_base_type());
+		Object *obj = ClassDB::instantiate(scr->get_instance_base_type(), true);
 		ERR_FAIL_NULL(obj);
 
 		Node *new_node = Object::cast_to<Node>(obj);

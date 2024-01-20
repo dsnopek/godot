@@ -2268,6 +2268,7 @@ typedef GDExtensionObjectPtr (*GDExtensionInterfaceObjectGetInstanceFromId)(GDOb
  */
 typedef GDObjectInstanceID (*GDExtensionInterfaceObjectGetInstanceId)(GDExtensionConstObjectPtr p_object);
 
+// @todo Do we need break this up into a call and ptrcall, the first for the script and the 2nd for any GDExtensions?
 /**
  * @name object_call_virtual_method
  * @since 4.3
@@ -2500,6 +2501,7 @@ typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClass2)(GDExtensionCl
  */
 typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClassMethod)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, const GDExtensionClassMethodInfo *p_method_info);
 
+// @todo In order to make a ptrcall to a GDExtension implementing this virtual method, we'll need to give a callback that can call it -- or change our virtual method registration
 /**
  * @name classdb_register_extension_class_virtual_method
  * @since 4.3

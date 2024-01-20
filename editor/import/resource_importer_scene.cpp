@@ -2514,7 +2514,7 @@ Error ResourceImporterScene::import(const String &p_source_file, const String &p
 		if (scene->get_class_name() != root_type) {
 			// If the user specified a Godot node type that does not match
 			// what the scene import gave us, replace the root node.
-			Node *base_node = Object::cast_to<Node>(ClassDB::instantiate(root_type, true));
+			Node *base_node = Object::cast_to<Node>(ClassDB::instantiate(root_type));
 			if (base_node) {
 				scene->replace_by(base_node);
 				scene->set_owner(nullptr);

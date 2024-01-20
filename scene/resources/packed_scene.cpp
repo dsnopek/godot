@@ -234,7 +234,7 @@ Node *SceneState::instantiate(GenEditState p_edit_state) const {
 			}
 		} else {
 			//node belongs to this scene and must be created
-			Object *obj = ClassDB::instantiate(snames[n.type], true);
+			Object *obj = ClassDB::instantiate(snames[n.type]);
 
 			node = Object::cast_to<Node>(obj);
 

@@ -539,7 +539,7 @@ Error ResourceLoaderText::load() {
 			} else {
 				//create
 
-				Object *obj = ClassDB::instantiate(type, true);
+				Object *obj = ClassDB::instantiate(type);
 				if (!obj) {
 					if (ResourceLoader::is_creating_missing_resources_if_class_unavailable_enabled()) {
 						missing_resource = memnew(MissingResource);
@@ -670,7 +670,7 @@ Error ResourceLoaderText::load() {
 		MissingResource *missing_resource = nullptr;
 
 		if (!resource.is_valid()) {
-			Object *obj = ClassDB::instantiate(res_type, true);
+			Object *obj = ClassDB::instantiate(res_type);
 			if (!obj) {
 				if (ResourceLoader::is_creating_missing_resources_if_class_unavailable_enabled()) {
 					missing_resource = memnew(MissingResource);

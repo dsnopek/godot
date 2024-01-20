@@ -2268,6 +2268,23 @@ typedef GDExtensionObjectPtr (*GDExtensionInterfaceObjectGetInstanceFromId)(GDOb
  */
 typedef GDObjectInstanceID (*GDExtensionInterfaceObjectGetInstanceId)(GDExtensionConstObjectPtr p_object);
 
+/**
+ * @name object_call_virtual_method
+ * @since 4.3
+ *
+ * Calls the script or other GDExtension that implements a virtual method on this object.
+ *
+ * This is intended to be used for virtual methods registered via `classdb_register_extension_class_virtual_method`.
+ *
+ * @param p_object A pointer to the Object.
+ * @param p_method A pointer to a StringName identifying the method.
+ * @param p_args A pointer to a C array of Variant.
+ * @param p_argument_count The number of arguments.
+ * @param r_return A pointer a Variant which will be assigned the return value.
+ * @param r_error A pointer the structure which will hold error information.
+ */
+typedef void (*GDExtensionInterfaceObjectCallVirtualMethod)(GDExtensionClassInstancePtr p_object, GDExtensionConstStringNamePtr p_method, const GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionVariantPtr r_return, GDExtensionCallError *r_error);
+
 /* INTERFACE: Reference */
 
 /**
@@ -2482,6 +2499,20 @@ typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClass2)(GDExtensionCl
  * @param p_method_info A pointer to a GDExtensionClassMethodInfo struct.
  */
 typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClassMethod)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, const GDExtensionClassMethodInfo *p_method_info);
+
+/**
+ * @name classdb_register_extension_class_virtual_method
+ * @since 4.3
+ *
+ * Registers a virtual method on an extension class in ClassDB, that can be implemented by scripts or other extensions.
+ *
+ * The `method_userdata`, `call_func` and `ptrcall_func` properties on `p_method_info` can be omitted, as they won't be used in this case.
+ *
+ * @param p_library A pointer the library received by the GDExtension's entry point function.
+ * @param p_class_name A pointer to a StringName with the class name.
+ * @param p_method_info A pointer to a GDExtensionClassMethodInfo struct.
+ */
+typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClassVirtualMethod)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, const GDExtensionClassMethodInfo *p_method_info);
 
 /**
  * @name classdb_register_extension_class_integer_constant

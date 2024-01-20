@@ -1974,6 +1974,8 @@ void ClassDB::unregister_extension_class(const StringName &p_class, bool p_free_
 		}
 	}
 	classes.erase(p_class);
+	default_values_cached.erase(p_class);
+	default_values.erase(p_class);
 }
 
 HashMap<StringName, ClassDB::NativeStruct> ClassDB::native_structs;

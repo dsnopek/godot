@@ -381,6 +381,30 @@ typedef struct {
 	GDExtensionVariantPtr *default_arguments;
 } GDExtensionClassMethodInfo;
 
+typedef void (*GDExtensionClassVirtualMethodPtrCall)(void *userdata, GDExtensionClassMethodPtrCall, GDExtensionClassInstancePtr p_object, GDExtensionConstStringNamePtr p_method, const GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionVariantPtr r_return, GDExtensionCallError *r_error);
+
+typedef struct {
+	GDExtensionStringNamePtr name;
+	GDExtensionClassVirtualMethodPtrCall call_to_ptrcall_func;
+	uint32_t method_flags; // Bitfield of `GDExtensionClassMethodFlags`.
+
+	/* If `has_return_value` is false, `return_value_info` and `return_value_metadata` are ignored. */
+	GDExtensionBool has_return_value;
+	GDExtensionPropertyInfo *return_value_info;
+	GDExtensionClassMethodArgumentMetadata return_value_metadata;
+
+	/* Arguments: `arguments_info` and `arguments_metadata` are array of size `argument_count`.
+	 * Name and hint information for the argument can be omitted in release builds. Class name should always be present if it applies.
+	 */
+	uint32_t argument_count;
+	GDExtensionPropertyInfo *arguments_info;
+	GDExtensionClassMethodArgumentMetadata *arguments_metadata;
+
+	/* Default arguments: `default_arguments` is an array of size `default_argument_count`. */
+	uint32_t default_argument_count;
+	GDExtensionVariantPtr *default_arguments;
+} GDExtensionClassVirtualMethodInfo;
+
 typedef void (*GDExtensionCallableCustomCall)(void *callable_userdata, const GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionVariantPtr r_return, GDExtensionCallError *r_error);
 typedef GDExtensionBool (*GDExtensionCallableCustomIsValid)(void *callable_userdata);
 typedef void (*GDExtensionCallableCustomFree)(void *callable_userdata);
@@ -2268,14 +2292,24 @@ typedef GDExtensionObjectPtr (*GDExtensionInterfaceObjectGetInstanceFromId)(GDOb
  */
 typedef GDObjectInstanceID (*GDExtensionInterfaceObjectGetInstanceId)(GDExtensionConstObjectPtr p_object);
 
-// @todo Do we need break this up into a call and ptrcall, the first for the script and the 2nd for any GDExtensions?
 /**
- * @name object_call_virtual_method
+ * @name object_has_script_method
  * @since 4.3
  *
- * Calls the script or other GDExtension that implements a virtual method on this object.
+ * Checks if this object has a script with the given method.
  *
- * This is intended to be used for virtual methods registered via `classdb_register_extension_class_virtual_method`.
+ * @param p_object A pointer to the Object.
+ * @param p_method A pointer to a StringName identifying the method.
+ *
+ * @returns true if the method exists.
+ */
+typedef GDExtensionBool (*GDExtensionInterfaceObjectHasScriptMethod)(GDExtensionClassInstancePtr p_object, GDExtensionConstStringNamePtr p_method);
+
+/**
+ * @name object_call_script_method
+ * @since 4.3
+ *
+ * Call the given script method on this object.
  *
  * @param p_object A pointer to the Object.
  * @param p_method A pointer to a StringName identifying the method.
@@ -2284,7 +2318,38 @@ typedef GDObjectInstanceID (*GDExtensionInterfaceObjectGetInstanceId)(GDExtensio
  * @param r_return A pointer a Variant which will be assigned the return value.
  * @param r_error A pointer the structure which will hold error information.
  */
-typedef void (*GDExtensionInterfaceObjectCallVirtualMethod)(GDExtensionClassInstancePtr p_object, GDExtensionConstStringNamePtr p_method, const GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionVariantPtr r_return, GDExtensionCallError *r_error);
+typedef void (*GDExtensionInterfaceObjectCallScriptMethod)(GDExtensionClassInstancePtr p_object, GDExtensionConstStringNamePtr p_method, const GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argument_count, GDExtensionVariantPtr r_return, GDExtensionCallError *r_error);
+
+/**
+ * @name object_call_virtual_method
+ * @since 4.3
+ *
+ * Calls the virtual method on another GDExtension that implements the given method.
+ *
+ * This is intended to be used for virtual methods registered via `classdb_register_extension_class_virtual_method`.
+ *
+ * @param p_object A pointer to the Object.
+ * @param p_method A pointer to a StringName identifying the method.
+ * @param p_args A pointer to a C array of pointers to the encoded  arguments.
+ * @param r_return A pointer a pointer which will be assigned the return value.
+ */
+typedef void (*GDExtensionInterfaceObjectCallVirtualMethod)(GDExtensionClassInstancePtr p_object, GDExtensionConstStringNamePtr p_method, const GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_ret);
+
+/**
+ * @name object_call_super_method
+ * @since 4.3
+ *
+ * Walks up the inheritence tree from the current class and calls the first virtual method on another GDExtension that it finds.
+ *
+ * This is intended to be used for virtual methods registered via `classdb_register_extension_class_virtual_method`.
+ *
+ * @param p_object A pointer to the Object.
+ * @param p_class_name A pointer to a StringName identifying the current class in the inheritance tree.
+ * @param p_method A pointer to a StringName identifying the method.
+ * @param p_args A pointer to a C array of pointers to the encoded  arguments.
+ * @param r_return A pointer a pointer which will be assigned the return value.
+ */
+typedef void (*GDExtensionInterfaceObjectCallSuperMethod)(GDExtensionClassInstancePtr p_object, GDExtensionConstStringNamePtr p_class_name, GDExtensionConstStringNamePtr p_method, const GDExtensionConstTypePtr *p_args, GDExtensionTypePtr r_ret);
 
 /* INTERFACE: Reference */
 
@@ -2501,20 +2566,19 @@ typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClass2)(GDExtensionCl
  */
 typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClassMethod)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, const GDExtensionClassMethodInfo *p_method_info);
 
-// @todo In order to make a ptrcall to a GDExtension implementing this virtual method, we'll need to give a callback that can call it -- or change our virtual method registration
 /**
  * @name classdb_register_extension_class_virtual_method
  * @since 4.3
  *
  * Registers a virtual method on an extension class in ClassDB, that can be implemented by scripts or other extensions.
  *
- * The `method_userdata`, `call_func` and `ptrcall_func` properties on `p_method_info` can be omitted, as they won't be used in this case.
+ * Provided struct can be safely freed once the function returns.
  *
  * @param p_library A pointer the library received by the GDExtension's entry point function.
  * @param p_class_name A pointer to a StringName with the class name.
  * @param p_method_info A pointer to a GDExtensionClassMethodInfo struct.
  */
-typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClassVirtualMethod)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, const GDExtensionClassMethodInfo *p_method_info);
+typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClassVirtualMethod)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name, const GDExtensionClassVirtualMethodInfo *p_method_info);
 
 /**
  * @name classdb_register_extension_class_integer_constant

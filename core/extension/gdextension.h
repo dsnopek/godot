@@ -59,7 +59,12 @@ class GDExtension : public Resource {
 		bool is_reloading = false;
 		HashMap<StringName, GDExtensionMethodBind *> methods;
 		HashSet<ObjectID> instances;
-		HashMap<ObjectID, List<Pair<String, Variant>>> instance_state;
+
+		struct InstanceState {
+			List<Pair<String, Variant>> properties;
+			bool is_placeholder = false;
+		};
+		HashMap<ObjectID, InstanceState> instance_state;
 #endif
 	};
 

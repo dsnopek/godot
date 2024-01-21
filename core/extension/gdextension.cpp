@@ -1089,7 +1089,7 @@ void GDExtension::prepare_reload() {
 
 				state.push_back(Pair<String, Variant>(P.name, value));
 			}
-			E.value.instance_state[obj_id] = state;
+			E.value.instance_state[obj_id] = { state, obj->is_extension_placeholder() };
 		}
 	}
 }
@@ -1164,25 +1164,29 @@ void GDExtension::finish_reload() {
 	for (KeyValue<StringName, Extension> &E : extension_classes) {
 		// Loop over 'instance_state' rather than 'instance' because new instances
 		// may have been created when re-initializing the extension.
-		for (const KeyValue<ObjectID, List<Pair<String, Variant>>> &S : E.value.instance_state) {
+		for (const KeyValue<ObjectID, Extension::InstanceState> &S : E.value.instance_state) {
 			Object *obj = ObjectDB::get_instance(S.key);
 			if (!obj) {
 				continue;
 			}
 
-			obj->reset_internal_extension(&E.value.gdextension);
+			if (S.value.is_placeholder) {
+				obj->reset_internal_extension(ClassDB::get_placeholder_extension(E.value.gdextension.class_name));
+			} else {
+				obj->reset_internal_extension(&E.value.gdextension);
+			}
 		}
 	}
 
 	// Now that all the classes are back, restore the state.
 	for (KeyValue<StringName, Extension> &E : extension_classes) {
-		for (const KeyValue<ObjectID, List<Pair<String, Variant>>> &S : E.value.instance_state) {
+		for (const KeyValue<ObjectID, Extension::InstanceState> &S : E.value.instance_state) {
 			Object *obj = ObjectDB::get_instance(S.key);
 			if (!obj) {
 				continue;
 			}
 
-			for (const Pair<String, Variant> &state : S.value) {
+			for (const Pair<String, Variant> &state : S.value.properties) {
 				obj->set(state.first, state.second);
 			}
 		}
@@ -1190,7 +1194,7 @@ void GDExtension::finish_reload() {
 
 	// Finally, let the objects know that we are done reloading them.
 	for (KeyValue<StringName, Extension> &E : extension_classes) {
-		for (const KeyValue<ObjectID, List<Pair<String, Variant>>> &S : E.value.instance_state) {
+		for (const KeyValue<ObjectID, Extension::InstanceState> &S : E.value.instance_state) {
 			Object *obj = ObjectDB::get_instance(S.key);
 			if (!obj) {
 				continue;

@@ -268,6 +268,7 @@ public:
 	static bool can_instantiate(const StringName &p_class);
 	static bool is_virtual(const StringName &p_class);
 	static Object *instantiate(const StringName &p_class, bool p_require_real_class = false);
+	static ObjectGDExtension *get_placeholder_extension(const StringName &p_class);
 	static void set_object_extension_instance(Object *p_object, const StringName &p_class, GDExtensionClassInstancePtr p_instance);
 
 	static APIType get_api_type(const StringName &p_class);

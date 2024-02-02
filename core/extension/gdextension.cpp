@@ -441,9 +441,9 @@ void GDExtension::_register_extension_class_internal(GDExtensionClassLibraryPtr 
 		if (!parent_extension && parent_class_name != extension->gdextension.parent_class_name) {
 			ERR_FAIL_MSG(vformat("GDExtension class '%s' cannot change parent type from '%s' to '%s' on hot reload. Restart Godot for this change to take effect.", class_name, extension->gdextension.parent_class_name, parent_class_name));
 		}
-		if (extension->gdextension.is_gameplay != (bool)p_extension_funcs->is_gameplay) {
-			ERR_FAIL_MSG(vformat("GDExtension class '%s' cannot change to/from gameplay class on hot reload. Restart Godot for this change to take effect.", class_name));
-		}
+		//if (extension->gdextension.is_gameplay != (bool)p_extension_funcs->is_gameplay) {
+		//	ERR_FAIL_MSG(vformat("GDExtension class '%s' cannot change to/from gameplay class on hot reload. Restart Godot for this change to take effect.", class_name));
+		//}
 		extension->is_reloading = false;
 	} else {
 		self->extension_classes[class_name] = Extension();
@@ -1172,7 +1172,7 @@ void GDExtension::finish_reload() {
 				continue;
 			}
 
-			if (S.value.is_placeholder) {
+			if (E.value.gdextension.is_gameplay) {
 				obj->reset_internal_extension(ClassDB::get_placeholder_extension(E.value.gdextension.class_name));
 			} else {
 				obj->reset_internal_extension(&E.value.gdextension);

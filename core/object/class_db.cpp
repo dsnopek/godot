@@ -508,8 +508,8 @@ Object *ClassDB::instantiate(const StringName &p_class, bool p_require_real_clas
 		Object *obj = (Object *)extension->create_instance(extension->class_userdata);
 
 #ifdef TOOLS_ENABLED
-		if (ti->gdextension->track_instance) {
-			ti->gdextension->track_instance(ti->gdextension->tracking_userdata, obj);
+		if (extension->track_instance) {
+			extension->track_instance(extension->tracking_userdata, obj);
 		}
 #endif
 		return obj;

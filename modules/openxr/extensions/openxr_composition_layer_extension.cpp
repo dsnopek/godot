@@ -50,26 +50,38 @@ OpenXRCompositionLayerExtension::~OpenXRCompositionLayerExtension() {
 HashMap<String, bool *> OpenXRCompositionLayerExtension::get_requested_extensions() {
 	HashMap<String, bool *> request_extensions;
 
-	request_extensions[XR_KHR_COMPOSITION_LAYER_EQUIRECT2_EXTENSION_NAME] = &available[COMPOSITION_LAYER_EQUIRECT_EXT];
+	request_extensions[XR_KHR_COMPOSITION_LAYER_CYLINDER_EXTENSION_NAME] = &available[COMPOSITION_LAYER_EXT_CYLINDER];
+	request_extensions[XR_KHR_COMPOSITION_LAYER_EQUIRECT2_EXTENSION_NAME] = &available[COMPOSITION_LAYER_EXT_EQUIRECT];
 
 	return request_extensions;
 }
 
-bool OpenXRCompositionLayerExtension::is_available(CompositionLayerExtensions p_which) {
-	ERR_FAIL_INDEX_V(p_which, COMPOSITION_LAYER_EXT_MAX, false);
-
-	return available[p_which];
+bool OpenXRCompositionLayerExtension::is_available(XrStructureType p_which) {
+	switch (p_which) {
+		case XR_TYPE_COMPOSITION_LAYER_QUAD: {
+			// Doesn't require an extension.
+			return true;
+		} break;
+		case XR_TYPE_COMPOSITION_LAYER_CYLINDER_KHR: {
+			return available[COMPOSITION_LAYER_EXT_CYLINDER];
+		} break;
+		case XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR: {
+			return available[COMPOSITION_LAYER_EXT_EQUIRECT];
+		} break;
+		default: {
+			ERR_PRINT(vformat("Unsupported composition layer type: %s", p_which));
+			return false;
+		}
+	};
 }
 
 ////////////////////////////////////////////////////////////////////////////
 // ViewportCompositionLayerProvider
 
-ViewportCompositionLayerProvider::ViewportCompositionLayerProvider() {
+ViewportCompositionLayerProvider::ViewportCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer) {
+	composition_layer = p_composition_layer;
 	openxr_api = OpenXRAPI::get_singleton();
 	composition_layer_extension = OpenXRCompositionLayerExtension::get_singleton();
-
-	// Clear this.
-	setup_for_type(XR_TYPE_UNKNOWN);
 }
 
 ViewportCompositionLayerProvider::~ViewportCompositionLayerProvider() {
@@ -78,22 +90,7 @@ ViewportCompositionLayerProvider::~ViewportCompositionLayerProvider() {
 	}
 }
 
-bool ViewportCompositionLayerProvider::is_supported() {
-	if (openxr_api == nullptr || composition_layer_extension == nullptr) {
-		// OpenXR not initialised or we're in the editor?
-		return false;
-	}
-
-	switch (composition_layer.type) {
-		case XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR: {
-			return composition_layer_extension->is_available(OpenXRCompositionLayerExtension::COMPOSITION_LAYER_EQUIRECT_EXT);
-		} break;
-		default: {
-			return false;
-		} break;
-	}
-}
-
+/*
 void ViewportCompositionLayerProvider::setup_for_type(XrStructureType p_type) {
 	// Note, we setup our type fully even if it's not supported on the current platform.
 	// This allows us to set it up in the editor.
@@ -123,6 +120,7 @@ void ViewportCompositionLayerProvider::setup_for_type(XrStructureType p_type) {
 		} break;
 	}
 }
+*/
 
 int ViewportCompositionLayerProvider::get_composition_layer_count() {
 	return 1;
@@ -134,7 +132,7 @@ XrCompositionLayerBaseHeader *ViewportCompositionLayerProvider::get_composition_
 		return nullptr;
 	}
 
-	if (!is_supported()) {
+	if (!composition_layer_extension->is_available(composition_layer->type)) {
 		// Selected type is not supported, ignore our layer.
 		return nullptr;
 	}
@@ -148,24 +146,44 @@ XrCompositionLayerBaseHeader *ViewportCompositionLayerProvider::get_composition_
 		openxr_api->release_image(swapchain_info);
 	}
 
-	switch (composition_layer.type) {
-		case XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR: {
-			// Setup additional info for swapchain
-			equirect_layer.subImage.swapchain = swapchain_info.swapchain;
-			equirect_layer.subImage.imageArrayIndex = swapchain_info.image_index;
-			equirect_layer.subImage.imageRect.offset.x = 0;
-			equirect_layer.subImage.imageRect.offset.y = 0;
-			equirect_layer.subImage.imageRect.extent.width = width;
-			equirect_layer.subImage.imageRect.extent.height = height;
-
-			equirect_layer.space = openxr_api->get_play_space();
-
-			return nullptr;
+	// Update the layer struct for the swapchain.
+	switch (composition_layer->type) {
+		case XR_TYPE_COMPOSITION_LAYER_QUAD: {
+			XrCompositionLayerQuad *quad_layer = (XrCompositionLayerQuad *)composition_layer;
+			quad_layer->subImage.swapchain = swapchain_info.swapchain;
+			quad_layer->subImage.imageArrayIndex = swapchain_info.image_index;
+			quad_layer->subImage.imageRect.offset.x = 0;
+			quad_layer->subImage.imageRect.offset.y = 0;
+			quad_layer->subImage.imageRect.extent.width = width;
+			quad_layer->subImage.imageRect.extent.height = height;
 		} break;
+
+		case XR_TYPE_COMPOSITION_LAYER_CYLINDER_KHR: {
+			XrCompositionLayerCylinderKHR *cylinder_layer = (XrCompositionLayerCylinderKHR *)composition_layer;
+			cylinder_layer->subImage.swapchain = swapchain_info.swapchain;
+			cylinder_layer->subImage.imageArrayIndex = swapchain_info.image_index;
+			cylinder_layer->subImage.imageRect.offset.x = 0;
+			cylinder_layer->subImage.imageRect.offset.y = 0;
+			cylinder_layer->subImage.imageRect.extent.width = width;
+			cylinder_layer->subImage.imageRect.extent.height = height;
+		} break;
+
+		case XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR: {
+			XrCompositionLayerEquirect2KHR *equirect_layer = (XrCompositionLayerEquirect2KHR *)composition_layer;
+			equirect_layer->subImage.swapchain = swapchain_info.swapchain;
+			equirect_layer->subImage.imageArrayIndex = swapchain_info.image_index;
+			equirect_layer->subImage.imageRect.offset.x = 0;
+			equirect_layer->subImage.imageRect.offset.y = 0;
+			equirect_layer->subImage.imageRect.extent.width = width;
+			equirect_layer->subImage.imageRect.extent.height = height;
+		} break;
+
 		default: {
 			return nullptr;
 		} break;
 	}
+
+	return composition_layer;
 }
 
 int ViewportCompositionLayerProvider::get_composition_layer_order(int p_index) {
@@ -177,8 +195,7 @@ bool ViewportCompositionLayerProvider::update_swapchain(uint32_t p_width, uint32
 		// OpenXR not initialised or we're in the editor?
 		return false;
 	}
-
-	if (!is_supported()) {
+	if (!composition_layer_extension->is_available(composition_layer->type)) {
 		// Selected type is not supported?
 		return false;
 	}

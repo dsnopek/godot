@@ -41,52 +41,52 @@
 // OpenXRCompositionLayerExtension enables the extensions related to this functionality
 class OpenXRCompositionLayerExtension : public OpenXRExtensionWrapper {
 public:
-	enum CompositionLayerExtensions {
-		COMPOSITION_LAYER_EQUIRECT_EXT,
-		COMPOSITION_LAYER_EXT_MAX
-	};
-
 	static OpenXRCompositionLayerExtension *get_singleton();
 
 	OpenXRCompositionLayerExtension();
 	virtual ~OpenXRCompositionLayerExtension() override;
 
 	virtual HashMap<String, bool *> get_requested_extensions() override;
-	bool is_available(CompositionLayerExtensions p_which);
+
+	bool is_available(XrStructureType p_which);
 
 private:
 	static OpenXRCompositionLayerExtension *singleton;
+
+	enum CompositionLayerExtensions {
+		COMPOSITION_LAYER_EXT_CYLINDER,
+		COMPOSITION_LAYER_EXT_EQUIRECT,
+		COMPOSITION_LAYER_EXT_MAX
+	};
 
 	bool available[COMPOSITION_LAYER_EXT_MAX] = { false };
 };
 
 class ViewportCompositionLayerProvider : public OpenXRCompositionLayerProvider {
-public:
-	ViewportCompositionLayerProvider();
-	virtual ~ViewportCompositionLayerProvider() override;
-
-	bool is_supported();
-	void setup_for_type(XrStructureType p_type);
-	virtual int get_composition_layer_count() override;
-	virtual XrCompositionLayerBaseHeader *get_composition_layer(int p_index) override;
-	virtual int get_composition_layer_order(int p_index) override;
-	bool update_swapchain(uint32_t p_width, uint32_t p_height);
-	void free_swapchain();
-	RID get_image();
-
-private:
-	union {
-		XrCompositionLayerBaseHeader composition_layer;
-		XrCompositionLayerEquirect2KHR equirect_layer;
-	};
+	XrCompositionLayerBaseHeader *composition_layer = nullptr;
 	int sort_order = 1;
 
 	OpenXRAPI *openxr_api = nullptr;
 	OpenXRCompositionLayerExtension *composition_layer_extension = nullptr;
 
+	OpenXRAPI::OpenXRSwapChainInfo swapchain_info;
 	uint32_t width = 0;
 	uint32_t height = 0;
-	OpenXRAPI::OpenXRSwapChainInfo swapchain_info;
+
+public:
+	virtual int get_composition_layer_count() override;
+	virtual XrCompositionLayerBaseHeader *get_composition_layer(int p_index) override;
+	virtual int get_composition_layer_order(int p_index) override;
+
+	void set_sort_order(int p_sort_order) { sort_order = p_sort_order; }
+	int get_sort_order() const { return sort_order; }
+
+	bool update_swapchain(uint32_t p_width, uint32_t p_height);
+	void free_swapchain();
+	RID get_image();
+
+	ViewportCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer);
+	virtual ~ViewportCompositionLayerProvider() override;
 };
 
 #endif // OPENXR_COMPOSITION_LAYER_EXTENSION_H

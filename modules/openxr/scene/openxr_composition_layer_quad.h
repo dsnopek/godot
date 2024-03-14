@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  openxr_composition_layer.h                                            */
+/*  openxr_composition_layer_quad.h                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,44 +28,44 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef OPENXR_COMPOSITION_LAYER_H
-#define OPENXR_COMPOSITION_LAYER_H
+#ifndef OPENXR_COMPOSITION_LAYER_QUAD_H
+#define OPENXR_COMPOSITION_LAYER_QUAD_H
 
-#include "scene/main/viewport.h"
+#include <openxr/openxr.h>
 
+#include "scene/3d/node_3d.h"
+
+class MeshInstance3D;
 class OpenXRAPI;
-class ViewportCompositionLayerProvider;
+class OpenXRViewportCompositionLayerProvider;
+class SubViewport;
 
-class OpenXRCompositionLayer : public SubViewport {
-	GDCLASS(OpenXRCompositionLayer, SubViewport);
+class OpenXRCompositionLayerQuad : public Node3D {
+	GDCLASS(OpenXRCompositionLayerQuad, Node3D);
 
-public:
-	enum CompositionLayerTypes {
-		COMPOSITION_LAYER_EQUIRECT2,
-		COMPOSITION_LAYER_MAX
-	};
+	XrCompositionLayerQuad composition_layer;
 
-private:
+	Size2 size = Size2(1.0, 1.0);
+	SubViewport *viewport = nullptr;
+	MeshInstance3D *fallback = nullptr;
+
 	OpenXRAPI *openxr_api = nullptr;
-	ViewportCompositionLayerProvider *openxr_layer_provider = nullptr;
-
-	CompositionLayerTypes composition_layer_type;
+	OpenXRViewportCompositionLayerProvider *openxr_layer_provider = nullptr;
 
 protected:
 	static void _bind_methods();
 
 public:
-	OpenXRCompositionLayer();
-	~OpenXRCompositionLayer();
+	OpenXRCompositionLayerQuad();
+	~OpenXRCompositionLayerQuad();
 
-	void set_composition_layer_type(const CompositionLayerTypes p_type);
-	CompositionLayerTypes get_composition_layer_type() const { return composition_layer_type; };
+	void set_size(const Size2 &p_size);
+	Size2 get_size() const;
 
-	bool is_supported();
+	void set_viewport(SubViewport *p_viewport);
+	SubViewport *get_viewport() const;
 
 	void _notification(int p_what);
 };
-
-VARIANT_ENUM_CAST(OpenXRCompositionLayer::CompositionLayerTypes)
 
 #endif // OPENXR_COMPOSITION_LAYER_H

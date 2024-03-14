@@ -62,7 +62,7 @@ private:
 	bool available[COMPOSITION_LAYER_EXT_MAX] = { false };
 };
 
-class ViewportCompositionLayerProvider : public OpenXRCompositionLayerProvider {
+class OpenXRViewportCompositionLayerProvider : public OpenXRCompositionLayerProvider {
 	XrCompositionLayerBaseHeader *composition_layer = nullptr;
 	int sort_order = 1;
 
@@ -85,8 +85,8 @@ public:
 	void free_swapchain();
 	RID get_image();
 
-	ViewportCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer);
-	virtual ~ViewportCompositionLayerProvider() override;
+	OpenXRViewportCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer);
+	virtual ~OpenXRViewportCompositionLayerProvider() override;
 };
 
 #endif // OPENXR_COMPOSITION_LAYER_EXTENSION_H

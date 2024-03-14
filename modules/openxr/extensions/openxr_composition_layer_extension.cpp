@@ -76,15 +76,15 @@ bool OpenXRCompositionLayerExtension::is_available(XrStructureType p_which) {
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// ViewportCompositionLayerProvider
+// OpenXRViewportCompositionLayerProvider
 
-ViewportCompositionLayerProvider::ViewportCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer) {
+OpenXRViewportCompositionLayerProvider::OpenXRViewportCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer) {
 	composition_layer = p_composition_layer;
 	openxr_api = OpenXRAPI::get_singleton();
 	composition_layer_extension = OpenXRCompositionLayerExtension::get_singleton();
 }
 
-ViewportCompositionLayerProvider::~ViewportCompositionLayerProvider() {
+OpenXRViewportCompositionLayerProvider::~OpenXRViewportCompositionLayerProvider() {
 	if (swapchain_info.swapchain != XR_NULL_HANDLE) {
 		openxr_api->free_swapchain(swapchain_info);
 	}
@@ -122,11 +122,11 @@ void ViewportCompositionLayerProvider::setup_for_type(XrStructureType p_type) {
 }
 */
 
-int ViewportCompositionLayerProvider::get_composition_layer_count() {
+int OpenXRViewportCompositionLayerProvider::get_composition_layer_count() {
 	return 1;
 }
 
-XrCompositionLayerBaseHeader *ViewportCompositionLayerProvider::get_composition_layer(int p_index) {
+XrCompositionLayerBaseHeader *OpenXRViewportCompositionLayerProvider::get_composition_layer(int p_index) {
 	if (openxr_api == nullptr || composition_layer_extension == nullptr) {
 		// OpenXR not initialised or we're in the editor?
 		return nullptr;
@@ -186,11 +186,11 @@ XrCompositionLayerBaseHeader *ViewportCompositionLayerProvider::get_composition_
 	return composition_layer;
 }
 
-int ViewportCompositionLayerProvider::get_composition_layer_order(int p_index) {
+int OpenXRViewportCompositionLayerProvider::get_composition_layer_order(int p_index) {
 	return sort_order;
 }
 
-bool ViewportCompositionLayerProvider::update_swapchain(uint32_t p_width, uint32_t p_height) {
+bool OpenXRViewportCompositionLayerProvider::update_swapchain(uint32_t p_width, uint32_t p_height) {
 	if (openxr_api == nullptr || composition_layer_extension == nullptr) {
 		// OpenXR not initialised or we're in the editor?
 		return false;
@@ -227,7 +227,7 @@ bool ViewportCompositionLayerProvider::update_swapchain(uint32_t p_width, uint32
 	return true;
 }
 
-void ViewportCompositionLayerProvider::free_swapchain() {
+void OpenXRViewportCompositionLayerProvider::free_swapchain() {
 	if (swapchain_info.swapchain != XR_NULL_HANDLE) {
 		openxr_api->free_swapchain(swapchain_info);
 	}
@@ -236,7 +236,7 @@ void ViewportCompositionLayerProvider::free_swapchain() {
 	height = 0;
 }
 
-RID ViewportCompositionLayerProvider::get_image() {
+RID OpenXRViewportCompositionLayerProvider::get_image() {
 	if (openxr_api == nullptr) {
 		return RID();
 	}

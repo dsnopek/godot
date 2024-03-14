@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  openxr_composition_layer.cpp                                          */
+/*  openxr_composition_layer_quad.cpp                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,65 +28,89 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
+#include "openxr_composition_layer_quad.h"
+
 #include "../extensions/openxr_composition_layer_extension.h"
 #include "../openxr_api.h"
 
-#include "openxr_composition_layer.h"
-
+#include "scene/3d/mesh_instance_3d.h"
+#include "scene/main/viewport.h"
+#include "scene/resources/3d/primitive_meshes.h"
 #include "servers/rendering/rendering_server_default.h"
 #include "servers/rendering_server.h"
 
-// TODOs:
-// - make settings for pose, radius, scale and bias setable, possibly linking pose to player position (or leave that up to user)
-// - add gizmo to visualise positioning/output of composition layer
-// - add support for other composition layers
+OpenXRCompositionLayerQuad::OpenXRCompositionLayerQuad() {
+	composition_layer = {
+		XR_TYPE_COMPOSITION_LAYER_QUAD, // type
+		nullptr, // next
+		0, // flags
+		XR_NULL_HANDLE, // space
+		XR_EYE_VISIBILITY_BOTH, // eyeVisibility
+		{}, // subImage
+		{ { 0, 0, 0, 0 }, { 0, 0, 0 } }, // pose
+		{ size.x, size.y }, // size
+	};
+	openxr_layer_provider = memnew(OpenXRViewportCompositionLayerProvider((XrCompositionLayerBaseHeader *)&composition_layer));
 
-OpenXRCompositionLayer::OpenXRCompositionLayer() {
 	openxr_api = OpenXRAPI::get_singleton();
-	openxr_layer_provider = memnew(ViewportCompositionLayerProvider);
-
 	if (openxr_api != nullptr) {
 		set_process_internal(true);
+		set_notify_local_transform(true);
+	}
+
+	if (Engine::get_singleton()->is_editor_hint()) {
+		fallback = memnew(MeshInstance3D);
+
+		Ref<QuadMesh> mesh;
+		mesh.instantiate();
+		fallback->set_mesh(mesh);
+
+		Ref<StandardMaterial3D> material;
+		material.instantiate();
+		fallback->set_surface_override_material(0, material);
+
+		add_child(fallback, false, INTERNAL_MODE_FRONT);
 	}
 }
 
-OpenXRCompositionLayer::~OpenXRCompositionLayer() {
+OpenXRCompositionLayerQuad::~OpenXRCompositionLayerQuad() {
 	if (openxr_layer_provider != nullptr) {
 		memdelete(openxr_layer_provider);
 		openxr_layer_provider = nullptr;
 	}
 }
 
-void OpenXRCompositionLayer::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("set_composition_layer_type", "composition_layer_type"), &OpenXRCompositionLayer::set_composition_layer_type);
-	ClassDB::bind_method(D_METHOD("get_composition_layer_type"), &OpenXRCompositionLayer::get_composition_layer_type);
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "composition_layer_type", PROPERTY_HINT_ENUM, "Equirect"), "set_composition_layer_type", "get_composition_layer_type");
+void OpenXRCompositionLayerQuad::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_size", "size"), &OpenXRCompositionLayerQuad::set_size);
+	ClassDB::bind_method(D_METHOD("get_size"), &OpenXRCompositionLayerQuad::get_size);
 
-	ClassDB::bind_method(D_METHOD("is_supported"), &OpenXRCompositionLayer::is_supported);
+	ClassDB::bind_method(D_METHOD("set_viewport", "viewport"), &OpenXRCompositionLayerQuad::set_viewport);
+	ClassDB::bind_method(D_METHOD("get_viewport"), &OpenXRCompositionLayerQuad::get_viewport);
 
-	BIND_ENUM_CONSTANT(COMPOSITION_LAYER_EQUIRECT2);
-	BIND_ENUM_CONSTANT(COMPOSITION_LAYER_MAX);
+	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "size", PROPERTY_HINT_NONE, ""), "set_size", "get_size");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "viewport", PROPERTY_HINT_NODE_TYPE, "SubViewport"), "set_viewport", "get_viewport");
 }
 
-void OpenXRCompositionLayer::set_composition_layer_type(const CompositionLayerTypes p_type) {
-	composition_layer_type = p_type;
+void OpenXRCompositionLayerQuad::set_viewport(SubViewport *p_viewport) {
+	RenderingServer *rs = RenderingServer::get_singleton();
+	ERR_FAIL_NULL(rs);
 
-	switch (composition_layer_type) {
-		case COMPOSITION_LAYER_EQUIRECT2: {
-			openxr_layer_provider->setup_for_type(XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR);
-		} break;
-		default: {
-			// this will clear it and make it inactive.
-			openxr_layer_provider->setup_for_type(XR_TYPE_UNKNOWN);
-		} break;
+	if (viewport != p_viewport) {
+		if (viewport) {
+			RID vp = viewport->get_viewport_rid();
+			RID rt = rs->viewport_get_render_target(vp);
+			RSG::texture_storage->render_target_set_override(rt, RID(), RID(), RID());
+		}
+
+		viewport = p_viewport;
 	}
 }
 
-bool OpenXRCompositionLayer::is_supported() {
-	return openxr_layer_provider->is_supported();
+SubViewport *OpenXRCompositionLayerQuad::get_viewport() const {
+	return viewport;
 }
 
-void OpenXRCompositionLayer::_notification(int p_what) {
+void OpenXRCompositionLayerQuad::_notification(int p_what) {
 	if (openxr_api == nullptr) {
 		return;
 	}
@@ -96,40 +120,42 @@ void OpenXRCompositionLayer::_notification(int p_what) {
 
 	switch (p_what) {
 		case NOTIFICATION_INTERNAL_PROCESS: {
-			// TODO, if our update mode will result in us not updating our viewport,
-			// we should skip this and reuse our last result.
+			if (viewport) {
+				// TODO, if our update mode will result in us not updating our viewport,
+				// we should skip this and reuse our last result.
 
-			if (openxr_layer_provider->is_supported()) {
 				// Update our XR swapchain
-				Size2i vp_size = get_size();
+				Size2i vp_size = viewport->get_size();
 				openxr_layer_provider->update_swapchain(vp_size.width, vp_size.height);
 
 				// Render to our XR swapchain image
-				RID vp = get_viewport_rid();
+				RID vp = viewport->get_viewport_rid();
 				RID rt = rs->viewport_get_render_target(vp);
 				RSG::texture_storage->render_target_set_override(rt, openxr_layer_provider->get_image(), RID(), RID());
-			} else {
-				// We still render our viewport, this will allow the user to display the viewport with a Quadmesh.
-				RID vp = get_viewport_rid();
-				RID rt = rs->viewport_get_render_target(vp);
-				RSG::texture_storage->render_target_set_override(rt, RID(), RID(), RID());
 			}
 		} break;
+		case NOTIFICATION_LOCAL_TRANSFORM_CHANGED: {
+			Transform3D transform = get_transform();
+			Quaternion quat(transform.basis);
+			composition_layer.pose.orientation = { quat.x, quat.y, quat.z, quat.w };
+			composition_layer.pose.position = { transform.origin.x, transform.origin.y, transform.origin.z };
+		} break;
 		case NOTIFICATION_ENTER_TREE: {
-			// Add our composition layer provider to our OpenXR API,
-			// we do this even if not supported as the user may change type.
+			// Unregister our composition layer provider to our OpenXR API.
 			openxr_api->register_composition_layer_provider(openxr_layer_provider);
 		} break;
 		case NOTIFICATION_EXIT_TREE: {
-			// Remove our composition layer provider from our OpenXR API
+			// Unregister our composition layer provider.
 			openxr_api->unregister_composition_layer_provider(openxr_layer_provider);
 
-			// reset our viewport
-			RID vp = get_viewport_rid();
-			RID rt = rs->viewport_get_render_target(vp);
-			RSG::texture_storage->render_target_set_override(rt, RID(), RID(), RID());
+			// Reset our viewport.
+			if (viewport) {
+				RID vp = viewport->get_viewport_rid();
+				RID rt = rs->viewport_get_render_target(vp);
+				RSG::texture_storage->render_target_set_override(rt, RID(), RID(), RID());
+			}
 
-			// free our swapchain
+			// Free our swap chain.
 			openxr_layer_provider->free_swapchain();
 		} break;
 	}

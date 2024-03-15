@@ -39,7 +39,7 @@
 
 #include "extensions/openxr_extension_wrapper_extension.h"
 
-#include "scene/openxr_composition_layer.h"
+#include "scene/openxr_composition_layer_quad.h"
 #include "scene/openxr_hand.h"
 
 #include "extensions/openxr_composition_layer_depth_extension.h"
@@ -165,7 +165,7 @@ void initialize_openxr_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(OpenXRIPBinding);
 		GDREGISTER_CLASS(OpenXRInteractionProfile);
 
-		GDREGISTER_CLASS(OpenXRCompositionLayer);
+		GDREGISTER_CLASS(OpenXRCompositionLayerQuad);
 		GDREGISTER_CLASS(OpenXRHand);
 
 		XRServer *xr_server = XRServer::get_singleton();

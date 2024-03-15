@@ -45,27 +45,29 @@ class OpenXRCompositionLayerQuad : public Node3D {
 
 	XrCompositionLayerQuad composition_layer;
 
-	Size2 size = Size2(1.0, 1.0);
-	SubViewport *viewport = nullptr;
+	Size2 quad_size = Size2(1.0, 1.0);
+	SubViewport *layer_viewport = nullptr;
 	MeshInstance3D *fallback = nullptr;
 
 	OpenXRAPI *openxr_api = nullptr;
 	OpenXRViewportCompositionLayerProvider *openxr_layer_provider = nullptr;
 
+	void _reset_fallback_material();
+
 protected:
 	static void _bind_methods();
 
+	void _notification(int p_what);
+
 public:
+	void set_quad_size(const Size2 &p_size);
+	Size2 get_quad_size() const;
+
+	void set_layer_viewport(SubViewport *p_viewport);
+	SubViewport *get_layer_viewport() const;
+
 	OpenXRCompositionLayerQuad();
 	~OpenXRCompositionLayerQuad();
-
-	void set_size(const Size2 &p_size);
-	Size2 get_size() const;
-
-	void set_viewport(SubViewport *p_viewport);
-	SubViewport *get_viewport() const;
-
-	void _notification(int p_what);
 };
 
 #endif // OPENXR_COMPOSITION_LAYER_H

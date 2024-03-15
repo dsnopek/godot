@@ -158,7 +158,7 @@ int OpenXRViewportCompositionLayerProvider::get_composition_layer_order(int p_in
 	return sort_order;
 }
 
-bool OpenXRViewportCompositionLayerProvider::update_and_acquire_swapchain(uint32_t p_width, uint32_t p_height) {
+bool OpenXRViewportCompositionLayerProvider::update_and_acquire_swapchain(uint32_t p_width, uint32_t p_height, bool p_static_image) {
 	if (openxr_api == nullptr || composition_layer_extension == nullptr) {
 		// OpenXR not initialised or we're in the editor?
 		return false;
@@ -168,9 +168,10 @@ bool OpenXRViewportCompositionLayerProvider::update_and_acquire_swapchain(uint32
 		return false;
 	}
 
-	// See if our current swapchain is outdated
+	// See if our current swapchain is outdated.
 	if (swapchain_info.swapchain != XR_NULL_HANDLE) {
-		if (width == p_width && height == p_height) {
+		// If this swap chain, or the previous one, were static, then we can't reuse it.
+		if (width == p_width && height == p_height && !p_static_image && !static_image) {
 			// We're all good! Just acquire it.
 			return openxr_api->acquire_image(swapchain_info);
 		}
@@ -178,9 +179,15 @@ bool OpenXRViewportCompositionLayerProvider::update_and_acquire_swapchain(uint32
 		openxr_api->free_swapchain(swapchain_info);
 	}
 
+	static_image = p_static_image;
+
 	// Create our new swap chain
 	int64_t swapchain_format = openxr_api->get_color_swapchain_format();
-	if (!openxr_api->create_swapchain(XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT | XR_SWAPCHAIN_USAGE_MUTABLE_FORMAT_BIT, swapchain_format, p_width, p_height, 3, 1, swapchain_info.swapchain, &swapchain_info.swapchain_graphics_data)) {
+	XrSwapchainCreateFlags create_flags = 0;
+	if (static_image) {
+		create_flags |= XR_SWAPCHAIN_CREATE_STATIC_IMAGE_BIT;
+	}
+	if (!openxr_api->create_swapchain(create_flags, XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT | XR_SWAPCHAIN_USAGE_MUTABLE_FORMAT_BIT, swapchain_format, p_width, p_height, 3, 1, swapchain_info.swapchain, &swapchain_info.swapchain_graphics_data)) {
 		width = 0;
 		height = 0;
 		return false;
@@ -201,6 +208,7 @@ void OpenXRViewportCompositionLayerProvider::free_swapchain() {
 
 	width = 0;
 	height = 0;
+	static_image = false;
 }
 
 RID OpenXRViewportCompositionLayerProvider::get_current_swapchain_texture() {

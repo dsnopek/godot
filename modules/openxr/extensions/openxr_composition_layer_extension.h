@@ -72,6 +72,7 @@ class OpenXRViewportCompositionLayerProvider : public OpenXRCompositionLayerProv
 	OpenXRAPI::OpenXRSwapChainInfo swapchain_info;
 	uint32_t width = 0;
 	uint32_t height = 0;
+	bool static_image = false;
 
 public:
 	virtual int get_composition_layer_count() override;
@@ -81,7 +82,7 @@ public:
 	void set_sort_order(int p_sort_order) { sort_order = p_sort_order; }
 	int get_sort_order() const { return sort_order; }
 
-	bool update_and_acquire_swapchain(uint32_t p_width, uint32_t p_height);
+	bool update_and_acquire_swapchain(uint32_t p_width, uint32_t p_height, bool p_static_image);
 	void free_swapchain();
 	RID get_current_swapchain_texture();
 

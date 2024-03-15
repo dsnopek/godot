@@ -404,7 +404,7 @@ public:
 
 	// swapchains
 	int64_t get_color_swapchain_format() const { return color_swapchain_format; }
-	bool create_swapchain(XrSwapchainUsageFlags p_usage_flags, int64_t p_swapchain_format, uint32_t p_width, uint32_t p_height, uint32_t p_sample_count, uint32_t p_array_size, XrSwapchain &r_swapchain, void **r_swapchain_graphics_data);
+	bool create_swapchain(XrSwapchainCreateFlags p_create_flags, XrSwapchainUsageFlags p_usage_flags, int64_t p_swapchain_format, uint32_t p_width, uint32_t p_height, uint32_t p_sample_count, uint32_t p_array_size, XrSwapchain &r_swapchain, void **r_swapchain_graphics_data);
 	void free_swapchain(OpenXRSwapChainInfo &p_swapchain);
 	bool acquire_image(OpenXRSwapChainInfo &p_swapchain);
 	RID get_image(OpenXRSwapChainInfo &p_swapchain);

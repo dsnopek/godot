@@ -155,13 +155,13 @@ void OpenXRCompositionLayerQuad::_reset_fallback_material() {
 
 	Ref<StandardMaterial3D> material = fallback->get_surface_override_material(0);
 	if (material.is_valid()) {
-		Ref<ViewportTexture> texture = material->get_texture(StandardMaterial3D::TEXTURE_ALBEDO);
-		if (texture.is_null()) {
-			texture.instantiate();
-			material->set_texture(StandardMaterial3D::TEXTURE_ALBEDO, texture);
-		}
-		Node *loc_scene = texture->get_local_scene();
+		Node *loc_scene = material->get_local_scene();
 		if (loc_scene) {
+			Ref<ViewportTexture> texture = material->get_texture(StandardMaterial3D::TEXTURE_ALBEDO);
+			if (texture.is_null()) {
+				texture.instantiate();
+				material->set_texture(StandardMaterial3D::TEXTURE_ALBEDO, texture);
+			}
 			NodePath viewport_path = loc_scene->get_path_to(layer_viewport);
 			texture->set_viewport_path_in_scene(viewport_path);
 		}
@@ -179,17 +179,21 @@ void OpenXRCompositionLayerQuad::_notification(int p_what) {
 			}
 		} break;
 		case NOTIFICATION_INTERNAL_PROCESS: {
-			if (layer_viewport && openxr_api && openxr_api->is_running()) {
-				// TODO, if our update mode will result in us not updating our viewport,
-				// we should skip this and reuse our last result.
-
-				// Update our XR swapchain
-				Size2i vp_size = layer_viewport->get_size();
-				if (openxr_layer_provider->update_and_acquire_swapchain(vp_size.width, vp_size.height)) {
-					// Render to our XR swapchain image.
-					RID vp = layer_viewport->get_viewport_rid();
-					RID rt = rs->viewport_get_render_target(vp);
-					RSG::texture_storage->render_target_set_override(rt, openxr_layer_provider->get_current_swapchain_texture(), RID(), RID());
+			if (is_visible() && layer_viewport && openxr_api && openxr_api->is_running()) {
+				RID vp = layer_viewport->get_viewport_rid();
+				RS::ViewportUpdateMode update_mode = rs->viewport_get_update_mode(vp);
+				if (update_mode == RS::VIEWPORT_UPDATE_ONCE || update_mode == RS::VIEWPORT_UPDATE_ALWAYS) {
+					// Update our XR swapchain
+					Size2i vp_size = layer_viewport->get_size();
+					if (openxr_layer_provider->update_and_acquire_swapchain(vp_size.width, vp_size.height, update_mode == RS::VIEWPORT_UPDATE_ONCE)) {
+						// Render to our XR swapchain image.
+						RID rt = rs->viewport_get_render_target(vp);
+						RSG::texture_storage->render_target_set_override(rt, openxr_layer_provider->get_current_swapchain_texture(), RID(), RID());
+					}
+				} else {
+					if (update_mode == RS::VIEWPORT_UPDATE_WHEN_VISIBLE || update_mode == RS::VIEWPORT_UPDATE_WHEN_PARENT_VISIBLE) {
+						WARN_PRINT_ONCE("OpenXR composition layers cannot use Viewports with UPDATE_WHEN_VISIBLE or UPDATE_WHEN_PARENT_VISIBLE.");
+					}
 				}
 			}
 		} break;

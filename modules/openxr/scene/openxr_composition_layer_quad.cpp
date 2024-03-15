@@ -185,11 +185,11 @@ void OpenXRCompositionLayerQuad::_notification(int p_what) {
 
 				// Update our XR swapchain
 				Size2i vp_size = layer_viewport->get_size();
-				if (openxr_layer_provider->update_swapchain(vp_size.width, vp_size.height)) {
+				if (openxr_layer_provider->update_and_acquire_swapchain(vp_size.width, vp_size.height)) {
 					// Render to our XR swapchain image.
 					RID vp = layer_viewport->get_viewport_rid();
 					RID rt = rs->viewport_get_render_target(vp);
-					RSG::texture_storage->render_target_set_override(rt, openxr_layer_provider->get_image(), RID(), RID());
+					RSG::texture_storage->render_target_set_override(rt, openxr_layer_provider->get_current_swapchain_texture(), RID(), RID());
 				} else {
 					WARN_PRINT("Unable to update and/or acquire swapchain for composition layer.");
 				}

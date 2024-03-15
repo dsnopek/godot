@@ -81,9 +81,9 @@ public:
 	void set_sort_order(int p_sort_order) { sort_order = p_sort_order; }
 	int get_sort_order() const { return sort_order; }
 
-	bool update_swapchain(uint32_t p_width, uint32_t p_height);
+	bool update_and_acquire_swapchain(uint32_t p_width, uint32_t p_height);
 	void free_swapchain();
-	RID get_image();
+	RID get_current_swapchain_texture();
 
 	OpenXRViewportCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer);
 	virtual ~OpenXRViewportCompositionLayerProvider() override;

@@ -161,7 +161,7 @@ int OpenXRViewportCompositionLayerProvider::get_composition_layer_order(int p_in
 	return sort_order;
 }
 
-bool OpenXRViewportCompositionLayerProvider::update_swapchain(uint32_t p_width, uint32_t p_height) {
+bool OpenXRViewportCompositionLayerProvider::update_and_acquire_swapchain(uint32_t p_width, uint32_t p_height) {
 	if (openxr_api == nullptr || composition_layer_extension == nullptr) {
 		// OpenXR not initialised or we're in the editor?
 		return false;
@@ -206,7 +206,7 @@ void OpenXRViewportCompositionLayerProvider::free_swapchain() {
 	height = 0;
 }
 
-RID OpenXRViewportCompositionLayerProvider::get_image() {
+RID OpenXRViewportCompositionLayerProvider::get_current_swapchain_texture() {
 	if (openxr_api == nullptr) {
 		return RID();
 	}

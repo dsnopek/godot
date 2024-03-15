@@ -90,38 +90,6 @@ OpenXRViewportCompositionLayerProvider::~OpenXRViewportCompositionLayerProvider(
 	}
 }
 
-/*
-void ViewportCompositionLayerProvider::setup_for_type(XrStructureType p_type) {
-	// Note, we setup our type fully even if it's not supported on the current platform.
-	// This allows us to set it up in the editor.
-	switch (p_type) {
-		case XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR: {
-			memset(&equirect_layer, 0, sizeof(XrCompositionLayerEquirect2KHR));
-			equirect_layer.type = XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR;
-			equirect_layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT | XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
-			equirect_layer.eyeVisibility = XR_EYE_VISIBILITY_BOTH;
-
-			// These needs to become configurable
-			equirect_layer.pose.orientation.x = 0.0;
-			equirect_layer.pose.orientation.y = 0.0;
-			equirect_layer.pose.orientation.z = 0.0;
-			equirect_layer.pose.orientation.w = 1.0;
-			equirect_layer.pose.position.x = 0.0; // this should probably be centered on the player?? or we leave it up to the user
-			equirect_layer.pose.position.y = 1.5;
-			equirect_layer.pose.position.z = 0.0;
-			equirect_layer.radius = 1.0;
-			equirect_layer.centralHorizontalAngle = 90.0 * Math_PI / 180.0;
-			equirect_layer.upperVerticalAngle = 25.0 * Math_PI / 180.0;
-			equirect_layer.lowerVerticalAngle = 25.0 * Math_PI / 180.0;
-		} break;
-		default: {
-			memset(&composition_layer, 0, sizeof(XrCompositionLayerBaseHeader));
-			composition_layer.type = XR_TYPE_UNKNOWN;
-		} break;
-	}
-}
-*/
-
 int OpenXRViewportCompositionLayerProvider::get_composition_layer_count() {
 	return 1;
 }
@@ -142,16 +110,19 @@ XrCompositionLayerBaseHeader *OpenXRViewportCompositionLayerProvider::get_compos
 		return nullptr;
 	}
 
-	if (swapchain_info.image_acquired) {
-		openxr_api->release_image(swapchain_info);
+	if (!swapchain_info.image_acquired) {
+		// If we never acquired the image, we didn't render anything, so ignore the layer.
+		return nullptr;
 	}
+
+	openxr_api->release_image(swapchain_info);
 
 	// Update the layer struct for the swapchain.
 	switch (composition_layer->type) {
 		case XR_TYPE_COMPOSITION_LAYER_QUAD: {
 			XrCompositionLayerQuad *quad_layer = (XrCompositionLayerQuad *)composition_layer;
 			quad_layer->subImage.swapchain = swapchain_info.swapchain;
-			quad_layer->subImage.imageArrayIndex = swapchain_info.image_index;
+			quad_layer->subImage.imageArrayIndex = 0;
 			quad_layer->subImage.imageRect.offset.x = 0;
 			quad_layer->subImage.imageRect.offset.y = 0;
 			quad_layer->subImage.imageRect.extent.width = width;
@@ -161,7 +132,7 @@ XrCompositionLayerBaseHeader *OpenXRViewportCompositionLayerProvider::get_compos
 		case XR_TYPE_COMPOSITION_LAYER_CYLINDER_KHR: {
 			XrCompositionLayerCylinderKHR *cylinder_layer = (XrCompositionLayerCylinderKHR *)composition_layer;
 			cylinder_layer->subImage.swapchain = swapchain_info.swapchain;
-			cylinder_layer->subImage.imageArrayIndex = swapchain_info.image_index;
+			cylinder_layer->subImage.imageArrayIndex = 0;
 			cylinder_layer->subImage.imageRect.offset.x = 0;
 			cylinder_layer->subImage.imageRect.offset.y = 0;
 			cylinder_layer->subImage.imageRect.extent.width = width;
@@ -171,7 +142,7 @@ XrCompositionLayerBaseHeader *OpenXRViewportCompositionLayerProvider::get_compos
 		case XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR: {
 			XrCompositionLayerEquirect2KHR *equirect_layer = (XrCompositionLayerEquirect2KHR *)composition_layer;
 			equirect_layer->subImage.swapchain = swapchain_info.swapchain;
-			equirect_layer->subImage.imageArrayIndex = swapchain_info.image_index;
+			equirect_layer->subImage.imageArrayIndex = 0;
 			equirect_layer->subImage.imageRect.offset.x = 0;
 			equirect_layer->subImage.imageRect.offset.y = 0;
 			equirect_layer->subImage.imageRect.extent.width = width;
@@ -204,8 +175,7 @@ bool OpenXRViewportCompositionLayerProvider::update_swapchain(uint32_t p_width, 
 	if (swapchain_info.swapchain != XR_NULL_HANDLE) {
 		if (width == p_width && height == p_height) {
 			// We're all good! Just acquire it.
-			openxr_api->acquire_image(swapchain_info);
-			return true;
+			return openxr_api->acquire_image(swapchain_info);
 		}
 
 		openxr_api->free_swapchain(swapchain_info);
@@ -220,11 +190,11 @@ bool OpenXRViewportCompositionLayerProvider::update_swapchain(uint32_t p_width, 
 	}
 
 	// Acquire our image so we can start rendering into it
-	openxr_api->acquire_image(swapchain_info);
+	bool ret = openxr_api->acquire_image(swapchain_info);
 
 	width = p_width;
 	height = p_height;
-	return true;
+	return ret;
 }
 
 void OpenXRViewportCompositionLayerProvider::free_swapchain() {

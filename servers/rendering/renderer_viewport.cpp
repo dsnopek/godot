@@ -769,8 +769,6 @@ void RendererViewport::draw_viewports(bool p_swap_buffers) {
 		} else
 #endif // _3D_DISABLED
 		{
-			RSG::texture_storage->render_target_set_override(vp->render_target, RID(), RID(), RID());
-
 			RSG::scene->set_debug_draw_mode(vp->debug_draw);
 
 			// render standard mono camera

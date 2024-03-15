@@ -190,8 +190,6 @@ void OpenXRCompositionLayerQuad::_notification(int p_what) {
 					RID vp = layer_viewport->get_viewport_rid();
 					RID rt = rs->viewport_get_render_target(vp);
 					RSG::texture_storage->render_target_set_override(rt, openxr_layer_provider->get_current_swapchain_texture(), RID(), RID());
-				} else {
-					WARN_PRINT("Unable to update and/or acquire swapchain for composition layer.");
 				}
 			}
 		} break;

@@ -110,12 +110,9 @@ XrCompositionLayerBaseHeader *OpenXRViewportCompositionLayerProvider::get_compos
 		return nullptr;
 	}
 
-	if (!swapchain_info.image_acquired) {
-		// If we never acquired the image, we didn't render anything, so ignore the layer.
-		return nullptr;
+	if (swapchain_info.image_acquired) {
+		openxr_api->release_image(swapchain_info);
 	}
-
-	openxr_api->release_image(swapchain_info);
 
 	// Update the layer struct for the swapchain.
 	switch (composition_layer->type) {

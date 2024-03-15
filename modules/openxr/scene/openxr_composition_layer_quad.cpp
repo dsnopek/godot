@@ -179,7 +179,7 @@ void OpenXRCompositionLayerQuad::_notification(int p_what) {
 			}
 		} break;
 		case NOTIFICATION_INTERNAL_PROCESS: {
-			if (layer_viewport) {
+			if (layer_viewport && openxr_api && openxr_api->is_running()) {
 				// TODO, if our update mode will result in us not updating our viewport,
 				// we should skip this and reuse our last result.
 

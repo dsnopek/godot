@@ -53,6 +53,7 @@ class OpenXRCompositionLayerQuad : public Node3D {
 	OpenXRViewportCompositionLayerProvider *openxr_layer_provider = nullptr;
 
 	void _reset_fallback_material();
+	void _on_openxr_session_begun();
 
 protected:
 	static void _bind_methods();

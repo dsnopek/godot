@@ -32,6 +32,7 @@
 
 #include "../extensions/openxr_composition_layer_extension.h"
 #include "../openxr_api.h"
+#include "../openxr_interface.h"
 
 #include "scene/3d/mesh_instance_3d.h"
 #include "scene/main/viewport.h"
@@ -40,6 +41,8 @@
 #include "servers/rendering_server.h"
 
 OpenXRCompositionLayerQuad::OpenXRCompositionLayerQuad() {
+	openxr_api = OpenXRAPI::get_singleton();
+
 	composition_layer = {
 		XR_TYPE_COMPOSITION_LAYER_QUAD, // type
 		nullptr, // next
@@ -52,10 +55,9 @@ OpenXRCompositionLayerQuad::OpenXRCompositionLayerQuad() {
 	};
 	openxr_layer_provider = memnew(OpenXRViewportCompositionLayerProvider((XrCompositionLayerBaseHeader *)&composition_layer));
 
-	openxr_api = OpenXRAPI::get_singleton();
-	if (openxr_api != nullptr) {
-		set_process_internal(true);
-		set_notify_local_transform(true);
+	Ref<OpenXRInterface> openxr_interface = XRServer::get_singleton()->find_interface("OpenXR");
+	if (openxr_interface.is_valid()) {
+		openxr_interface->connect("session_begun", callable_mp(this, &OpenXRCompositionLayerQuad::_on_openxr_session_begun));
 	}
 
 	if (Engine::get_singleton()->is_editor_hint()) {
@@ -73,9 +75,17 @@ OpenXRCompositionLayerQuad::OpenXRCompositionLayerQuad() {
 
 		add_child(fallback, false, INTERNAL_MODE_FRONT);
 	}
+
+	set_process_internal(true);
+	set_notify_local_transform(true);
 }
 
 OpenXRCompositionLayerQuad::~OpenXRCompositionLayerQuad() {
+	Ref<OpenXRInterface> openxr_interface = XRServer::get_singleton()->find_interface("OpenXR");
+	if (openxr_interface.is_valid()) {
+		openxr_interface->disconnect("session_begun", callable_mp(this, &OpenXRCompositionLayerQuad::_on_openxr_session_begun));
+	}
+
 	if (openxr_layer_provider != nullptr) {
 		memdelete(openxr_layer_provider);
 		openxr_layer_provider = nullptr;
@@ -93,8 +103,16 @@ void OpenXRCompositionLayerQuad::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "layer_viewport", PROPERTY_HINT_NODE_TYPE, "SubViewport"), "set_layer_viewport", "get_layer_viewport");
 }
 
+void OpenXRCompositionLayerQuad::_on_openxr_session_begun() {
+	if (openxr_api) {
+		composition_layer.space = openxr_api->get_play_space();
+	}
+}
+
 void OpenXRCompositionLayerQuad::set_quad_size(const Size2 &p_size) {
 	quad_size = p_size;
+
+	composition_layer.size = { quad_size.x, quad_size.y };
 
 	if (fallback) {
 		Ref<QuadMesh> mesh = fallback->get_mesh();

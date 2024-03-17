@@ -36,6 +36,8 @@
 
 #include "../openxr_api.h"
 
+class SubViewport;
+
 // This extension provides access to composition layers for displaying 2D content through the XR compositor.
 
 // OpenXRCompositionLayerExtension enables the extensions related to this functionality
@@ -65,14 +67,21 @@ private:
 class OpenXRViewportCompositionLayerProvider : public OpenXRCompositionLayerProvider {
 	XrCompositionLayerBaseHeader *composition_layer = nullptr;
 	int sort_order = 1;
+	bool visible = true;
 
 	OpenXRAPI *openxr_api = nullptr;
 	OpenXRCompositionLayerExtension *composition_layer_extension = nullptr;
+
+	SubViewport *viewport = nullptr;
 
 	OpenXRAPI::OpenXRSwapChainInfo swapchain_info;
 	uint32_t width = 0;
 	uint32_t height = 0;
 	bool static_image = false;
+
+	bool update_and_acquire_swapchain(uint32_t p_width, uint32_t p_height, bool p_static_image);
+	void free_swapchain();
+	RID get_current_swapchain_texture();
 
 public:
 	virtual int get_composition_layer_count() override;
@@ -82,9 +91,13 @@ public:
 	void set_sort_order(int p_sort_order) { sort_order = p_sort_order; }
 	int get_sort_order() const { return sort_order; }
 
-	bool update_and_acquire_swapchain(uint32_t p_width, uint32_t p_height, bool p_static_image);
-	void free_swapchain();
-	RID get_current_swapchain_texture();
+	bool is_visible() const { return visible; }
+	void set_visible(bool p_visible);
+
+	bool set_viewport(SubViewport *p_viewport);
+	SubViewport *get_viewport() const { return viewport; }
+
+	void process();
 
 	OpenXRViewportCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer);
 	virtual ~OpenXRViewportCompositionLayerProvider() override;

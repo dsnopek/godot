@@ -30,6 +30,9 @@
 
 #include "openxr_composition_layer_extension.h"
 
+#include "scene/main/viewport.h"
+#include "servers/rendering/rendering_server_default.h"
+
 ////////////////////////////////////////////////////////////////////////////
 // OpenXRCompositionLayerExtension
 
@@ -85,13 +88,12 @@ OpenXRViewportCompositionLayerProvider::OpenXRViewportCompositionLayerProvider(X
 }
 
 OpenXRViewportCompositionLayerProvider::~OpenXRViewportCompositionLayerProvider() {
-	if (swapchain_info.swapchain != XR_NULL_HANDLE) {
-		openxr_api->free_swapchain(swapchain_info);
-	}
+	// This will reset the viewport and free the swapchain too.
+	set_viewport(nullptr);
 }
 
 int OpenXRViewportCompositionLayerProvider::get_composition_layer_count() {
-	return 1;
+	return visible ? 1 : 0;
 }
 
 XrCompositionLayerBaseHeader *OpenXRViewportCompositionLayerProvider::get_composition_layer(int p_index) {
@@ -156,6 +158,59 @@ XrCompositionLayerBaseHeader *OpenXRViewportCompositionLayerProvider::get_compos
 
 int OpenXRViewportCompositionLayerProvider::get_composition_layer_order(int p_index) {
 	return sort_order;
+}
+
+void OpenXRViewportCompositionLayerProvider::set_visible(bool p_visible) {
+	visible = p_visible;
+	if (!visible) {
+		free_swapchain();
+	}
+}
+
+bool OpenXRViewportCompositionLayerProvider::set_viewport(SubViewport *p_viewport) {
+	RenderingServer *rs = RenderingServer::get_singleton();
+	ERR_FAIL_NULL_V(rs, false);
+
+	if (viewport != p_viewport) {
+		if (viewport) {
+			RID vp = viewport->get_viewport_rid();
+			RID rt = rs->viewport_get_render_target(vp);
+			RSG::texture_storage->render_target_set_override(rt, RID(), RID(), RID());
+		}
+
+		viewport = p_viewport;
+
+		if (!viewport) {
+			free_swapchain();
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+void OpenXRViewportCompositionLayerProvider::process() {
+	RenderingServer *rs = RenderingServer::get_singleton();
+	ERR_FAIL_NULL(rs);
+
+	if (viewport && openxr_api && openxr_api->is_running()) {
+		RID vp = viewport->get_viewport_rid();
+		RS::ViewportUpdateMode update_mode = rs->viewport_get_update_mode(vp);
+		if (update_mode == RS::VIEWPORT_UPDATE_WHEN_VISIBLE || update_mode == RS::VIEWPORT_UPDATE_WHEN_PARENT_VISIBLE) {
+			WARN_PRINT_ONCE("OpenXR composition layers cannot use Viewports with UPDATE_WHEN_VISIBLE or UPDATE_WHEN_PARENT_VISIBLE. Switching to UPDATE_ALWAYS.");
+			viewport->set_update_mode(SubViewport::UPDATE_ALWAYS);
+		}
+		if (update_mode == RS::VIEWPORT_UPDATE_ONCE || update_mode == RS::VIEWPORT_UPDATE_ALWAYS) {
+			// Update our XR swapchain
+			Size2i vp_size = viewport->get_size();
+			if (update_and_acquire_swapchain(vp_size.width, vp_size.height, update_mode == RS::VIEWPORT_UPDATE_ONCE)) {
+				// Render to our XR swapchain image.
+				RID rt = rs->viewport_get_render_target(vp);
+				RSG::texture_storage->render_target_set_override(rt, get_current_swapchain_texture(), RID(), RID());
+			}
+		}
+	}
 }
 
 bool OpenXRViewportCompositionLayerProvider::update_and_acquire_swapchain(uint32_t p_width, uint32_t p_height, bool p_static_image) {

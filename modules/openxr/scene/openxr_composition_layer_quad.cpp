@@ -179,9 +179,13 @@ void OpenXRCompositionLayerQuad::_notification(int p_what) {
 			}
 		} break;
 		case NOTIFICATION_INTERNAL_PROCESS: {
-			if (is_visible() && layer_viewport && openxr_api && openxr_api->is_running()) {
+			if (layer_viewport && openxr_api && openxr_api->is_running() && is_visible()) {
 				RID vp = layer_viewport->get_viewport_rid();
 				RS::ViewportUpdateMode update_mode = rs->viewport_get_update_mode(vp);
+				if (update_mode == RS::VIEWPORT_UPDATE_WHEN_VISIBLE || update_mode == RS::VIEWPORT_UPDATE_WHEN_PARENT_VISIBLE) {
+					WARN_PRINT_ONCE("OpenXR composition layers cannot use Viewports with UPDATE_WHEN_VISIBLE or UPDATE_WHEN_PARENT_VISIBLE. Switching to UPDATE_ALWAYS.");
+					layer_viewport->set_update_mode(SubViewport::UPDATE_ALWAYS);
+				}
 				if (update_mode == RS::VIEWPORT_UPDATE_ONCE || update_mode == RS::VIEWPORT_UPDATE_ALWAYS) {
 					// Update our XR swapchain
 					Size2i vp_size = layer_viewport->get_size();
@@ -189,10 +193,6 @@ void OpenXRCompositionLayerQuad::_notification(int p_what) {
 						// Render to our XR swapchain image.
 						RID rt = rs->viewport_get_render_target(vp);
 						RSG::texture_storage->render_target_set_override(rt, openxr_layer_provider->get_current_swapchain_texture(), RID(), RID());
-					}
-				} else {
-					if (update_mode == RS::VIEWPORT_UPDATE_WHEN_VISIBLE || update_mode == RS::VIEWPORT_UPDATE_WHEN_PARENT_VISIBLE) {
-						WARN_PRINT_ONCE("OpenXR composition layers cannot use Viewports with UPDATE_WHEN_VISIBLE or UPDATE_WHEN_PARENT_VISIBLE.");
 					}
 				}
 			}

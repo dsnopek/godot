@@ -179,12 +179,10 @@ bool OpenXRViewportCompositionLayerProvider::update_and_acquire_swapchain(uint32
 		openxr_api->free_swapchain(swapchain_info);
 	}
 
-	static_image = p_static_image;
-
 	// Create our new swap chain
 	int64_t swapchain_format = openxr_api->get_color_swapchain_format();
 	XrSwapchainCreateFlags create_flags = 0;
-	if (static_image) {
+	if (p_static_image) {
 		create_flags |= XR_SWAPCHAIN_CREATE_STATIC_IMAGE_BIT;
 	}
 	if (!openxr_api->create_swapchain(create_flags, XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT | XR_SWAPCHAIN_USAGE_MUTABLE_FORMAT_BIT, swapchain_format, p_width, p_height, 3, 1, swapchain_info.swapchain, &swapchain_info.swapchain_graphics_data)) {
@@ -198,6 +196,7 @@ bool OpenXRViewportCompositionLayerProvider::update_and_acquire_swapchain(uint32
 
 	width = p_width;
 	height = p_height;
+	static_image = p_static_image;
 	return ret;
 }
 

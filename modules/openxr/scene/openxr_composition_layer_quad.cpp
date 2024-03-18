@@ -39,8 +39,6 @@
 #include "scene/resources/3d/primitive_meshes.h"
 
 OpenXRCompositionLayerQuad::OpenXRCompositionLayerQuad() {
-	openxr_api = OpenXRAPI::get_singleton();
-
 	composition_layer = {
 		XR_TYPE_COMPOSITION_LAYER_QUAD, // type
 		nullptr, // next
@@ -53,11 +51,8 @@ OpenXRCompositionLayerQuad::OpenXRCompositionLayerQuad() {
 	};
 	openxr_layer_provider = memnew(OpenXRViewportCompositionLayerProvider((XrCompositionLayerBaseHeader *)&composition_layer));
 
-	Ref<OpenXRInterface> openxr_interface = XRServer::get_singleton()->find_interface("OpenXR");
-	if (openxr_interface.is_valid()) {
-		openxr_interface->connect("session_begun", callable_mp(this, &OpenXRCompositionLayerQuad::_on_openxr_session_begun));
-	}
-
+	// This layer should always be supported, so we only provide a fallback in
+	// the editor.
 	if (Engine::get_singleton()->is_editor_hint()) {
 		fallback = memnew(MeshInstance3D);
 
@@ -74,31 +69,17 @@ OpenXRCompositionLayerQuad::OpenXRCompositionLayerQuad() {
 		add_child(fallback, false, INTERNAL_MODE_FRONT);
 	}
 
-	set_process_internal(true);
 	set_notify_local_transform(true);
 }
 
 OpenXRCompositionLayerQuad::~OpenXRCompositionLayerQuad() {
-	Ref<OpenXRInterface> openxr_interface = XRServer::get_singleton()->find_interface("OpenXR");
-	if (openxr_interface.is_valid()) {
-		openxr_interface->disconnect("session_begun", callable_mp(this, &OpenXRCompositionLayerQuad::_on_openxr_session_begun));
-	}
-
-	if (openxr_layer_provider != nullptr) {
-		memdelete(openxr_layer_provider);
-		openxr_layer_provider = nullptr;
-	}
 }
 
 void OpenXRCompositionLayerQuad::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_quad_size", "size"), &OpenXRCompositionLayerQuad::set_quad_size);
 	ClassDB::bind_method(D_METHOD("get_quad_size"), &OpenXRCompositionLayerQuad::get_quad_size);
 
-	ClassDB::bind_method(D_METHOD("set_layer_viewport", "viewport"), &OpenXRCompositionLayerQuad::set_layer_viewport);
-	ClassDB::bind_method(D_METHOD("get_layer_viewport"), &OpenXRCompositionLayerQuad::get_layer_viewport);
-
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "quad_size", PROPERTY_HINT_NONE, ""), "set_quad_size", "get_quad_size");
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "layer_viewport", PROPERTY_HINT_NODE_TYPE, "SubViewport"), "set_layer_viewport", "get_layer_viewport");
 }
 
 void OpenXRCompositionLayerQuad::_on_openxr_session_begun() {
@@ -124,22 +105,10 @@ Size2 OpenXRCompositionLayerQuad::get_quad_size() const {
 	return quad_size;
 }
 
-void OpenXRCompositionLayerQuad::set_layer_viewport(SubViewport *p_viewport) {
-	layer_viewport = p_viewport;
-	if (is_visible() && is_inside_tree() && openxr_layer_provider->set_viewport(p_viewport)) {
-		if (layer_viewport && fallback) {
-			_reset_fallback_material();
-		}
+void OpenXRCompositionLayerQuad::_on_layer_viewport_changed() {
+	if (!fallback || !layer_viewport) {
+		return;
 	}
-}
-
-SubViewport *OpenXRCompositionLayerQuad::get_layer_viewport() const {
-	return layer_viewport;
-}
-
-void OpenXRCompositionLayerQuad::_reset_fallback_material() {
-	ERR_FAIL_COND(!fallback);
-	ERR_FAIL_COND(!layer_viewport);
 
 	Ref<StandardMaterial3D> material = fallback->get_surface_override_material(0);
 	if (material.is_valid()) {
@@ -158,43 +127,11 @@ void OpenXRCompositionLayerQuad::_reset_fallback_material() {
 
 void OpenXRCompositionLayerQuad::_notification(int p_what) {
 	switch (p_what) {
-		case NOTIFICATION_READY: {
-			if (layer_viewport && fallback) {
-				_reset_fallback_material();
-			}
-		} break;
-		case NOTIFICATION_INTERNAL_PROCESS: {
-			if (is_visible()) {
-				openxr_layer_provider->process();
-			}
-		} break;
 		case NOTIFICATION_LOCAL_TRANSFORM_CHANGED: {
 			Transform3D transform = get_transform();
 			Quaternion quat(transform.basis);
 			composition_layer.pose.orientation = { quat.x, quat.y, quat.z, quat.w };
 			composition_layer.pose.position = { transform.origin.x, transform.origin.y, transform.origin.z };
-		} break;
-		case NOTIFICATION_VISIBILITY_CHANGED: {
-			if (is_inside_tree()) {
-				openxr_layer_provider->set_viewport(is_visible() ? layer_viewport : nullptr);
-			}
-		} break;
-		case NOTIFICATION_ENTER_TREE: {
-			if (openxr_api) {
-				// Register our composition layer provider to our OpenXR API.
-				openxr_api->register_composition_layer_provider(openxr_layer_provider);
-			}
-			if (layer_viewport) {
-				openxr_layer_provider->set_viewport(is_visible() ? layer_viewport : nullptr);
-			}
-		} break;
-		case NOTIFICATION_EXIT_TREE: {
-			if (openxr_api) {
-				// Unregister our composition layer provider.
-				openxr_api->unregister_composition_layer_provider(openxr_layer_provider);
-			}
-			// This will clean up existing resources.
-			openxr_layer_provider->set_viewport(nullptr);
 		} break;
 	}
 }

@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  openxr_composition_layer_quad.h                                       */
+/*  openxr_composition_layer.h                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,40 +28,42 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef OPENXR_COMPOSITION_LAYER_QUAD_H
-#define OPENXR_COMPOSITION_LAYER_QUAD_H
+#ifndef OPENXR_COMPOSITION_LAYER_H
+#define OPENXR_COMPOSITION_LAYER_H
 
 #include <openxr/openxr.h>
 
-#include "openxr_composition_layer.h"
+#include "scene/3d/node_3d.h"
 
-class MeshInstance3D;
 class OpenXRAPI;
 class OpenXRViewportCompositionLayerProvider;
 class SubViewport;
 
-class OpenXRCompositionLayerQuad : public OpenXRCompositionLayer {
-	GDCLASS(OpenXRCompositionLayerQuad, OpenXRCompositionLayer);
-
-	XrCompositionLayerQuad composition_layer;
-
-	Size2 quad_size = Size2(1.0, 1.0);
-	MeshInstance3D *fallback = nullptr;
+class OpenXRCompositionLayer : public Node3D {
+	GDCLASS(OpenXRCompositionLayer, Node3D);
 
 protected:
+	OpenXRAPI *openxr_api = nullptr;
+	OpenXRViewportCompositionLayerProvider *openxr_layer_provider = nullptr;
+
+	SubViewport *layer_viewport = nullptr;
+
 	static void _bind_methods();
 
 	void _notification(int p_what);
 
-	virtual void _on_openxr_session_begun() override;
-	virtual void _on_layer_viewport_changed() override;
+	virtual void _on_openxr_session_begun() {}
+	virtual void _on_layer_viewport_changed() {}
 
 public:
-	void set_quad_size(const Size2 &p_size);
-	Size2 get_quad_size() const;
+	void set_layer_viewport(SubViewport *p_viewport);
+	SubViewport *get_layer_viewport() const;
 
-	OpenXRCompositionLayerQuad();
-	~OpenXRCompositionLayerQuad();
+	void set_sort_order(int p_order);
+	int get_sort_order() const;
+
+	OpenXRCompositionLayer();
+	~OpenXRCompositionLayer();
 };
 
-#endif // OPENXR_COMPOSITION_LAYER_QUAD_H
+#endif // OPENXR_COMPOSITION_LAYER_H

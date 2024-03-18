@@ -67,7 +67,6 @@ private:
 class OpenXRViewportCompositionLayerProvider : public OpenXRCompositionLayerProvider {
 	XrCompositionLayerBaseHeader *composition_layer = nullptr;
 	int sort_order = 1;
-	bool visible = true;
 
 	OpenXRAPI *openxr_api = nullptr;
 	OpenXRCompositionLayerExtension *composition_layer_extension = nullptr;
@@ -90,9 +89,6 @@ public:
 
 	void set_sort_order(int p_sort_order) { sort_order = p_sort_order; }
 	int get_sort_order() const { return sort_order; }
-
-	bool is_visible() const { return visible; }
-	void set_visible(bool p_visible);
 
 	bool set_viewport(SubViewport *p_viewport);
 	SubViewport *get_viewport() const { return viewport; }

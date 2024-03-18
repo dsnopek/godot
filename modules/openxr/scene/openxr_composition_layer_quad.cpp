@@ -125,8 +125,8 @@ Size2 OpenXRCompositionLayerQuad::get_quad_size() const {
 }
 
 void OpenXRCompositionLayerQuad::set_layer_viewport(SubViewport *p_viewport) {
-	if (openxr_layer_provider->set_viewport(p_viewport)) {
-		layer_viewport = p_viewport;
+	layer_viewport = p_viewport;
+	if (is_visible() && is_inside_tree() && openxr_layer_provider->set_viewport(p_viewport)) {
 		if (layer_viewport && fallback) {
 			_reset_fallback_material();
 		}
@@ -176,7 +176,7 @@ void OpenXRCompositionLayerQuad::_notification(int p_what) {
 		} break;
 		case NOTIFICATION_VISIBILITY_CHANGED: {
 			if (is_inside_tree()) {
-				openxr_layer_provider->set_visible(is_visible());
+				openxr_layer_provider->set_viewport(is_visible() ? layer_viewport : nullptr);
 			}
 		} break;
 		case NOTIFICATION_ENTER_TREE: {
@@ -184,7 +184,9 @@ void OpenXRCompositionLayerQuad::_notification(int p_what) {
 				// Register our composition layer provider to our OpenXR API.
 				openxr_api->register_composition_layer_provider(openxr_layer_provider);
 			}
-			openxr_layer_provider->set_visible(is_visible());
+			if (layer_viewport) {
+				openxr_layer_provider->set_viewport(is_visible() ? layer_viewport : nullptr);
+			}
 		} break;
 		case NOTIFICATION_EXIT_TREE: {
 			if (openxr_api) {
@@ -192,7 +194,7 @@ void OpenXRCompositionLayerQuad::_notification(int p_what) {
 				openxr_api->unregister_composition_layer_provider(openxr_layer_provider);
 			}
 			// This will clean up existing resources.
-			openxr_layer_provider->set_visible(false);
+			openxr_layer_provider->set_viewport(nullptr);
 		} break;
 	}
 }

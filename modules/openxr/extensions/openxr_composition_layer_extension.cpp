@@ -93,7 +93,7 @@ OpenXRViewportCompositionLayerProvider::~OpenXRViewportCompositionLayerProvider(
 }
 
 int OpenXRViewportCompositionLayerProvider::get_composition_layer_count() {
-	return visible ? 1 : 0;
+	return 1;
 }
 
 XrCompositionLayerBaseHeader *OpenXRViewportCompositionLayerProvider::get_composition_layer(int p_index) {
@@ -158,13 +158,6 @@ XrCompositionLayerBaseHeader *OpenXRViewportCompositionLayerProvider::get_compos
 
 int OpenXRViewportCompositionLayerProvider::get_composition_layer_order(int p_index) {
 	return sort_order;
-}
-
-void OpenXRViewportCompositionLayerProvider::set_visible(bool p_visible) {
-	visible = p_visible;
-	if (!visible) {
-		free_swapchain();
-	}
 }
 
 bool OpenXRViewportCompositionLayerProvider::set_viewport(SubViewport *p_viewport) {

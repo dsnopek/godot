@@ -35,18 +35,12 @@
 
 #include "openxr_composition_layer.h"
 
-class MeshInstance3D;
-class OpenXRAPI;
-class OpenXRViewportCompositionLayerProvider;
-class SubViewport;
-
 class OpenXRCompositionLayerQuad : public OpenXRCompositionLayer {
 	GDCLASS(OpenXRCompositionLayerQuad, OpenXRCompositionLayer);
 
 	XrCompositionLayerQuad composition_layer;
 
 	Size2 quad_size = Size2(1.0, 1.0);
-	MeshInstance3D *fallback = nullptr;
 
 protected:
 	static void _bind_methods();
@@ -54,7 +48,7 @@ protected:
 	void _notification(int p_what);
 
 	virtual void _on_openxr_session_begun() override;
-	virtual void _on_layer_viewport_changed() override;
+	virtual Ref<Mesh> _create_fallback_mesh() override;
 
 public:
 	void set_quad_size(const Size2 &p_size);

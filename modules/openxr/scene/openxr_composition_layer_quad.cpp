@@ -51,24 +51,6 @@ OpenXRCompositionLayerQuad::OpenXRCompositionLayerQuad() {
 	};
 	openxr_layer_provider = memnew(OpenXRViewportCompositionLayerProvider((XrCompositionLayerBaseHeader *)&composition_layer));
 
-	// This layer should always be supported, so we only provide a fallback in
-	// the editor.
-	if (Engine::get_singleton()->is_editor_hint()) {
-		fallback = memnew(MeshInstance3D);
-
-		Ref<QuadMesh> mesh;
-		mesh.instantiate();
-		mesh->set_size(quad_size);
-		fallback->set_mesh(mesh);
-
-		Ref<StandardMaterial3D> material;
-		material.instantiate();
-		material->set_local_to_scene(true);
-		fallback->set_surface_override_material(0, material);
-
-		add_child(fallback, false, INTERNAL_MODE_FRONT);
-	}
-
 	set_notify_local_transform(true);
 }
 
@@ -83,46 +65,27 @@ void OpenXRCompositionLayerQuad::_bind_methods() {
 }
 
 void OpenXRCompositionLayerQuad::_on_openxr_session_begun() {
+	OpenXRCompositionLayer::_on_openxr_session_begun();
 	if (openxr_api) {
 		composition_layer.space = openxr_api->get_play_space();
 	}
 }
 
+Ref<Mesh> OpenXRCompositionLayerQuad::_create_fallback_mesh() {
+	Ref<QuadMesh> mesh;
+	mesh.instantiate();
+	mesh->set_size(quad_size);
+	return mesh;
+}
+
 void OpenXRCompositionLayerQuad::set_quad_size(const Size2 &p_size) {
 	quad_size = p_size;
-
 	composition_layer.size = { quad_size.x, quad_size.y };
-
-	if (fallback) {
-		Ref<QuadMesh> mesh = fallback->get_mesh();
-		if (mesh.is_valid()) {
-			mesh->set_size(p_size);
-		}
-	}
+	update_fallback_mesh();
 }
 
 Size2 OpenXRCompositionLayerQuad::get_quad_size() const {
 	return quad_size;
-}
-
-void OpenXRCompositionLayerQuad::_on_layer_viewport_changed() {
-	if (!fallback || !layer_viewport) {
-		return;
-	}
-
-	Ref<StandardMaterial3D> material = fallback->get_surface_override_material(0);
-	if (material.is_valid()) {
-		Node *loc_scene = material->get_local_scene();
-		if (loc_scene) {
-			Ref<ViewportTexture> texture = material->get_texture(StandardMaterial3D::TEXTURE_ALBEDO);
-			if (texture.is_null()) {
-				texture.instantiate();
-				material->set_texture(StandardMaterial3D::TEXTURE_ALBEDO, texture);
-			}
-			NodePath viewport_path = loc_scene->get_path_to(layer_viewport);
-			texture->set_viewport_path_in_scene(viewport_path);
-		}
-	}
 }
 
 void OpenXRCompositionLayerQuad::_notification(int p_what) {

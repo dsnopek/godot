@@ -83,6 +83,8 @@ class OpenXRViewportCompositionLayerProvider : public OpenXRCompositionLayerProv
 	RID get_current_swapchain_texture();
 
 public:
+	XrStructureType get_openxr_type() { return composition_layer->type; }
+
 	virtual int get_composition_layer_count() override;
 	virtual XrCompositionLayerBaseHeader *get_composition_layer(int p_index) override;
 	virtual int get_composition_layer_order(int p_index) override;

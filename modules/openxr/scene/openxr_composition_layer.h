@@ -35,6 +35,8 @@
 
 #include "scene/3d/node_3d.h"
 
+class MeshInstance3D;
+class Mesh;
 class OpenXRAPI;
 class OpenXRViewportCompositionLayerProvider;
 class SubViewport;
@@ -42,18 +44,27 @@ class SubViewport;
 class OpenXRCompositionLayer : public Node3D {
 	GDCLASS(OpenXRCompositionLayer, Node3D);
 
+	SubViewport *layer_viewport = nullptr;
+	MeshInstance3D *fallback = nullptr;
+	bool should_update_fallback_mesh = false;
+
+	void _create_fallback_node();
+	void _reset_fallback_material();
+
 protected:
 	OpenXRAPI *openxr_api = nullptr;
 	OpenXRViewportCompositionLayerProvider *openxr_layer_provider = nullptr;
-
-	SubViewport *layer_viewport = nullptr;
 
 	static void _bind_methods();
 
 	void _notification(int p_what);
 
-	virtual void _on_openxr_session_begun() {}
-	virtual void _on_layer_viewport_changed() {}
+	virtual void _on_openxr_session_begun();
+	virtual void _on_openxr_session_stopping();
+
+	virtual Ref<Mesh> _create_fallback_mesh() = 0;
+
+	void update_fallback_mesh();
 
 public:
 	void set_layer_viewport(SubViewport *p_viewport);
@@ -61,6 +72,8 @@ public:
 
 	void set_sort_order(int p_order);
 	int get_sort_order() const;
+
+	bool is_natively_supported() const;
 
 	OpenXRCompositionLayer();
 	~OpenXRCompositionLayer();

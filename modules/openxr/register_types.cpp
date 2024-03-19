@@ -166,7 +166,7 @@ void initialize_openxr_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(OpenXRIPBinding);
 		GDREGISTER_CLASS(OpenXRInteractionProfile);
 
-		GDREGISTER_VIRTUAL_CLASS(OpenXRCompositionLayer);
+		GDREGISTER_ABSTRACT_CLASS(OpenXRCompositionLayer);
 		GDREGISTER_CLASS(OpenXRCompositionLayerQuad);
 		GDREGISTER_CLASS(OpenXRHand);
 

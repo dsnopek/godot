@@ -34,6 +34,7 @@
 #include "../openxr_api.h"
 #include "../openxr_interface.h"
 
+#include "scene/3d/mesh_instance_3d.h"
 #include "scene/main/viewport.h"
 
 OpenXRCompositionLayer::OpenXRCompositionLayer() {
@@ -42,15 +43,21 @@ OpenXRCompositionLayer::OpenXRCompositionLayer() {
 	Ref<OpenXRInterface> openxr_interface = XRServer::get_singleton()->find_interface("OpenXR");
 	if (openxr_interface.is_valid()) {
 		openxr_interface->connect("session_begun", callable_mp(this, &OpenXRCompositionLayer::_on_openxr_session_begun));
+		openxr_interface->connect("session_stopping", callable_mp(this, &OpenXRCompositionLayer::_on_openxr_session_stopping));
 	}
 
 	set_process_internal(true);
+
+	if (Engine::get_singleton()->is_editor_hint()) {
+		_create_fallback_node();
+	}
 }
 
 OpenXRCompositionLayer::~OpenXRCompositionLayer() {
 	Ref<OpenXRInterface> openxr_interface = XRServer::get_singleton()->find_interface("OpenXR");
 	if (openxr_interface.is_valid()) {
 		openxr_interface->disconnect("session_begun", callable_mp(this, &OpenXRCompositionLayer::_on_openxr_session_begun));
+		openxr_interface->disconnect("session_stopping", callable_mp(this, &OpenXRCompositionLayer::_on_openxr_session_stopping));
 	}
 
 	if (openxr_layer_provider != nullptr) {
@@ -66,15 +73,42 @@ void OpenXRCompositionLayer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_sort_order", "order"), &OpenXRCompositionLayer::set_sort_order);
 	ClassDB::bind_method(D_METHOD("get_sort_order"), &OpenXRCompositionLayer::get_sort_order);
 
+	ClassDB::bind_method(D_METHOD("is_natively_supported"), &OpenXRCompositionLayer::is_natively_supported);
+
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "layer_viewport", PROPERTY_HINT_NODE_TYPE, "SubViewport"), "set_layer_viewport", "get_layer_viewport");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "sort_order", PROPERTY_HINT_NONE, ""), "set_sort_order", "get_sort_order");
+}
+
+void OpenXRCompositionLayer::_create_fallback_node() {
+	ERR_FAIL_COND(fallback);
+	fallback = memnew(MeshInstance3D);
+	add_child(fallback, false, INTERNAL_MODE_FRONT);
+	should_update_fallback_mesh = true;
+}
+
+void OpenXRCompositionLayer::_on_openxr_session_begun() {
+	if (!fallback && !is_natively_supported()) {
+		_create_fallback_node();
+	}
+}
+
+void OpenXRCompositionLayer::_on_openxr_session_stopping() {
+	if (fallback && !Engine::get_singleton()->is_editor_hint()) {
+		fallback->queue_free();
+		remove_child(fallback);
+		fallback = nullptr;
+	}
+}
+
+void OpenXRCompositionLayer::update_fallback_mesh() {
+	should_update_fallback_mesh = true;
 }
 
 void OpenXRCompositionLayer::set_layer_viewport(SubViewport *p_viewport) {
 	layer_viewport = p_viewport;
 	if (is_visible() && is_inside_tree() && openxr_layer_provider->set_viewport(p_viewport)) {
-		if (layer_viewport) {
-			_on_layer_viewport_changed();
+		if (fallback) {
+			_reset_fallback_material();
 		}
 	}
 }
@@ -96,14 +130,43 @@ int OpenXRCompositionLayer::get_sort_order() const {
 	return 1;
 }
 
+bool OpenXRCompositionLayer::is_natively_supported() const {
+	return OpenXRCompositionLayerExtension::get_singleton()->is_available(openxr_layer_provider->get_openxr_type());
+}
+
+void OpenXRCompositionLayer::_reset_fallback_material() {
+	ERR_FAIL_NULL(fallback);
+
+	if (layer_viewport) {
+		Ref<StandardMaterial3D> material = fallback->get_surface_override_material(0);
+		if (material.is_null()) {
+			material.instantiate();
+			material->set_local_to_scene(true);
+			fallback->set_surface_override_material(0, material);
+		}
+
+		Node *loc_scene = material->get_local_scene();
+		if (loc_scene) {
+			Ref<ViewportTexture> texture = material->get_texture(StandardMaterial3D::TEXTURE_ALBEDO);
+			if (texture.is_null()) {
+				texture.instantiate();
+			}
+			NodePath viewport_path = loc_scene->get_path_to(layer_viewport);
+			texture->set_viewport_path_in_scene(viewport_path);
+			material->set_texture(StandardMaterial3D::TEXTURE_ALBEDO, texture);
+		}
+	} else {
+		fallback->set_surface_override_material(0, Ref<Material>());
+	}
+}
+
 void OpenXRCompositionLayer::_notification(int p_what) {
 	switch (p_what) {
-		case NOTIFICATION_READY: {
-			if (layer_viewport) {
-				_on_layer_viewport_changed();
-			}
-		} break;
 		case NOTIFICATION_INTERNAL_PROCESS: {
+			if (fallback && should_update_fallback_mesh) {
+				fallback->set_mesh(_create_fallback_mesh());
+				_reset_fallback_material();
+			}
 			if (is_visible()) {
 				openxr_layer_provider->process();
 			}

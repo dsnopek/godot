@@ -50,7 +50,7 @@ OpenXRCompositionLayerEquirect::OpenXRCompositionLayerEquirect() {
 		radius, // radius
 		central_horizontal_angle, // centralHorizontalAngle
 		upper_vertical_angle, // upperVerticalAngle
-		lower_vertical_angle, // lowerVerticalAngle
+		-lower_vertical_angle, // lowerVerticalAngle
 	};
 	openxr_layer_provider = memnew(OpenXRViewportCompositionLayerProvider((XrCompositionLayerBaseHeader *)&composition_layer));
 
@@ -179,7 +179,7 @@ float OpenXRCompositionLayerEquirect::get_central_horizontal_angle() const {
 }
 
 void OpenXRCompositionLayerEquirect::set_upper_vertical_angle(float p_angle) {
-	ERR_FAIL_COND(p_angle <= 0);
+	ERR_FAIL_COND(p_angle <= 0 || p_angle > (Math_PI / 2.0));
 	upper_vertical_angle = p_angle;
 	composition_layer.upperVerticalAngle = p_angle;
 	update_fallback_mesh();
@@ -190,9 +190,9 @@ float OpenXRCompositionLayerEquirect::get_upper_vertical_angle() const {
 }
 
 void OpenXRCompositionLayerEquirect::set_lower_vertical_angle(float p_angle) {
-	ERR_FAIL_COND(p_angle <= 0);
+	ERR_FAIL_COND(p_angle <= 0 || p_angle > (Math_PI / 2.0));
 	lower_vertical_angle = p_angle;
-	composition_layer.lowerVerticalAngle = p_angle;
+	composition_layer.lowerVerticalAngle = -p_angle;
 	update_fallback_mesh();
 }
 

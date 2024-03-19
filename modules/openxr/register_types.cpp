@@ -40,6 +40,7 @@
 #include "extensions/openxr_extension_wrapper_extension.h"
 
 #include "scene/openxr_composition_layer.h"
+#include "scene/openxr_composition_layer_cylinder.h"
 #include "scene/openxr_composition_layer_quad.h"
 #include "scene/openxr_hand.h"
 
@@ -167,6 +168,7 @@ void initialize_openxr_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(OpenXRInteractionProfile);
 
 		GDREGISTER_ABSTRACT_CLASS(OpenXRCompositionLayer);
+		GDREGISTER_CLASS(OpenXRCompositionLayerCylinder);
 		GDREGISTER_CLASS(OpenXRCompositionLayerQuad);
 		GDREGISTER_CLASS(OpenXRHand);
 

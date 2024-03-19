@@ -42,7 +42,7 @@ OpenXRCompositionLayerQuad::OpenXRCompositionLayerQuad() {
 	composition_layer = {
 		XR_TYPE_COMPOSITION_LAYER_QUAD, // type
 		nullptr, // next
-		0, // flags
+		0, // layerFlags
 		XR_NULL_HANDLE, // space
 		XR_EYE_VISIBILITY_BOTH, // eyeVisibility
 		{}, // subImage
@@ -78,16 +78,6 @@ Ref<Mesh> OpenXRCompositionLayerQuad::_create_fallback_mesh() {
 	return mesh;
 }
 
-void OpenXRCompositionLayerQuad::set_quad_size(const Size2 &p_size) {
-	quad_size = p_size;
-	composition_layer.size = { quad_size.x, quad_size.y };
-	update_fallback_mesh();
-}
-
-Size2 OpenXRCompositionLayerQuad::get_quad_size() const {
-	return quad_size;
-}
-
 void OpenXRCompositionLayerQuad::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_LOCAL_TRANSFORM_CHANGED: {
@@ -97,4 +87,14 @@ void OpenXRCompositionLayerQuad::_notification(int p_what) {
 			composition_layer.pose.position = { transform.origin.x, transform.origin.y, transform.origin.z };
 		} break;
 	}
+}
+
+void OpenXRCompositionLayerQuad::set_quad_size(const Size2 &p_size) {
+	quad_size = p_size;
+	composition_layer.size = { quad_size.x, quad_size.y };
+	update_fallback_mesh();
+}
+
+Size2 OpenXRCompositionLayerQuad::get_quad_size() const {
+	return quad_size;
 }

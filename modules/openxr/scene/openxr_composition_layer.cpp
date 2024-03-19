@@ -106,10 +106,10 @@ void OpenXRCompositionLayer::update_fallback_mesh() {
 
 void OpenXRCompositionLayer::set_layer_viewport(SubViewport *p_viewport) {
 	layer_viewport = p_viewport;
-	if (is_visible() && is_inside_tree() && openxr_layer_provider->set_viewport(p_viewport)) {
-		if (fallback) {
-			_reset_fallback_material();
-		}
+	if (fallback) {
+		_reset_fallback_material();
+	} else if (is_visible() && is_inside_tree()) {
+		openxr_layer_provider->set_viewport(p_viewport);
 	}
 }
 
@@ -163,35 +163,40 @@ void OpenXRCompositionLayer::_reset_fallback_material() {
 void OpenXRCompositionLayer::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_INTERNAL_PROCESS: {
-			if (fallback && should_update_fallback_mesh) {
-				fallback->set_mesh(_create_fallback_mesh());
-				_reset_fallback_material();
-			}
-			if (is_visible()) {
+			if (fallback) {
+				if (should_update_fallback_mesh) {
+					fallback->set_mesh(_create_fallback_mesh());
+					_reset_fallback_material();
+				}
+			} else if (is_visible()) {
 				openxr_layer_provider->process();
 			}
 		} break;
 		case NOTIFICATION_VISIBILITY_CHANGED: {
-			if (is_inside_tree()) {
+			if (!fallback && is_inside_tree()) {
 				openxr_layer_provider->set_viewport(is_visible() ? layer_viewport : nullptr);
 			}
 		} break;
 		case NOTIFICATION_ENTER_TREE: {
-			if (openxr_api) {
-				// Register our composition layer provider to our OpenXR API.
-				openxr_api->register_composition_layer_provider(openxr_layer_provider);
-			}
-			if (layer_viewport) {
-				openxr_layer_provider->set_viewport(is_visible() ? layer_viewport : nullptr);
+			if (!fallback) {
+				if (openxr_api) {
+					// Register our composition layer provider to our OpenXR API.
+					openxr_api->register_composition_layer_provider(openxr_layer_provider);
+				}
+				if (layer_viewport) {
+					openxr_layer_provider->set_viewport(is_visible() ? layer_viewport : nullptr);
+				}
 			}
 		} break;
 		case NOTIFICATION_EXIT_TREE: {
-			if (openxr_api) {
-				// Unregister our composition layer provider.
-				openxr_api->unregister_composition_layer_provider(openxr_layer_provider);
+			if (!fallback) {
+				if (openxr_api) {
+					// Unregister our composition layer provider.
+					openxr_api->unregister_composition_layer_provider(openxr_layer_provider);
+				}
+				// This will clean up existing resources.
+				openxr_layer_provider->set_viewport(nullptr);
 			}
-			// This will clean up existing resources.
-			openxr_layer_provider->set_viewport(nullptr);
 		} break;
 	}
 }

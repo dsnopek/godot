@@ -36,7 +36,7 @@
 
 #include "scene/3d/mesh_instance_3d.h"
 #include "scene/main/viewport.h"
-#include "scene/resources/3d/primitive_meshes.h"
+#include "scene/resources/mesh.h"
 
 OpenXRCompositionLayerCylinder::OpenXRCompositionLayerCylinder() {
 	composition_layer = {
@@ -104,7 +104,7 @@ Ref<Mesh> OpenXRCompositionLayerCylinder::_create_fallback_mesh() {
 	float start_angle = (-Math_PI / 2.0) - (central_angle / 2.0);
 
 	for (uint32_t i = 0; i < fallback_segments + 1; i++) {
-		float current_angle = start_angle + (i * delta_angle);
+		float current_angle = start_angle + (delta_angle * i);
 		float x = radius * Math::cos(current_angle);
 		float z = radius * Math::sin(current_angle);
 		Vector3 normal(Math::cos(current_angle), 0, Math::sin(current_angle));

@@ -85,6 +85,9 @@ void OpenXRCompositionLayer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_layer_viewport", "viewport"), &OpenXRCompositionLayer::set_layer_viewport);
 	ClassDB::bind_method(D_METHOD("get_layer_viewport"), &OpenXRCompositionLayer::get_layer_viewport);
 
+	ClassDB::bind_method(D_METHOD("set_use_android_surface", "enable"), &OpenXRCompositionLayer::set_use_android_surface);
+	ClassDB::bind_method(D_METHOD("get_use_android_surface"), &OpenXRCompositionLayer::get_use_android_surface);
+
 	ClassDB::bind_method(D_METHOD("set_enable_hole_punch", "enable"), &OpenXRCompositionLayer::set_enable_hole_punch);
 	ClassDB::bind_method(D_METHOD("get_enable_hole_punch"), &OpenXRCompositionLayer::get_enable_hole_punch);
 
@@ -99,6 +102,7 @@ void OpenXRCompositionLayer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("intersects_ray", "origin", "direction"), &OpenXRCompositionLayer::intersects_ray);
 
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "layer_viewport", PROPERTY_HINT_NODE_TYPE, "SubViewport"), "set_layer_viewport", "get_layer_viewport");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "use_android_surface", PROPERTY_HINT_NONE, ""), "set_use_android_surface", "get_use_android_surface");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "sort_order", PROPERTY_HINT_NONE, ""), "set_sort_order", "get_sort_order");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "alpha_blend", PROPERTY_HINT_NONE, ""), "set_alpha_blend", "get_alpha_blend");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "enable_hole_punch", PROPERTY_HINT_NONE, ""), "set_enable_hole_punch", "get_enable_hole_punch");
@@ -108,7 +112,7 @@ bool OpenXRCompositionLayer::_should_use_fallback_node() {
 	if (Engine::get_singleton()->is_editor_hint()) {
 		return true;
 	} else if (openxr_session_running) {
-		return enable_hole_punch || !is_natively_supported();
+		return enable_hole_punch || (!is_natively_supported() && !use_android_surface);
 	}
 	return false;
 }
@@ -128,10 +132,25 @@ void OpenXRCompositionLayer::_remove_fallback_node() {
 	fallback = nullptr;
 }
 
+void OpenXRCompositionLayer::_setup_composition_layer_provider() {
+	// Set our properties on the layer provider, which will create all the necessary resources (ex swap chains).
+	if (use_android_surface) {
+		openxr_layer_provider->set_use_android_surface(true);
+	} else if (layer_viewport) {
+		openxr_layer_provider->set_viewport(layer_viewport->get_viewport_rid(), layer_viewport->get_size());
+	}
+}
+
+void OpenXRCompositionLayer::_clear_composition_layer_provider() {
+	// This will free all the resources (ex swap chains) used by the layer.
+	openxr_layer_provider->set_use_android_surface(false);
+	openxr_layer_provider->set_viewport(RID(), Size2i());
+}
+
 void OpenXRCompositionLayer::_on_openxr_session_begun() {
 	openxr_session_running = true;
-	if (layer_viewport && is_natively_supported() && is_visible() && is_inside_tree()) {
-		openxr_layer_provider->set_viewport(layer_viewport->get_viewport_rid(), layer_viewport->get_size());
+	if (is_natively_supported() && is_visible() && is_inside_tree()) {
+		_setup_composition_layer_provider();
 	}
 	if (!fallback && _should_use_fallback_node()) {
 		_create_fallback_node();
@@ -142,9 +161,8 @@ void OpenXRCompositionLayer::_on_openxr_session_stopping() {
 	openxr_session_running = false;
 	if (fallback && !_should_use_fallback_node()) {
 		_remove_fallback_node();
-	} else {
-		openxr_layer_provider->set_viewport(RID(), Size2i());
 	}
+	_clear_composition_layer_provider();
 }
 
 void OpenXRCompositionLayer::update_fallback_mesh() {
@@ -162,6 +180,7 @@ XrPosef OpenXRCompositionLayer::get_openxr_pose() {
 }
 
 bool OpenXRCompositionLayer::is_viewport_in_use(SubViewport *p_viewport) {
+	ERR_FAIL_NULL(p_viewport);
 	for (const OpenXRCompositionLayer *other_composition_layer : composition_layer_nodes) {
 		if (other_composition_layer != this && other_composition_layer->is_inside_tree() && other_composition_layer->get_layer_viewport() == p_viewport) {
 			return true;
@@ -177,6 +196,9 @@ void OpenXRCompositionLayer::set_layer_viewport(SubViewport *p_viewport) {
 
 	if (p_viewport != nullptr) {
 		ERR_FAIL_COND_EDMSG(is_viewport_in_use(p_viewport), RTR("Cannot use the same SubViewport with multiple OpenXR composition layers. Clear it from its current layer first."));
+	}
+	if (use_android_surface) {
+		ERR_FAIL_COND_MSG(p_viewport != nullptr, RTR("Cannot set SubViewport on an OpenXR composition layer when using an Android surface."));
 	}
 
 	layer_viewport = p_viewport;
@@ -198,6 +220,24 @@ void OpenXRCompositionLayer::set_layer_viewport(SubViewport *p_viewport) {
 			openxr_layer_provider->set_viewport(RID(), Size2i());
 		}
 	}
+}
+
+void OpenXRCompositionLayer::set_use_android_surface(bool p_use_android_surface) {
+	if (use_android_surface == p_use_android_surface) {
+		return;
+	}
+
+	use_android_surface = p_use_android_surface;
+	if (use_android_surface) {
+		set_layer_viewport(nullptr);
+		openxr_layer_provider->set_use_android_surface(true);
+	} else {
+		openxr_layer_provider->set_use_android_surface(false);
+	}
+}
+
+bool OpenXRCompositionLayer::get_use_android_surface() const {
+	return use_android_surface;
 }
 
 SubViewport *OpenXRCompositionLayer::get_layer_viewport() const {
@@ -301,10 +341,7 @@ void OpenXRCompositionLayer::_reset_fallback_material() {
 
 		Ref<ViewportTexture> texture = material->get_texture(StandardMaterial3D::TEXTURE_ALBEDO);
 		if (texture.is_null()) {
-			texture.instantiate();
-			// ViewportTexture can't be configured without a local scene, so use this hack to set it.
-			HashMap<Ref<Resource>, Ref<Resource>> remap_cache;
-			texture->configure_for_local_scene(this, remap_cache);
+			texture = layer_viewport->get_texture();
 		}
 
 		Node *loc_scene = texture->get_local_scene();
@@ -339,10 +376,10 @@ void OpenXRCompositionLayer::_notification(int p_what) {
 		} break;
 		case NOTIFICATION_VISIBILITY_CHANGED: {
 			if (!fallback && openxr_session_running && is_inside_tree()) {
-				if (layer_viewport && is_visible()) {
-					openxr_layer_provider->set_viewport(layer_viewport->get_viewport_rid(), layer_viewport->get_size());
+				if (is_visible()) {
+					_setup_composition_layer_provider();
 				} else {
-					openxr_layer_provider->set_viewport(RID(), Size2i());
+					_clear_composition_layer_provider();
 				}
 			}
 			update_configuration_warnings();
@@ -355,10 +392,10 @@ void OpenXRCompositionLayer::_notification(int p_what) {
 				composition_layer_extension->register_viewport_composition_layer_provider(openxr_layer_provider);
 			}
 
-			if (is_viewport_in_use(layer_viewport)) {
-				set_layer_viewport(nullptr);
-			} else if (!fallback && layer_viewport && openxr_session_running && is_visible()) {
-				openxr_layer_provider->set_viewport(layer_viewport->get_viewport_rid(), layer_viewport->get_size());
+			if (layer_viewport && is_viewport_in_use(layer_viewport)) {
+				_clear_composition_layer_provider();
+			} else if (openxr_session_running && is_visible()) {
+				_setup_composition_layer_provider();
 			}
 		} break;
 		case NOTIFICATION_EXIT_TREE: {
@@ -366,10 +403,8 @@ void OpenXRCompositionLayer::_notification(int p_what) {
 				composition_layer_extension->unregister_viewport_composition_layer_provider(openxr_layer_provider);
 			}
 
-			if (!fallback) {
-				// This will clean up existing resources.
-				openxr_layer_provider->set_viewport(RID(), Size2i());
-			}
+			// This will clean up existing resources.
+			_clear_composition_layer_provider();
 		} break;
 	}
 }

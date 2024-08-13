@@ -36,7 +36,7 @@
 
 #include "../openxr_api.h"
 
-class OpenXRViewportCompositionLayerProvider;
+class OpenXRCompositionLayerProvider;
 
 // This extension provides access to composition layers for displaying 2D content through the XR compositor.
 
@@ -57,21 +57,21 @@ public:
 	virtual XrCompositionLayerBaseHeader *get_composition_layer(int p_index) override;
 	virtual int get_composition_layer_order(int p_index) override;
 
-	void register_viewport_composition_layer_provider(OpenXRViewportCompositionLayerProvider *p_composition_layer);
-	void unregister_viewport_composition_layer_provider(OpenXRViewportCompositionLayerProvider *p_composition_layer);
+	void register_viewport_composition_layer_provider(OpenXRCompositionLayerProvider *p_composition_layer);
+	void unregister_viewport_composition_layer_provider(OpenXRCompositionLayerProvider *p_composition_layer);
 
 	bool is_available(XrStructureType p_which);
 
 private:
 	static OpenXRCompositionLayerExtension *singleton;
 
-	Vector<OpenXRViewportCompositionLayerProvider *> composition_layers;
+	Vector<OpenXRCompositionLayerProvider *> composition_layers;
 
 	bool cylinder_ext_available = false;
 	bool equirect_ext_available = false;
 };
 
-class OpenXRViewportCompositionLayerProvider {
+class OpenXRCompositionLayerProvider {
 	XrCompositionLayerBaseHeader *composition_layer = nullptr;
 	int sort_order = 1;
 	bool alpha_blend = false;
@@ -80,6 +80,7 @@ class OpenXRViewportCompositionLayerProvider {
 
 	RID viewport;
 	Size2i viewport_size;
+	bool use_android_surface;
 
 	OpenXRAPI::OpenXRSwapChainInfo swapchain_info;
 	Size2i swapchain_size;
@@ -104,13 +105,16 @@ public:
 	void set_viewport(RID p_viewport, Size2i p_size);
 	RID get_viewport() const { return viewport; }
 
+	void set_use_android_surface(bool p_use_android_surface);
+	bool get_use_android_surface() const { return use_android_surface; }
+
 	void set_extension_property_values(const Dictionary &p_property_values);
 
 	void on_pre_render();
 	XrCompositionLayerBaseHeader *get_composition_layer();
 
-	OpenXRViewportCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer);
-	~OpenXRViewportCompositionLayerProvider();
+	OpenXRCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer);
+	~OpenXRCompositionLayerProvider();
 };
 
 #endif // OPENXR_COMPOSITION_LAYER_EXTENSION_H

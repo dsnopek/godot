@@ -49,7 +49,7 @@ OpenXRCompositionLayerQuad::OpenXRCompositionLayerQuad() {
 		{ { 0, 0, 0, 0 }, { 0, 0, 0 } }, // pose
 		{ (float)quad_size.x, (float)quad_size.y }, // size
 	};
-	openxr_layer_provider = memnew(OpenXRViewportCompositionLayerProvider((XrCompositionLayerBaseHeader *)&composition_layer));
+	openxr_layer_provider = memnew(OpenXRCompositionLayerProvider((XrCompositionLayerBaseHeader *)&composition_layer));
 	XRServer::get_singleton()->connect("reference_frame_changed", callable_mp(this, &OpenXRCompositionLayerQuad::update_transform));
 }
 

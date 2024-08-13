@@ -51,7 +51,7 @@ OpenXRCompositionLayerCylinder::OpenXRCompositionLayerCylinder() {
 		central_angle, // centralAngle
 		aspect_ratio, // aspectRatio
 	};
-	openxr_layer_provider = memnew(OpenXRViewportCompositionLayerProvider((XrCompositionLayerBaseHeader *)&composition_layer));
+	openxr_layer_provider = memnew(OpenXRCompositionLayerProvider((XrCompositionLayerBaseHeader *)&composition_layer));
 	XRServer::get_singleton()->connect("reference_frame_changed", callable_mp(this, &OpenXRCompositionLayerCylinder::update_transform));
 }
 

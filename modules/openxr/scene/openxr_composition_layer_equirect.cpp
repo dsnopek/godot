@@ -52,7 +52,7 @@ OpenXRCompositionLayerEquirect::OpenXRCompositionLayerEquirect() {
 		upper_vertical_angle, // upperVerticalAngle
 		-lower_vertical_angle, // lowerVerticalAngle
 	};
-	openxr_layer_provider = memnew(OpenXRCompositionLayerProvider((XrCompositionLayerBaseHeader *)&composition_layer));
+	openxr_layer_provider = memnew(OpenXRViewportCompositionLayerProvider((XrCompositionLayerBaseHeader *)&composition_layer));
 	XRServer::get_singleton()->connect("reference_frame_changed", callable_mp(this, &OpenXRCompositionLayerEquirect::update_transform));
 }
 

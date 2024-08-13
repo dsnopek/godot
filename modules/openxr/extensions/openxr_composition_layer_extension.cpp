@@ -67,7 +67,7 @@ void OpenXRCompositionLayerExtension::on_session_destroyed() {
 }
 
 void OpenXRCompositionLayerExtension::on_pre_render() {
-	for (OpenXRCompositionLayerProvider *composition_layer : composition_layers) {
+	for (OpenXRBaseCompositionLayerProvider *composition_layer : composition_layers) {
 		composition_layer->on_pre_render();
 	}
 }
@@ -86,11 +86,11 @@ int OpenXRCompositionLayerExtension::get_composition_layer_order(int p_index) {
 	return composition_layers[p_index]->get_sort_order();
 }
 
-void OpenXRCompositionLayerExtension::register_viewport_composition_layer_provider(OpenXRCompositionLayerProvider *p_composition_layer) {
+void OpenXRCompositionLayerExtension::register_viewport_composition_layer_provider(OpenXRBaseCompositionLayerProvider *p_composition_layer) {
 	composition_layers.push_back(p_composition_layer);
 }
 
-void OpenXRCompositionLayerExtension::unregister_viewport_composition_layer_provider(OpenXRCompositionLayerProvider *p_composition_layer) {
+void OpenXRCompositionLayerExtension::unregister_viewport_composition_layer_provider(OpenXRBaseCompositionLayerProvider *p_composition_layer) {
 	composition_layers.erase(p_composition_layer);
 }
 
@@ -114,24 +114,21 @@ bool OpenXRCompositionLayerExtension::is_available(XrStructureType p_which) {
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// OpenXRCompositionLayerProvider
+// OpenXRBaseCompositionLayerProvider
 
-OpenXRCompositionLayerProvider::OpenXRCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer) {
+OpenXRBaseCompositionLayerProvider::OpenXRBaseCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer) {
 	composition_layer = p_composition_layer;
 	openxr_api = OpenXRAPI::get_singleton();
 	composition_layer_extension = OpenXRCompositionLayerExtension::get_singleton();
 }
 
-OpenXRCompositionLayerProvider::~OpenXRCompositionLayerProvider() {
+OpenXRBaseCompositionLayerProvider::~OpenXRBaseCompositionLayerProvider() {
 	for (OpenXRExtensionWrapper *extension : OpenXRAPI::get_registered_extension_wrappers()) {
 		extension->on_viewport_composition_layer_destroyed(composition_layer);
 	}
-
-	// This will reset the viewport and free the swapchain too.
-	set_viewport(RID(), Size2i());
 }
 
-void OpenXRCompositionLayerProvider::set_alpha_blend(bool p_alpha_blend) {
+void OpenXRBaseCompositionLayerProvider::set_alpha_blend(bool p_alpha_blend) {
 	if (alpha_blend != p_alpha_blend) {
 		alpha_blend = p_alpha_blend;
 		if (alpha_blend) {
@@ -142,50 +139,12 @@ void OpenXRCompositionLayerProvider::set_alpha_blend(bool p_alpha_blend) {
 	}
 }
 
-void OpenXRCompositionLayerProvider::set_viewport(RID p_viewport, Size2i p_size) {
-	RenderingServer *rs = RenderingServer::get_singleton();
-	ERR_FAIL_NULL(rs);
-
-	if (viewport != p_viewport) {
-		if (viewport.is_valid()) {
-			RID rt = rs->viewport_get_render_target(viewport);
-			RSG::texture_storage->render_target_set_override(rt, RID(), RID(), RID());
-		}
-
-		viewport = p_viewport;
-
-		if (viewport.is_valid()) {
-			viewport_size = p_size;
-		} else {
-			free_swapchain();
-			viewport_size = Size2i();
-		}
-	}
-}
-
-void OpenXRCompositionLayerProvider::set_extension_property_values(const Dictionary &p_extension_property_values) {
+void OpenXRBaseCompositionLayerProvider::set_extension_property_values(const Dictionary &p_extension_property_values) {
 	extension_property_values = p_extension_property_values;
 	extension_property_values_changed = true;
 }
 
-void OpenXRCompositionLayerProvider::on_pre_render() {
-	RenderingServer *rs = RenderingServer::get_singleton();
-	ERR_FAIL_NULL(rs);
-
-	if (viewport.is_valid() && openxr_api && openxr_api->is_running()) {
-		RS::ViewportUpdateMode update_mode = rs->viewport_get_update_mode(viewport);
-		if (update_mode == RS::VIEWPORT_UPDATE_ONCE || update_mode == RS::VIEWPORT_UPDATE_ALWAYS) {
-			// Update our XR swapchain
-			if (update_and_acquire_swapchain(update_mode == RS::VIEWPORT_UPDATE_ONCE)) {
-				// Render to our XR swapchain image.
-				RID rt = rs->viewport_get_render_target(viewport);
-				RSG::texture_storage->render_target_set_override(rt, get_current_swapchain_texture(), RID(), RID());
-			}
-		}
-	}
-}
-
-XrCompositionLayerBaseHeader *OpenXRCompositionLayerProvider::get_composition_layer() {
+XrCompositionLayerBaseHeader *OpenXRBaseCompositionLayerProvider::get_composition_layer() {
 	if (openxr_api == nullptr || composition_layer_extension == nullptr) {
 		// OpenXR not initialized or we're in the editor?
 		return nullptr;
@@ -196,13 +155,10 @@ XrCompositionLayerBaseHeader *OpenXRCompositionLayerProvider::get_composition_la
 		return nullptr;
 	}
 
-	if (swapchain_info.get_swapchain() == XR_NULL_HANDLE) {
+	XrSwapchain swapchain = _get_swap_chain();
+	if (swapchain == XR_NULL_HANDLE) {
 		// Don't have a swapchain to display? Ignore our layer.
 		return nullptr;
-	}
-
-	if (swapchain_info.is_image_acquired()) {
-		swapchain_info.release();
 	}
 
 	// Update the layer struct for the swapchain.
@@ -210,7 +166,7 @@ XrCompositionLayerBaseHeader *OpenXRCompositionLayerProvider::get_composition_la
 		case XR_TYPE_COMPOSITION_LAYER_QUAD: {
 			XrCompositionLayerQuad *quad_layer = (XrCompositionLayerQuad *)composition_layer;
 			quad_layer->space = openxr_api->get_play_space();
-			quad_layer->subImage.swapchain = swapchain_info.get_swapchain();
+			quad_layer->subImage.swapchain = swapchain;
 			quad_layer->subImage.imageArrayIndex = 0;
 			quad_layer->subImage.imageRect.offset.x = 0;
 			quad_layer->subImage.imageRect.offset.y = 0;
@@ -221,7 +177,7 @@ XrCompositionLayerBaseHeader *OpenXRCompositionLayerProvider::get_composition_la
 		case XR_TYPE_COMPOSITION_LAYER_CYLINDER_KHR: {
 			XrCompositionLayerCylinderKHR *cylinder_layer = (XrCompositionLayerCylinderKHR *)composition_layer;
 			cylinder_layer->space = openxr_api->get_play_space();
-			cylinder_layer->subImage.swapchain = swapchain_info.get_swapchain();
+			cylinder_layer->subImage.swapchain = swapchain;
 			cylinder_layer->subImage.imageArrayIndex = 0;
 			cylinder_layer->subImage.imageRect.offset.x = 0;
 			cylinder_layer->subImage.imageRect.offset.y = 0;
@@ -232,7 +188,7 @@ XrCompositionLayerBaseHeader *OpenXRCompositionLayerProvider::get_composition_la
 		case XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR: {
 			XrCompositionLayerEquirect2KHR *equirect_layer = (XrCompositionLayerEquirect2KHR *)composition_layer;
 			equirect_layer->space = openxr_api->get_play_space();
-			equirect_layer->subImage.swapchain = swapchain_info.get_swapchain();
+			equirect_layer->subImage.swapchain = swapchain;
 			equirect_layer->subImage.imageArrayIndex = 0;
 			equirect_layer->subImage.imageRect.offset.x = 0;
 			equirect_layer->subImage.imageRect.offset.y = 0;
@@ -261,12 +217,68 @@ XrCompositionLayerBaseHeader *OpenXRCompositionLayerProvider::get_composition_la
 	return composition_layer;
 }
 
-bool OpenXRCompositionLayerProvider::update_and_acquire_swapchain(bool p_static_image) {
+////////////////////////////////////////////////////////////////////////////
+// OpenXRViewportCompositionLayerProvider
+
+void OpenXRViewportCompositionLayerProvider::set_viewport(RID p_viewport, Size2i p_size) {
+	RenderingServer *rs = RenderingServer::get_singleton();
+	ERR_FAIL_NULL(rs);
+
+	if (viewport != p_viewport) {
+		if (viewport.is_valid()) {
+			RID rt = rs->viewport_get_render_target(viewport);
+			RSG::texture_storage->render_target_set_override(rt, RID(), RID(), RID());
+		}
+
+		viewport = p_viewport;
+
+		if (viewport.is_valid()) {
+			viewport_size = p_size;
+		} else {
+			free_swapchain();
+			viewport_size = Size2i();
+		}
+	}
+}
+
+void OpenXRViewportCompositionLayerProvider::on_pre_render() {
+	RenderingServer *rs = RenderingServer::get_singleton();
+	ERR_FAIL_NULL(rs);
+
+	if (viewport.is_valid() && openxr_api && openxr_api->is_running()) {
+		RS::ViewportUpdateMode update_mode = rs->viewport_get_update_mode(viewport);
+		if (update_mode == RS::VIEWPORT_UPDATE_ONCE || update_mode == RS::VIEWPORT_UPDATE_ALWAYS) {
+			// Update our XR swapchain
+			if (update_and_acquire_swapchain(update_mode == RS::VIEWPORT_UPDATE_ONCE)) {
+				// Render to our XR swapchain image.
+				RID rt = rs->viewport_get_render_target(viewport);
+				RSG::texture_storage->render_target_set_override(rt, get_current_swapchain_texture(), RID(), RID());
+			}
+		}
+	}
+}
+
+XrSwapchain OpenXRViewportCompositionLayerProvider::_get_swap_chain() {
+	XrSwapchain swapchain = swapchain_info.get_swapchain();
+
+	if (swapchain && swapchain_info.is_image_acquired()) {
+		swapchain_info.release();
+	}
+
+	return swapchain;
+}
+
+OpenXRViewportCompositionLayerProvider::~OpenXRViewportCompositionLayerProvider() {
+	// This will reset the viewport and free the swapchain too.
+	set_viewport(RID(), Size2i());
+}
+
+bool OpenXRViewportCompositionLayerProvider::update_and_acquire_swapchain(bool p_static_image) {
 	if (openxr_api == nullptr || composition_layer_extension == nullptr) {
 		// OpenXR not initialized or we're in the editor?
 		return false;
 	}
-	if (!composition_layer_extension->is_available(composition_layer->type)) {
+	if (!composition_layer_extension->is_available(get_openxr_type())) {
 		// Selected type is not supported?
 		return false;
 	}
@@ -307,7 +319,7 @@ bool OpenXRCompositionLayerProvider::update_and_acquire_swapchain(bool p_static_
 	return ret;
 }
 
-void OpenXRCompositionLayerProvider::free_swapchain() {
+void OpenXRViewportCompositionLayerProvider::free_swapchain() {
 	if (swapchain_info.get_swapchain() != XR_NULL_HANDLE) {
 		swapchain_info.queue_free();
 	}
@@ -316,7 +328,7 @@ void OpenXRCompositionLayerProvider::free_swapchain() {
 	static_image = false;
 }
 
-RID OpenXRCompositionLayerProvider::get_current_swapchain_texture() {
+RID OpenXRViewportCompositionLayerProvider::get_current_swapchain_texture() {
 	if (openxr_api == nullptr) {
 		return RID();
 	}

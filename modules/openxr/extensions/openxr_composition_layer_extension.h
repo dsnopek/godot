@@ -36,7 +36,7 @@
 
 #include "../openxr_api.h"
 
-class OpenXRCompositionLayerProvider;
+class OpenXRBaseCompositionLayerProvider;
 
 // This extension provides access to composition layers for displaying 2D content through the XR compositor.
 
@@ -57,41 +57,33 @@ public:
 	virtual XrCompositionLayerBaseHeader *get_composition_layer(int p_index) override;
 	virtual int get_composition_layer_order(int p_index) override;
 
-	void register_viewport_composition_layer_provider(OpenXRCompositionLayerProvider *p_composition_layer);
-	void unregister_viewport_composition_layer_provider(OpenXRCompositionLayerProvider *p_composition_layer);
+	void register_viewport_composition_layer_provider(OpenXRBaseCompositionLayerProvider *p_composition_layer);
+	void unregister_viewport_composition_layer_provider(OpenXRBaseCompositionLayerProvider *p_composition_layer);
 
 	bool is_available(XrStructureType p_which);
 
 private:
 	static OpenXRCompositionLayerExtension *singleton;
 
-	Vector<OpenXRCompositionLayerProvider *> composition_layers;
+	Vector<OpenXRBaseCompositionLayerProvider *> composition_layers;
 
 	bool cylinder_ext_available = false;
 	bool equirect_ext_available = false;
 };
 
-class OpenXRCompositionLayerProvider {
+class OpenXRBaseCompositionLayerProvider {
 	XrCompositionLayerBaseHeader *composition_layer = nullptr;
 	int sort_order = 1;
 	bool alpha_blend = false;
 	Dictionary extension_property_values;
 	bool extension_property_values_changed = true;
 
-	RID viewport;
-	Size2i viewport_size;
-	bool use_android_surface;
-
-	OpenXRAPI::OpenXRSwapChainInfo swapchain_info;
-	Size2i swapchain_size;
-	bool static_image = false;
-
+protected:
 	OpenXRAPI *openxr_api = nullptr;
 	OpenXRCompositionLayerExtension *composition_layer_extension = nullptr;
 
-	bool update_and_acquire_swapchain(bool p_static_image);
-	void free_swapchain();
-	RID get_current_swapchain_texture();
+	// Called each frame, right before putting the swapchain into the composition layer settings.
+	virtual XrSwapchain _get_swap_chain() = 0;
 
 public:
 	XrStructureType get_openxr_type() { return composition_layer->type; }
@@ -102,19 +94,48 @@ public:
 	void set_alpha_blend(bool p_alpha_blend);
 	bool get_alpha_blend() const { return alpha_blend; }
 
+	void set_extension_property_values(const Dictionary &p_property_values);
+
+	virtual void on_pre_render(){};
+	XrCompositionLayerBaseHeader *get_composition_layer();
+
+	OpenXRBaseCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer);
+	virtual ~OpenXRBaseCompositionLayerProvider();
+};
+
+class OpenXRViewportCompositionLayerProvider : public OpenXRBaseCompositionLayerProvider {
+	RID viewport;
+	Size2i viewport_size;
+
+	OpenXRAPI::OpenXRSwapChainInfo swapchain_info;
+	Size2i swapchain_size;
+	bool static_image = false;
+
+	bool update_and_acquire_swapchain(bool p_static_image);
+	void free_swapchain();
+	RID get_current_swapchain_texture();
+
+protected:
+	virtual XrSwapchain _get_swap_chain() override;
+
+public:
 	void set_viewport(RID p_viewport, Size2i p_size);
 	RID get_viewport() const { return viewport; }
 
-	void set_use_android_surface(bool p_use_android_surface);
-	bool get_use_android_surface() const { return use_android_surface; }
+	virtual void on_pre_render() override;
 
-	void set_extension_property_values(const Dictionary &p_property_values);
+	virtual ~OpenXRViewportCompositionLayerProvider();
+};
 
-	void on_pre_render();
-	XrCompositionLayerBaseHeader *get_composition_layer();
+class OpenXRAndroidSurfaceCompositionLayerProvider : public OpenXRBaseCompositionLayerProvider {
+	//Ref<JavaObject> android_surface;
 
-	OpenXRCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer);
-	~OpenXRCompositionLayerProvider();
+protected:
+	virtual XrSwapchain _get_swap_chain() override;
+
+public:
+	// @todo Should this return
+	//Ref<JavaObject> get_android_surface();
 };
 
 #endif // OPENXR_COMPOSITION_LAYER_EXTENSION_H

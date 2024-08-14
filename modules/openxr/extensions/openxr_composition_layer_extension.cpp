@@ -67,7 +67,7 @@ void OpenXRCompositionLayerExtension::on_session_destroyed() {
 }
 
 void OpenXRCompositionLayerExtension::on_pre_render() {
-	for (OpenXRBaseCompositionLayerProvider *composition_layer : composition_layers) {
+	for (OpenXRViewportCompositionLayerProviderBase *composition_layer : composition_layers) {
 		composition_layer->on_pre_render();
 	}
 }
@@ -86,11 +86,11 @@ int OpenXRCompositionLayerExtension::get_composition_layer_order(int p_index) {
 	return composition_layers[p_index]->get_sort_order();
 }
 
-void OpenXRCompositionLayerExtension::register_viewport_composition_layer_provider(OpenXRBaseCompositionLayerProvider *p_composition_layer) {
+void OpenXRCompositionLayerExtension::register_viewport_composition_layer_provider(OpenXRViewportCompositionLayerProviderBase *p_composition_layer) {
 	composition_layers.push_back(p_composition_layer);
 }
 
-void OpenXRCompositionLayerExtension::unregister_viewport_composition_layer_provider(OpenXRBaseCompositionLayerProvider *p_composition_layer) {
+void OpenXRCompositionLayerExtension::unregister_viewport_composition_layer_provider(OpenXRViewportCompositionLayerProviderBase *p_composition_layer) {
 	composition_layers.erase(p_composition_layer);
 }
 
@@ -114,21 +114,21 @@ bool OpenXRCompositionLayerExtension::is_available(XrStructureType p_which) {
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// OpenXRBaseCompositionLayerProvider
+// OpenXRViewportCompositionLayerProviderBase
 
-OpenXRBaseCompositionLayerProvider::OpenXRBaseCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer) {
+OpenXRViewportCompositionLayerProviderBase::OpenXRViewportCompositionLayerProviderBase(XrCompositionLayerBaseHeader *p_composition_layer) {
 	composition_layer = p_composition_layer;
 	openxr_api = OpenXRAPI::get_singleton();
 	composition_layer_extension = OpenXRCompositionLayerExtension::get_singleton();
 }
 
-OpenXRBaseCompositionLayerProvider::~OpenXRBaseCompositionLayerProvider() {
+OpenXRViewportCompositionLayerProviderBase::~OpenXRViewportCompositionLayerProviderBase() {
 	for (OpenXRExtensionWrapper *extension : OpenXRAPI::get_registered_extension_wrappers()) {
 		extension->on_viewport_composition_layer_destroyed(composition_layer);
 	}
 }
 
-void OpenXRBaseCompositionLayerProvider::set_alpha_blend(bool p_alpha_blend) {
+void OpenXRViewportCompositionLayerProviderBase::set_alpha_blend(bool p_alpha_blend) {
 	if (alpha_blend != p_alpha_blend) {
 		alpha_blend = p_alpha_blend;
 		if (alpha_blend) {
@@ -139,12 +139,12 @@ void OpenXRBaseCompositionLayerProvider::set_alpha_blend(bool p_alpha_blend) {
 	}
 }
 
-void OpenXRBaseCompositionLayerProvider::set_extension_property_values(const Dictionary &p_extension_property_values) {
+void OpenXRViewportCompositionLayerProviderBase::set_extension_property_values(const Dictionary &p_extension_property_values) {
 	extension_property_values = p_extension_property_values;
 	extension_property_values_changed = true;
 }
 
-XrCompositionLayerBaseHeader *OpenXRBaseCompositionLayerProvider::get_composition_layer() {
+XrCompositionLayerBaseHeader *OpenXRViewportCompositionLayerProviderBase::get_composition_layer() {
 	if (openxr_api == nullptr || composition_layer_extension == nullptr) {
 		// OpenXR not initialized or we're in the editor?
 		return nullptr;

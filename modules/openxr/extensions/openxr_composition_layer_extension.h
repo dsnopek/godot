@@ -36,7 +36,7 @@
 
 #include "../openxr_api.h"
 
-class OpenXRBaseCompositionLayerProvider;
+class OpenXRViewportCompositionLayerProviderBase;
 
 // This extension provides access to composition layers for displaying 2D content through the XR compositor.
 
@@ -57,21 +57,21 @@ public:
 	virtual XrCompositionLayerBaseHeader *get_composition_layer(int p_index) override;
 	virtual int get_composition_layer_order(int p_index) override;
 
-	void register_viewport_composition_layer_provider(OpenXRBaseCompositionLayerProvider *p_composition_layer);
-	void unregister_viewport_composition_layer_provider(OpenXRBaseCompositionLayerProvider *p_composition_layer);
+	void register_viewport_composition_layer_provider(OpenXRViewportCompositionLayerProviderBase *p_composition_layer);
+	void unregister_viewport_composition_layer_provider(OpenXRViewportCompositionLayerProviderBase *p_composition_layer);
 
 	bool is_available(XrStructureType p_which);
 
 private:
 	static OpenXRCompositionLayerExtension *singleton;
 
-	Vector<OpenXRBaseCompositionLayerProvider *> composition_layers;
+	Vector<OpenXRViewportCompositionLayerProviderBase *> composition_layers;
 
 	bool cylinder_ext_available = false;
 	bool equirect_ext_available = false;
 };
 
-class OpenXRBaseCompositionLayerProvider {
+class OpenXRViewportCompositionLayerProviderBase {
 	XrCompositionLayerBaseHeader *composition_layer = nullptr;
 	int sort_order = 1;
 	bool alpha_blend = false;
@@ -99,11 +99,11 @@ public:
 	virtual void on_pre_render(){};
 	XrCompositionLayerBaseHeader *get_composition_layer();
 
-	OpenXRBaseCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer);
-	virtual ~OpenXRBaseCompositionLayerProvider();
+	OpenXRViewportCompositionLayerProviderBase(XrCompositionLayerBaseHeader *p_composition_layer);
+	virtual ~OpenXRViewportCompositionLayerProviderBase();
 };
 
-class OpenXRViewportCompositionLayerProvider : public OpenXRBaseCompositionLayerProvider {
+class OpenXRViewportCompositionLayerProvider : public OpenXRViewportCompositionLayerProviderBase {
 	RID viewport;
 	Size2i viewport_size;
 
@@ -127,7 +127,7 @@ public:
 	virtual ~OpenXRViewportCompositionLayerProvider();
 };
 
-class OpenXRAndroidSurfaceCompositionLayerProvider : public OpenXRBaseCompositionLayerProvider {
+class OpenXRAndroidSurfaceCompositionLayerProvider : public OpenXRViewportCompositionLayerProviderBase {
 	//Ref<JavaObject> android_surface;
 
 protected:

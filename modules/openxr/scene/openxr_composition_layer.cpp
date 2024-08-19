@@ -47,7 +47,10 @@ static const char *HOLE_PUNCH_SHADER_CODE =
 		"\tALBEDO = vec3(0.0, 0.0, 0.0);\n"
 		"}\n";
 
-OpenXRCompositionLayer::OpenXRCompositionLayer() {
+OpenXRCompositionLayer::OpenXRCompositionLayer(XrCompositionLayerBaseHeader *p_composition_layer) {
+	composition_layer_base_header = p_composition_layer;
+	openxr_layer_provider = memnew(OpenXRViewportCompositionLayerProvider(composition_layer_base_header));
+
 	openxr_api = OpenXRAPI::get_singleton();
 	composition_layer_extension = OpenXRCompositionLayerExtension::get_singleton();
 
@@ -133,6 +136,8 @@ void OpenXRCompositionLayer::_remove_fallback_node() {
 }
 
 void OpenXRCompositionLayer::_setup_composition_layer_provider() {
+	ERR_FAIL_COND(openxr_layer_provider != nullptr);
+
 	// Set our properties on the layer provider, which will create all the necessary resources (ex swap chains).
 	if (use_android_surface) {
 		openxr_layer_provider->set_use_android_surface(true);

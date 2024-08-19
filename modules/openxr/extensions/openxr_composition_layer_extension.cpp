@@ -424,6 +424,7 @@ void OpenXRAndroidSurfaceCompositionLayerProvider::set_surface_size(Size2i p_siz
 #ifdef ANDROID_ENABLED
 	if (surface_size != p_size) {
 		surface_size = p_size;
+		free_swapchain();
 	}
 #endif
 }

@@ -45,6 +45,9 @@ class SubViewport;
 class OpenXRCompositionLayer : public Node3D {
 	GDCLASS(OpenXRCompositionLayer, Node3D);
 
+	XrCompositionLayerBaseHeader *composition_layer_base_header = nullptr;
+	OpenXRCompositionLayerProvider *openxr_layer_provider = nullptr;
+
 	SubViewport *layer_viewport = nullptr;
 	bool use_android_surface = false;
 	bool enable_hole_punch = false;
@@ -65,7 +68,6 @@ class OpenXRCompositionLayer : public Node3D {
 protected:
 	OpenXRAPI *openxr_api = nullptr;
 	OpenXRCompositionLayerExtension *composition_layer_extension = nullptr;
-	OpenXRCompositionLayerProvider *openxr_layer_provider = nullptr;
 
 	static void _bind_methods();
 
@@ -85,6 +87,8 @@ protected:
 
 	static Vector<OpenXRCompositionLayer *> composition_layer_nodes;
 	bool is_viewport_in_use(SubViewport *p_viewport);
+
+	OpenXRCompositionLayer(XrCompositionLayerBaseHeader *p_composition_layer);
 
 public:
 	void set_layer_viewport(SubViewport *p_viewport);
@@ -108,7 +112,6 @@ public:
 
 	virtual Vector2 intersects_ray(const Vector3 &p_origin, const Vector3 &p_direction) const;
 
-	OpenXRCompositionLayer();
 	~OpenXRCompositionLayer();
 };
 

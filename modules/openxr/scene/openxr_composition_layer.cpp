@@ -141,6 +141,10 @@ void OpenXRCompositionLayer::_remove_fallback_node() {
 }
 
 void OpenXRCompositionLayer::_setup_composition_layer_provider() {
+	if (composition_layer_extension) {
+		composition_layer_extension->register_viewport_composition_layer_provider(openxr_layer_provider);
+	}
+
 	// NOTE: We don't setup/clear when using Android surfaces, so we don't destroy the surface unexpectedly.
 	if (!use_android_surface) {
 		// Set our properties on the layer provider, which will create all the necessary resources (ex swap chains).
@@ -149,9 +153,13 @@ void OpenXRCompositionLayer::_setup_composition_layer_provider() {
 }
 
 void OpenXRCompositionLayer::_clear_composition_layer_provider() {
+	if (composition_layer_extension) {
+		composition_layer_extension->unregister_viewport_composition_layer_provider(openxr_layer_provider);
+	}
+
 	// NOTE: We don't setup/clear when using Android surfaces, so we don't destroy the surface unexpectedly.
 	if (!use_android_surface) {
-		// This will free all the resources (ex swap chains) used by the layer.
+		// This will reset the viewport and free all the resources (ex swap chains) used by the layer.
 		openxr_layer_provider->set_viewport(RID(), Size2i());
 	}
 }
@@ -398,10 +406,6 @@ void OpenXRCompositionLayer::_notification(int p_what) {
 			update_configuration_warnings();
 		} break;
 		case NOTIFICATION_ENTER_TREE: {
-			if (composition_layer_extension) {
-				composition_layer_extension->register_viewport_composition_layer_provider(openxr_layer_provider);
-			}
-
 			if (layer_viewport && is_viewport_in_use(layer_viewport)) {
 				_clear_composition_layer_provider();
 			} else if (openxr_session_running && is_visible()) {
@@ -409,10 +413,6 @@ void OpenXRCompositionLayer::_notification(int p_what) {
 			}
 		} break;
 		case NOTIFICATION_EXIT_TREE: {
-			if (composition_layer_extension) {
-				composition_layer_extension->unregister_viewport_composition_layer_provider(openxr_layer_provider);
-			}
-
 			// This will clean up existing resources.
 			_clear_composition_layer_provider();
 		} break;

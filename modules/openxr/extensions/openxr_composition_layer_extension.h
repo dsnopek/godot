@@ -123,12 +123,31 @@ public:
 };
 
 class OpenXRViewportCompositionLayerProvider : public OpenXRViewportCompositionLayerProviderBase {
-	RID viewport;
-	Size2i viewport_size;
+	XrCompositionLayerBaseHeader *composition_layer = nullptr;
+	int sort_order = 1;
+	bool alpha_blend = false;
+	Dictionary extension_property_values;
+	bool extension_property_values_changed = true;
 
-	OpenXRAPI::OpenXRSwapChainInfo swapchain_info;
+	struct SubViewport {
+		RID viewport;
+		Size2i viewport_size;
+		OpenXRAPI::OpenXRSwapChainInfo swapchain_info;
+		bool static_image = false;
+	} subviewport;
+
+#ifdef ANDROID_ENABLED
+	struct AndroidSurface {
+		XrSwapchain swapchain;
+		jobject surface;
+	} android_surface;
+#endif
+
+	bool use_android_surface = false;
 	Size2i swapchain_size;
-	bool static_image = false;
+
+	OpenXRAPI *openxr_api = nullptr;
+	OpenXRCompositionLayerExtension *composition_layer_extension = nullptr;
 
 	bool update_and_acquire_swapchain(bool p_static_image);
 	void free_swapchain();
@@ -138,11 +157,25 @@ protected:
 	virtual void _update_swapchain_sub_image(XrSwapchainSubImage &r_swapchain_sub_image) override;
 
 public:
+	XrStructureType get_openxr_type() { return composition_layer->type; }
+
+	void set_sort_order(int p_sort_order) { sort_order = p_sort_order; }
+	int get_sort_order() const { return sort_order; }
+
+	void set_alpha_blend(bool p_alpha_blend);
+	bool get_alpha_blend() const { return alpha_blend; }
+
+	void set_extension_property_values(const Dictionary &p_property_values);
+
+	void on_pre_render();
+	XrCompositionLayerBaseHeader *get_composition_layer();
+
 	void set_viewport(RID p_viewport, Size2i p_size);
 	RID get_viewport() const { return viewport; }
 
 	virtual void on_pre_render() override;
 
+	OpenXRViewportCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer);
 	virtual ~OpenXRViewportCompositionLayerProvider();
 };
 

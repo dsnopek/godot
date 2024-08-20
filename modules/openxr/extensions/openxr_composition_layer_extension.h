@@ -136,11 +136,6 @@ public:
 	void set_alpha_blend(bool p_alpha_blend);
 	bool get_alpha_blend() const { return alpha_blend; }
 
-	void set_extension_property_values(const Dictionary &p_property_values);
-
-	void on_pre_render();
-	XrCompositionLayerBaseHeader *get_composition_layer();
-
 	void set_viewport(RID p_viewport, Size2i p_size);
 	RID get_viewport() const { return subviewport.viewport; }
 
@@ -149,6 +144,11 @@ public:
 
 	// @todo
 	//Ref<JavaObject> get_android_surface();
+
+	void set_extension_property_values(const Dictionary &p_property_values);
+
+	void on_pre_render();
+	XrCompositionLayerBaseHeader *get_composition_layer();
 
 	OpenXRViewportCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer);
 	~OpenXRViewportCompositionLayerProvider();

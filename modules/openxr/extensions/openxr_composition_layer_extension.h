@@ -35,11 +35,12 @@
 #include "openxr_extension_wrapper.h"
 
 #include "../openxr_api.h"
-#include "../openxr_platform_inc.h"
 
 #ifdef ANDROID_ENABLED
 #include <jni.h>
 #endif
+
+#include <openxr/openxr_platform.h>
 
 class OpenXRViewportCompositionLayerProvider;
 

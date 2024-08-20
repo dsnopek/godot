@@ -141,8 +141,7 @@ void OpenXRCompositionLayer::_remove_fallback_node() {
 }
 
 void OpenXRCompositionLayer::_setup_composition_layer_provider() {
-	ERR_FAIL_COND(openxr_layer_provider != nullptr);
-
+	// NOTE: We don't setup/clear when using Android surfaces, so we don't destroy the surface unexpectedly.
 	if (!use_android_surface) {
 		// Set our properties on the layer provider, which will create all the necessary resources (ex swap chains).
 		openxr_layer_provider->set_viewport(layer_viewport->get_viewport_rid(), layer_viewport->get_size());
@@ -150,6 +149,7 @@ void OpenXRCompositionLayer::_setup_composition_layer_provider() {
 }
 
 void OpenXRCompositionLayer::_clear_composition_layer_provider() {
+	// NOTE: We don't setup/clear when using Android surfaces, so we don't destroy the surface unexpectedly.
 	if (!use_android_surface) {
 		// This will free all the resources (ex swap chains) used by the layer.
 		openxr_layer_provider->set_viewport(RID(), Size2i());
@@ -290,33 +290,23 @@ bool OpenXRCompositionLayer::get_enable_hole_punch() const {
 }
 
 void OpenXRCompositionLayer::set_sort_order(int p_order) {
-	if (openxr_layer_provider) {
-		openxr_layer_provider->set_sort_order(p_order);
-		update_configuration_warnings();
-	}
+	openxr_layer_provider->set_sort_order(p_order);
+	update_configuration_warnings();
 }
 
 int OpenXRCompositionLayer::get_sort_order() const {
-	if (openxr_layer_provider) {
-		return openxr_layer_provider->get_sort_order();
-	}
-	return 1;
+	return openxr_layer_provider->get_sort_order();
 }
 
 void OpenXRCompositionLayer::set_alpha_blend(bool p_alpha_blend) {
-	if (openxr_layer_provider) {
-		openxr_layer_provider->set_alpha_blend(p_alpha_blend);
-		if (fallback) {
-			_reset_fallback_material();
-		}
+	openxr_layer_provider->set_alpha_blend(p_alpha_blend);
+	if (fallback) {
+		_reset_fallback_material();
 	}
 }
 
 bool OpenXRCompositionLayer::get_alpha_blend() const {
-	if (openxr_layer_provider) {
-		return openxr_layer_provider->get_alpha_blend();
-	}
-	return false;
+	return openxr_layer_provider->get_alpha_blend();
 }
 
 bool OpenXRCompositionLayer::is_natively_supported() const {
@@ -380,12 +370,10 @@ void OpenXRCompositionLayer::_notification(int p_what) {
 		case NOTIFICATION_POSTINITIALIZE: {
 			composition_layer_nodes.push_back(this);
 
-			if (openxr_layer_provider) {
-				for (OpenXRExtensionWrapper *extension : OpenXRAPI::get_registered_extension_wrappers()) {
-					extension_property_values.merge(extension->get_viewport_composition_layer_extension_property_defaults());
-				}
-				openxr_layer_provider->set_extension_property_values(extension_property_values);
+			for (OpenXRExtensionWrapper *extension : OpenXRAPI::get_registered_extension_wrappers()) {
+				extension_property_values.merge(extension->get_viewport_composition_layer_extension_property_defaults());
 			}
+			openxr_layer_provider->set_extension_property_values(extension_property_values);
 		} break;
 		case NOTIFICATION_INTERNAL_PROCESS: {
 			if (fallback) {
@@ -458,9 +446,7 @@ bool OpenXRCompositionLayer::_get(const StringName &p_property, Variant &r_value
 bool OpenXRCompositionLayer::_set(const StringName &p_property, const Variant &p_value) {
 	extension_property_values[p_property] = p_value;
 
-	if (openxr_layer_provider) {
-		openxr_layer_provider->set_extension_property_values(extension_property_values);
-	}
+	openxr_layer_provider->set_extension_property_values(extension_property_values);
 
 	return true;
 }

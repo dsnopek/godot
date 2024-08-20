@@ -109,8 +109,8 @@ class OpenXRViewportCompositionLayerProvider {
 
 #ifdef ANDROID_ENABLED
 	struct AndroidSurface {
-		XrSwapchain swapchain;
-		jobject surface;
+		XrSwapchain swapchain = XR_NULL_HANDLE;
+		jobject surface = nullptr;
 	} android_surface;
 #endif
 

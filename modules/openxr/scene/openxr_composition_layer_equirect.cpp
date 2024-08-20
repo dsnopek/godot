@@ -39,7 +39,7 @@
 #include "scene/resources/mesh.h"
 
 OpenXRCompositionLayerEquirect::OpenXRCompositionLayerEquirect() :
-		OpenXRCompositionLayer(&composition_layer) {
+		OpenXRCompositionLayer((XrCompositionLayerBaseHeader *)&composition_layer) {
 	XRServer::get_singleton()->connect("reference_frame_changed", callable_mp(this, &OpenXRCompositionLayerEquirect::update_transform));
 }
 

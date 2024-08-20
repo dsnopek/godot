@@ -39,7 +39,7 @@
 #include "scene/resources/3d/primitive_meshes.h"
 
 OpenXRCompositionLayerQuad::OpenXRCompositionLayerQuad() :
-		OpenXRCompositionLayer(&composition_layer) {
+		OpenXRCompositionLayer((XrCompositionLayerBaseHeader *)&composition_layer) {
 	XRServer::get_singleton()->connect("reference_frame_changed", callable_mp(this, &OpenXRCompositionLayerQuad::update_transform));
 }
 

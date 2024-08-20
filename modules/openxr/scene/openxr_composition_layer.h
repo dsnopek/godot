@@ -39,17 +39,18 @@ class MeshInstance3D;
 class Mesh;
 class OpenXRAPI;
 class OpenXRCompositionLayerExtension;
-class OpenXRCompositionLayerProvider;
+class OpenXRViewportCompositionLayerProvider;
 class SubViewport;
 
 class OpenXRCompositionLayer : public Node3D {
 	GDCLASS(OpenXRCompositionLayer, Node3D);
 
 	XrCompositionLayerBaseHeader *composition_layer_base_header = nullptr;
-	OpenXRCompositionLayerProvider *openxr_layer_provider = nullptr;
+	OpenXRViewportCompositionLayerProvider *openxr_layer_provider = nullptr;
 
 	SubViewport *layer_viewport = nullptr;
 	bool use_android_surface = false;
+	Size2i android_surface_size = Size2i(1024, 1024);
 	bool enable_hole_punch = false;
 	MeshInstance3D *fallback = nullptr;
 	bool should_update_fallback_mesh = false;
@@ -96,6 +97,9 @@ public:
 
 	void set_use_android_surface(bool p_use_android_surface);
 	bool get_use_android_surface() const;
+
+	void set_android_surface_size(Size2i p_size);
+	Size2i get_android_surface_size() const;
 
 	void set_enable_hole_punch(bool p_enable);
 	bool get_enable_hole_punch() const;

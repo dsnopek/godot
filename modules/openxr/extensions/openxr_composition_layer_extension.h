@@ -35,12 +35,13 @@
 #include "openxr_extension_wrapper.h"
 
 #include "../openxr_api.h"
+#include "../openxr_platform_inc.h"
 
 #ifdef ANDROID_ENABLED
 #include <jni.h>
 #endif
 
-class OpenXRViewportCompositionLayerProviderBase;
+class OpenXRViewportCompositionLayerProvider;
 
 // This extension provides access to composition layers for displaying 2D content through the XR compositor.
 
@@ -62,10 +63,11 @@ public:
 	virtual XrCompositionLayerBaseHeader *get_composition_layer(int p_index) override;
 	virtual int get_composition_layer_order(int p_index) override;
 
-	void register_viewport_composition_layer_provider(OpenXRViewportCompositionLayerProviderBase *p_composition_layer);
-	void unregister_viewport_composition_layer_provider(OpenXRViewportCompositionLayerProviderBase *p_composition_layer);
+	void register_viewport_composition_layer_provider(OpenXRViewportCompositionLayerProvider *p_composition_layer);
+	void unregister_viewport_composition_layer_provider(OpenXRViewportCompositionLayerProvider *p_composition_layer);
 
 	bool is_available(XrStructureType p_which);
+	bool is_android_surface_swapchain_available() { return android_surface_ext_available; }
 
 #ifdef ANDROID_ENABLED
 	bool create_android_surface_swapchain(XrSwapchainCreateInfo *p_info, XrSwapchain *r_swapchain, jobject *r_surface);
@@ -75,7 +77,7 @@ public:
 private:
 	static OpenXRCompositionLayerExtension *singleton;
 
-	Vector<OpenXRViewportCompositionLayerProviderBase *> composition_layers;
+	Vector<OpenXRViewportCompositionLayerProvider *> composition_layers;
 
 	bool cylinder_ext_available = false;
 	bool equirect_ext_available = false;
@@ -86,43 +88,11 @@ private:
 	void free_queued_android_surface_swapchains();
 
 	EXT_PROTO_XRRESULT_FUNC1(xrDestroySwapchain, (XrSwapchain), swapchain)
-	EXT_PROTO_XRRESULT_FUNC4(xrCreateSwapchainAndroidSurfaceKHR, (XrSession), session, (const XrSwapchainCreateInfo *), info, (xrSwapchain *), swapchain, (jobject *), surface)
+	EXT_PROTO_XRRESULT_FUNC4(xrCreateSwapchainAndroidSurfaceKHR, (XrSession), session, (const XrSwapchainCreateInfo *), info, (XrSwapchain *), swapchain, (jobject *), surface)
 #endif
 };
 
-class OpenXRViewportCompositionLayerProviderBase {
-	XrCompositionLayerBaseHeader *composition_layer = nullptr;
-	int sort_order = 1;
-	bool alpha_blend = false;
-	Dictionary extension_property_values;
-	bool extension_property_values_changed = true;
-
-protected:
-	OpenXRAPI *openxr_api = nullptr;
-	OpenXRCompositionLayerExtension *composition_layer_extension = nullptr;
-
-	// Called each frame, right before putting the swapchain into the composition layer settings.
-	virtual void _update_swapchain_sub_image(XrSwapchainSubImage &r_swapchain_sub_image) = 0;
-
-public:
-	XrStructureType get_openxr_type() { return composition_layer->type; }
-
-	void set_sort_order(int p_sort_order) { sort_order = p_sort_order; }
-	int get_sort_order() const { return sort_order; }
-
-	void set_alpha_blend(bool p_alpha_blend);
-	bool get_alpha_blend() const { return alpha_blend; }
-
-	void set_extension_property_values(const Dictionary &p_property_values);
-
-	virtual void on_pre_render(){};
-	XrCompositionLayerBaseHeader *get_composition_layer();
-
-	OpenXRViewportCompositionLayerProviderBase(XrCompositionLayerBaseHeader *p_composition_layer);
-	virtual ~OpenXRViewportCompositionLayerProviderBase();
-};
-
-class OpenXRViewportCompositionLayerProvider : public OpenXRViewportCompositionLayerProviderBase {
+class OpenXRViewportCompositionLayerProvider {
 	XrCompositionLayerBaseHeader *composition_layer = nullptr;
 	int sort_order = 1;
 	bool alpha_blend = false;
@@ -149,12 +119,12 @@ class OpenXRViewportCompositionLayerProvider : public OpenXRViewportCompositionL
 	OpenXRAPI *openxr_api = nullptr;
 	OpenXRCompositionLayerExtension *composition_layer_extension = nullptr;
 
+	// Only for SubViewports.
 	bool update_and_acquire_swapchain(bool p_static_image);
-	void free_swapchain();
 	RID get_current_swapchain_texture();
 
-protected:
-	virtual void _update_swapchain_sub_image(XrSwapchainSubImage &r_swapchain_sub_image) override;
+	void update_swapchain_sub_image(XrSwapchainSubImage &r_swapchain_sub_image);
+	void free_swapchain();
 
 public:
 	XrStructureType get_openxr_type() { return composition_layer->type; }
@@ -171,34 +141,16 @@ public:
 	XrCompositionLayerBaseHeader *get_composition_layer();
 
 	void set_viewport(RID p_viewport, Size2i p_size);
-	RID get_viewport() const { return viewport; }
+	RID get_viewport() const { return subviewport.viewport; }
 
-	virtual void on_pre_render() override;
+	void set_use_android_surface(bool p_enable, Size2i p_size);
+	bool get_use_android_surface() const { return use_android_surface; }
 
-	OpenXRViewportCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer);
-	virtual ~OpenXRViewportCompositionLayerProvider();
-};
-
-class OpenXRAndroidSurfaceCompositionLayerProvider : public OpenXRViewportCompositionLayerProviderBase {
-#ifdef ANDROID_ENABLED
-	jobject surface;
-	XrSwapchain swapchain = XR_NULL_HANDLE;
-	Size2i surface_size;
-
-	bool create_swapchain();
-	void free_swapchain();
-#endif
-
-protected:
-	virtual void _update_swapchain_sub_image(XrSwapchainSubImage &r_swapchain_sub_image) override;
-
-public:
-	// @todo me!
+	// @todo
 	//Ref<JavaObject> get_android_surface();
 
-	void set_surface_size(Size2i p_size);
-
-	virtual ~OpenXRAndroidSurfaceCompositionLayerProvider();
+	OpenXRViewportCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer);
+	~OpenXRViewportCompositionLayerProvider();
 };
 
 #endif // OPENXR_COMPOSITION_LAYER_EXTENSION_H

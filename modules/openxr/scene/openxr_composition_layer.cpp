@@ -91,6 +91,9 @@ void OpenXRCompositionLayer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_use_android_surface", "enable"), &OpenXRCompositionLayer::set_use_android_surface);
 	ClassDB::bind_method(D_METHOD("get_use_android_surface"), &OpenXRCompositionLayer::get_use_android_surface);
 
+	ClassDB::bind_method(D_METHOD("set_android_surface_size", "size"), &OpenXRCompositionLayer::set_android_surface_size);
+	ClassDB::bind_method(D_METHOD("get_android_surface_size"), &OpenXRCompositionLayer::get_android_surface_size);
+
 	ClassDB::bind_method(D_METHOD("set_enable_hole_punch", "enable"), &OpenXRCompositionLayer::set_enable_hole_punch);
 	ClassDB::bind_method(D_METHOD("get_enable_hole_punch"), &OpenXRCompositionLayer::get_enable_hole_punch);
 
@@ -106,6 +109,8 @@ void OpenXRCompositionLayer::_bind_methods() {
 
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "layer_viewport", PROPERTY_HINT_NODE_TYPE, "SubViewport"), "set_layer_viewport", "get_layer_viewport");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "use_android_surface", PROPERTY_HINT_NONE, ""), "set_use_android_surface", "get_use_android_surface");
+	// @todo Show this only if "use_android_surface" is true
+	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "android_surface_size", PROPERTY_HINT_NONE, ""), "set_android_surface_size", "get_android_surface_size");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "sort_order", PROPERTY_HINT_NONE, ""), "set_sort_order", "get_sort_order");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "alpha_blend", PROPERTY_HINT_NONE, ""), "set_alpha_blend", "get_alpha_blend");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "enable_hole_punch", PROPERTY_HINT_NONE, ""), "set_enable_hole_punch", "get_enable_hole_punch");
@@ -138,18 +143,17 @@ void OpenXRCompositionLayer::_remove_fallback_node() {
 void OpenXRCompositionLayer::_setup_composition_layer_provider() {
 	ERR_FAIL_COND(openxr_layer_provider != nullptr);
 
-	// Set our properties on the layer provider, which will create all the necessary resources (ex swap chains).
-	if (use_android_surface) {
-		openxr_layer_provider->set_use_android_surface(true);
-	} else if (layer_viewport) {
+	if (!use_android_surface) {
+		// Set our properties on the layer provider, which will create all the necessary resources (ex swap chains).
 		openxr_layer_provider->set_viewport(layer_viewport->get_viewport_rid(), layer_viewport->get_size());
 	}
 }
 
 void OpenXRCompositionLayer::_clear_composition_layer_provider() {
-	// This will free all the resources (ex swap chains) used by the layer.
-	openxr_layer_provider->set_use_android_surface(false);
-	openxr_layer_provider->set_viewport(RID(), Size2i());
+	if (!use_android_surface) {
+		// This will free all the resources (ex swap chains) used by the layer.
+		openxr_layer_provider->set_viewport(RID(), Size2i());
+	}
 }
 
 void OpenXRCompositionLayer::_on_openxr_session_begun() {
@@ -185,7 +189,7 @@ XrPosef OpenXRCompositionLayer::get_openxr_pose() {
 }
 
 bool OpenXRCompositionLayer::is_viewport_in_use(SubViewport *p_viewport) {
-	ERR_FAIL_NULL(p_viewport);
+	ERR_FAIL_NULL_V(p_viewport, false);
 	for (const OpenXRCompositionLayer *other_composition_layer : composition_layer_nodes) {
 		if (other_composition_layer != this && other_composition_layer->is_inside_tree() && other_composition_layer->get_layer_viewport() == p_viewport) {
 			return true;
@@ -235,14 +239,27 @@ void OpenXRCompositionLayer::set_use_android_surface(bool p_use_android_surface)
 	use_android_surface = p_use_android_surface;
 	if (use_android_surface) {
 		set_layer_viewport(nullptr);
-		openxr_layer_provider->set_use_android_surface(true);
+		openxr_layer_provider->set_use_android_surface(true, android_surface_size);
 	} else {
-		openxr_layer_provider->set_use_android_surface(false);
+		openxr_layer_provider->set_use_android_surface(false, Size2i());
 	}
 }
 
 bool OpenXRCompositionLayer::get_use_android_surface() const {
 	return use_android_surface;
+}
+
+void OpenXRCompositionLayer::set_android_surface_size(Size2i p_size) {
+	if (android_surface_size != p_size) {
+		android_surface_size = p_size;
+		if (use_android_surface) {
+			openxr_layer_provider->set_use_android_surface(true, android_surface_size);
+		}
+	}
+}
+
+Size2i OpenXRCompositionLayer::get_android_surface_size() const {
+	return android_surface_size;
 }
 
 SubViewport *OpenXRCompositionLayer::get_layer_viewport() const {

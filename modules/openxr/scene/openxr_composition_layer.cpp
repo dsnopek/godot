@@ -251,6 +251,8 @@ void OpenXRCompositionLayer::set_use_android_surface(bool p_use_android_surface)
 	} else {
 		openxr_layer_provider->set_use_android_surface(false, Size2i());
 	}
+
+	notify_property_list_changed();
 }
 
 bool OpenXRCompositionLayer::get_use_android_surface() const {
@@ -449,6 +451,22 @@ bool OpenXRCompositionLayer::_set(const StringName &p_property, const Variant &p
 	openxr_layer_provider->set_extension_property_values(extension_property_values);
 
 	return true;
+}
+
+void OpenXRCompositionLayer::_validate_property(PropertyInfo &p_property) const {
+	if (p_property.name == "layer_viewport") {
+		if (use_android_surface) {
+			p_property.usage &= ~PROPERTY_USAGE_EDITOR;
+		} else {
+			p_property.usage |= PROPERTY_USAGE_EDITOR;
+		}
+	} else if (p_property.name == "android_surface_size") {
+		if (use_android_surface) {
+			p_property.usage |= PROPERTY_USAGE_EDITOR;
+		} else {
+			p_property.usage &= ~PROPERTY_USAGE_EDITOR;
+		}
+	}
 }
 
 PackedStringArray OpenXRCompositionLayer::get_configuration_warnings() const {

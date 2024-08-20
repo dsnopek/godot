@@ -76,6 +76,7 @@ protected:
 	void _get_property_list(List<PropertyInfo> *p_property_list) const;
 	bool _get(const StringName &p_property, Variant &r_value) const;
 	bool _set(const StringName &p_property, const Variant &p_value);
+	void _validate_property(PropertyInfo &p_property) const;
 
 	virtual void _on_openxr_session_begun();
 	virtual void _on_openxr_session_stopping();

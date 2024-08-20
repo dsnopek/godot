@@ -252,18 +252,20 @@ void OpenXRViewportCompositionLayerProvider::on_pre_render() {
 #ifdef ANDROID_ENABLED
 	if (use_android_surface) {
 		if (android_surface.swapchain == XR_NULL_HANDLE && openxr_api && openxr_api->is_running()) {
+			// The XR_FB_android_surface_swapchain_create extension mandates that format, sampleCount,
+			// faceCount, arraySize and mipCount must be zero.
 			XrSwapchainCreateInfo info = {
 				XR_TYPE_SWAPCHAIN_CREATE_INFO, // type
 				nullptr, // next
 				0, // createFlags
 				XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT | XR_SWAPCHAIN_USAGE_MUTABLE_FORMAT_BIT, // usageFlags
 				0, // format
-				1, // sampleCount
+				0, // sampleCount
 				(uint32_t)swapchain_size.x, // width
 				(uint32_t)swapchain_size.y, // height
-				1, // faceCount
-				1, // arraySize
-				1, // mipCount
+				0, // faceCount
+				0, // arraySize
+				0, // mipCount
 			};
 			composition_layer_extension->create_android_surface_swapchain(&info, &android_surface.swapchain, &android_surface.surface);
 		}

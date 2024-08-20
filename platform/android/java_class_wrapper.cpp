@@ -487,7 +487,11 @@ bool JavaClass::_call_method(JavaObject *p_instance, const StringName &p_method,
 
 Variant JavaClass::callp(const StringName &p_method, const Variant **p_args, int p_argcount, Callable::CallError &r_error) {
 	Variant ret;
-	bool found = _call_method(nullptr, p_method, p_args, p_argcount, r_error, ret);
+
+	// Use the Java class name to indicate the constructor.
+	String method = (p_method == java_class_name) ? "<init>" : p_method;
+
+	bool found = _call_method(nullptr, method, p_args, p_argcount, r_error, ret);
 	if (found) {
 		return ret;
 	}
@@ -498,16 +502,42 @@ Variant JavaClass::callp(const StringName &p_method, const Variant **p_args, int
 JavaClass::JavaClass() {
 }
 
+JavaClass::~JavaClass() {
+	JNIEnv *env = get_jni_env();
+	ERR_FAIL_NULL(env);
+
+	env->DeleteGlobalRef(_class);
+}
+
 /////////////////////
 
 Variant JavaObject::callp(const StringName &p_method, const Variant **p_args, int p_argcount, Callable::CallError &r_error) {
-	return Variant();
+	if (base_class.is_valid()) {
+		Variant ret;
+		bool found = base_class->_call_method(this, p_method, p_args, p_argcount, r_error, ret);
+		if (found) {
+			return ret;
+		}
+	}
+
+	return RefCounted::callp(p_method, p_args, p_argcount, r_error);
 }
 
-JavaObject::JavaObject(const Ref<JavaClass> &p_base, jobject *p_instance) {
+JavaObject::JavaObject(const Ref<JavaClass> &p_base, jobject p_instance) {
+	JNIEnv *env = get_jni_env();
+	ERR_FAIL_NULL(env);
+
+	base_class = p_base;
+	instance = env->NewGlobalRef(p_instance);
 }
 
 JavaObject::~JavaObject() {
+	if (instance) {
+		JNIEnv *env = get_jni_env();
+		ERR_FAIL_NULL(env);
+
+		env->DeleteGlobalRef(instance);
+	}
 }
 
 ////////////////////
@@ -649,6 +679,16 @@ bool JavaClass::_convert_object_to_variant(JNIEnv *env, jobject obj, Variant &va
 			return true;
 		} break;
 		case ARG_TYPE_CLASS: {
+			jclass java_class = env->GetObjectClass(obj);
+			Ref<JavaClass> java_class_wrapped = JavaClassWrapper::singleton->wrap_jclass(env->GetObjectClass(obj));
+			env->DeleteLocalRef(java_class);
+
+			if (java_class_wrapped.is_valid()) {
+				Ref<JavaObject> ret = Ref<JavaObject>(memnew(JavaObject(java_class_wrapped, obj)));
+				var = ret;
+				return true;
+			}
+
 			return false;
 		} break;
 		case ARG_ARRAY_BIT | ARG_TYPE_VOID: {
@@ -981,6 +1021,10 @@ Ref<JavaClass> JavaClassWrapper::wrap(const String &p_class) {
 	ERR_FAIL_NULL_V(methods, Ref<JavaClass>());
 
 	Ref<JavaClass> java_class = memnew(JavaClass);
+	Vector<String> class_name_parts = p_class.split("/");
+	java_class->java_class_name = class_name_parts[class_name_parts.size() - 1];
+	java_class->_class = (jclass)env->NewGlobalRef(bclass);
+	class_cache[p_class] = java_class;
 
 	int count = env->GetArrayLength(methods);
 
@@ -1146,7 +1190,18 @@ Ref<JavaClass> JavaClassWrapper::wrap(const String &p_class) {
 
 	env->DeleteLocalRef(fields);
 
-	return Ref<JavaClass>();
+	return java_class;
+}
+
+Ref<JavaClass> JavaClassWrapper::wrap_jclass(jclass p_class) {
+	JNIEnv *env = get_jni_env();
+	ERR_FAIL_NULL_V(env, Ref<JavaClass>());
+
+	jstring class_name = (jstring)env->CallObjectMethod(p_class, Class_getName);
+	String class_name_string = jstring_to_string(class_name, env);
+	env->DeleteLocalRef(class_name);
+
+	return wrap(class_name_string);
 }
 
 JavaClassWrapper *JavaClassWrapper::singleton = nullptr;

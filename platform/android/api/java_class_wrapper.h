@@ -174,6 +174,8 @@ class JavaClass : public RefCounted {
 	bool _call_method(JavaObject *p_instance, const StringName &p_method, const Variant **p_args, int p_argcount, Callable::CallError &r_error, Variant &ret);
 
 	friend class JavaClassWrapper;
+	friend class JavaObject;
+	String java_class_name;
 	HashMap<StringName, List<MethodInfo>> methods;
 	jclass _class;
 #endif
@@ -182,6 +184,7 @@ public:
 	virtual Variant callp(const StringName &p_method, const Variant **p_args, int p_argcount, Callable::CallError &r_error) override;
 
 	JavaClass();
+	~JavaClass();
 };
 
 class JavaObject : public RefCounted {
@@ -191,14 +194,16 @@ class JavaObject : public RefCounted {
 	Ref<JavaClass> base_class;
 	friend class JavaClass;
 
-	jobject instance;
+	jobject instance = nullptr;
 #endif
 
 public:
 	virtual Variant callp(const StringName &p_method, const Variant **p_args, int p_argcount, Callable::CallError &r_error) override;
 
 #ifdef ANDROID_ENABLED
-	JavaObject(const Ref<JavaClass> &p_base, jobject *p_instance);
+	jobject get_instance() { return instance; }
+
+	JavaObject(const Ref<JavaClass> &p_base, jobject p_instance);
 	~JavaObject();
 #endif
 };
@@ -242,6 +247,8 @@ public:
 	Ref<JavaClass> wrap(const String &p_class);
 
 #ifdef ANDROID_ENABLED
+	Ref<JavaClass> wrap_jclass(jclass p_class);
+
 	JavaClassWrapper(jobject p_activity = nullptr);
 #else
 	JavaClassWrapper();

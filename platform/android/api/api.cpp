@@ -72,6 +72,9 @@ Variant JavaClass::callp(const StringName &, const Variant **, int, Callable::Ca
 JavaClass::JavaClass() {
 }
 
+JavaClass::~JavaClass() {
+}
+
 Variant JavaObject::callp(const StringName &, const Variant **, int, Callable::CallError &) {
 	return Variant();
 }

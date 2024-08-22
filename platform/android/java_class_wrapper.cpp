@@ -1034,6 +1034,7 @@ Ref<JavaClass> JavaClassWrapper::wrap(const String &p_class) {
 
 		jstring name = (jstring)env->CallObjectMethod(obj, getName);
 		String str_method = jstring_to_string(name, env);
+		print_line("Method name: ", str_method);
 		env->DeleteLocalRef(name);
 
 		Vector<String> params;
@@ -1214,6 +1215,7 @@ JavaClassWrapper::JavaClassWrapper(jobject p_activity) {
 
 	jclass bclass = env->FindClass("java/lang/Class");
 	getDeclaredMethods = env->GetMethodID(bclass, "getDeclaredMethods", "()[Ljava/lang/reflect/Method;");
+	getDeclaredConstructors = env->GetMethodID(bclass, "getDeclaredConstructors", "()[Ljava/lang/reflect/Constructor;");
 	getFields = env->GetMethodID(bclass, "getFields", "()[Ljava/lang/reflect/Field;");
 	Class_getName = env->GetMethodID(bclass, "getName", "()Ljava/lang/String;");
 	env->DeleteLocalRef(bclass);

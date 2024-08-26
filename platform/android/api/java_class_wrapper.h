@@ -185,6 +185,10 @@ class JavaClass : public RefCounted {
 public:
 	virtual Variant callp(const StringName &p_method, const Variant **p_args, int p_argcount, Callable::CallError &r_error) override;
 
+#ifdef ANDROID_ENABLED
+	virtual String to_string() override;
+#endif
+
 	JavaClass();
 	~JavaClass();
 };
@@ -203,6 +207,8 @@ public:
 	virtual Variant callp(const StringName &p_method, const Variant **p_args, int p_argcount, Callable::CallError &r_error) override;
 
 #ifdef ANDROID_ENABLED
+	virtual String to_string() override;
+
 	jobject get_instance() { return instance; }
 
 	JavaObject(const Ref<JavaClass> &p_base, jobject p_instance);

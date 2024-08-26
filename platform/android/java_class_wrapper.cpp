@@ -499,6 +499,10 @@ Variant JavaClass::callp(const StringName &p_method, const Variant **p_args, int
 	return RefCounted::callp(p_method, p_args, p_argcount, r_error);
 }
 
+String JavaClass::to_string() {
+	return "<JavaClass:" + java_class_name + ">";
+}
+
 JavaClass::JavaClass() {
 }
 
@@ -521,6 +525,16 @@ Variant JavaObject::callp(const StringName &p_method, const Variant **p_args, in
 	}
 
 	return RefCounted::callp(p_method, p_args, p_argcount, r_error);
+}
+
+String JavaObject::to_string() {
+	String s = "<JavaObject:" + base_class->java_class_name;
+	// Call the Java toString() method.
+	if (base_class->methods.has("toString")) {
+		s += " \"" + (String)call("toString") + "\"";
+	}
+	s += ">";
+	return s;
 }
 
 JavaObject::JavaObject(const Ref<JavaClass> &p_base, jobject p_instance) {

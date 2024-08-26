@@ -44,7 +44,7 @@ bool JavaClass::_call_method(JavaObject *p_instance, const StringName &p_method,
 
 	MethodInfo *method = nullptr;
 	for (MethodInfo &E : M->value) {
-		if (!p_instance && !E._static) {
+		if (!p_instance && !E._static && !E._constructor) {
 			r_error.error = Callable::CallError::CALL_ERROR_INSTANCE_IS_NULL;
 			continue;
 		}
@@ -458,7 +458,9 @@ bool JavaClass::_call_method(JavaObject *p_instance, const StringName &p_method,
 		} break;
 		default: {
 			jobject obj;
-			if (method->_static) {
+			if (method->_constructor) {
+				obj = env->NewObject(_class, method->method, argv);
+			} else if (method->_static) {
 				obj = env->CallStaticObjectMethodA(_class, method->method, argv);
 			} else {
 				obj = env->CallObjectMethodA(p_instance->instance, method->method, argv);
@@ -680,7 +682,7 @@ bool JavaClass::_convert_object_to_variant(JNIEnv *env, jobject obj, Variant &va
 		} break;
 		case ARG_TYPE_CLASS: {
 			jclass java_class = env->GetObjectClass(obj);
-			Ref<JavaClass> java_class_wrapped = JavaClassWrapper::singleton->wrap_jclass(env->GetObjectClass(obj));
+			Ref<JavaClass> java_class_wrapped = JavaClassWrapper::singleton->wrap_jclass(java_class);
 			env->DeleteLocalRef(java_class);
 
 			if (java_class_wrapped.is_valid()) {
@@ -1039,24 +1041,32 @@ Ref<JavaClass> JavaClassWrapper::wrap(const String &p_class) {
 		methods_and_constructors[constructor_count + i] = env->GetObjectArrayElement(methods, i);
 	}
 
-	for (const jobject &obj : methods_and_constructors) {
+	for (int i = 0; i < methods_and_constructors.size(); i++) {
+		jobject obj = methods_and_constructors[i];
 		ERR_CONTINUE(!obj);
 
-		jstring name = (jstring)env->CallObjectMethod(obj, getName);
-		String str_method = jstring_to_string(name, env);
+		bool is_constructor = i < constructor_count;
+
+		String str_method;
+		if (is_constructor) {
+			str_method = "<init>";
+		} else {
+			jstring name = (jstring)env->CallObjectMethod(obj, Method_getName);
+			str_method = jstring_to_string(name, env);
+			env->DeleteLocalRef(name);
+		}
 		print_line("Method name: ", str_method);
-		env->DeleteLocalRef(name);
 
 		Vector<String> params;
 
-		jint mods = env->CallIntMethod(obj, getModifiers);
+		jint mods = env->CallIntMethod(obj, is_constructor ? Constructor_getModifiers : Method_getModifiers);
 
 		if (!(mods & 0x0001)) {
 			env->DeleteLocalRef(obj);
 			continue; //not public bye
 		}
 
-		jobjectArray param_types = (jobjectArray)env->CallObjectMethod(obj, getParameterTypes);
+		jobjectArray param_types = (jobjectArray)env->CallObjectMethod(obj, is_constructor ? Constructor_getParameterTypes : Method_getParameterTypes);
 		int count = env->GetArrayLength(param_types);
 
 		if (!java_class->methods.has(str_method)) {
@@ -1065,6 +1075,7 @@ Ref<JavaClass> JavaClassWrapper::wrap(const String &p_class) {
 
 		JavaClass::MethodInfo mi;
 		mi._static = (mods & 0x8) != 0;
+		mi._constructor = is_constructor;
 		bool valid = true;
 		String signature = "(";
 
@@ -1092,20 +1103,27 @@ Ref<JavaClass> JavaClassWrapper::wrap(const String &p_class) {
 
 		signature += ")";
 
-		jobject return_type = (jobject)env->CallObjectMethod(obj, getReturnType);
+		if (is_constructor) {
+			signature += "V";
+			mi.return_type = JavaClass::ARG_TYPE_CLASS;
+		} else {
+			jobject return_type = (jobject)env->CallObjectMethod(obj, Method_getReturnType);
 
-		String strsig;
-		uint32_t sig = 0;
-		if (!_get_type_sig(env, return_type, sig, strsig)) {
-			print_line("Method can't be bound (unsupported return type): " + p_class + "::" + str_method);
-			env->DeleteLocalRef(obj);
-			env->DeleteLocalRef(param_types);
+			String strsig;
+			uint32_t sig = 0;
+			if (!_get_type_sig(env, return_type, sig, strsig)) {
+				print_line("Method can't be bound (unsupported return type): " + p_class + "::" + str_method);
+				env->DeleteLocalRef(obj);
+				env->DeleteLocalRef(param_types);
+				env->DeleteLocalRef(return_type);
+				continue;
+			}
+
+			signature += strsig;
+			mi.return_type = sig;
+
 			env->DeleteLocalRef(return_type);
-			continue;
 		}
-
-		signature += strsig;
-		mi.return_type = sig;
 
 		bool discard = false;
 
@@ -1158,7 +1176,6 @@ Ref<JavaClass> JavaClassWrapper::wrap(const String &p_class) {
 
 		env->DeleteLocalRef(obj);
 		env->DeleteLocalRef(param_types);
-		env->DeleteLocalRef(return_type);
 	}
 
 	env->DeleteLocalRef(constructors);
@@ -1213,7 +1230,7 @@ Ref<JavaClass> JavaClassWrapper::wrap_jclass(jclass p_class) {
 	String class_name_string = jstring_to_string(class_name, env);
 	env->DeleteLocalRef(class_name);
 
-	return wrap(class_name_string);
+	return wrap(class_name_string.replace(".", "/"));
 }
 
 JavaClassWrapper *JavaClassWrapper::singleton = nullptr;
@@ -1231,11 +1248,16 @@ JavaClassWrapper::JavaClassWrapper(jobject p_activity) {
 	Class_getName = env->GetMethodID(bclass, "getName", "()Ljava/lang/String;");
 	env->DeleteLocalRef(bclass);
 
+	bclass = env->FindClass("java/lang/reflect/Constructor");
+	Constructor_getParameterTypes = env->GetMethodID(bclass, "getParameterTypes", "()[Ljava/lang/Class;");
+	Constructor_getModifiers = env->GetMethodID(bclass, "getModifiers", "()I");
+	env->DeleteLocalRef(bclass);
+
 	bclass = env->FindClass("java/lang/reflect/Method");
-	getParameterTypes = env->GetMethodID(bclass, "getParameterTypes", "()[Ljava/lang/Class;");
-	getReturnType = env->GetMethodID(bclass, "getReturnType", "()Ljava/lang/Class;");
-	getName = env->GetMethodID(bclass, "getName", "()Ljava/lang/String;");
-	getModifiers = env->GetMethodID(bclass, "getModifiers", "()I");
+	Method_getParameterTypes = env->GetMethodID(bclass, "getParameterTypes", "()[Ljava/lang/Class;");
+	Method_getReturnType = env->GetMethodID(bclass, "getReturnType", "()Ljava/lang/Class;");
+	Method_getName = env->GetMethodID(bclass, "getName", "()Ljava/lang/String;");
+	Method_getModifiers = env->GetMethodID(bclass, "getModifiers", "()I");
 	env->DeleteLocalRef(bclass);
 
 	bclass = env->FindClass("java/lang/reflect/Field");

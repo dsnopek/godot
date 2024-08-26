@@ -67,6 +67,7 @@ class JavaClass : public RefCounted {
 
 	struct MethodInfo {
 		bool _static = false;
+		bool _constructor = false;
 		Vector<uint32_t> param_types;
 		Vector<StringName> param_sigs;
 		uint32_t return_type = 0;
@@ -217,10 +218,12 @@ class JavaClassWrapper : public Object {
 	jmethodID getDeclaredConstructors;
 	jmethodID getDeclaredMethods;
 	jmethodID getFields;
-	jmethodID getParameterTypes;
-	jmethodID getReturnType;
-	jmethodID getModifiers;
-	jmethodID getName;
+	jmethodID Constructor_getParameterTypes;
+	jmethodID Constructor_getModifiers;
+	jmethodID Method_getParameterTypes;
+	jmethodID Method_getReturnType;
+	jmethodID Method_getModifiers;
+	jmethodID Method_getName;
 	jmethodID Class_getName;
 	jmethodID Field_getName;
 	jmethodID Field_getModifiers;

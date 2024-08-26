@@ -177,6 +177,7 @@ class JavaClass : public RefCounted {
 	friend class JavaClassWrapper;
 	friend class JavaObject;
 	String java_class_name;
+	String java_constructor_name;
 	HashMap<StringName, List<MethodInfo>> methods;
 	jclass _class;
 #endif

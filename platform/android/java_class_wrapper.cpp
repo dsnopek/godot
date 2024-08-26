@@ -490,9 +490,7 @@ bool JavaClass::_call_method(JavaObject *p_instance, const StringName &p_method,
 Variant JavaClass::callp(const StringName &p_method, const Variant **p_args, int p_argcount, Callable::CallError &r_error) {
 	Variant ret;
 
-	// Use the Java class name to indicate the constructor.
-	String method = (p_method == java_class_name) ? "<init>" : p_method;
-
+	String method = (p_method == java_constructor_name) ? "<init>" : p_method;
 	bool found = _call_method(nullptr, method, p_args, p_argcount, r_error, ret);
 	if (found) {
 		return ret;
@@ -1008,14 +1006,15 @@ bool JavaClass::_convert_object_to_variant(JNIEnv *env, jobject obj, Variant &va
 }
 
 Ref<JavaClass> JavaClassWrapper::wrap(const String &p_class) {
-	if (class_cache.has(p_class)) {
-		return class_cache[p_class];
+	String class_name_dots = p_class.replace("/", ".");
+	if (class_cache.has(class_name_dots)) {
+		return class_cache[class_name_dots];
 	}
 
 	JNIEnv *env = get_jni_env();
 	ERR_FAIL_NULL_V(env, Ref<JavaClass>());
 
-	jclass bclass = env->FindClass(p_class.utf8().get_data());
+	jclass bclass = env->FindClass(class_name_dots.replace(".", "/").utf8().get_data());
 	ERR_FAIL_NULL_V(bclass, Ref<JavaClass>());
 
 	jobjectArray constructors = (jobjectArray)env->CallObjectMethod(bclass, getDeclaredConstructors);
@@ -1025,10 +1024,11 @@ Ref<JavaClass> JavaClassWrapper::wrap(const String &p_class) {
 	ERR_FAIL_NULL_V(methods, Ref<JavaClass>());
 
 	Ref<JavaClass> java_class = memnew(JavaClass);
-	Vector<String> class_name_parts = p_class.split("/");
-	java_class->java_class_name = class_name_parts[class_name_parts.size() - 1];
+	java_class->java_class_name = class_name_dots;
+	Vector<String> class_name_parts = class_name_dots.split(".");
+	java_class->java_constructor_name = class_name_parts[class_name_parts.size() - 1];
 	java_class->_class = (jclass)env->NewGlobalRef(bclass);
-	class_cache[p_class] = java_class;
+	class_cache[class_name_dots] = java_class;
 
 	LocalVector<jobject> methods_and_constructors;
 	int constructor_count = env->GetArrayLength(constructors);
@@ -1094,7 +1094,7 @@ Ref<JavaClass> JavaClassWrapper::wrap(const String &p_class) {
 		}
 
 		if (!valid) {
-			print_line("Method can't be bound (unsupported arguments): " + p_class + "::" + str_method);
+			print_line("Method can't be bound (unsupported arguments): " + class_name_dots + "::" + str_method);
 			env->DeleteLocalRef(obj);
 			env->DeleteLocalRef(param_types);
 			continue;
@@ -1111,7 +1111,7 @@ Ref<JavaClass> JavaClassWrapper::wrap(const String &p_class) {
 			String strsig;
 			uint32_t sig = 0;
 			if (!_get_type_sig(env, return_type, sig, strsig)) {
-				print_line("Method can't be bound (unsupported return type): " + p_class + "::" + str_method);
+				print_line("Method can't be bound (unsupported return type): " + class_name_dots + "::" + str_method);
 				env->DeleteLocalRef(obj);
 				env->DeleteLocalRef(param_types);
 				env->DeleteLocalRef(return_type);
@@ -1229,7 +1229,7 @@ Ref<JavaClass> JavaClassWrapper::wrap_jclass(jclass p_class) {
 	String class_name_string = jstring_to_string(class_name, env);
 	env->DeleteLocalRef(class_name);
 
-	return wrap(class_name_string.replace(".", "/"));
+	return wrap(class_name_string);
 }
 
 JavaClassWrapper *JavaClassWrapper::singleton = nullptr;

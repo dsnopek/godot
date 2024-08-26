@@ -7,13 +7,13 @@
 		The JavaClassWrapper singleton provides a way for the Godot application to send and receive data through the [url=https://developer.android.com/training/articles/perf-jni]Java Native Interface[/url] (JNI).
 		[b]Note:[/b] This singleton is only available in Android builds.
 		[codeblock]
-		var cls = JavaClassWrapper.wrap("java.util.Date")
+		var LocalDateTime = JavaClassWrapper.wrap("java.time.LocalDateTime")
+		var DateTimeFormatter = JavaClassWrapper.wrap("java.time.format.DateTimeFormatter")
 
-		# Construct an instance of the class.
-		var obj = cls.Date()
+		var datetime = LocalDateTime.now()
+		var formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")
 
-		# Call one of its methods.
-		print("java.util.Date::getTime(): ", obj.getTime())
+		print(datetime.format(formatter))
 		[/codeblock]
 	</description>
 	<tutorials>

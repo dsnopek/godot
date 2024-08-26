@@ -226,6 +226,8 @@ public:
 	JavaObject(const Ref<JavaClass> &p_base, jobject p_instance);
 	~JavaObject();
 #endif
+
+	JavaObject();
 };
 
 class JavaClassWrapper : public Object {

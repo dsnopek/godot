@@ -504,7 +504,70 @@ String JavaClass::get_java_class_name() const {
 }
 
 TypedArray<Dictionary> JavaClass::get_java_method_list() const {
-	return TypedArray<Dictionary>();
+	TypedArray<Dictionary> method_list;
+
+	for (const KeyValue<StringName, List<MethodInfo>> &item : methods) {
+		for (const MethodInfo &mi : item.value) {
+			Dictionary method;
+
+			method["name"] = mi._constructor ? java_constructor_name : String(item.key);
+			method["id"] = (uint64_t)mi.method;
+			method["default_args"] = Array();
+			method["flags"] = METHOD_FLAGS_DEFAULT & (mi._static || mi._constructor ? METHOD_FLAG_STATIC : METHOD_FLAG_NORMAL);
+
+			{
+				Array a;
+
+				for (uint32_t argtype : mi.param_types) {
+					Dictionary d;
+
+					Variant::Type t = Variant::NIL;
+					float likelihood = 0.0;
+					_convert_to_variant_type(argtype, t, likelihood);
+					d["type"] = t;
+					if (t == Variant::OBJECT) {
+						d["hint"] = PROPERTY_HINT_RESOURCE_TYPE;
+						d["hint_string"] = "JavaObject";
+					} else {
+						d["hint"] = 0;
+						d["hint_string"] = "";
+					}
+
+					a.push_back(d);
+				}
+
+				method["args"] = a;
+			}
+
+			{
+				Dictionary d;
+
+				if (mi._constructor) {
+					d["type"] = Variant::OBJECT;
+					d["hint"] = PROPERTY_HINT_RESOURCE_TYPE;
+					d["hint_string"] = "JavaObject";
+				} else {
+					Variant::Type t = Variant::NIL;
+					float likelihood = 0.0;
+					_convert_to_variant_type(mi.return_type, t, likelihood);
+					d["type"] = t;
+					if (t == Variant::OBJECT) {
+						d["hint"] = PROPERTY_HINT_RESOURCE_TYPE;
+						d["hint_string"] = "JavaObject";
+					} else {
+						d["hint"] = 0;
+						d["hint_string"] = "";
+					}
+				}
+
+				method["return_type"] = d;
+			}
+
+			method_list.push_back(method);
+		}
+	}
+
+	return method_list;
 }
 
 String JavaClass::to_string() {
@@ -524,7 +587,7 @@ JavaClass::~JavaClass() {
 /////////////////////
 
 Variant JavaObject::callp(const StringName &p_method, const Variant **p_args, int p_argcount, Callable::CallError &r_error) {
-	if (base_class.is_valid()) {
+	if (base_class.is_valid() && instance) {
 		Variant ret;
 		bool found = base_class->_call_method(this, p_method, p_args, p_argcount, r_error, ret);
 		if (found) {
@@ -540,13 +603,19 @@ Ref<JavaClass> JavaObject::get_java_class() const {
 }
 
 String JavaObject::to_string() {
-	String s = "<JavaObject:" + base_class->java_class_name;
-	// Call the Java toString() method.
-	if (base_class->methods.has("toString")) {
-		s += " \"" + (String)call("toString") + "\"";
+	if (base_class.is_valid() && instance) {
+		String s = "<JavaObject:" + base_class->java_class_name;
+		// Call the Java toString() method.
+		if (base_class->methods.has("toString")) {
+			s += " \"" + (String)call("toString") + "\"";
+		}
+		s += ">";
+		return s;
 	}
-	s += ">";
-	return s;
+	return RefCounted::to_string();
+}
+
+JavaObject::JavaObject() {
 }
 
 JavaObject::JavaObject(const Ref<JavaClass> &p_base, jobject p_instance) {

@@ -32,6 +32,7 @@
 #define JAVA_CLASS_WRAPPER_H
 
 #include "core/object/ref_counted.h"
+#include "core/variant/typed_array.h"
 
 #ifdef ANDROID_ENABLED
 #include <android/log.h>
@@ -182,8 +183,14 @@ class JavaClass : public RefCounted {
 	jclass _class;
 #endif
 
+protected:
+	static void _bind_methods();
+
 public:
 	virtual Variant callp(const StringName &p_method, const Variant **p_args, int p_argcount, Callable::CallError &r_error) override;
+
+	String get_java_class_name() const;
+	TypedArray<Dictionary> get_java_method_list() const;
 
 #ifdef ANDROID_ENABLED
 	virtual String to_string() override;
@@ -203,8 +210,13 @@ class JavaObject : public RefCounted {
 	jobject instance = nullptr;
 #endif
 
+protected:
+	static void _bind_methods();
+
 public:
 	virtual Variant callp(const StringName &p_method, const Variant **p_args, int p_argcount, Callable::CallError &r_error) override;
+
+	Ref<JavaClass> get_java_class() const;
 
 #ifdef ANDROID_ENABLED
 	virtual String to_string() override;

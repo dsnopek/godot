@@ -499,6 +499,14 @@ Variant JavaClass::callp(const StringName &p_method, const Variant **p_args, int
 	return RefCounted::callp(p_method, p_args, p_argcount, r_error);
 }
 
+String JavaClass::get_java_class_name() const {
+	return java_class_name;
+}
+
+TypedArray<Dictionary> JavaClass::get_java_method_list() const {
+	return TypedArray<Dictionary>();
+}
+
 String JavaClass::to_string() {
 	return "<JavaClass:" + java_class_name + ">";
 }
@@ -525,6 +533,10 @@ Variant JavaObject::callp(const StringName &p_method, const Variant **p_args, in
 	}
 
 	return RefCounted::callp(p_method, p_args, p_argcount, r_error);
+}
+
+Ref<JavaClass> JavaObject::get_java_class() const {
+	return base_class;
 }
 
 String JavaObject::to_string() {

@@ -1055,7 +1055,6 @@ Ref<JavaClass> JavaClassWrapper::wrap(const String &p_class) {
 			str_method = jstring_to_string(name, env);
 			env->DeleteLocalRef(name);
 		}
-		print_line("Method name: ", str_method);
 
 		Vector<String> params;
 

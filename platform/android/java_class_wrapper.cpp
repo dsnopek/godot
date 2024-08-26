@@ -110,7 +110,11 @@ bool JavaClass::_call_method(JavaObject *p_instance, const StringName &p_method,
 							if (Object::cast_to<JavaObject>(ref.ptr())) {
 								Ref<JavaObject> jo = ref;
 								//could be faster
-								jclass c = env->FindClass(E.param_sigs[i].operator String().utf8().get_data());
+								String cn = E.param_sigs[i].operator String();
+								if (cn.begins_with("L") && cn.ends_with(";")) {
+									cn = cn.substr(1, cn.length() - 2);
+								}
+								jclass c = env->FindClass(cn.utf8().get_data());
 								if (!c || !env->IsInstanceOf(jo->instance, c)) {
 									arg_expected = Variant::OBJECT;
 								} else {

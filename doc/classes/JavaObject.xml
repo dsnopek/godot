@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="JavaObject" inherits="RefCounted" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		Represents an object from the Java Native Interface. It can be return from Java methods called on [JavaClass]. See [JavaClassWrapper] for an example.
+		[b]Note:[/b] This class only works on Android. For any other build, this class does nothing.
+		[b]Note:[/b] This class is not to be confused with [JavaScriptObject].
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_java_class" qualifiers="const">
+			<return type="JavaClass" />
+			<description>
+				Returns the [JavaClass] that this object is an instance of.
+			</description>
+		</method>
+	</methods>
+</class>

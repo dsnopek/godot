@@ -214,6 +214,7 @@ class JavaClassWrapper : public Object {
 #ifdef ANDROID_ENABLED
 	RBMap<String, Ref<JavaClass>> class_cache;
 	friend class JavaClass;
+	jmethodID getDeclaredConstructors;
 	jmethodID getDeclaredMethods;
 	jmethodID getFields;
 	jmethodID getParameterTypes;

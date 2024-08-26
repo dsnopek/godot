@@ -1016,8 +1016,10 @@ Ref<JavaClass> JavaClassWrapper::wrap(const String &p_class) {
 	jclass bclass = env->FindClass(p_class.utf8().get_data());
 	ERR_FAIL_NULL_V(bclass, Ref<JavaClass>());
 
-	jobjectArray methods = (jobjectArray)env->CallObjectMethod(bclass, getDeclaredMethods);
+	jobjectArray constructors = (jobjectArray)env->CallObjectMethod(bclass, getDeclaredConstructors);
+	ERR_FAIL_NULL_V(constructors, Ref<JavaClass>());
 
+	jobjectArray methods = (jobjectArray)env->CallObjectMethod(bclass, getDeclaredMethods);
 	ERR_FAIL_NULL_V(methods, Ref<JavaClass>());
 
 	Ref<JavaClass> java_class = memnew(JavaClass);
@@ -1026,10 +1028,18 @@ Ref<JavaClass> JavaClassWrapper::wrap(const String &p_class) {
 	java_class->_class = (jclass)env->NewGlobalRef(bclass);
 	class_cache[p_class] = java_class;
 
-	int count = env->GetArrayLength(methods);
+	LocalVector<jobject> methods_and_constructors;
+	int constructor_count = env->GetArrayLength(constructors);
+	int method_count = env->GetArrayLength(methods);
+	methods_and_constructors.resize(method_count + constructor_count);
+	for (int i = 0; i < constructor_count; i++) {
+		methods_and_constructors[i] = env->GetObjectArrayElement(constructors, i);
+	}
+	for (int i = 0; i < method_count; i++) {
+		methods_and_constructors[constructor_count + i] = env->GetObjectArrayElement(methods, i);
+	}
 
-	for (int i = 0; i < count; i++) {
-		jobject obj = env->GetObjectArrayElement(methods, i);
+	for (const jobject &obj : methods_and_constructors) {
 		ERR_CONTINUE(!obj);
 
 		jstring name = (jstring)env->CallObjectMethod(obj, getName);
@@ -1047,7 +1057,7 @@ Ref<JavaClass> JavaClassWrapper::wrap(const String &p_class) {
 		}
 
 		jobjectArray param_types = (jobjectArray)env->CallObjectMethod(obj, getParameterTypes);
-		int count2 = env->GetArrayLength(param_types);
+		int count = env->GetArrayLength(param_types);
 
 		if (!java_class->methods.has(str_method)) {
 			java_class->methods[str_method] = List<JavaClass::MethodInfo>();
@@ -1058,7 +1068,7 @@ Ref<JavaClass> JavaClassWrapper::wrap(const String &p_class) {
 		bool valid = true;
 		String signature = "(";
 
-		for (int j = 0; j < count2; j++) {
+		for (int j = 0; j < count; j++) {
 			jobject obj2 = env->GetObjectArrayElement(param_types, j);
 			String strsig;
 			uint32_t sig = 0;
@@ -1151,11 +1161,12 @@ Ref<JavaClass> JavaClassWrapper::wrap(const String &p_class) {
 		env->DeleteLocalRef(return_type);
 	}
 
+	env->DeleteLocalRef(constructors);
 	env->DeleteLocalRef(methods);
 
 	jobjectArray fields = (jobjectArray)env->CallObjectMethod(bclass, getFields);
 
-	count = env->GetArrayLength(fields);
+	int count = env->GetArrayLength(fields);
 
 	for (int i = 0; i < count; i++) {
 		jobject obj = env->GetObjectArrayElement(fields, i);
@@ -1214,8 +1225,8 @@ JavaClassWrapper::JavaClassWrapper(jobject p_activity) {
 	ERR_FAIL_NULL(env);
 
 	jclass bclass = env->FindClass("java/lang/Class");
-	getDeclaredMethods = env->GetMethodID(bclass, "getDeclaredMethods", "()[Ljava/lang/reflect/Method;");
 	getDeclaredConstructors = env->GetMethodID(bclass, "getDeclaredConstructors", "()[Ljava/lang/reflect/Constructor;");
+	getDeclaredMethods = env->GetMethodID(bclass, "getDeclaredMethods", "()[Ljava/lang/reflect/Method;");
 	getFields = env->GetMethodID(bclass, "getFields", "()[Ljava/lang/reflect/Field;");
 	Class_getName = env->GetMethodID(bclass, "getName", "()Ljava/lang/String;");
 	env->DeleteLocalRef(bclass);

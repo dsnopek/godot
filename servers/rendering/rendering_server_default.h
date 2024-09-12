@@ -173,23 +173,16 @@ public:
 		return ret;                                                                                                              \
 	}
 
-#define FUNCRIDTEX8(m_type, m_type1, m_type2, m_type3, m_type4, m_type5, m_type6, m_type7, m_type8)                                        \
-	virtual RID m_type##_create(m_type1 p1, m_type2 p2, m_type3 p3, m_type4 p4, m_type5 p5, m_type6 p6, m_type7 p7, m_type8 p8) override { \
-		RID ret = RSG::texture_storage->texture_allocate();                                                                                \
-		if (Thread::get_caller_id() == server_thread || RSG::texture_storage->can_create_resources_async()) {                              \
-			RSG::texture_storage->m_type##_initialize(ret, p1, p2, p3, p4, p5, p6, p7, p8);                                                \
-		} else {                                                                                                                           \
-			command_queue.push(RSG::texture_storage, &RendererTextureStorage::m_type##_initialize, ret, p1, p2, p3, p4, p5, p6, p7, p8);   \
-		}                                                                                                                                  \
-		return ret;                                                                                                                        \
-	}
-
 	//these go pass-through, as they can be called from any thread
 	FUNCRIDTEX1(texture_2d, const Ref<Image> &)
 	FUNCRIDTEX2(texture_2d_layered, const Vector<Ref<Image>> &, TextureLayeredType)
 	FUNCRIDTEX6(texture_3d, Image::Format, int, int, int, bool, const Vector<Ref<Image>> &)
 	FUNCRIDTEX1(texture_proxy, RID)
-	FUNCRIDTEX8(texture_native, TextureType, Image::Format, uint64_t, int, int, int, int, TextureLayeredType)
+
+	// Called directly, not through the command queue.
+	virtual RID texture_create_from_native_handle(TextureType p_type, Image::Format p_format, uint64_t p_native_handle, int p_width, int p_height, int p_depth, int p_layers = 1, TextureLayeredType p_layered_type = TEXTURE_LAYERED_2D_ARRAY) override {
+		return RSG::texture_storage->texture_create_from_native_handle(p_type, p_format, p_native_handle, p_width, p_height, p_depth, p_layers, p_layered_type);
+	}
 
 	//these go through command queue if they are in another thread
 	FUNC3(texture_2d_update, RID, const Ref<Image> &, int)

@@ -240,10 +240,7 @@ bool OpenXROpenGLExtension::get_swapchain_image_data(XrSwapchain p_swapchain, in
 	Vector<RID> texture_rids;
 
 	for (uint64_t i = 0; i < swapchain_length; i++) {
-		RID texture_rid = texture_storage->texture_allocate();
-
-		texture_storage->texture_native_initialize(
-				texture_rid,
+		RID texture_rid = texture_storage->texture_create_from_native_handle(
 				p_array_size == 1 ? RS::TEXTURE_TYPE_2D : RS::TEXTURE_TYPE_LAYERED,
 				format,
 				images[i].image,

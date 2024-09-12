@@ -1108,6 +1108,10 @@ void TextureStorage::texture_proxy_initialize(RID p_texture, RID p_base) {
 	tex->proxies.push_back(p_texture);
 }
 
+void TextureStorage::texture_native_initialize(RID p_texture, RS::TextureType p_type, Image::Format p_format, uint64_t p_native_handle, int p_width, int p_height, int p_depth, int p_layers, RS::TextureLayeredType p_layered_type) {
+	// @todo Implement
+}
+
 void TextureStorage::_texture_2d_update(RID p_texture, const Ref<Image> &p_image, int p_layer, bool p_immediate) {
 	ERR_FAIL_COND(p_image.is_null() || p_image->is_empty());
 

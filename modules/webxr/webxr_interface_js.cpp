@@ -561,7 +561,9 @@ RID WebXRInterfaceJS::_get_texture(unsigned int p_texture_id) {
 	uint32_t view_count = godot_webxr_get_view_count();
 	Size2 texture_size = get_render_target_size();
 
-	RID texture = texture_storage->texture_create_external(
+	RID texture = texture_storage->texture_allocate();
+	texture_storage->texture_native_initialize(
+			texture,
 			view_count == 1 ? GLES3::Texture::TYPE_2D : GLES3::Texture::TYPE_LAYERED,
 			Image::FORMAT_RGBA8,
 			p_texture_id,

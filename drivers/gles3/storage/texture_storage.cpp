@@ -729,7 +729,7 @@ void TextureStorage::texture_free(RID p_texture) {
 			}
 		}
 	} else {
-		must_free_data = t->tex_id != 0 && !t->is_external;
+		must_free_data = t->tex_id != 0 && !t->is_native;
 	}
 	if (must_free_data) {
 		GLES3::Utilities::get_singleton()->texture_free_data(t->tex_id);
@@ -874,33 +874,35 @@ void TextureStorage::texture_proxy_initialize(RID p_texture, RID p_base) {
 	texture_owner.initialize_rid(p_texture, proxy_tex);
 }
 
-RID TextureStorage::texture_create_external(GLES3::Texture::Type p_type, Image::Format p_format, unsigned int p_image, int p_width, int p_height, int p_depth, int p_layers, RS::TextureLayeredType p_layered_type) {
-	Texture texture;
-	texture.active = true;
-	texture.is_external = true;
-	texture.type = p_type;
+void TextureStorage::texture_native_initialize(RID p_texture, RS::TextureType p_type, Image::Format p_format, uint64_t p_native_handle, int p_width, int p_height, int p_depth, int p_layers, RS::TextureLayeredType p_layered_type) {
+	Texture *texture = texture_owner.get_or_null(p_texture);
+	ERR_FAIL_NULL(texture);
+
+	texture->active = true;
+	texture->is_native = true;
 
 	switch (p_type) {
-		case Texture::TYPE_2D: {
-			texture.target = GL_TEXTURE_2D;
+		case RS::TEXTURE_TYPE_2D: {
+			texture->type = Texture::TYPE_2D;
+			texture->target = GL_TEXTURE_2D;
 		} break;
-		case Texture::TYPE_3D: {
-			texture.target = GL_TEXTURE_3D;
+		case RS::TEXTURE_TYPE_3D: {
+			texture->type = Texture::TYPE_3D;
+			texture->target = GL_TEXTURE_3D;
 		} break;
-		case Texture::TYPE_LAYERED: {
-			texture.target = GL_TEXTURE_2D_ARRAY;
+		case RS::TEXTURE_TYPE_LAYERED: {
+			texture->type = Texture::TYPE_LAYERED;
+			texture->target = GL_TEXTURE_2D_ARRAY;
 		} break;
 	}
 
-	texture.real_format = texture.format = p_format;
-	texture.tex_id = p_image;
-	texture.alloc_width = texture.width = p_width;
-	texture.alloc_height = texture.height = p_height;
-	texture.depth = p_depth;
-	texture.layers = p_layers;
-	texture.layered_type = p_layered_type;
-
-	return texture_owner.make_rid(texture);
+	texture->real_format = texture->format = p_format;
+	texture->tex_id = p_native_handle;
+	texture->alloc_width = texture->width = p_width;
+	texture->alloc_height = texture->height = p_height;
+	texture->depth = p_depth;
+	texture->layers = p_layers;
+	texture->layered_type = p_layered_type;
 }
 
 void TextureStorage::texture_2d_update(RID p_texture, const Ref<Image> &p_image, int p_layer) {

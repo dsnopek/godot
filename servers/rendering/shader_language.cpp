@@ -4690,8 +4690,7 @@ PropertyInfo ShaderLanguage::uniform_to_property_info(const ShaderNode::Uniform 
 		case ShaderLanguage::TYPE_ISAMPLER2DARRAY:
 		case ShaderLanguage::TYPE_USAMPLER2DARRAY:
 		case ShaderLanguage::TYPE_SAMPLERCUBE:
-		case ShaderLanguage::TYPE_SAMPLERCUBEARRAY:
-		case ShaderLanguage::TYPE_SAMPLEREXT: {
+		case ShaderLanguage::TYPE_SAMPLERCUBEARRAY: {
 			if (p_uniform.array_size > 0) {
 				pi.type = Variant::ARRAY;
 				pi.hint = PROPERTY_HINT_ARRAY_TYPE;
@@ -4713,6 +4712,17 @@ PropertyInfo ShaderLanguage::uniform_to_property_info(const ShaderNode::Uniform 
 				pi.type = Variant::OBJECT;
 				pi.hint = PROPERTY_HINT_RESOURCE_TYPE;
 				pi.hint_string = "Texture3D";
+			}
+		} break;
+		case ShaderLanguage::TYPE_SAMPLEREXT: {
+			if (p_uniform.array_size > 0) {
+				pi.type = Variant::ARRAY;
+				pi.hint = PROPERTY_HINT_ARRAY_TYPE;
+				pi.hint_string = MAKE_RESOURCE_TYPE_HINT("ExternalTexture");
+			} else {
+				pi.type = Variant::OBJECT;
+				pi.hint = PROPERTY_HINT_RESOURCE_TYPE;
+				pi.hint_string = "ExternalTexture";
 			}
 		} break;
 		case ShaderLanguage::TYPE_STRUCT: {

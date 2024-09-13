@@ -48,16 +48,16 @@ protected:
 public:
 	uint64_t get_external_texture_id() const;
 
-	virtual Size2 get_size() const;
+	virtual Size2 get_size() const override;
 	void set_size(const Size2 &p_size);
 
 	void set_external_buffer_id(uint64_t p_external_buffer);
 
-	virtual int get_width() const;
-	virtual int get_height() const;
+	virtual int get_width() const override;
+	virtual int get_height() const override;
 
-	virtual RID get_rid() const;
-	virtual bool has_alpha() const;
+	virtual RID get_rid() const override;
+	virtual bool has_alpha() const override;
 
 	ExternalTexture();
 	~ExternalTexture();

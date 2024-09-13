@@ -39,7 +39,7 @@ class ExternalTexture : public Texture2D {
 
 private:
 	RID texture;
-	Size2 size = Size2(1024, 1024);
+	Size2 size = Size2(256, 256);
 	uint64_t external_buffer = 0;
 
 protected:

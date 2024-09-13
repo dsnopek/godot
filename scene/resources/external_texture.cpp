@@ -48,6 +48,7 @@ void ExternalTexture::set_size(const Size2 &p_size) {
 	if (p_size.width > 0 && p_size.height > 0 && p_size != size) {
 		size = p_size;
 		RenderingServer::get_singleton()->texture_external_update(texture, size.width, size.height, external_buffer);
+		emit_changed();
 	}
 }
 

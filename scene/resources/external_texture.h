@@ -33,26 +33,31 @@
 
 #include "scene/resources/texture.h"
 
+// External textures as defined by OES_EGL_image_external (GLES) or VK_ANDROID_external_memory_android_hardware_buffer (Vulkan).
 class ExternalTexture : public Texture2D {
 	GDCLASS(ExternalTexture, Texture2D);
 
 private:
-	mutable RID _texture;
-	Size2 _size;
+	RID texture;
+	Size2 size = Size2(1024, 1024);
+	uint64_t external_buffer = 0;
 
 protected:
 	static void _bind_methods();
 
 public:
-	uint32_t get_external_texture_id();
-	virtual Size2 get_size() const override;
+	uint64_t get_external_texture_id() const;
+
+	virtual Size2 get_size() const;
 	void set_size(const Size2 &p_size);
 
-	virtual int get_width() const override;
-	virtual int get_height() const override;
-	virtual RID get_rid() const override;
-	virtual bool has_alpha() const override;
-	virtual Ref<Image> get_image() const override;
+	void set_external_buffer_id(uint64_t p_external_buffer);
+
+	virtual int get_width() const;
+	virtual int get_height() const;
+
+	virtual RID get_rid() const;
+	virtual bool has_alpha() const;
 
 	ExternalTexture();
 	~ExternalTexture();

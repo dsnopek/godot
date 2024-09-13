@@ -35,32 +35,39 @@
 void ExternalTexture::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_size", "size"), &ExternalTexture::set_size);
 	ClassDB::bind_method(D_METHOD("get_external_texture_id"), &ExternalTexture::get_external_texture_id);
+	ClassDB::bind_method(D_METHOD("set_external_buffer_id", "external_buffer_id"), &ExternalTexture::set_external_buffer_id);
 
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "size"), "set_size", "get_size");
 }
 
-uint32_t ExternalTexture::get_external_texture_id() {
-	return ((GLES3::TextureStorage *)RSG::texture_storage)->texture_get_texid(_texture);
+uint64_t ExternalTexture::get_external_texture_id() const {
+	return RenderingServer::get_singleton()->texture_get_native_handle(texture);
 }
 
 void ExternalTexture::set_size(const Size2 &p_size) {
-	if (p_size.width > 0 && p_size.height > 0) {
-		_size = p_size;
-		RenderingServer::get_singleton()->texture_set_size_override(_texture, _size.width, _size.height);
-		notify_property_list_changed();
+	if (p_size.width > 0 && p_size.height > 0 && p_size != size) {
+		size = p_size;
+		RenderingServer::get_singleton()->texture_external_update(texture, size.width, size.height, external_buffer);
 	}
 }
 
 Size2 ExternalTexture::get_size() const {
-	return _size;
+	return size;
+}
+
+void ExternalTexture::set_external_buffer_id(uint64_t p_external_buffer) {
+	if (p_external_buffer != external_buffer) {
+		external_buffer = p_external_buffer;
+		RenderingServer::get_singleton()->texture_external_update(texture, size.width, size.height, external_buffer);
+	}
 }
 
 int ExternalTexture::get_width() const {
-	return _size.width;
+	return size.width;
 }
 
 int ExternalTexture::get_height() const {
-	return _size.height;
+	return size.height;
 }
 
 bool ExternalTexture::has_alpha() const {
@@ -68,23 +75,16 @@ bool ExternalTexture::has_alpha() const {
 }
 
 RID ExternalTexture::get_rid() const {
-	return _texture;
-}
-
-Ref<Image> ExternalTexture::get_image() const {
-	// not (yet) supported
-	return Ref<Image>();
+	return texture;
 }
 
 ExternalTexture::ExternalTexture() {
-	_size = Size2(1024, 1024);
-	_texture = RenderingServer::get_singleton()->texture_external_create(_size.width, _size.height);
-	notify_property_list_changed();
+	texture = RenderingServer::get_singleton()->texture_external_create(size.width, size.height);
 }
 
 ExternalTexture::~ExternalTexture() {
-	if (_texture.is_valid()) {
+	if (texture.is_valid()) {
 		ERR_FAIL_NULL(RenderingServer::get_singleton());
-		RenderingServer::get_singleton()->free(_texture);
+		RenderingServer::get_singleton()->free(texture);
 	}
 }

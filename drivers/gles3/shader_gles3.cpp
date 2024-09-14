@@ -193,8 +193,9 @@ void ShaderGLES3::_build_variant_code(StringBuilder &builder, uint32_t p_variant
 #ifdef ANDROID_ENABLED
 	builder.append("#extension GL_OES_EGL_image_external : enable\n");
 	builder.append("#extension GL_OES_EGL_image_external_essl3 : enable\n");
+	builder.append("#define samplerExternal samplerExternalOES\n");
 #else
-	builder.append("#define samplerExternalOES sampler2D\n");
+	builder.append("#define samplerExternal sampler2D\n");
 #endif
 
 	// Insert multiview extension loading, because it needs to appear before

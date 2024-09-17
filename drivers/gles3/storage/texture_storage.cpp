@@ -153,6 +153,11 @@ TextureStorage::TextureStorage() {
 		}
 
 		{
+			default_gl_textures[DEFAULT_GL_TEXTURE_EXT] = texture_allocate();
+			texture_external_initialize(default_gl_textures[DEFAULT_GL_TEXTURE_EXT], 1, 1, 0);
+		}
+
+		{
 			unsigned char pixel_data[4 * 4 * 4];
 			for (int i = 0; i < 16; i++) {
 				pixel_data[i * 4 + 0] = 0;
@@ -776,19 +781,39 @@ void TextureStorage::texture_external_initialize(RID p_texture, int p_width, int
 	texture.alloc_height = texture.height = p_height;
 	texture.real_format = texture.format = Image::FORMAT_RGB8;
 	texture.type = Texture::TYPE_2D;
-	texture.target = _GL_TEXTURE_EXTERNAL_OES;
+
+	if (GLES3::Config::get_singleton()->external_texture_supported) {
+		texture.target = _GL_TEXTURE_EXTERNAL_OES;
+	} else {
+		texture.target = GL_TEXTURE_2D;
+	}
 
 	glGenTextures(1, &texture.tex_id);
-	glBindTexture(_GL_TEXTURE_EXTERNAL_OES, texture.tex_id);
+	glBindTexture(texture.target, texture.tex_id);
 
-	// @todo Use glEGLImageTargetTexture2DOES() to attach p_external_buffer - this isn't needed in most cases, though
+#ifdef ANDROID_ENABLED
+	if (texture.target == _GL_TEXTURE_EXTERNAL_OES) {
+		if (p_external_buffer) {
+			GLES3::Config::get_singleton()->eglEGLImageTargetTexture2DOES(_GL_TEXTURE_EXTERNAL_OES, reinterpret_cast<void *>(p_external_buffer));
+		}
+		texture.total_data_size = 0;
+	} else
+#endif
+	{
+		// If external textures aren't supported, allocate an empty 1x1 texture.
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+		texture.total_data_size = 3;
+	}
 
-	glTexParameteri(_GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(_GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(_GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(_GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(texture.target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(texture.target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(texture.target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(texture.target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
+	GLES3::Utilities::get_singleton()->texture_allocated_data(texture.tex_id, texture.total_data_size, "Texture External");
 	texture_owner.initialize_rid(p_texture, texture);
+
+	glBindTexture(texture.target, 0);
 }
 
 void TextureStorage::texture_2d_layered_initialize(RID p_texture, const Vector<Ref<Image>> &p_layers, RS::TextureLayeredType p_layered_type) {
@@ -955,12 +980,17 @@ void TextureStorage::texture_3d_update(RID p_texture, const Vector<Ref<Image>> &
 void TextureStorage::texture_external_update(RID p_texture, int p_width, int p_height, uint64_t p_external_buffer) {
 	Texture *tex = texture_owner.get_or_null(p_texture);
 	ERR_FAIL_NULL(tex);
-	ERR_FAIL_COND(tex->target != _GL_TEXTURE_EXTERNAL_OES);
 
 	tex->alloc_width = tex->width = p_width;
 	tex->alloc_height = tex->height = p_height;
 
-	// @todo Use glEGLImageTargetTexture2DOES() to attach p_external_buffer
+#ifdef ANDROID_ENABLED
+	if (tex->target == _GL_TEXTURE_EXTERNAL_OES && p_external_buffer) {
+		glBindTexture(_GL_TEXTURE_EXTERNAL_OES, tex->tex_id);
+		GLES3::Config::get_singleton()->eglEGLImageTargetTexture2DOES(_GL_TEXTURE_EXTERNAL_OES, reinterpret_cast<void *>(p_external_buffer));
+		glBindTexture(_GL_TEXTURE_EXTERNAL_OES, 0);
+	}
+#endif
 }
 
 void TextureStorage::texture_proxy_update(RID p_texture, RID p_proxy_to) {

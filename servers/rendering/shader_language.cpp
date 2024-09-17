@@ -315,7 +315,7 @@ const ShaderLanguage::KeyWord ShaderLanguage::keyword_list[] = {
 	{ TK_TYPE_USAMPLER3D, "usampler3D", KCF_SAMPLER_DATATYPE, {}, {} },
 	{ TK_TYPE_SAMPLERCUBE, "samplerCube", KCF_SAMPLER_DATATYPE, {}, {} },
 	{ TK_TYPE_SAMPLERCUBEARRAY, "samplerCubeArray", KCF_SAMPLER_DATATYPE, {}, {} },
-	{ TK_TYPE_SAMPLEREXT, "samplerExternal", KCF_SAMPLER_DATATYPE, {}, {} },
+	{ TK_TYPE_SAMPLEREXT, "samplerExternalOES", KCF_SAMPLER_DATATYPE, {}, {} },
 
 	// interpolation qualifiers
 
@@ -1165,7 +1165,7 @@ String ShaderLanguage::get_datatype_name(DataType p_type) {
 		case TYPE_SAMPLERCUBEARRAY:
 			return "samplerCubeArray";
 		case TYPE_SAMPLEREXT:
-			return "samplerExternal";
+			return "samplerExternalOES";
 		case TYPE_STRUCT:
 			return "struct";
 		case TYPE_MAX:

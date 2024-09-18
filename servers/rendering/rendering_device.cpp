@@ -1124,6 +1124,43 @@ RID RenderingDevice::texture_create_shared_from_slice(const TextureView &p_view,
 	return id;
 }
 
+RID RenderingDevice::texture_create_external(TextureType p_type, DataFormat p_format, TextureSamples p_samples, BitField<RenderingDevice::TextureUsageBits> p_usage, uint64_t p_external_buffer_type, uint64_t p_external_buffer, uint64_t p_width, uint64_t p_height, uint64_t p_depth, uint64_t p_layers) {
+	_THREAD_SAFE_METHOD_
+
+	Texture texture;
+	texture.type = p_type;
+	texture.format = p_format;
+	texture.samples = p_samples;
+	texture.width = p_width;
+	texture.height = p_height;
+	texture.depth = p_depth;
+	texture.layers = p_layers;
+	texture.mipmaps = 1;
+	texture.usage_flags = p_usage;
+	texture.base_mipmap = 0;
+	texture.base_layer = 0;
+
+	if (p_usage.has_flag(TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)) {
+		texture.read_aspect_flags.set_flag(RDD::TEXTURE_ASPECT_DEPTH_BIT);
+		texture.barrier_aspect_flags.set_flag(RDD::TEXTURE_ASPECT_DEPTH_BIT);
+	} else {
+		texture.read_aspect_flags.set_flag(RDD::TEXTURE_ASPECT_COLOR_BIT);
+		texture.barrier_aspect_flags.set_flag(RDD::TEXTURE_ASPECT_COLOR_BIT);
+	}
+
+	texture.driver_id = driver->texture_create_external(p_image, p_type, p_format, p_layers, (texture.usage_flags & TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT));
+	ERR_FAIL_COND_V(!texture.driver_id, RID());
+
+	_texture_make_mutable(&texture, RID());
+
+	RID id = texture_owner.make_rid(texture);
+#ifdef DEV_ENABLED
+	set_resource_name(id, "RID:" + itos(id.get_id()));
+#endif
+
+	return id;
+}
+
 Error RenderingDevice::texture_update(RID p_texture, uint32_t p_layer, const Vector<uint8_t> &p_data) {
 	return _texture_update(p_texture, p_layer, p_data, false, true);
 }

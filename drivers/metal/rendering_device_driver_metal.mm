@@ -461,6 +461,10 @@ RDD::TextureID RenderingDeviceDriverMetal::texture_create_shared_from_slice(Text
 	return rid::make(obj);
 }
 
+RDD::TextureID RenderingDeviceDriverMetal::texture_create_external(TextureType p_type, DataFormat p_format, TextureSamples p_samples, BitField<TextureUsageBits> p_usage, uint64_t p_external_buffer_type, uint64_t p_external_buffer, uint64_t p_width, uint64_t p_height, uint64_t p_depth, uint64_t p_layers) {
+	ERR_FAIL_V_MSG(RDD::TextureID(), "not implemented");
+}
+
 void RenderingDeviceDriverMetal::texture_free(TextureID p_texture) {
 	rid::release(p_texture);
 }

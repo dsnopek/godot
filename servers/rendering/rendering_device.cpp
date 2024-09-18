@@ -1124,34 +1124,26 @@ RID RenderingDevice::texture_create_shared_from_slice(const TextureView &p_view,
 	return id;
 }
 
-RID RenderingDevice::texture_create_external(TextureType p_type, DataFormat p_format, TextureSamples p_samples, BitField<RenderingDevice::TextureUsageBits> p_usage, uint64_t p_external_buffer_type, uint64_t p_external_buffer, uint64_t p_width, uint64_t p_height, uint64_t p_depth, uint64_t p_layers) {
+RID RenderingDevice::texture_create_external(int p_width, int p_height, uint64_t p_external_buffer, uint64_t p_external_buffer_type) {
 	_THREAD_SAFE_METHOD_
 
 	Texture texture;
-	texture.type = p_type;
-	texture.format = p_format;
-	texture.samples = p_samples;
+	texture.type = TEXTURE_TYPE_2D;
+	texture.format = DATA_FORMAT_A8B8G8R8_UNORM_PACK32;
+	texture.samples = TEXTURE_SAMPLES_1;
 	texture.width = p_width;
 	texture.height = p_height;
-	texture.depth = p_depth;
-	texture.layers = p_layers;
+	texture.depth = 1;
+	texture.layers = 1;
 	texture.mipmaps = 1;
-	texture.usage_flags = p_usage;
+	texture.usage_flags = TEXTURE_USAGE_SAMPLING_BIT | TEXTURE_USAGE_COLOR_ATTACHMENT_BIT;
 	texture.base_mipmap = 0;
 	texture.base_layer = 0;
+	texture.read_aspect_flags.set_flag(RDD::TEXTURE_ASPECT_COLOR_BIT);
+	texture.barrier_aspect_flags.set_flag(RDD::TEXTURE_ASPECT_COLOR_BIT);
 
-	if (p_usage.has_flag(TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)) {
-		texture.read_aspect_flags.set_flag(RDD::TEXTURE_ASPECT_DEPTH_BIT);
-		texture.barrier_aspect_flags.set_flag(RDD::TEXTURE_ASPECT_DEPTH_BIT);
-	} else {
-		texture.read_aspect_flags.set_flag(RDD::TEXTURE_ASPECT_COLOR_BIT);
-		texture.barrier_aspect_flags.set_flag(RDD::TEXTURE_ASPECT_COLOR_BIT);
-	}
-
-	texture.driver_id = driver->texture_create_external(p_image, p_type, p_format, p_layers, (texture.usage_flags & TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT));
+	texture.driver_id = driver->texture_create_external(p_width, p_height, p_external_buffer, p_external_buffer_type);
 	ERR_FAIL_COND_V(!texture.driver_id, RID());
-
-	_texture_make_mutable(&texture, RID());
 
 	RID id = texture_owner.make_rid(texture);
 #ifdef DEV_ENABLED
@@ -5977,6 +5969,7 @@ void RenderingDevice::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("texture_create_shared", "view", "with_texture"), &RenderingDevice::_texture_create_shared);
 	ClassDB::bind_method(D_METHOD("texture_create_shared_from_slice", "view", "with_texture", "layer", "mipmap", "mipmaps", "slice_type"), &RenderingDevice::_texture_create_shared_from_slice, DEFVAL(1), DEFVAL(TEXTURE_SLICE_2D));
 	ClassDB::bind_method(D_METHOD("texture_create_from_extension", "type", "format", "samples", "usage_flags", "image", "width", "height", "depth", "layers"), &RenderingDevice::texture_create_from_extension);
+	ClassDB::bind_method(D_METHOD("texture_create_external", "width", "height", "external_buffer", "external_buffer_type"), &RenderingDevice::texture_create_external, DEFVAL(0));
 
 	ClassDB::bind_method(D_METHOD("texture_update", "texture", "layer", "data"), &RenderingDevice::texture_update);
 	ClassDB::bind_method(D_METHOD("texture_get_data", "texture", "layer"), &RenderingDevice::texture_get_data);

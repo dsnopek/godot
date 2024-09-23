@@ -101,12 +101,14 @@ void LineEdit::_close_ime_window() {
 	DisplayServer::get_singleton()->window_set_ime_active(false, wid);
 }
 
-void LineEdit::_update_ime_window_position() {
+void LineEdit::_update_ime_window_position(bool p_set_active) {
 	DisplayServer::WindowID wid = get_window() ? get_window()->get_window_id() : DisplayServer::INVALID_WINDOW_ID;
-	if (wid == DisplayServer::INVALID_WINDOW_ID || !DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_IME) || !DisplayServer::get_singleton()->window_is_focused(wid)) {
+	if (wid == DisplayServer::INVALID_WINDOW_ID || !DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_IME)) {
 		return;
 	}
-	DisplayServer::get_singleton()->window_set_ime_active(true, wid);
+	if (p_set_active) {
+		DisplayServer::get_singleton()->window_set_ime_active(true, wid);
+	}
 	Point2 pos = Point2(get_caret_pixel_pos().x, (get_size().y + theme_cache.font->get_height(theme_cache.font_size)) / 2) + get_global_position();
 	if (get_window()->get_embedder()) {
 		pos += get_viewport()->get_popup_base_transform().get_origin();
@@ -1851,7 +1853,7 @@ void LineEdit::clear() {
 }
 
 void LineEdit::show_virtual_keyboard() {
-	_update_ime_window_position();
+	_update_ime_window_position(true);
 
 	if (DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_VIRTUAL_KEYBOARD) && virtual_keyboard_enabled) {
 		if (selection.enabled) {

@@ -211,7 +211,7 @@ private:
 	void _unedit();
 
 	void _close_ime_window();
-	void _update_ime_window_position();
+	void _update_ime_window_position(bool p_set_active = false);
 
 	void _clear_undo_stack();
 	void _clear_redo();

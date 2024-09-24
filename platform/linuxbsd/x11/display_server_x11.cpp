@@ -3046,8 +3046,15 @@ void DisplayServerX11::window_set_ime_active(const bool p_active, WindowID p_win
 		XWindowAttributes xwa;
 		XSync(x11_display, False);
 		XGetWindowAttributes(x11_display, wd.x11_xim_window, &xwa);
-		if (xwa.map_state == IsViewable && _window_focus_check()) {
-			_set_input_focus(wd.x11_xim_window, RevertToParent);
+		if (xwa.map_state == IsViewable)
+			if (_window_focus_check()) {
+				_set_input_focus(wd.x11_xim_window, RevertToParent);
+			} else {
+				ime_deferred_set_input_focus.active = true;
+				ime_deferred_set_input_focus.window_id = p_window;
+				ime_deferred_set_input_focus.x11_xim_window = wd.x11_xim_window;
+				//ime_deferred_set_input_focus.time =
+			}
 		}
 		XSetICFocus(wd.xic);
 	} else {

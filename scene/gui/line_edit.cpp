@@ -598,9 +598,6 @@ void LineEdit::gui_input(const Ref<InputEvent> &p_event) {
 		return;
 	}
 
-	print_line("KEY: ", k->as_text_keycode(), " - PRESSED: ", k->is_pressed());
-	print_line("Editable: ", editable, " - Editing: ", editing);
-
 	if (editable && !editing && k->is_action_pressed("ui_text_submit", false)) {
 		_edit();
 		return;
@@ -731,14 +728,12 @@ void LineEdit::gui_input(const Ref<InputEvent> &p_event) {
 
 	// Default is ENTER and KP_ENTER. Cannot use ui_accept as default includes SPACE.
 	if (k->is_action_pressed("ui_text_submit")) {
-		print_line("Submit");
 		emit_signal(SNAME("text_submitted"), text);
 		if (DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_VIRTUAL_KEYBOARD) && virtual_keyboard_enabled) {
 			DisplayServer::get_singleton()->virtual_keyboard_hide();
 		}
 
 		if (editing) {
-			print_line("Still editing - about to unedit");
 			_unedit();
 		}
 

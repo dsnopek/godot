@@ -267,6 +267,13 @@ class DisplayServerX11 : public DisplayServer {
 	uint64_t time_since_no_focus = 0;
 
 	struct {
+		bool active = false;
+		WindowID window_id;
+		Window x11_xim_window;
+		uint64_t time;
+	} ime_deferred_set_input_focus;
+
+	struct {
 		int opcode;
 		Vector<int> touch_devices;
 		HashMap<int, Vector2> absolute_devices;

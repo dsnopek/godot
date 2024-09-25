@@ -4325,7 +4325,7 @@ bool DisplayServerX11::_window_focus_check() {
 
 	bool has_focus = false;
 	for (const KeyValue<int, DisplayServerX11::WindowData> &wid : windows) {
-		if (wid.value.x11_window == focused_window) {
+		if (wid.value.x11_window == focused_window || (wid.value.xic && wid.value.ime_active && wid.value.x11_xim_window == focused_window)) {
 			has_focus = true;
 			break;
 		}
@@ -4369,25 +4369,63 @@ void DisplayServerX11::process_events() {
 			}
 		} else {
 			time_since_no_focus = OS::get_singleton()->get_ticks_msec();
+		}
+	}
 
-			if (ime_deferred_set_input_focus.active) {
-				uint64_t delta = OS::get_singleton()->get_ticks_msec() - ime_deferred_set_input_focus.time;
-				if (delta < 250 && windows.has(ime_deferred_set_input_focus.window_id)) {
-					print_line("Deferred focus with delta ", delta);
-					MutexLock mutex_lock(events_mutex);
+  /*
+	if (ime_deferred_set_input_focus.active && _window_focus_check()) {
+		uint64_t delta = OS::get_singleton()->get_ticks_msec() - ime_deferred_set_input_focus.time;
+		print_line("Deferred focus with delta ", delta);
+		if (delta < 250 && windows.has(ime_deferred_set_input_focus.window_id)) {
+			MutexLock mutex_lock(events_mutex);
 
-					XMapWindow(x11_display, ime_deferred_set_input_focus.x11_xim_window);
+			const WindowData &wd = windows[ime_deferred_set_input_focus.window_id];
 
-					XWindowAttributes xwa;
-					XSync(x11_display, False);
-					XGetWindowAttributes(x11_display, ime_deferred_set_input_focus.x11_xim_window, &xwa);
-					if (xwa.map_state == IsViewable) {
-						print_line("Doing set focus!");
-						_set_input_focus(ime_deferred_set_input_focus.x11_xim_window, RevertToParent);
-					}
-				}
-				ime_deferred_set_input_focus.active = false;
+			XMapWindow(x11_display, ime_deferred_set_input_focus.x11_xim_window);
+
+			XWindowAttributes xwa;
+			XSync(x11_display, False);
+			XGetWindowAttributes(x11_display, wd.x11_xim_window, &xwa);
+			print_line("Mapping");
+			if (xwa.map_state == IsViewable) {
+				print_line("Doing set focus!");
+				_set_input_focus(wd.x11_xim_window, RevertToParent);
 			}
+			//_set_input_focus(ime_deferred_set_input_focus.x11_xim_window, RevertToParent);
+			XSetICFocus(wd.xic);
+		}
+		ime_deferred_set_input_focus.active = false;
+	}
+	*/
+
+	if (ime_deferred_set_input_focus.active) {
+		print_line("IME deferred set input focus is active");
+		if (_window_focus_check()) {
+			print_line("One of our windows is focused");
+			uint64_t delta = OS::get_singleton()->get_ticks_msec() - ime_deferred_set_input_focus.time;
+			print_line("Deferred focus with delta ", delta);
+			if (delta < 250 && windows.has(ime_deferred_set_input_focus.window_id)) {
+				MutexLock mutex_lock(events_mutex);
+
+				const WindowData &wd = windows[ime_deferred_set_input_focus.window_id];
+
+				XMapWindow(x11_display, ime_deferred_set_input_focus.x11_xim_window);
+
+				XWindowAttributes xwa;
+				XSync(x11_display, False);
+				XGetWindowAttributes(x11_display, wd.x11_xim_window, &xwa);
+				print_line("Mapping");
+				if (xwa.map_state == IsViewable) {
+					print_line("Doing set focus!");
+					_set_input_focus(wd.x11_xim_window, RevertToParent);
+				}
+				//_set_input_focus(ime_deferred_set_input_focus.x11_xim_window, RevertToParent);
+				XSetICFocus(wd.xic);
+			}
+			ime_deferred_set_input_focus.active = false;
+		}
+		else {
+			print_line("No windows focused");
 		}
 	}
 

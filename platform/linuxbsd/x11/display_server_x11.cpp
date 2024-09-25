@@ -3046,14 +3046,17 @@ void DisplayServerX11::window_set_ime_active(const bool p_active, WindowID p_win
 		XWindowAttributes xwa;
 		XSync(x11_display, False);
 		XGetWindowAttributes(x11_display, wd.x11_xim_window, &xwa);
-		if (xwa.map_state == IsViewable)
+		if (xwa.map_state == IsViewable) {
 			if (_window_focus_check()) {
 				_set_input_focus(wd.x11_xim_window, RevertToParent);
 			} else {
+				// No Godot windows are focused, which could be intentional (the user switching away to another app),
+				// or it could be one of the momentary focus in/out that X11 does when creating a new window.
+				// So, let's defer this request to set input focus, and see if focus comes back in a moment.
 				ime_deferred_set_input_focus.active = true;
 				ime_deferred_set_input_focus.window_id = p_window;
 				ime_deferred_set_input_focus.x11_xim_window = wd.x11_xim_window;
-				//ime_deferred_set_input_focus.time =
+				ime_deferred_set_input_focus.time = OS::get_singleton()->get_ticks_msec();
 			}
 		}
 		XSetICFocus(wd.xic);
@@ -4714,6 +4717,15 @@ void DisplayServerX11::process_events() {
 						OS::get_singleton()->get_main_loop()->notification(MainLoop::NOTIFICATION_APPLICATION_FOCUS_IN);
 					}
 					app_focused = true;
+				}
+
+				if (ime_deferred_set_input_focus.active) {
+					uint64_t delta = OS::get_singleton()->get_ticks_msec() - ime_deferred_set_input_focus.time;
+					// If any Godot window gains focus within 250ms, then take action on the deferred request to set input focus.
+					if (delta < 250) {
+						_set_input_focus(ime_deferred_set_input_focus.x11_xim_window, RevertToParent);
+					}
+					ime_deferred_set_input_focus.active = false;
 				}
 			} break;
 

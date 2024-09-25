@@ -3046,18 +3046,8 @@ void DisplayServerX11::window_set_ime_active(const bool p_active, WindowID p_win
 		XWindowAttributes xwa;
 		XSync(x11_display, False);
 		XGetWindowAttributes(x11_display, wd.x11_xim_window, &xwa);
-		if (xwa.map_state == IsViewable) {
-			if (_window_focus_check()) {
-				_set_input_focus(wd.x11_xim_window, RevertToParent);
-			} else {
-				// No Godot windows are focused, which could be intentional (the user switching away to another app),
-				// or it could be one of the momentary focus in/out that X11 does when creating a new window.
-				// So, let's defer this request to set input focus, and see if focus comes back in a moment.
-				ime_deferred_set_input_focus.active = true;
-				ime_deferred_set_input_focus.window_id = p_window;
-				ime_deferred_set_input_focus.x11_xim_window = wd.x11_xim_window;
-				ime_deferred_set_input_focus.time = OS::get_singleton()->get_ticks_msec();
-			}
+		if (xwa.map_state == IsViewable && _window_focus_check()) {
+			_set_input_focus(wd.x11_xim_window, RevertToParent);
 		}
 		XSetICFocus(wd.xic);
 	} else {
@@ -4372,63 +4362,6 @@ void DisplayServerX11::process_events() {
 		}
 	}
 
-  /*
-	if (ime_deferred_set_input_focus.active && _window_focus_check()) {
-		uint64_t delta = OS::get_singleton()->get_ticks_msec() - ime_deferred_set_input_focus.time;
-		print_line("Deferred focus with delta ", delta);
-		if (delta < 250 && windows.has(ime_deferred_set_input_focus.window_id)) {
-			MutexLock mutex_lock(events_mutex);
-
-			const WindowData &wd = windows[ime_deferred_set_input_focus.window_id];
-
-			XMapWindow(x11_display, ime_deferred_set_input_focus.x11_xim_window);
-
-			XWindowAttributes xwa;
-			XSync(x11_display, False);
-			XGetWindowAttributes(x11_display, wd.x11_xim_window, &xwa);
-			print_line("Mapping");
-			if (xwa.map_state == IsViewable) {
-				print_line("Doing set focus!");
-				_set_input_focus(wd.x11_xim_window, RevertToParent);
-			}
-			//_set_input_focus(ime_deferred_set_input_focus.x11_xim_window, RevertToParent);
-			XSetICFocus(wd.xic);
-		}
-		ime_deferred_set_input_focus.active = false;
-	}
-	*/
-
-	if (ime_deferred_set_input_focus.active) {
-		print_line("IME deferred set input focus is active");
-		if (_window_focus_check()) {
-			print_line("One of our windows is focused");
-			uint64_t delta = OS::get_singleton()->get_ticks_msec() - ime_deferred_set_input_focus.time;
-			print_line("Deferred focus with delta ", delta);
-			if (delta < 250 && windows.has(ime_deferred_set_input_focus.window_id)) {
-				MutexLock mutex_lock(events_mutex);
-
-				const WindowData &wd = windows[ime_deferred_set_input_focus.window_id];
-
-				XMapWindow(x11_display, ime_deferred_set_input_focus.x11_xim_window);
-
-				XWindowAttributes xwa;
-				XSync(x11_display, False);
-				XGetWindowAttributes(x11_display, wd.x11_xim_window, &xwa);
-				print_line("Mapping");
-				if (xwa.map_state == IsViewable) {
-					print_line("Doing set focus!");
-					_set_input_focus(wd.x11_xim_window, RevertToParent);
-				}
-				//_set_input_focus(ime_deferred_set_input_focus.x11_xim_window, RevertToParent);
-				XSetICFocus(wd.xic);
-			}
-			ime_deferred_set_input_focus.active = false;
-		}
-		else {
-			print_line("No windows focused");
-		}
-	}
-
 	do_mouse_warp = false;
 
 	// Is the current mouse mode one where it needs to be grabbed.
@@ -4778,31 +4711,6 @@ void DisplayServerX11::process_events() {
 					}
 					app_focused = true;
 				}
-
-				//if (ime_deferred_set_input_focus.active && ime_deferred_set_input_focus.window_id == window_id) {
-				/*
-				if (ime_deferred_set_input_focus.active) {
-					if (windows.has(ime_deferred_set_input_focus.window_id)) {
-						uint64_t delta = OS::get_singleton()->get_ticks_msec() - ime_deferred_set_input_focus.time;
-						print_line("Deferred focus with delta ", delta);
-						// If any Godot window gains focus within 250ms, then take action on the deferred request to set input focus.
-						if (delta < 250) {
-							MutexLock mutex_lock(events_mutex);
-
-							XMapWindow(x11_display, ime_deferred_set_input_focus.x11_xim_window);
-
-							XWindowAttributes xwa;
-							XSync(x11_display, False);
-							XGetWindowAttributes(x11_display, ime_deferred_set_input_focus.x11_xim_window, &xwa);
-							if (xwa.map_state == IsViewable) {
-								print_line("Doing set focus!");
-								_set_input_focus(ime_deferred_set_input_focus.x11_xim_window, RevertToParent);
-							}
-						}
-					}
-					ime_deferred_set_input_focus.active = false;
-				}
-				*/
 			} break;
 
 			case FocusOut: {

@@ -79,7 +79,7 @@
 #define VALUATOR_TILTX 3
 #define VALUATOR_TILTY 4
 
-//#define DISPLAY_SERVER_X11_DEBUG_LOGS_ENABLED
+#define DISPLAY_SERVER_X11_DEBUG_LOGS_ENABLED
 #ifdef DISPLAY_SERVER_X11_DEBUG_LOGS_ENABLED
 #define DEBUG_LOG_X11(...) printf(__VA_ARGS__)
 #else
@@ -4369,6 +4369,25 @@ void DisplayServerX11::process_events() {
 			}
 		} else {
 			time_since_no_focus = OS::get_singleton()->get_ticks_msec();
+
+			if (ime_deferred_set_input_focus.active) {
+				uint64_t delta = OS::get_singleton()->get_ticks_msec() - ime_deferred_set_input_focus.time;
+				if (delta < 250 && windows.has(ime_deferred_set_input_focus.window_id)) {
+					print_line("Deferred focus with delta ", delta);
+					MutexLock mutex_lock(events_mutex);
+
+					XMapWindow(x11_display, ime_deferred_set_input_focus.x11_xim_window);
+
+					XWindowAttributes xwa;
+					XSync(x11_display, False);
+					XGetWindowAttributes(x11_display, ime_deferred_set_input_focus.x11_xim_window, &xwa);
+					if (xwa.map_state == IsViewable) {
+						print_line("Doing set focus!");
+						_set_input_focus(ime_deferred_set_input_focus.x11_xim_window, RevertToParent);
+					}
+				}
+				ime_deferred_set_input_focus.active = false;
+			}
 		}
 	}
 
@@ -4614,6 +4633,7 @@ void DisplayServerX11::process_events() {
 
 				// Have we failed to set fullscreen while the window was unmapped?
 				_validate_mode_on_map(window_id);
+
 			} break;
 
 			case Expose: {
@@ -4625,6 +4645,8 @@ void DisplayServerX11::process_events() {
 				windows[window_id].fullscreen = _window_fullscreen_check(window_id);
 
 				Main::force_redraw();
+
+
 			} break;
 
 			case NoExpose: {
@@ -4719,14 +4741,30 @@ void DisplayServerX11::process_events() {
 					app_focused = true;
 				}
 
+				//if (ime_deferred_set_input_focus.active && ime_deferred_set_input_focus.window_id == window_id) {
+				/*
 				if (ime_deferred_set_input_focus.active) {
-					uint64_t delta = OS::get_singleton()->get_ticks_msec() - ime_deferred_set_input_focus.time;
-					// If any Godot window gains focus within 250ms, then take action on the deferred request to set input focus.
-					if (delta < 250) {
-						_set_input_focus(ime_deferred_set_input_focus.x11_xim_window, RevertToParent);
+					if (windows.has(ime_deferred_set_input_focus.window_id)) {
+						uint64_t delta = OS::get_singleton()->get_ticks_msec() - ime_deferred_set_input_focus.time;
+						print_line("Deferred focus with delta ", delta);
+						// If any Godot window gains focus within 250ms, then take action on the deferred request to set input focus.
+						if (delta < 250) {
+							MutexLock mutex_lock(events_mutex);
+
+							XMapWindow(x11_display, ime_deferred_set_input_focus.x11_xim_window);
+
+							XWindowAttributes xwa;
+							XSync(x11_display, False);
+							XGetWindowAttributes(x11_display, ime_deferred_set_input_focus.x11_xim_window, &xwa);
+							if (xwa.map_state == IsViewable) {
+								print_line("Doing set focus!");
+								_set_input_focus(ime_deferred_set_input_focus.x11_xim_window, RevertToParent);
+							}
+						}
 					}
 					ime_deferred_set_input_focus.active = false;
 				}
+				*/
 			} break;
 
 			case FocusOut: {

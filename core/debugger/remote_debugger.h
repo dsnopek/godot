@@ -75,6 +75,7 @@ private:
 	int last_reset = 0;
 	bool reload_all_scripts = false;
 	Array script_paths_to_reload;
+	Array extensions_to_reload;
 
 	// Make handlers and send_message thread safe.
 	Mutex mutex;

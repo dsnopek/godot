@@ -865,6 +865,7 @@ void ScriptEditorDebugger::_notification(int p_what) {
 			error_tree->connect("item_activated", callable_mp(this, &ScriptEditorDebugger::_error_activated));
 			breakpoints_tree->connect("item_activated", callable_mp(this, &ScriptEditorDebugger::_breakpoint_tree_clicked));
 			connect("started", callable_mp(expression_evaluator, &EditorExpressionEvaluator::on_start));
+			GDExtensionManager::get_singleton()->connect("extensions_reloaded", callable_mp(this, &ScriptEditorDebugger::reload_extensions));
 		} break;
 
 		case NOTIFICATION_THEME_CHANGED: {
@@ -1543,6 +1544,10 @@ void ScriptEditorDebugger::reload_all_scripts() {
 
 void ScriptEditorDebugger::reload_scripts(const Vector<String> &p_script_paths) {
 	_put_msg("reload_scripts", Variant(p_script_paths).operator Array(), debugging_thread_id != Thread::UNASSIGNED_ID ? debugging_thread_id : Thread::MAIN_ID);
+}
+
+void ScriptEditorDebugger::reload_gdextensions(const Vector<String> &p_extensions) {
+	_put_msg("reload_extensions", Variant(p_extensions).operator Array(), debugging_thread_id != Thread::UNASSIGNED_ID ? debugging_thread_id : Thread::MAIN_ID);
 }
 
 bool ScriptEditorDebugger::is_skip_breakpoints() {

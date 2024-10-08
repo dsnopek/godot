@@ -33,6 +33,7 @@
 #include "core/config/project_settings.h"
 #include "core/debugger/debugger_marshalls.h"
 #include "core/debugger/remote_debugger.h"
+#include "core/extension/gdextension_manager.h"
 #include "core/io/marshalls.h"
 #include "core/string/ustring.h"
 #include "core/version.h"
@@ -1546,8 +1547,10 @@ void ScriptEditorDebugger::reload_scripts(const Vector<String> &p_script_paths) 
 	_put_msg("reload_scripts", Variant(p_script_paths).operator Array(), debugging_thread_id != Thread::UNASSIGNED_ID ? debugging_thread_id : Thread::MAIN_ID);
 }
 
-void ScriptEditorDebugger::reload_gdextensions(const Vector<String> &p_extensions) {
-	_put_msg("reload_extensions", Variant(p_extensions).operator Array(), debugging_thread_id != Thread::UNASSIGNED_ID ? debugging_thread_id : Thread::MAIN_ID);
+void ScriptEditorDebugger::reload_extensions() {
+	if (is_session_active()) {
+		_put_msg("reload_extensions", Array(), debugging_thread_id != Thread::UNASSIGNED_ID ? debugging_thread_id : Thread::MAIN_ID);
+	}
 }
 
 bool ScriptEditorDebugger::is_skip_breakpoints() {

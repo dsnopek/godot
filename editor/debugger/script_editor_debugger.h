@@ -306,7 +306,7 @@ public:
 
 	void reload_all_scripts();
 	void reload_scripts(const Vector<String> &p_script_paths);
-	void reload_gdextensions(const Vector<String> &p_extensions);
+	void reload_extensions();
 
 	bool is_skip_breakpoints();
 

@@ -30,6 +30,7 @@
 
 #include "editor_debugger_node.h"
 
+#include "core/extension/gdextension_manager.h"
 #include "core/object/undo_redo.h"
 #include "editor/debugger/editor_debugger_tree.h"
 #include "editor/debugger/script_editor_debugger.h"
@@ -87,6 +88,8 @@ EditorDebuggerNode::EditorDebuggerNode() {
 	remote_scene_tree->connect("button_clicked", callable_mp(this, &EditorDebuggerNode::_remote_tree_button_pressed));
 	SceneTreeDock::get_singleton()->add_remote_tree_editor(remote_scene_tree);
 	SceneTreeDock::get_singleton()->connect("remote_tree_selected", callable_mp(this, &EditorDebuggerNode::request_remote_tree));
+
+	GDExtensionManager::get_singleton()->connect("extensions_reloaded", callable_mp(this, &EditorDebuggerNode::reload_extensions));
 
 	remote_scene_tree_timeout = EDITOR_GET("debugger/remote_scene_tree_refresh_interval");
 	inspect_edited_object_timeout = EDITOR_GET("debugger/remote_inspect_refresh_interval");
@@ -609,6 +612,12 @@ void EditorDebuggerNode::reload_all_scripts() {
 void EditorDebuggerNode::reload_scripts(const Vector<String> &p_script_paths) {
 	_for_all(tabs, [&](ScriptEditorDebugger *dbg) {
 		dbg->reload_scripts(p_script_paths);
+	});
+}
+
+void EditorDebuggerNode::reload_extensions() {
+	_for_all(tabs, [&](ScriptEditorDebugger *dbg) {
+		dbg->reload_extensions();
 	});
 }
 

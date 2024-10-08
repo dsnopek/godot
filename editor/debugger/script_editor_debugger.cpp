@@ -33,7 +33,6 @@
 #include "core/config/project_settings.h"
 #include "core/debugger/debugger_marshalls.h"
 #include "core/debugger/remote_debugger.h"
-#include "core/extension/gdextension_manager.h"
 #include "core/io/marshalls.h"
 #include "core/string/ustring.h"
 #include "core/version.h"
@@ -866,7 +865,6 @@ void ScriptEditorDebugger::_notification(int p_what) {
 			error_tree->connect("item_activated", callable_mp(this, &ScriptEditorDebugger::_error_activated));
 			breakpoints_tree->connect("item_activated", callable_mp(this, &ScriptEditorDebugger::_breakpoint_tree_clicked));
 			connect("started", callable_mp(expression_evaluator, &EditorExpressionEvaluator::on_start));
-			GDExtensionManager::get_singleton()->connect("extensions_reloaded", callable_mp(this, &ScriptEditorDebugger::reload_extensions));
 		} break;
 
 		case NOTIFICATION_THEME_CHANGED: {

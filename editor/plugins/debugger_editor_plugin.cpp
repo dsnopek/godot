@@ -92,6 +92,9 @@ DebuggerEditorPlugin::DebuggerEditorPlugin(PopupMenu *p_debug_menu) {
 	debug_menu->add_check_shortcut(ED_SHORTCUT("editor/sync_script_changes", TTR("Synchronize Script Changes")), RUN_RELOAD_SCRIPTS);
 	debug_menu->set_item_tooltip(-1,
 			TTR("When this option is enabled, any script that is saved will be reloaded in the running project.\nWhen used remotely on a device, this is more efficient when the network filesystem option is enabled."));
+	debug_menu->add_check_shortcut(ED_SHORTCUT("editor/reload_extensions", TTR("Synchronize Extension Changes")), RUN_RELOAD_EXTENSIONS);
+	debug_menu->set_item_tooltip(-1,
+			TTR("When this option is enabled, any GDExtensions that are reloaded in editor will reloaded in the running project too.\nWhen used remotely on a device, this is more efficient when the network filesystem option is enabled."));
 	debug_menu->add_check_shortcut(ED_SHORTCUT("editor/keep_server_open", TTR("Keep Debug Server Open")), SERVER_KEEP_OPEN);
 	debug_menu->set_item_tooltip(-1,
 			TTR("When this option is enabled, the editor debug server will stay open and listen for new sessions started outside of the editor itself."));

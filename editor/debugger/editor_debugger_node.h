@@ -190,6 +190,7 @@ public:
 	void set_breakpoints(const String &p_path, const Array &p_lines);
 	void reload_all_scripts();
 	void reload_scripts(const Vector<String> &p_script_paths);
+	void reload_extensions();
 
 	// Remote inspector/edit.
 	void request_remote_tree();

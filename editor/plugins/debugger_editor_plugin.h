@@ -58,6 +58,7 @@ private:
 		RUN_RELOAD_SCRIPTS,
 		SERVER_KEEP_OPEN,
 		RUN_MULTIPLE_INSTANCES,
+		RUN_RELOAD_EXTENSIONS,
 	};
 
 	bool initializing = true;

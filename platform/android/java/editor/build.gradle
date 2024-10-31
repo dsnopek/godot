@@ -172,6 +172,8 @@ android {
             }
             applicationIdSuffix ".vive"
             versionNameSuffix "-vive"
+            minSdkVersion 24
+            targetSdkVersion 32
         }
     }
 }
@@ -187,5 +189,5 @@ dependencies {
 
     // XR dependencies
     horizonosImplementation "org.godotengine:godot-openxr-vendors-meta:3.0.0-stable"
-    viveImplementation "org.godotengine:godot-openxr-vendors-meta:3.0.0-stable"
+    viveImplementation "org.godotengine:godot-openxr-vendors-khronos:3.0.0-stable"
 }

@@ -5450,6 +5450,11 @@ void EditorNode::_immediate_dialog_confirmed() {
 	immediate_dialog_confirmed = true;
 }
 bool EditorNode::immediate_confirmation_dialog(const String &p_text, const String &p_ok_text, const String &p_cancel_text, uint32_t p_wrap_width) {
+	if (DisplayServer::get_singleton()->get_name() == "headless") {
+		// If we launched in headless mode, the user can't confirm the dialog, so we just assume that they did.
+		return true;
+	}
+
 	ConfirmationDialog *cd = memnew(ConfirmationDialog);
 	cd->set_text(p_text);
 	cd->set_ok_button_text(p_ok_text);

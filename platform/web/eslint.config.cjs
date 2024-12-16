@@ -11,7 +11,6 @@ if (process && process.env && process.env.npm_command && !fs.existsSync('./platf
 }
 
 const emscriptenGlobals = {
-	'Browser': true,
 	'ERRNO_CODES': true,
 	'FS': true,
 	'GL': true,
@@ -21,6 +20,7 @@ const emscriptenGlobals = {
 	'HEAPU8': true,
 	'IDBFS': true,
 	'LibraryManager': true,
+	'MainLoop': true,
 	'Module': true,
 	'UTF8ToString': true,
 	'_emscripten_webgl_get_current_context': true,

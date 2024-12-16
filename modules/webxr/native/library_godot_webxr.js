@@ -29,7 +29,11 @@
 /**************************************************************************/
 
 const GodotWebXR = {
+#if EMSCRIPTEN_VERSION.split('.').map(parseFloat)[0] < 3 || (EMSCRIPTEN_VERSION.split('.').map(parseFloat)[0] == 3 && EMSCRIPTEN_VERSION.split('.').map(parseFloat)[1] < 1) || (EMSCRIPTEN_VERSION.split('.').map(parseFloat)[0] == 3 && EMSCRIPTEN_VERSION.split('.').map(parseFloat)[1] == 1 && EMSCRIPTEN_VERSION.split('.').map(parseFloat)[2] < 71)
+	$GodotWebXR__deps: ['$Browser', '$GL', '$GodotRuntime', '$runtimeKeepalivePush', '$runtimeKeepalivePop'],
+#else
 	$GodotWebXR__deps: ['$MainLoop', '$GL', '$GodotRuntime', '$runtimeKeepalivePush', '$runtimeKeepalivePop'],
+#endif
 	$GodotWebXR: {
 		gl: null,
 
@@ -63,6 +67,9 @@ const GodotWebXR = {
 			}
 		},
 		monkeyPatchRequestAnimationFrame: (enable) => {
+#if EMSCRIPTEN_VERSION.split('.').map(parseFloat)[0] < 3 || (EMSCRIPTEN_VERSION.split('.').map(parseFloat)[0] == 3 && EMSCRIPTEN_VERSION.split('.').map(parseFloat)[1] < 1) || (EMSCRIPTEN_VERSION.split('.').map(parseFloat)[0] == 3 && EMSCRIPTEN_VERSION.split('.').map(parseFloat)[1] == 1 && EMSCRIPTEN_VERSION.split('.').map(parseFloat)[2] < 71)
+			const MainLoop = Browser;
+#endif
 			if (GodotWebXR.orig_requestAnimationFrame === null) {
 				GodotWebXR.orig_requestAnimationFrame = MainLoop.requestAnimationFrame;
 			}
@@ -71,6 +78,10 @@ const GodotWebXR = {
 				: GodotWebXR.orig_requestAnimationFrame;
 		},
 		pauseResumeMainLoop: () => {
+#if EMSCRIPTEN_VERSION.split('.').map(parseFloat)[0] < 3 || (EMSCRIPTEN_VERSION.split('.').map(parseFloat)[0] == 3 && EMSCRIPTEN_VERSION.split('.').map(parseFloat)[1] < 1) || (EMSCRIPTEN_VERSION.split('.').map(parseFloat)[0] == 3 && EMSCRIPTEN_VERSION.split('.').map(parseFloat)[1] == 1 && EMSCRIPTEN_VERSION.split('.').map(parseFloat)[2] < 71)
+			const MainLoop = Browser.mainLoop;
+#endif
+			// .
 			// Once both GodotWebXR.session and GodotWebXR.space are set or
 			// unset, our monkey-patched requestAnimationFrame() should be
 			// enabled or disabled. When using the WebXR API Emulator, this

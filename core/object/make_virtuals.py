@@ -1,36 +1,42 @@
-proto = """#define GDVIRTUAL$VER($RET m_name $ARG)\\
-	StringName _gdvirtual_##m_name##_sn = #m_name;\\
-	mutable bool _gdvirtual_##m_name##_initialized = false;\\
-	mutable void *_gdvirtual_##m_name = nullptr;\\
-	_FORCE_INLINE_ bool _gdvirtual_##m_name##_call($CALLARGS) $CONST {\\
+proto = """#define GDVIRTUAL$VER($ALIAS $RET m_name $ARG)\\
+	StringName _gdvirtual_##$VARNAME##_sn = #m_name;\\
+	mutable bool _gdvirtual_##$VARNAME##_initialized = false;\\
+	mutable void *_gdvirtual_##$VARNAME = nullptr;\\
+	_FORCE_INLINE_ bool _gdvirtual_##$VARNAME##_call($CALLARGS) $CONST {\\
 		ScriptInstance *_script_instance = ((Object *)(this))->get_script_instance();\\
 		if (_script_instance) {\\
 			Callable::CallError ce;\\
 			$CALLSIARGS\\
-			$CALLSIBEGIN_script_instance->callp(_gdvirtual_##m_name##_sn, $CALLSIARGPASS, ce);\\
+			$CALLSIBEGIN_script_instance->callp(_gdvirtual_##$VARNAME##_sn, $CALLSIARGPASS, ce);\\
 			if (ce.error == Callable::CallError::CALL_OK) {\\
 				$CALLSIRET\\
 				return true;\\
 			}\\
 		}\\
-		if (unlikely(_get_extension() && !_gdvirtual_##m_name##_initialized)) {\\
-			_gdvirtual_##m_name = nullptr;\\
-			if (_get_extension()->get_virtual_call_data && _get_extension()->call_virtual_with_data) {\\
-				_gdvirtual_##m_name = _get_extension()->get_virtual_call_data(_get_extension()->class_userdata, &_gdvirtual_##m_name##_sn);\\
+		if (unlikely(_get_extension() && !_gdvirtual_##$VARNAME##_initialized)) {\\
+			_MethodInfo mi = _gdvirtual_##$VARNAME##_get_method_info();\\
+			_uint32_t hash = mi.get_hash();\\
+			_gdvirtual_##$VARNAME = nullptr;\\
+			if (_get_extension()->get_virtual_call_data2 && _get_extension()->call_virtual_with_data) {\\
+				_gdvirtual_##$VARNAME = _get_extension()->get_virtual_call_data2(_get_extension()->class_userdata, &_gdvirtual_##$VARNAME##_sn, hash);\\
+			} else if (_get_extension()->get_virtual2) {\\
+				_gdvirtual_##$VARNAME = (void *)_get_extension()->get_virtual2(_get_extension()->class_userdata, &_gdvirtual_##$VARNAME##_sn, hash);\\
+			} else if (_get_extension()->get_virtual_call_data && _get_extension()->call_virtual_with_data) {\\
+				_gdvirtual_##$VARNAME = _get_extension()->get_virtual_call_data(_get_extension()->class_userdata, &_gdvirtual_##$VARNAME##_sn);\\
 			} else if (_get_extension()->get_virtual) {\\
-				_gdvirtual_##m_name = (void *)_get_extension()->get_virtual(_get_extension()->class_userdata, &_gdvirtual_##m_name##_sn);\\
+				_gdvirtual_##$VARNAME = (void *)_get_extension()->get_virtual(_get_extension()->class_userdata, &_gdvirtual_##$VARNAME##_sn);\\
 			}\\
-			GDVIRTUAL_TRACK(_gdvirtual_##m_name, _gdvirtual_##m_name##_initialized);\\
-			_gdvirtual_##m_name##_initialized = true;\\
+			GDVIRTUAL_TRACK(_gdvirtual_##$VARNAME, _gdvirtual_##$VARNAME##_initialized);\\
+			_gdvirtual_##$VARNAME##_initialized = true;\\
 		}\\
-		if (_gdvirtual_##m_name) {\\
+		if (_gdvirtual_##$VARNAME) {\\
 			$CALLPTRARGS\\
 			$CALLPTRRETDEF\\
-			if (_get_extension()->get_virtual_call_data && _get_extension()->call_virtual_with_data) {\\
-				_get_extension()->call_virtual_with_data(_get_extension_instance(), &_gdvirtual_##m_name##_sn, _gdvirtual_##m_name, $CALLPTRARGPASS, $CALLPTRRETPASS);\\
+			if (_get_extension()->call_virtual_with_data) {\\
+				_get_extension()->call_virtual_with_data(_get_extension_instance(), &_gdvirtual_##$VARNAME##_sn, _gdvirtual_##$VARNAME, $CALLPTRARGPASS, $CALLPTRRETPASS);\\
 				$CALLPTRRET\\
 			} else {\\
-				((GDExtensionClassCallVirtual)_gdvirtual_##m_name)(_get_extension_instance(), $CALLPTRARGPASS, $CALLPTRRETPASS);\\
+				((GDExtensionClassCallVirtual)_gdvirtual_##$VARNAME)(_get_extension_instance(), $CALLPTRARGPASS, $CALLPTRRETPASS);\\
 				$CALLPTRRET\\
 			}\\
 			return true;\\
@@ -39,27 +45,27 @@ proto = """#define GDVIRTUAL$VER($RET m_name $ARG)\\
 		$RVOID\\
 		return false;\\
 	}\\
-	_FORCE_INLINE_ bool _gdvirtual_##m_name##_overridden() const {\\
+	_FORCE_INLINE_ bool _gdvirtual_##$VARNAME##_overridden() const {\\
 		ScriptInstance *_script_instance = ((Object *)(this))->get_script_instance();\\
-		if (_script_instance && _script_instance->has_method(_gdvirtual_##m_name##_sn)) {\\
+		if (_script_instance && _script_instance->has_method(_gdvirtual_##$VARNAME##_sn)) {\\
 			return true;\\
 		}\\
-		if (unlikely(_get_extension() && !_gdvirtual_##m_name##_initialized)) {\\
-			_gdvirtual_##m_name = nullptr;\\
+		if (unlikely(_get_extension() && !_gdvirtual_##$VARNAME##_initialized)) {\\
+			_gdvirtual_##$VARNAME = nullptr;\\
 			if (_get_extension()->get_virtual_call_data && _get_extension()->call_virtual_with_data) {\\
-				_gdvirtual_##m_name = _get_extension()->get_virtual_call_data(_get_extension()->class_userdata, &_gdvirtual_##m_name##_sn);\\
+				_gdvirtual_##$VARNAME = _get_extension()->get_virtual_call_data(_get_extension()->class_userdata, &_gdvirtual_##$VARNAME##_sn);\\
 			} else if (_get_extension()->get_virtual) {\\
-				_gdvirtual_##m_name = (void *)_get_extension()->get_virtual(_get_extension()->class_userdata, &_gdvirtual_##m_name##_sn);\\
+				_gdvirtual_##$VARNAME = (void *)_get_extension()->get_virtual(_get_extension()->class_userdata, &_gdvirtual_##$VARNAME##_sn);\\
 			}\\
-			GDVIRTUAL_TRACK(_gdvirtual_##m_name, _gdvirtual_##m_name##_initialized);\\
-			_gdvirtual_##m_name##_initialized = true;\\
+			GDVIRTUAL_TRACK(_gdvirtual_##$VARNAME, _gdvirtual_##$VARNAME##_initialized);\\
+			_gdvirtual_##$VARNAME##_initialized = true;\\
 		}\\
-		if (_gdvirtual_##m_name) {\\
+		if (_gdvirtual_##$VARNAME) {\\
 			return true;\\
 		}\\
 		return false;\\
 	}\\
-	_FORCE_INLINE_ static MethodInfo _gdvirtual_##m_name##_get_method_info() {\\
+	_FORCE_INLINE_ static MethodInfo _gdvirtual_##$VARNAME##_get_method_info() {\\
 		MethodInfo method_info;\\
 		method_info.name = #m_name;\\
 		method_info.flags = $METHOD_FLAGS;\\
@@ -70,7 +76,7 @@ proto = """#define GDVIRTUAL$VER($RET m_name $ARG)\\
 """
 
 
-def generate_version(argcount, const=False, returns=False, required=False):
+def generate_version(argcount, const=False, returns=False, required=False, compat=False):
     s = proto
     sproto = str(argcount)
     method_info = ""
@@ -103,6 +109,14 @@ def generate_version(argcount, const=False, returns=False, required=False):
         )
     else:
         s = s.replace("\t\t$REQCHECK\\\n", "")
+
+    if compat:
+        sproto += "_COMPAT"
+        s = s.replace("$ALIAS", "m_alias,")
+        s = s.replace("$VARNAME", "m_alias")
+    else:
+        s = s.replace("$ALIAS ", "")
+        s = s.replace("$VARNAME", "m_name")
 
     s = s.replace("$METHOD_FLAGS", method_flags)
     s = s.replace("$VER", sproto)
@@ -243,6 +257,10 @@ _to_variant(T&& t) {
         txt += generate_version(i, False, True, True)
         txt += generate_version(i, True, False, True)
         txt += generate_version(i, True, True, True)
+        txt += generate_version(i, False, False, False, True)
+        txt += generate_version(i, False, True, False, True)
+        txt += generate_version(i, True, False, False, True)
+        txt += generate_version(i, True, True, False, True)
 
     txt += "#endif // GDVIRTUAL_GEN_H\n"
 

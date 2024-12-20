@@ -14,19 +14,16 @@ proto = """#define GDVIRTUAL$VER($ALIAS $RET m_name $ARG)\\
 			}\\
 		}\\
 		if (unlikely(_get_extension() && !_gdvirtual_##$VARNAME##_initialized)) {\\
-			_MethodInfo mi = _gdvirtual_##$VARNAME##_get_method_info();\\
-			_uint32_t hash = mi.get_hash();\\
+			MethodInfo mi = _gdvirtual_##$VARNAME##_get_method_info();\\
+			uint32_t hash = mi.get_hash();\\
 			_gdvirtual_##$VARNAME = nullptr;\\
 			if (_get_extension()->get_virtual_call_data2 && _get_extension()->call_virtual_with_data) {\\
 				_gdvirtual_##$VARNAME = _get_extension()->get_virtual_call_data2(_get_extension()->class_userdata, &_gdvirtual_##$VARNAME##_sn, hash);\\
 			} else if (_get_extension()->get_virtual2) {\\
 				_gdvirtual_##$VARNAME = (void *)_get_extension()->get_virtual2(_get_extension()->class_userdata, &_gdvirtual_##$VARNAME##_sn, hash);\\
-			} else if (_get_extension()->get_virtual_call_data && _get_extension()->call_virtual_with_data) {\\
-				_gdvirtual_##$VARNAME = _get_extension()->get_virtual_call_data(_get_extension()->class_userdata, &_gdvirtual_##$VARNAME##_sn);\\
-			} else if (_get_extension()->get_virtual) {\\
-				_gdvirtual_##$VARNAME = (void *)_get_extension()->get_virtual(_get_extension()->class_userdata, &_gdvirtual_##$VARNAME##_sn);\\
 			}\\
-			GDVIRTUAL_TRACK(_gdvirtual_##$VARNAME, _gdvirtual_##$VARNAME##_initialized);\\
+			_GDVIRTUAL_GET_DEPRECATED(_gdvirtual_##$VARNAME, _gdvirtual_##$VARNAME##_sn)\\
+			_GDVIRTUAL_TRACK(_gdvirtual_##$VARNAME, _gdvirtual_##$VARNAME##_initialized);\\
 			_gdvirtual_##$VARNAME##_initialized = true;\\
 		}\\
 		if (_gdvirtual_##$VARNAME) {\\
@@ -51,13 +48,16 @@ proto = """#define GDVIRTUAL$VER($ALIAS $RET m_name $ARG)\\
 			return true;\\
 		}\\
 		if (unlikely(_get_extension() && !_gdvirtual_##$VARNAME##_initialized)) {\\
+			MethodInfo mi = _gdvirtual_##$VARNAME##_get_method_info();\\
+			uint32_t hash = mi.get_hash();\\
 			_gdvirtual_##$VARNAME = nullptr;\\
-			if (_get_extension()->get_virtual_call_data && _get_extension()->call_virtual_with_data) {\\
-				_gdvirtual_##$VARNAME = _get_extension()->get_virtual_call_data(_get_extension()->class_userdata, &_gdvirtual_##$VARNAME##_sn);\\
-			} else if (_get_extension()->get_virtual) {\\
-				_gdvirtual_##$VARNAME = (void *)_get_extension()->get_virtual(_get_extension()->class_userdata, &_gdvirtual_##$VARNAME##_sn);\\
+			if (_get_extension()->get_virtual_call_data2 && _get_extension()->call_virtual_with_data) {\\
+				_gdvirtual_##$VARNAME = _get_extension()->get_virtual_call_data2(_get_extension()->class_userdata, &_gdvirtual_##$VARNAME##_sn, hash);\\
+			} else if (_get_extension()->get_virtual2) {\\
+				_gdvirtual_##$VARNAME = (void *)_get_extension()->get_virtual2(_get_extension()->class_userdata, &_gdvirtual_##$VARNAME##_sn, hash);\\
 			}\\
-			GDVIRTUAL_TRACK(_gdvirtual_##$VARNAME, _gdvirtual_##$VARNAME##_initialized);\\
+			_GDVIRTUAL_GET_DEPRECATED(_gdvirtual_##$VARNAME, _gdvirtual_##$VARNAME##_sn)\\
+			_GDVIRTUAL_TRACK(_gdvirtual_##$VARNAME, _gdvirtual_##$VARNAME##_initialized);\\
 			_gdvirtual_##$VARNAME##_initialized = true;\\
 		}\\
 		if (_gdvirtual_##$VARNAME) {\\
@@ -202,7 +202,7 @@ def run(target, source, env):
 #include <utility>
 
 #ifdef TOOLS_ENABLED
-#define GDVIRTUAL_TRACK(m_virtual, m_initialized)\\
+#define _GDVIRTUAL_TRACK(m_virtual, m_initialized)\\
 	if (_get_extension()->reloadable) {\\
 		VirtualMethodTracker *tracker = memnew(VirtualMethodTracker);\\
 		tracker->method = (void **)&m_virtual;\\
@@ -211,7 +211,18 @@ def run(target, source, env):
 		virtual_method_list = tracker;\\
 	}
 #else
-#define GDVIRTUAL_TRACK(m_virtual, m_initialized)
+#define _GDVIRTUAL_TRACK(m_virtual, m_initialized)
+#endif
+
+#ifndef DISABLE_DEPRECATED
+#define _GDVIRTUAL_GET_DEPRECATED(m_virtual, m_name_sn)\\
+    else if (_get_extension()->get_virtual_call_data && _get_extension()->call_virtual_with_data) {\\
+        m_virtual = _get_extension()->get_virtual_call_data(_get_extension()->class_userdata, &m_name_sn);\\
+    } else if (_get_extension()->get_virtual) {\\
+        m_virtual = (void *)_get_extension()->get_virtual(_get_extension()->class_userdata, &m_name_sn);\\
+    }
+#else
+#define _GDVIRTUAL_GET_DEPRECATED(m_name, m_name_sn)
 #endif
 
 // MSVC WORKAROUND START

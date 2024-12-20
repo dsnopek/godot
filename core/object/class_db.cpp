@@ -2016,6 +2016,10 @@ void ClassDB::add_virtual_method(const StringName &p_class, const MethodInfo &p_
 #endif
 }
 
+void ClassDB::add_virtual_compatibility_method(const StringName &p_class, const MethodInfo &p_method, bool p_virtual, const Vector<String> &p_arg_names, bool p_object_core) {
+	// @todo Implement me!
+}
+
 void ClassDB::get_virtual_methods(const StringName &p_class, List<MethodInfo> *p_methods, bool p_no_inheritance) {
 	ERR_FAIL_COND_MSG(!classes.has(p_class), vformat("Request for nonexistent class '%s'.", p_class));
 

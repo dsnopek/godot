@@ -1020,7 +1020,8 @@ Dictionary GDExtensionAPIDump::generate_extension_api(bool p_include_docs) {
 						d2["is_required"] = (F.flags & METHOD_FLAG_VIRTUAL_REQUIRED) ? true : false;
 						d2["is_vararg"] = false;
 						d2["is_virtual"] = true;
-						// virtual functions have no hash since no MethodBind is involved
+						d2["hash"] = mi.get_hash();
+
 						bool has_return = mi.return_val.type != Variant::NIL || (mi.return_val.usage & PROPERTY_USAGE_NIL_IS_VARIANT);
 						if (has_return) {
 							PropertyInfo pinfo = mi.return_val;
@@ -1474,6 +1475,7 @@ static bool compare_dict_array(const Dictionary &p_old_api, const Dictionary &p_
 		if (p_compare_hashes) {
 			if (!old_elem.has("hash")) {
 				if (old_elem.has("is_virtual") && bool(old_elem["is_virtual"]) && !new_elem.has("hash")) {
+					// @todo We should validate hashes here!
 					continue; // No hash for virtual methods, go on.
 				}
 

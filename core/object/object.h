@@ -247,6 +247,8 @@ struct MethodInfo {
 
 	static MethodInfo from_dict(const Dictionary &p_dict);
 
+	uint32_t get_hash() const;
+
 	MethodInfo() {}
 
 	explicit MethodInfo(const GDExtensionMethodInfo &pinfo) :

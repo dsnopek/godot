@@ -506,7 +506,6 @@ Error RenderingDeviceDriverVulkan::_initialize_device_extensions() {
 	_register_requested_device_extension(VK_KHR_MULTIVIEW_EXTENSION_NAME, false);
 	_register_requested_device_extension(VK_KHR_FRAGMENT_SHADING_RATE_EXTENSION_NAME, false);
 	_register_requested_device_extension(VK_EXT_FRAGMENT_DENSITY_MAP_EXTENSION_NAME, false);
-	_register_requested_device_extension(VK_QCOM_FRAGMENT_DENSITY_MAP_OFFSET_EXTENSION_NAME, false);
 	_register_requested_device_extension(VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME, false);
 	_register_requested_device_extension(VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME, false);
 	_register_requested_device_extension(VK_KHR_STORAGE_BUFFER_STORAGE_CLASS_EXTENSION_NAME, false);
@@ -739,7 +738,6 @@ Error RenderingDeviceDriverVulkan::_check_device_capabilities() {
 		VkPhysicalDeviceShaderFloat16Int8FeaturesKHR shader_features = {};
 		VkPhysicalDeviceFragmentShadingRateFeaturesKHR fsr_features = {};
 		VkPhysicalDeviceFragmentDensityMapFeaturesEXT fdm_features = {};
-		VkPhysicalDeviceFragmentDensityMapOffsetFeaturesQCOM fdmo_features_qcom = {};
 		VkPhysicalDevice16BitStorageFeaturesKHR storage_feature = {};
 		VkPhysicalDeviceMultiviewFeatures multiview_features = {};
 		VkPhysicalDevicePipelineCreationCacheControlFeatures pipeline_cache_control_features = {};
@@ -765,12 +763,6 @@ Error RenderingDeviceDriverVulkan::_check_device_capabilities() {
 			fdm_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_FEATURES_EXT;
 			fdm_features.pNext = next_features;
 			next_features = &fdm_features;
-		}
-
-		if (enabled_device_extension_names.has(VK_QCOM_FRAGMENT_DENSITY_MAP_OFFSET_EXTENSION_NAME)) {
-			fdmo_features_qcom.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_OFFSET_FEATURES_QCOM;
-			fdmo_features_qcom.pNext = next_features;
-			next_features = &fdmo_features_qcom;
 		}
 
 		if (enabled_device_extension_names.has(VK_KHR_16BIT_STORAGE_EXTENSION_NAME)) {
@@ -823,10 +815,6 @@ Error RenderingDeviceDriverVulkan::_check_device_capabilities() {
 			fdm_capabilities.non_subsampled_images_supported = fdm_features.fragmentDensityMapNonSubsampledImages;
 		}
 
-		if (enabled_device_extension_names.has(VK_QCOM_FRAGMENT_DENSITY_MAP_OFFSET_EXTENSION_NAME)) {
-			fdm_capabilities.offset_supported = fdmo_features_qcom.fragmentDensityMapOffset;
-		}
-
 		// Multiple VRS techniques can't co-exist during the existence of one device, so we must
 		// choose one at creation time and only report one of them as available.
 		_choose_vrs_capabilities();
@@ -862,7 +850,6 @@ Error RenderingDeviceDriverVulkan::_check_device_capabilities() {
 		void *next_properties = nullptr;
 		VkPhysicalDeviceFragmentShadingRatePropertiesKHR fsr_properties = {};
 		VkPhysicalDeviceFragmentDensityMapPropertiesEXT fdm_properties = {};
-		VkPhysicalDeviceFragmentDensityMapOffsetPropertiesQCOM fdmo_properties = {};
 		VkPhysicalDeviceMultiviewProperties multiview_properties = {};
 		VkPhysicalDeviceSubgroupProperties subgroup_properties = {};
 		VkPhysicalDeviceSubgroupSizeControlProperties subgroup_size_control_properties = {};
@@ -898,12 +885,6 @@ Error RenderingDeviceDriverVulkan::_check_device_capabilities() {
 			fdm_properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_PROPERTIES_EXT;
 			fdm_properties.pNext = next_properties;
 			next_properties = &fdm_properties;
-		}
-
-		if (fdm_capabilities.offset_supported) {
-			fdmo_properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_OFFSET_PROPERTIES_QCOM;
-			fdmo_properties.pNext = next_properties;
-			next_properties = &fdmo_properties;
 		}
 
 		physical_device_properties_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
@@ -971,17 +952,6 @@ Error RenderingDeviceDriverVulkan::_check_device_capabilities() {
 			}
 		} else {
 			print_verbose("- Vulkan Fragment Density Map not supported");
-		}
-
-		if (fdm_capabilities.offset_supported) {
-			print_verbose("- Vulkan Fragment Density Map Offset supported");
-
-			fdm_capabilities.offset_granularity.x = fdmo_properties.fragmentDensityOffsetGranularity.width;
-			fdm_capabilities.offset_granularity.y = fdmo_properties.fragmentDensityOffsetGranularity.height;
-
-			print_verbose(vformat("  Offset granularity: (%d, %d)", fdm_capabilities.offset_granularity.x, fdm_capabilities.offset_granularity.y));
-		} else {
-			print_verbose("- Vulkan Fragment Density Map Offset not supported");
 		}
 
 		if (multiview_capabilities.is_supported) {
@@ -4726,27 +4696,7 @@ void RenderingDeviceDriverVulkan::command_end_render_pass(CommandBufferID p_cmd_
 	DEV_ASSERT(command_buffer->active_framebuffer != nullptr && "A framebuffer must be active.");
 	DEV_ASSERT(command_buffer->active_render_pass != nullptr && "A render pass must be active.");
 
-	if (device_functions.EndRenderPass2KHR != nullptr && fdm_capabilities.offset_supported && command_buffer->active_render_pass->uses_fragment_density_map_offsets) {
-		// FIXME: This is the framework for using the offsets extension if necessary at some point. Passing the actual offset
-		// values has not been implemented yet and this branch is currently unused.
-		thread_local LocalVector<VkOffset2D> fragment_density_offsets;
-		while (fragment_density_offsets.size() < command_buffer->active_framebuffer->fragment_density_map_offsets_layers) {
-			fragment_density_offsets.push_back({ 0, 0 });
-		}
-
-		VkSubpassFragmentDensityMapOffsetEndInfoQCOM offset_info = {};
-		offset_info.sType = VK_STRUCTURE_TYPE_SUBPASS_FRAGMENT_DENSITY_MAP_OFFSET_END_INFO_QCOM;
-		offset_info.pFragmentDensityOffsets = fragment_density_offsets.ptr();
-		offset_info.fragmentDensityOffsetCount = fragment_density_offsets.size();
-
-		VkSubpassEndInfo subpass_end_info = {};
-		subpass_end_info.sType = VK_STRUCTURE_TYPE_SUBPASS_END_INFO;
-		subpass_end_info.pNext = &offset_info;
-
-		device_functions.EndRenderPass2KHR(command_buffer->vk_command_buffer, &subpass_end_info);
-	} else {
-		vkCmdEndRenderPass(command_buffer->vk_command_buffer);
-	}
+	vkCmdEndRenderPass(command_buffer->vk_command_buffer);
 
 	command_buffer->active_render_pass = nullptr;
 	command_buffer->active_framebuffer = nullptr;

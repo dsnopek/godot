@@ -2691,6 +2691,10 @@ static void bind_uniforms_generic(const Vector<RID> &p_textures, const Vector<Sh
 		GLES3::Texture *texture = TextureStorage::get_singleton()->get_texture(textures[ti]);
 		const ShaderCompiler::GeneratedCode::Texture &texture_uniform = texture_uniforms[texture_uniform_index];
 		if (texture) {
+#ifdef ANDROID_ENABLED
+			print_line(vformat("X-X-X: Binding RID %s (%s)", textures[ti].get_id(), texture->tex_id));
+#endif
+
 			glActiveTexture(GL_TEXTURE0 + texture_offset + ti);
 			GLenum target = target_from_type[texture_uniform.type];
 			if (target == _GL_TEXTURE_EXTERNAL_OES && !GLES3::Config::get_singleton()->external_texture_supported) {

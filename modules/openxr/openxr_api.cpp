@@ -2248,6 +2248,7 @@ void OpenXRAPI::pre_render() {
 		print_line("OpenXR: failed to being frame [", get_error_string(result), "]");
 		return;
 	}
+	print_line("X-X-X: xrBeginFrame() returned success");
 
 	// Reset this, we haven't found a viewport for output yet
 	render_state.has_xr_viewport = false;
@@ -2489,6 +2490,7 @@ void OpenXRAPI::end_frame() {
 		print_line("OpenXR: failed to end frame! [", get_error_string(result), "]");
 		return;
 	}
+	print_line("X-X-X: xrEndFrame() returned success");
 
 	end_debug_label_region(); // Session frame #
 }

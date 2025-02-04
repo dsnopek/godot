@@ -2223,6 +2223,8 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 	GLES3::Config *config = GLES3::Config::get_singleton();
 	RENDER_TIMESTAMP("Setup 3D Scene");
 
+	print_line("Y-Y-Y: About to render");
+
 	bool apply_color_adjustments_in_post = false;
 	bool is_reflection_probe = p_reflection_probe.is_valid();
 
@@ -2727,6 +2729,8 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 	}
 
 	glActiveTexture(GL_TEXTURE0);
+
+	print_line("Y-Y-Y: Done rendering");
 }
 
 void RasterizerSceneGLES3::_render_post_processing(const RenderDataGLES3 *p_render_data) {

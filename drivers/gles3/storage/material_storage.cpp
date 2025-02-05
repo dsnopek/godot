@@ -2700,6 +2700,7 @@ static void bind_uniforms_generic(const Vector<RID> &p_textures, const Vector<Sh
 			print_line(vformat("X-X-X: Binding RID %s (%s) as %s", textures[ti].get_id(), texture->tex_id, target));
 #endif
 			glBindTexture(target, texture->tex_id);
+			// DRS: This shouldn't be necessary.
 			glTexParameteri(target, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 			if (texture->render_target) {
 				texture->render_target->used_in_frame = true;

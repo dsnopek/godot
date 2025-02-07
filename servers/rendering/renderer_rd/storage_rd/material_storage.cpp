@@ -894,6 +894,8 @@ void MaterialStorage::MaterialData::update_textures(const HashMap<StringName, Va
 					}
 
 					textures.push_back(v->override.get_type() != Variant::NIL ? v->override : v->value);
+
+					print_line(vformat("ZZZ: Uniform name %s binding to RID %s", uniform_name, v->value));
 				}
 
 			} else {

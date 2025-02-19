@@ -2692,14 +2692,7 @@ static void bind_uniforms_generic(const Vector<RID> &p_textures, const Vector<Sh
 			if (target == _GL_TEXTURE_EXTERNAL_OES && !GLES3::Config::get_singleton()->external_texture_supported) {
 				target = GL_TEXTURE_2D;
 			}
-#ifdef ANDROID_ENABLED
-			print_line(vformat("X-X-X: Binding RID %s (%s) as %s", textures[ti].get_id(), texture->tex_id, target));
-#endif
 			glBindTexture(target, texture->tex_id);
-			// DRS: This shouldn't be necessary.
-			glTexParameteri(target, GL_TEXTURE_COMPARE_MODE, GL_NONE);
-			glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			if (texture->render_target) {
 				texture->render_target->used_in_frame = true;
 			}

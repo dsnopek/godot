@@ -298,7 +298,6 @@ void ShaderGLES3::_get_uniform_locations(Version::Specialization &spec, Version 
 		Vector<int32_t> texture_uniform_bindings;
 		int texture_count = p_version->texture_uniforms[i].array_size;
 		for (int j = 0; j < texture_count; j++) {
-			print_line(vformat("ZZZ: Uniform name %s using texture unit %s", native_uniform_name, texture_index));
 			texture_uniform_bindings.append(texture_index + base_texture_index);
 			texture_index++;
 		}

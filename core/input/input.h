@@ -336,7 +336,7 @@ public:
 	void warp_mouse(const Vector2 &p_position);
 	Point2 warp_mouse_motion(const Ref<InputEventMouseMotion> &p_motion, const Rect2 &p_rect);
 
-	void parse_input_event(const Ref<InputEvent> &p_event);
+	void parse_input_event(const RequiredPtr<Ref<InputEvent>> &rp_event);
 
 	void set_gravity(const Vector3 &p_gravity);
 	void set_accelerometer(const Vector3 &p_accel);

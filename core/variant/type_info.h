@@ -211,27 +211,6 @@ struct GetTypeInfo<T *, std::enable_if_t<std::is_base_of_v<Object, T>>> {
 	}
 };
 
-template <class T>
-class RequiredPtr;
-
-template <typename T>
-struct GetTypeInfo<RequiredPtr<T>, std::enable_if_t<std::is_base_of_v<Object, T>>> {
-	static const Variant::Type VARIANT_TYPE = Variant::OBJECT;
-	static const GodotTypeInfo::Metadata METADATA = GodotTypeInfo::METADATA_OBJECT_IS_REQUIRED;
-	static inline PropertyInfo get_class_info() {
-		return PropertyInfo(StringName(T::get_class_static()));
-	}
-};
-
-template <typename T>
-struct GetTypeInfo<const RequiredPtr<T> &, std::enable_if_t<std::is_base_of_v<Object, T>>> {
-	static const Variant::Type VARIANT_TYPE = Variant::OBJECT;
-	static const GodotTypeInfo::Metadata METADATA = GodotTypeInfo::METADATA_OBJECT_IS_REQUIRED;
-	static inline PropertyInfo get_class_info() {
-		return PropertyInfo(StringName(T::get_class_static()));
-	}
-};
-
 namespace godot {
 namespace details {
 inline String enum_qualified_name_to_class_info_name(const String &p_qualified_name) {

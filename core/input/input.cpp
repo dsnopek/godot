@@ -1121,10 +1121,10 @@ void Input::set_custom_mouse_cursor(const Ref<Resource> &p_cursor, CursorShape p
 	set_custom_mouse_cursor_func(p_cursor, p_shape, p_hotspot);
 }
 
-void Input::parse_input_event(const Ref<InputEvent> &p_event) {
+void Input::parse_input_event(const RequiredPtr<Ref<InputEvent>> &rp_event) {
 	_THREAD_SAFE_METHOD_
 
-	ERR_FAIL_COND(p_event.is_null());
+	ERR_FAIL_REQUIRED_PTR(p_event, rp_event);
 
 #ifdef DEBUG_ENABLED
 	uint64_t curr_frame = Engine::get_singleton()->get_process_frames();

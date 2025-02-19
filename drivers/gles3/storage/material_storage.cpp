@@ -2698,6 +2698,8 @@ static void bind_uniforms_generic(const Vector<RID> &p_textures, const Vector<Sh
 			glBindTexture(target, texture->tex_id);
 			// DRS: This shouldn't be necessary.
 			glTexParameteri(target, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+			glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			if (texture->render_target) {
 				texture->render_target->used_in_frame = true;
 			}

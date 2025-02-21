@@ -1109,32 +1109,38 @@ void TextureStorage::texture_proxy_initialize(RID p_texture, RID p_base) {
 // Note: We make some big assumptions about format and usage. If developers need more control,
 // they should use RD::texture_create_from_extension() instead.
 RID TextureStorage::texture_create_from_native_handle(RS::TextureType p_type, Image::Format p_format, uint64_t p_native_handle, int p_width, int p_height, int p_depth, int p_layers, RS::TextureLayeredType p_layered_type) {
-	RD::TextureType type;
+	TextureType type;
+	RD::TextureType rd_type;
+
 	switch (p_type) {
 		case RS::TEXTURE_TYPE_2D:
-			type = RD::TEXTURE_TYPE_2D;
+			type = TYPE_2D;
+			rd_type = RD::TEXTURE_TYPE_2D;
 			break;
 
 		case RS::TEXTURE_TYPE_3D:
-			type = RD::TEXTURE_TYPE_3D;
+			type = TYPE_3D;
+			rd_type = RD::TEXTURE_TYPE_3D;
 			break;
 
 		case RS::TEXTURE_TYPE_LAYERED:
+			type = TYPE_LAYERED;
 			if (p_layered_type == RS::TEXTURE_LAYERED_2D_ARRAY) {
-				type = RD::TEXTURE_TYPE_2D_ARRAY;
+				rd_type = RD::TEXTURE_TYPE_2D_ARRAY;
 			} else if (p_layered_type == RS::TEXTURE_LAYERED_CUBEMAP) {
-				type = RD::TEXTURE_TYPE_CUBE;
+				rd_type = RD::TEXTURE_TYPE_CUBE;
 			} else if (p_layered_type == RS::TEXTURE_LAYERED_CUBEMAP_ARRAY) {
-				type = RD::TEXTURE_TYPE_CUBE_ARRAY;
+				rd_type = RD::TEXTURE_TYPE_CUBE_ARRAY;
 			} else {
 				// Arbitrary fallback.
-				type = RD::TEXTURE_TYPE_2D_ARRAY;
+				rd_type = RD::TEXTURE_TYPE_2D_ARRAY;
 			}
 			break;
 
 		default:
 			// Arbitrary fallback.
-			type = RD::TEXTURE_TYPE_2D;
+			type = TYPE_2D;
+			rd_type = RD::TEXTURE_TYPE_2D;
 	}
 
 	// Only a rough conversion - see note above.
@@ -1292,7 +1298,29 @@ RID TextureStorage::texture_create_from_native_handle(RS::TextureType p_type, Im
 	// Assumed to be a color attachment - see note above.
 	uint64_t usage_flags = RD::TEXTURE_USAGE_SAMPLING_BIT | RD::TEXTURE_USAGE_COLOR_ATTACHMENT_BIT;
 
-	return RD::get_singleton()->texture_create_from_extension(type, format, RD::TEXTURE_SAMPLES_1, usage_flags, p_native_handle, p_width, p_height, p_depth, p_layers);
+	RID rd_texture = RD::get_singleton()->texture_create_from_extension(rd_type, format, RD::TEXTURE_SAMPLES_1, usage_flags, p_native_handle, p_width, p_height, p_depth, p_layers);
+
+	Texture texture;
+	texture.type = type;
+	texture.layered_type = p_layered_type;
+	texture.rd_type = rd_type;
+	texture.rd_texture = rd_texture;
+	texture.rd_format = format;
+	texture.rd_format_srgb = RenderingDevice::DATA_FORMAT_MAX;
+	texture.width = p_width;
+	texture.height = p_height;
+	texture.width_2d = p_width;
+	texture.height_2d = p_height;
+	texture.depth = p_depth;
+	texture.mipmaps = 1;
+	texture.format = p_format;
+	texture.validated_format = p_format;
+	texture.is_render_target = false;
+	texture.is_proxy = false;
+
+	RID ret = texture_owner.make_rid();
+	texture_owner.initialize_rid(ret, texture);
+	return ret;
 }
 
 void TextureStorage::_texture_2d_update(RID p_texture, const Ref<Image> &p_image, int p_layer, bool p_immediate) {

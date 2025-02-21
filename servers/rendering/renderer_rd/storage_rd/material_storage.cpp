@@ -895,7 +895,8 @@ void MaterialStorage::MaterialData::update_textures(const HashMap<StringName, Va
 
 					textures.push_back(v->override.get_type() != Variant::NIL ? v->override : v->value);
 
-					print_line(vformat("ZZZ: Uniform name %s binding to RID %s", uniform_name, v->value));
+					RID vvv = v->override.get_type() != Variant::NIL ? v->override : v->value;
+					print_line(vformat("ZZZ: Uniform name %s binding to RID %s", uniform_name, vvv));
 				}
 
 			} else {
@@ -943,6 +944,7 @@ void MaterialStorage::MaterialData::update_textures(const HashMap<StringName, Va
 		RID rd_texture;
 
 		if (textures.is_empty()) {
+			print_line("VVV: textures are empty");
 			//check default usage
 			switch (p_texture_uniforms[i].type) {
 				case ShaderLanguage::TYPE_ISAMPLER2D:
@@ -1014,11 +1016,15 @@ void MaterialStorage::MaterialData::update_textures(const HashMap<StringName, Va
 		} else {
 			bool srgb = p_use_linear_color && p_texture_uniforms[i].use_color;
 
+			print_line(vformat("VVV: getting the rd textures - srgb: %s", srgb));
+
 			for (int j = 0; j < textures.size(); j++) {
 				TextureStorage::Texture *tex = TextureStorage::get_singleton()->get_texture(textures[j]);
 
 				if (tex) {
 					rd_texture = (srgb && tex->rd_texture_srgb.is_valid()) ? tex->rd_texture_srgb : tex->rd_texture;
+					print_line(vformat("VVV: rd textures: %s", rd_texture));
+
 #ifdef TOOLS_ENABLED
 					if (tex->detect_3d_callback && p_3d_material) {
 						tex->detect_3d_callback(tex->detect_3d_callback_ud);
@@ -1041,6 +1047,7 @@ void MaterialStorage::MaterialData::update_textures(const HashMap<StringName, Va
 					}
 				}
 				if (rd_texture.is_null()) {
+					print_line(vformat("VVV: it's null, getting default"));
 					rd_texture = texture_storage->texture_rd_get_default(TextureStorage::DEFAULT_RD_TEXTURE_WHITE);
 				}
 #ifdef TOOLS_ENABLED

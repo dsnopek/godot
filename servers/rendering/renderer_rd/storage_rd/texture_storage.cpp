@@ -1318,12 +1318,7 @@ RID TextureStorage::texture_create_from_native_handle(RS::TextureType p_type, Im
 	texture.is_render_target = false;
 	texture.is_proxy = false;
 
-	print_line(vformat("DRS: made rd_texture: %s", texture.rd_texture));
-
-	RID ret = texture_owner.make_rid();
-	texture_owner.initialize_rid(ret, texture);
-	print_line(vformat("DRS: made RS texture: %s", ret));
-	return ret;
+	return texture_owner.make_rid(texture);
 }
 
 void TextureStorage::_texture_2d_update(RID p_texture, const Ref<Image> &p_image, int p_layer, bool p_immediate) {

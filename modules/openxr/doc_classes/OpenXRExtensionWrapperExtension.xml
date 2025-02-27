@@ -202,6 +202,18 @@
 				[param property_values] contains the values of the properties returned by [method _get_viewport_composition_layer_extension_properties].
 			</description>
 		</method>
+		<method name="_set_frame_end_info_and_get_next_pointer" qualifiers="virtual">
+			<return type="int" />
+			<param index="0" name="next_pointer" type="void*" />
+			<description>
+			</description>
+		</method>
+		<method name="_set_frame_wait_info_and_get_next_pointer" qualifiers="virtual">
+			<return type="int" />
+			<param index="0" name="next_pointer" type="void*" />
+			<description>
+			</description>
+		</method>
 		<method name="_set_hand_joint_locations_and_get_next_pointer" qualifiers="virtual">
 			<return type="int" />
 			<param index="0" name="hand_index" type="int" />
@@ -225,6 +237,13 @@
 				Adds additional data structures to the projection view of the given [param view_index].
 			</description>
 		</method>
+		<method name="_set_reference_space_create_info_and_get_next_pointer" qualifiers="virtual">
+			<return type="int" />
+			<param index="0" name="reference_space_type" type="int" />
+			<param index="1" name="next_pointer" type="void*" />
+			<description>
+			</description>
+		</method>
 		<method name="_set_session_create_and_get_next_pointer" qualifiers="virtual">
 			<return type="int" />
 			<param index="0" name="next_pointer" type="void*" />
@@ -244,6 +263,12 @@
 			<param index="0" name="next_pointer" type="void*" />
 			<description>
 				Adds additional data structures when querying OpenXR system abilities.
+			</description>
+		</method>
+		<method name="_set_view_locate_info_and_get_next_pointer" qualifiers="virtual">
+			<return type="int" />
+			<param index="0" name="next_pointer" type="void*" />
+			<description>
 			</description>
 		</method>
 		<method name="_set_viewport_composition_layer_and_get_next_pointer" qualifiers="virtual">

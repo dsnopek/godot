@@ -34,6 +34,7 @@
 
 #include "effects/copy_effects.h"
 #include "effects/cubemap_filter.h"
+#include "effects/environment_depth.h"
 #include "effects/feed_effects.h"
 #include "effects/glow.h"
 #include "effects/post_effects.h"
@@ -76,6 +77,7 @@ protected:
 	GLES3::Fog *fog = nullptr;
 	GLES3::CopyEffects *copy_effects = nullptr;
 	GLES3::CubemapFilter *cubemap_filter = nullptr;
+	GLES3::EnvironmentDepth *env_depth = nullptr;
 	GLES3::Glow *glow = nullptr;
 	GLES3::PostEffects *post_effects = nullptr;
 	GLES3::FeedEffects *feed_effects = nullptr;

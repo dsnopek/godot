@@ -1367,6 +1367,62 @@ bool OpenXRInterface::set_environment_blend_mode(XRInterface::EnvironmentBlendMo
 	return false;
 }
 
+XRInterface::EnvironmentDepthUsage OpenXRInterface::get_environment_depth_usage() const {
+	if (openxr_api) {
+		return openxr_api->get_environment_depth_usage();
+	}
+	return XRInterface::XR_ENV_DEPTH_USAGE_NONE;
+}
+
+XRInterface::EnvironmentDepthFormat OpenXRInterface::get_environment_depth_format() const {
+	if (openxr_api) {
+		return openxr_api->get_environment_depth_format();
+	}
+	return XRInterface::XR_ENV_DEPTH_FORMAT_UNSIGNED_SHORT;
+}
+
+Size2i OpenXRInterface::get_environment_depth_map_size() const {
+	if (openxr_api) {
+		return openxr_api->get_environment_depth_map_size();
+	}
+	return Size2i();
+}
+
+float OpenXRInterface::get_environment_depth_multiplier() const {
+	if (openxr_api) {
+		return openxr_api->get_environment_depth_multiplier();
+	}
+	return 1.0;
+}
+
+Transform3D OpenXRInterface::get_environment_depth_transform(uint32_t p_view) const {
+	if (openxr_api) {
+		return openxr_api->get_environment_depth_transform(p_view);
+	}
+	return Transform3D();
+}
+
+Projection OpenXRInterface::get_environment_depth_projection(uint32_t p_view) const {
+	if (openxr_api) {
+		return openxr_api->get_environment_depth_projection(p_view);
+	}
+	return Transform3D();
+}
+
+void *OpenXRInterface::get_environment_depth_cpu_data(uint32_t p_view) const {
+	if (openxr_api) {
+		return openxr_api->get_environment_depth_cpu_data(p_view);
+	}
+	return nullptr;
+}
+
+RID OpenXRInterface::get_environment_depth_gpu_data(uint32_t p_view) const {
+	if (openxr_api) {
+		return openxr_api->get_environment_depth_gpu_data(p_view);
+	}
+	return RID();
+}
+
 void OpenXRInterface::on_state_ready() {
 	emit_signal(SNAME("session_begun"));
 }

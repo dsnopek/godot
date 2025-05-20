@@ -31,6 +31,7 @@
 #include "rasterizer_scene_gles3.h"
 
 #include "drivers/gles3/effects/copy_effects.h"
+#include "drivers/gles3/effects/environment_depth.h"
 #include "drivers/gles3/effects/feed_effects.h"
 #include "rasterizer_gles3.h"
 #include "storage/config.h"
@@ -2486,6 +2487,60 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 
 	scene_state.reset_gl_state();
 
+	// @todo replace this with something in `config` maybe?
+	bool use_environment_depth = false;
+	Ref<XRInterface> xr_interface = XRServer::get_singleton()->get_primary_interface();
+	if (xr_interface.is_valid() && xr_interface->get_environment_depth_usage() != XRInterface::XR_ENV_DEPTH_USAGE_NONE) {
+		use_environment_depth = true;
+	}
+
+	if (use_environment_depth) {
+		RENDER_TIMESTAMP("Render Environment Depth");
+
+		if (render_data.render_region != Rect2i()) {
+			glViewport(render_data.render_region.position.x, render_data.render_region.position.y, render_data.render_region.size.width, render_data.render_region.size.height);
+		}
+
+		scene_state.enable_gl_depth_test(true);
+		scene_state.enable_gl_depth_draw(true);
+		scene_state.enable_gl_blend(false);
+		glDepthFunc(GL_GEQUAL);
+		scene_state.enable_gl_scissor_test(false);
+		scene_state.set_gl_cull_mode(RS::CULL_MODE_DISABLED);
+
+		glColorMask(0, 0, 0, 0);
+		RasterizerGLES3::clear_depth(0.0);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		// Some desktop GL implementations fall apart when using Multiview with GL_NONE.
+		//GLuint db = p_camera_data->view_count > 1 ? GL_COLOR_ATTACHMENT0 : GL_NONE;
+		GLuint db = GL_NONE;
+		glDrawBuffers(1, &db);
+
+		XRInterface::EnvironmentDepthFormat depth_format = xr_interface->get_environment_depth_format();
+
+		RID depth_map;
+		if (xr_interface->get_environment_depth_usage() == XRInterface::XR_ENV_DEPTH_USAGE_CPU) {
+			// @todo Create the depth map from the CPU data.
+		} else {
+			// We can always use zero, because if there is more than one view, then multiview will be used
+			// with a 2D texture array.
+			depth_map = xr_interface->get_environment_depth_gpu_data(0);
+		}
+
+		Projection depth_proj[2];
+		Projection cur_proj[2];
+		for (int i = 0; i < p_camera_data->view_count; i++) {
+			depth_proj[i] = xr_interface->get_environment_depth_projection(i);
+			cur_proj[i] = p_camera_data->view_projection[i] * p_camera_data->view_offset[i] * p_camera_data->main_transform.inverse();
+		}
+
+		GLES3::EnvironmentDepth::get_singleton()->fill_depth_buffer(depth_map, p_camera_data->view_count, depth_proj, cur_proj, depth_format == XRInterface::XR_ENV_DEPTH_FORMAT_LUMINANCE_ALPHA);
+
+		glColorMask(1, 1, 1, 1);
+
+		fb_cleared = true;
+	}
+
 	// Do depth prepass if it's explicitly enabled
 	bool use_depth_prepass = config->use_depth_prepass;
 
@@ -2507,8 +2562,10 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 		scene_state.enable_gl_scissor_test(false);
 
 		glColorMask(0, 0, 0, 0);
-		RasterizerGLES3::clear_depth(0.0);
-		glClear(GL_DEPTH_BUFFER_BIT);
+		if (!fb_cleared) {
+			RasterizerGLES3::clear_depth(0.0);
+			glClear(GL_DEPTH_BUFFER_BIT);
+		}
 		// Some desktop GL implementations fall apart when using Multiview with GL_NONE.
 		GLuint db = p_camera_data->view_count > 1 ? GL_COLOR_ATTACHMENT0 : GL_NONE;
 		glDrawBuffers(1, &db);

@@ -42,6 +42,7 @@
 #include "core/templates/rid_owner.h"
 #include "core/templates/vector.h"
 #include "servers/rendering_server.h"
+#include "servers/xr/xr_interface.h"
 #include "servers/xr/xr_pose.h"
 
 #include <openxr/openxr.h>
@@ -127,6 +128,17 @@ private:
 	XrEnvironmentBlendMode requested_environment_blend_mode = XR_ENVIRONMENT_BLEND_MODE_OPAQUE;
 	Vector<XrEnvironmentBlendMode> supported_environment_blend_modes;
 	bool emulate_environment_blend_mode_alpha_blend = false;
+
+	XRInterface::EnvironmentDepthUsage env_depth_usage = XRInterface::XR_ENV_DEPTH_USAGE_NONE;
+	XRInterface::EnvironmentDepthFormat env_depth_format = XRInterface::XR_ENV_DEPTH_FORMAT_UNSIGNED_SHORT;
+	Size2i env_depth_map_size;
+	float env_depth_multiplier = 1.0;
+	struct EnvDepthView {
+		Transform3D transform;
+		Projection projection;
+		void *cpu_data = nullptr;
+		RID gpu_data;
+	} env_depth_views[2];
 
 	// state
 	XrInstance instance = XR_NULL_HANDLE;
@@ -605,6 +617,23 @@ public:
 
 	void set_emulate_environment_blend_mode_alpha_blend(bool p_enabled);
 	OpenXRAlphaBlendModeSupport is_environment_blend_mode_alpha_blend_supported();
+
+	XRInterface::EnvironmentDepthUsage get_environment_depth_usage() const;
+	void set_environment_depth_usage(XRInterface::EnvironmentDepthUsage p_usage);
+	XRInterface::EnvironmentDepthFormat get_environment_depth_format() const;
+	void set_environment_depth_format(XRInterface::EnvironmentDepthFormat p_format);
+	Size2i get_environment_depth_map_size() const;
+	void set_environment_depth_map_size(const Size2i &p_size);
+	float get_environment_depth_multiplier() const;
+	void set_environment_depth_multiplier(float p_multiplier);
+	Transform3D get_environment_depth_transform(uint32_t p_view) const;
+	void set_environment_depth_transform(uint32_t p_view, const Transform3D &p_transform);
+	Projection get_environment_depth_projection(uint32_t p_view) const;
+	void set_environment_depth_projection(uint32_t p_view, const Projection &p_projection);
+	void *get_environment_depth_cpu_data(uint32_t p_view) const;
+	void set_environment_depth_cpu_data(uint32_t p_view, void *p_data);
+	RID get_environment_depth_gpu_data(uint32_t p_view) const;
+	void set_environment_depth_gpu_data(uint32_t p_view, RID p_data);
 
 	OpenXRAPI();
 	~OpenXRAPI();

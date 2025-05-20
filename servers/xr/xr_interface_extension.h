@@ -95,6 +95,16 @@ public:
 	GDVIRTUAL1(_set_anchor_detection_is_enabled, bool);
 	GDVIRTUAL0RC(int, _get_camera_feed_id);
 
+	/*
+	virtual EnvironmentDepthUsage get_environment_depth_usage() const override;
+	virtual EnvironmentDepthFormat get_environment_depth_format() const override;
+	virtual Transform3D get_environment_depth_projection(uint32_t p_value) const override;
+	virtual void *get_environment_depth_cpu_data(uint32_t p_view) const override;
+	virtual RID get_environment_depth_gpu_data(uint32_t p_view) const override;
+	virtual Size2i get_environment_depth_map_size() const override;
+	virtual float get_environment_depth_raw_value_to_meters() const override;
+	*/
+
 	/** rendering and internal **/
 
 	virtual Size2 get_render_target_size() override;

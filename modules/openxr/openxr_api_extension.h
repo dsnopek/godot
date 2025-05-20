@@ -128,6 +128,15 @@ public:
 	void set_emulate_environment_blend_mode_alpha_blend(bool p_enabled);
 	OpenXRAlphaBlendModeSupport is_environment_blend_mode_alpha_blend_supported();
 
+	void set_environment_depth_usage(XRInterface::EnvironmentDepthUsage p_usage);
+	void set_environment_depth_format(XRInterface::EnvironmentDepthFormat p_format);
+	void set_environment_depth_map_size(const Size2i &p_size) const;
+	void set_environment_depth_multiplier(float p_multiplier);
+	void set_environment_depth_transform(uint32_t p_view, const Transform3D &p_transform);
+	void set_environment_depth_projection(uint32_t p_view, const Projection &p_projection);
+	void set_environment_depth_cpu_data(uint32_t p_view, GDExtensionConstPtr<const void> p_data);
+	void set_environment_depth_gpu_data(uint32_t p_view, RID p_data);
+
 	OpenXRAPIExtension();
 };
 

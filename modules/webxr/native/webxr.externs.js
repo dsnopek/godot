@@ -1259,3 +1259,149 @@ XRMediaBinding.prototype.createEquirectLayer = function(video, init) {};
  * @type {Array<XRLayer>}
  */
 XRRenderState.prototype.layers;
+
+/**
+ * @constructor XRDepthStateInit
+ */
+function XRDepthStateInit() {};
+
+/**
+ * @type {Array<string>}
+ */
+XRDepthStateInit.prototype.usagePreference;
+
+/**
+ * @type {Array<string>}
+ */
+XRDepthStateInit.prototype.dataFormatPreference;
+
+/**
+ * @type {Array<string>}
+ */
+XRDepthStateInit.prototype.depthTypeRequest;
+
+/**
+ * @type boolean
+ */
+XRDepthStateInit.prototype.matchDepthView;
+
+/**
+ * @type {XRDepthStateInit}
+ */
+XRSessionInit.prototype.depthSensing;
+
+/**
+ * @type {string}
+ */
+XRSession.prototype.depthUsage;
+
+/**
+ * @type {string}
+ */
+XRSession.prototype.depthDataFormat;
+
+/**
+ * @type {?string}
+ */
+XRSession.prototype.depthType;
+
+/**
+ * @type {boolean}
+ */
+XRSession.prototype.depthActive;
+
+/**
+ * @return {void}
+ */
+XRSession.prototype.pauseDepthSensing = function () {};
+
+/**
+ * @return {void}
+ */
+XRSession.prototype.resumeDepthSensing = function () {};
+
+/**
+ * @constructor XRDepthInformation
+ */
+function XRDepthInformation() {}
+
+/**
+ * @type {number}
+ */
+XRDepthInformation.prototype.width;
+
+/**
+ * @type {number}
+ */
+XRDepthInformation.prototype.height;
+
+/**
+ * @type {XRRigidTransform}
+ */
+XRDepthInformation.prototype.normDepthBufferFromNormView;
+
+/**
+ * @type {number}
+ */
+XRDepthInformation.prototype.rawValueToMeters;
+
+/**
+ * @type {Float32Array}
+ */
+XRDepthInformation.prototype.projectionMatrix;
+
+/**
+ * @type {XRRigidTransform}
+ */
+XRDepthInformation.prototype.transform;
+
+/**
+ * @constructor XRCPUDepthInformation
+ * @extends {XRDepthInformation}
+ */
+function XRCPUDepthInformation() {}
+
+/**
+ * @type {ArrayBuffer}
+ */
+XRCPUDepthInformation.prototype.data;
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @return {number}
+ */
+XRCPUDepthInformation.prototype.getDepthInMeters = function (x, y) {};
+
+/**
+ * @constructor XRWebGLDepthInformation
+ * @extends {XRDepthInformation}
+ */
+function XRWebGLDepthInformation() {};
+
+/**
+ * @type {WebGLTexture}
+ */
+XRWebGLDepthInformation.prototype.texture;
+
+/**
+ * @type {string}
+ */
+XRWebGLDepthInformation.prototype.textureType;
+
+/**
+ * @type {?number}
+ */
+XRWebGLDepthInformation.prototype.imageIndex;
+
+/**
+ * @param {XRView} view
+ * @return {?XRCPUDepthInformation}
+ */
+XRFrame.prototype.getDepthInformation = function (view) {};
+
+/**
+ * @param {XRView} view
+ * @return {?XRWebGLDepthInformation}
+ */
+XRWebGLBinding.prototype.getDepthInformation = function (view) {};

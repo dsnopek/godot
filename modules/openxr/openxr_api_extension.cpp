@@ -95,6 +95,15 @@ void OpenXRAPIExtension::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_emulate_environment_blend_mode_alpha_blend", "enabled"), &OpenXRAPIExtension::set_emulate_environment_blend_mode_alpha_blend);
 	ClassDB::bind_method(D_METHOD("is_environment_blend_mode_alpha_supported"), &OpenXRAPIExtension::is_environment_blend_mode_alpha_blend_supported);
 
+	ClassDB::bind_method(D_METHOD("set_environment_depth_usage", "usage"), &OpenXRAPIExtension::set_environment_depth_usage);
+	ClassDB::bind_method(D_METHOD("set_environment_depth_format", "format"), &OpenXRAPIExtension::set_environment_depth_format);
+	ClassDB::bind_method(D_METHOD("set_environment_depth_map_size", "size"), &OpenXRAPIExtension::set_environment_depth_map_size);
+	ClassDB::bind_method(D_METHOD("set_environment_depth_multiplier", "multiplier"), &OpenXRAPIExtension::set_environment_depth_multiplier);
+	ClassDB::bind_method(D_METHOD("set_environment_depth_transform", "view", "transform"), &OpenXRAPIExtension::set_environment_depth_transform);
+	ClassDB::bind_method(D_METHOD("set_environment_depth_projection", "view", "projection"), &OpenXRAPIExtension::set_environment_depth_projection);
+	ClassDB::bind_method(D_METHOD("set_environment_depth_cpu_data", "view", "data"), &OpenXRAPIExtension::set_environment_depth_cpu_data);
+	ClassDB::bind_method(D_METHOD("set_environment_depth_gpu_data", "view", "data"), &OpenXRAPIExtension::set_environment_depth_gpu_data);
+
 	BIND_ENUM_CONSTANT(OPENXR_ALPHA_BLEND_MODE_SUPPORT_NONE);
 	BIND_ENUM_CONSTANT(OPENXR_ALPHA_BLEND_MODE_SUPPORT_REAL);
 	BIND_ENUM_CONSTANT(OPENXR_ALPHA_BLEND_MODE_SUPPORT_EMULATING);
@@ -356,6 +365,46 @@ void OpenXRAPIExtension::set_emulate_environment_blend_mode_alpha_blend(bool p_e
 OpenXRAPIExtension::OpenXRAlphaBlendModeSupport OpenXRAPIExtension::is_environment_blend_mode_alpha_blend_supported() {
 	ERR_FAIL_NULL_V(OpenXRAPI::get_singleton(), OPENXR_ALPHA_BLEND_MODE_SUPPORT_NONE);
 	return (OpenXRAPIExtension::OpenXRAlphaBlendModeSupport)OpenXRAPI::get_singleton()->is_environment_blend_mode_alpha_blend_supported();
+}
+
+void OpenXRAPIExtension::set_environment_depth_usage(XRInterface::EnvironmentDepthUsage p_usage) {
+	ERR_FAIL_NULL(OpenXRAPI::get_singleton());
+	OpenXRAPI::get_singleton()->set_environment_depth_usage(p_usage);
+}
+
+void OpenXRAPIExtension::set_environment_depth_format(XRInterface::EnvironmentDepthFormat p_format) {
+	ERR_FAIL_NULL(OpenXRAPI::get_singleton());
+	OpenXRAPI::get_singleton()->set_environment_depth_format(p_format);
+}
+
+void OpenXRAPIExtension::set_environment_depth_map_size(const Size2i &p_size) const {
+	ERR_FAIL_NULL(OpenXRAPI::get_singleton());
+	OpenXRAPI::get_singleton()->set_environment_depth_map_size(p_size);
+}
+
+void OpenXRAPIExtension::set_environment_depth_multiplier(float p_multiplier) {
+	ERR_FAIL_NULL(OpenXRAPI::get_singleton());
+	OpenXRAPI::get_singleton()->set_environment_depth_multiplier(p_multiplier);
+}
+
+void OpenXRAPIExtension::set_environment_depth_transform(uint32_t p_view, const Transform3D &p_transform) {
+	ERR_FAIL_NULL(OpenXRAPI::get_singleton());
+	OpenXRAPI::get_singleton()->set_environment_depth_transform(p_view, p_transform);
+}
+
+void OpenXRAPIExtension::set_environment_depth_projection(uint32_t p_view, const Projection &p_projection) {
+	ERR_FAIL_NULL(OpenXRAPI::get_singleton());
+	OpenXRAPI::get_singleton()->set_environment_depth_projection(p_view, p_projection);
+}
+
+void OpenXRAPIExtension::set_environment_depth_cpu_data(uint32_t p_view, GDExtensionConstPtr<const void> p_data) {
+	ERR_FAIL_NULL(OpenXRAPI::get_singleton());
+	OpenXRAPI::get_singleton()->set_environment_depth_cpu_data(p_view, const_cast<void *>(p_data.operator const void *()));
+}
+
+void OpenXRAPIExtension::set_environment_depth_gpu_data(uint32_t p_view, RID p_data) {
+	ERR_FAIL_NULL(OpenXRAPI::get_singleton());
+	OpenXRAPI::get_singleton()->set_environment_depth_gpu_data(p_view, p_data);
 }
 
 OpenXRAPIExtension::OpenXRAPIExtension() {

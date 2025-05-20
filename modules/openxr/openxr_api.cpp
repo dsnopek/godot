@@ -3741,3 +3741,81 @@ OpenXRAPI::OpenXRAlphaBlendModeSupport OpenXRAPI::is_environment_blend_mode_alph
 	}
 	return OPENXR_ALPHA_BLEND_MODE_SUPPORT_NONE;
 }
+
+XRInterface::EnvironmentDepthUsage OpenXRAPI::get_environment_depth_usage() const {
+	return env_depth_usage;
+}
+
+void OpenXRAPI::set_environment_depth_usage(XRInterface::EnvironmentDepthUsage p_usage) {
+	env_depth_usage = p_usage;
+}
+
+XRInterface::EnvironmentDepthFormat OpenXRAPI::get_environment_depth_format() const {
+	return env_depth_format;
+}
+
+void OpenXRAPI::set_environment_depth_format(XRInterface::EnvironmentDepthFormat p_format) {
+	env_depth_format = p_format;
+}
+
+Size2i OpenXRAPI::get_environment_depth_map_size() const {
+	ERR_FAIL_COND_V(env_depth_usage == XRInterface::XR_ENV_DEPTH_USAGE_NONE, Size2i());
+	return env_depth_map_size;
+}
+
+void OpenXRAPI::set_environment_depth_map_size(const Size2i &p_size) {
+	env_depth_map_size = p_size;
+}
+
+float OpenXRAPI::get_environment_depth_multiplier() const {
+	ERR_FAIL_COND_V(env_depth_usage == XRInterface::XR_ENV_DEPTH_USAGE_NONE, 1.0);
+	return env_depth_multiplier;
+}
+
+void OpenXRAPI::set_environment_depth_multiplier(float p_multiplier) {
+	env_depth_multiplier = p_multiplier;
+}
+
+Transform3D OpenXRAPI::get_environment_depth_transform(uint32_t p_view) const {
+	ERR_FAIL_COND_V(env_depth_usage == XRInterface::XR_ENV_DEPTH_USAGE_NONE, Transform3D());
+	ERR_FAIL_COND_V(p_view >= 2, Transform3D());
+	return env_depth_views[p_view].transform;
+}
+
+void OpenXRAPI::set_environment_depth_transform(uint32_t p_view, const Transform3D &p_transform) {
+	ERR_FAIL_COND(p_view >= 2);
+	env_depth_views[p_view].transform = p_transform;
+}
+
+Projection OpenXRAPI::get_environment_depth_projection(uint32_t p_view) const {
+	ERR_FAIL_COND_V(env_depth_usage == XRInterface::XR_ENV_DEPTH_USAGE_NONE, Projection());
+	ERR_FAIL_COND_V(p_view >= 2, Projection());
+	return env_depth_views[p_view].projection;
+}
+
+void OpenXRAPI::set_environment_depth_projection(uint32_t p_view, const Projection &p_projection) {
+	ERR_FAIL_COND(p_view >= 2);
+	env_depth_views[p_view].projection = p_projection;
+}
+
+void *OpenXRAPI::get_environment_depth_cpu_data(uint32_t p_view) const {
+	ERR_FAIL_COND_V(env_depth_usage == XRInterface::XR_ENV_DEPTH_USAGE_NONE, nullptr);
+	ERR_FAIL_COND_V(p_view >= 2, nullptr);
+	return env_depth_views[p_view].cpu_data;
+}
+
+void OpenXRAPI::set_environment_depth_cpu_data(uint32_t p_view, void *p_data) {
+	ERR_FAIL_COND(p_view >= 2);
+	env_depth_views[p_view].cpu_data = p_data;
+}
+
+RID OpenXRAPI::get_environment_depth_gpu_data(uint32_t p_view) const {
+	ERR_FAIL_COND_V(env_depth_usage == XRInterface::XR_ENV_DEPTH_USAGE_NONE, RID());
+	ERR_FAIL_COND_V(p_view >= 2, RID());
+	return env_depth_views[p_view].gpu_data;
+}
+
+void OpenXRAPI::set_environment_depth_gpu_data(uint32_t p_view, RID p_data) {
+	ERR_FAIL_COND(p_view >= 2);
+	env_depth_views[p_view].gpu_data = p_data;
+}

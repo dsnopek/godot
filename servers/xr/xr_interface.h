@@ -85,6 +85,18 @@ public:
 		XR_ENV_BLEND_MODE_ALPHA_BLEND, /* Real world is passed through where alpha channel is 0.0 and gradually blends to opaque for value 1.0. */
 	};
 
+	enum EnvironmentDepthUsage {
+		XR_ENV_DEPTH_USAGE_NONE,
+		XR_ENV_DEPTH_USAGE_CPU,
+		XR_ENV_DEPTH_USAGE_GPU,
+	};
+
+	enum EnvironmentDepthFormat {
+		XR_ENV_DEPTH_FORMAT_LUMINANCE_ALPHA,
+		XR_ENV_DEPTH_FORMAT_FLOAT32,
+		XR_ENV_DEPTH_FORMAT_UNSIGNED_SHORT,
+	};
+
 	enum VRSTextureFormat {
 		XR_VRS_TEXTURE_FORMAT_UNIFIED,
 		XR_VRS_TEXTURE_FORMAT_FRAGMENT_SHADING_RATE,
@@ -126,6 +138,15 @@ public:
 	virtual bool get_anchor_detection_is_enabled() const;
 	virtual void set_anchor_detection_is_enabled(bool p_enable);
 	virtual int get_camera_feed_id();
+
+	virtual EnvironmentDepthUsage get_environment_depth_usage() const { return XR_ENV_DEPTH_USAGE_NONE; }
+	virtual EnvironmentDepthFormat get_environment_depth_format() const { return XR_ENV_DEPTH_FORMAT_UNSIGNED_SHORT; }
+	virtual Size2i get_environment_depth_map_size() const { return Size2i(); }
+	virtual float get_environment_depth_multiplier() const { return 1.0; }
+	virtual Transform3D get_environment_depth_transform(uint32_t p_view) const { return Transform3D(); }
+	virtual Projection get_environment_depth_projection(uint32_t p_view) const { return Projection(); }
+	virtual void *get_environment_depth_cpu_data(uint32_t p_view) const { return nullptr; }
+	virtual RID get_environment_depth_gpu_data(uint32_t p_view) const { return RID(); }
 
 	/** rendering and internal **/
 
@@ -175,4 +196,6 @@ VARIANT_ENUM_CAST(XRInterface::Capabilities);
 VARIANT_ENUM_CAST(XRInterface::TrackingStatus);
 VARIANT_ENUM_CAST(XRInterface::PlayAreaMode);
 VARIANT_ENUM_CAST(XRInterface::EnvironmentBlendMode);
+VARIANT_ENUM_CAST(XRInterface::EnvironmentDepthUsage);
+VARIANT_ENUM_CAST(XRInterface::EnvironmentDepthFormat);
 VARIANT_ENUM_CAST(XRInterface::VRSTextureFormat);

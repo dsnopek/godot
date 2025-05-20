@@ -592,6 +592,39 @@ RID WebXRInterfaceJS::get_velocity_texture() {
 	return _get_texture(texture_id);
 }
 
+XRInterface::EnvironmentDepthUsage WebXRInterfaceJS::get_environment_depth_usage() const {
+}
+
+XRInterface::EnvironmentDepthFormat WebXRInterfaceJS::get_environment_depth_format() const {
+}
+
+Transform3D WebXRInterfaceJS::get_environment_depth_transform(uint32_t p_value) const {
+}
+
+Projection WebXRInterfaceJS::get_environment_depth_projection(uint32_t p_value) const {
+}
+
+void *WebXRInterfaceJS::get_environment_depth_cpu_data(uint32_t p_view) const {
+}
+
+RID WebXRInterfaceJS::get_environment_depth_gpu_data(uint32_t p_view) const {
+}
+
+Size2i WebXRInterfaceJS::get_environment_depth_map_size() const {
+}
+
+float WebXRInterfaceJS::get_environment_depth_multiplier() const {
+}
+
+bool WebXRInterfaceJS::is_depth_sensing_active() const {
+}
+
+void WebXRInterfaceJS::pause_depth_sensing() {
+}
+
+void WebXRInterfaceJS::resume_depth_sensing() {
+}
+
 void WebXRInterfaceJS::process() {
 	if (initialized) {
 		// Get the "head" position.

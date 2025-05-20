@@ -141,11 +141,12 @@ public:
 
 	virtual EnvironmentDepthUsage get_environment_depth_usage() const { return XR_ENV_DEPTH_USAGE_NONE; }
 	virtual EnvironmentDepthFormat get_environment_depth_format() const { return XR_ENV_DEPTH_FORMAT_UNSIGNED_SHORT; }
-	virtual Transform3D get_environment_depth_transform(uint32_t p_value) const { return Transform3D(); }
+	virtual Transform3D get_environment_depth_transform(uint32_t p_view) const { return Transform3D(); }
+	virtual Projection get_environment_depth_projection(uint32_t p_view) const { return Projection(); }
 	virtual void *get_environment_depth_cpu_data(uint32_t p_view) const { return nullptr; }
 	virtual RID get_environment_depth_gpu_data(uint32_t p_view) const { return RID(); }
 	virtual Size2i get_environment_depth_map_size() const { return Size2i(); }
-	virtual float get_environment_depth_raw_value_to_meters() const { return 1.0; }
+	virtual float get_environment_depth_multiplier() const { return 1.0; }
 
 	/** rendering and internal **/
 
@@ -195,4 +196,6 @@ VARIANT_ENUM_CAST(XRInterface::Capabilities);
 VARIANT_ENUM_CAST(XRInterface::TrackingStatus);
 VARIANT_ENUM_CAST(XRInterface::PlayAreaMode);
 VARIANT_ENUM_CAST(XRInterface::EnvironmentBlendMode);
+VARIANT_ENUM_CAST(XRInterface::EnvironmentDepthUsage);
+VARIANT_ENUM_CAST(XRInterface::EnvironmentDepthFormat);
 VARIANT_ENUM_CAST(XRInterface::VRSTextureFormat);

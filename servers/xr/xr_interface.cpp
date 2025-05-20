@@ -72,6 +72,15 @@ void XRInterface::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_passthrough_enabled"), &XRInterface::is_passthrough_enabled);
 	ClassDB::bind_method(D_METHOD("start_passthrough"), &XRInterface::start_passthrough);
 	ClassDB::bind_method(D_METHOD("stop_passthrough"), &XRInterface::stop_passthrough);
+
+	// TODO: bind all of these
+	/*
+	ClassDB::bind_method(D_METHOD("get_environment_depth_usage"), &XRInterface::get_environment_depth_usage);
+	ClassDB::bind_method(D_METHOD("get_environment_depth_format"), &XRInterface::get_environment_depth_format);
+	ClassDB::bind_method(D_METHOD("get_environment_depth_transform", "view"), &XRInterface::get_environment_depth_transform);
+	ClassDB::bind_method(D_METHOD("get_environment_depth_projection", "view"), &XRInterface::get_environment_depth_projection);
+	*/
+
 	ClassDB::bind_method(D_METHOD("get_transform_for_view", "view", "cam_transform"), &XRInterface::get_transform_for_view);
 	ClassDB::bind_method(D_METHOD("get_projection_for_view", "view", "aspect", "near", "far"), &XRInterface::get_projection_for_view);
 

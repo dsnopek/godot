@@ -74,6 +74,9 @@ public:
 	virtual float get_display_refresh_rate() const = 0;
 	virtual void set_display_refresh_rate(float p_refresh_rate) = 0;
 	virtual Array get_available_display_refresh_rates() const = 0;
+	virtual bool is_depth_sensing_active() const = 0;
+	virtual void pause_depth_sensing() = 0;
+	virtual void resume_depth_sensing() = 0;
 };
 
 VARIANT_ENUM_CAST(WebXRInterface::TargetRayMode);

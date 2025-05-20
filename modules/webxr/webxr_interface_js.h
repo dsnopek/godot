@@ -137,6 +137,18 @@ public:
 	virtual RID get_depth_texture() override;
 	virtual RID get_velocity_texture() override;
 
+	virtual EnvironmentDepthUsage get_environment_depth_usage() const override;
+	virtual EnvironmentDepthFormat get_environment_depth_format() const override;
+	virtual Transform3D get_environment_depth_transform(uint32_t p_value) const override;
+	virtual Projection get_environment_depth_projection(uint32_t p_value) const override;
+	virtual void *get_environment_depth_cpu_data(uint32_t p_view) const override;
+	virtual RID get_environment_depth_gpu_data(uint32_t p_view) const override;
+	virtual Size2i get_environment_depth_map_size() const override;
+	virtual float get_environment_depth_multiplier() const override;
+	virtual bool is_depth_sensing_active() const override;
+	virtual void pause_depth_sensing() override;
+	virtual void resume_depth_sensing() override;
+
 	virtual void process() override;
 
 	void _on_input_event(int p_event_type, int p_input_source_id);

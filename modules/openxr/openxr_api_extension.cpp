@@ -397,9 +397,9 @@ void OpenXRAPIExtension::set_environment_depth_projection(uint32_t p_view, const
 	OpenXRAPI::get_singleton()->set_environment_depth_projection(p_view, p_projection);
 }
 
-void OpenXRAPIExtension::set_environment_depth_cpu_data(uint32_t p_view, GDExtensionPtr<void> p_data) {
+void OpenXRAPIExtension::set_environment_depth_cpu_data(uint32_t p_view, GDExtensionConstPtr<const void> p_data) {
 	ERR_FAIL_NULL(OpenXRAPI::get_singleton());
-	OpenXRAPI::get_singleton()->set_environment_depth_cpu_data(p_view, p_data);
+	OpenXRAPI::get_singleton()->set_environment_depth_cpu_data(p_view, const_cast<void *>(p_data.operator const void *()));
 }
 
 void OpenXRAPIExtension::set_environment_depth_gpu_data(uint32_t p_view, RID p_data) {

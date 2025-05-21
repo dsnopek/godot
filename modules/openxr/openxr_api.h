@@ -42,6 +42,7 @@
 #include "core/templates/rid_owner.h"
 #include "core/templates/vector.h"
 #include "servers/rendering_server.h"
+#include "servers/xr/xr_interface.h"
 #include "servers/xr/xr_pose.h"
 
 #include <openxr/openxr.h>
@@ -622,7 +623,7 @@ public:
 	XRInterface::EnvironmentDepthFormat get_environment_depth_format() const;
 	void set_environment_depth_format(XRInterface::EnvironmentDepthFormat p_format);
 	Size2i get_environment_depth_map_size() const;
-	void set_environment_depth_map_size(const Size2i &p_size) const;
+	void set_environment_depth_map_size(const Size2i &p_size);
 	float get_environment_depth_multiplier() const;
 	void set_environment_depth_multiplier(float p_multiplier);
 	Transform3D get_environment_depth_transform(uint32_t p_view) const;

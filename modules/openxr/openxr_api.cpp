@@ -3763,12 +3763,13 @@ Size2i OpenXRAPI::get_environment_depth_map_size() const {
 	return env_depth_map_size;
 }
 
-void OpenXRAPI::set_environment_depth_map_size(const Size2i &p_size) const {
+void OpenXRAPI::set_environment_depth_map_size(const Size2i &p_size) {
 	env_depth_map_size = p_size;
 }
 
 float OpenXRAPI::get_environment_depth_multiplier() const {
 	ERR_FAIL_COND_V(env_depth_usage == XRInterface::XR_ENV_DEPTH_USAGE_NONE, 1.0);
+	return env_depth_multiplier;
 }
 
 void OpenXRAPI::set_environment_depth_multiplier(float p_multiplier) {
@@ -3783,7 +3784,7 @@ Transform3D OpenXRAPI::get_environment_depth_transform(uint32_t p_view) const {
 
 void OpenXRAPI::set_environment_depth_transform(uint32_t p_view, const Transform3D &p_transform) {
 	ERR_FAIL_COND(p_view >= 2);
-	return env_depth_views[p_view].transform = p_transform;
+	env_depth_views[p_view].transform = p_transform;
 }
 
 Projection OpenXRAPI::get_environment_depth_projection(uint32_t p_view) const {
@@ -3794,7 +3795,7 @@ Projection OpenXRAPI::get_environment_depth_projection(uint32_t p_view) const {
 
 void OpenXRAPI::set_environment_depth_projection(uint32_t p_view, const Projection &p_projection) {
 	ERR_FAIL_COND(p_view >= 2);
-	return env_depth_views[p_view].projection = p_projection;
+	env_depth_views[p_view].projection = p_projection;
 }
 
 void *OpenXRAPI::get_environment_depth_cpu_data(uint32_t p_view) const {
@@ -3805,7 +3806,7 @@ void *OpenXRAPI::get_environment_depth_cpu_data(uint32_t p_view) const {
 
 void OpenXRAPI::set_environment_depth_cpu_data(uint32_t p_view, void *p_data) {
 	ERR_FAIL_COND(p_view >= 2);
-	return env_depth_views[p_view].cpu_data = p_data;
+	env_depth_views[p_view].cpu_data = p_data;
 }
 
 RID OpenXRAPI::get_environment_depth_gpu_data(uint32_t p_view) const {
@@ -3816,5 +3817,5 @@ RID OpenXRAPI::get_environment_depth_gpu_data(uint32_t p_view) const {
 
 void OpenXRAPI::set_environment_depth_gpu_data(uint32_t p_view, RID p_data) {
 	ERR_FAIL_COND(p_view >= 2);
-	return env_depth_views[p_view].gpu_data = p_data;
+	env_depth_views[p_view].gpu_data = p_data;
 }

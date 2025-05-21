@@ -35,7 +35,6 @@
 #include "core/object/ref_counted.h"
 #include "core/os/thread_safe.h"
 #include "core/variant/native_ptr.h"
-#include "servers/xr/xr_interface.h"
 
 class OpenXRExtensionWrapper;
 class OpenXRExtensionWrapperExtension;
@@ -135,7 +134,7 @@ public:
 	void set_environment_depth_multiplier(float p_multiplier);
 	void set_environment_depth_transform(uint32_t p_view, const Transform3D &p_transform);
 	void set_environment_depth_projection(uint32_t p_view, const Projection &p_projection);
-	void set_environment_depth_cpu_data(uint32_t p_view, GDExtensionPtr<void> p_data);
+	void set_environment_depth_cpu_data(uint32_t p_view, GDExtensionConstPtr<const void> p_data);
 	void set_environment_depth_gpu_data(uint32_t p_view, RID p_data);
 
 	OpenXRAPIExtension();

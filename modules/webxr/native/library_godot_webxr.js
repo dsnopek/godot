@@ -43,6 +43,7 @@ const GodotWebXR = {
 		input_sources: new Array(16),
 		touches: new Array(5),
 		onsimpleevent: null,
+		env_depth: null,
 
 		// Monkey-patch the requestAnimationFrame() used by Emscripten for the main
 		// loop, so that we can swap it out for XRSession.requestAnimationFrame()
@@ -53,6 +54,7 @@ const GodotWebXR = {
 				const onFrame = function (time, frame) {
 					GodotWebXR.frame = frame;
 					GodotWebXR.pose = frame.getViewerPose(GodotWebXR.space);
+					GodotWebXR.env_depth = GodotWebXR.getEnvDepth();
 					callback(time);
 					GodotWebXR.frame = null;
 					GodotWebXR.pose = null;
@@ -205,6 +207,21 @@ const GodotWebXR = {
 				return input_source.touch_index;
 			}
 			return -1;
+		},
+
+		getEnvDepth: () => {
+			if (GodotWebXR.session.depthActive) {
+				const env_depth = new Array(GodotWebXR.pose.views.length);
+				for (let i = 0; i < env_depth.length; i++) {
+					if (GodotWebXR.session.depthUsage === 'cpu-optimized') {
+						env_depth[i] = GodotWebXR.frame.getDepthInformation(GodotWebXR.pose.views[i]);
+					} else {
+						env_depth[i] = GodotWebXR.gl_binding.getDepthInformation(GodotWebXR.pose.views[i]);
+					}
+				}
+				return env_depth;
+			}
+			return null;
 		},
 	},
 
@@ -380,6 +397,7 @@ const GodotWebXR = {
 		GodotWebXR.input_sources = new Array(16);
 		GodotWebXR.touches = new Array(5);
 		GodotWebXR.onsimpleevent = null;
+		GodotWebXR.env_depth = null;
 
 		// Disable the monkey-patched window.requestAnimationFrame() and
 		// pause/restart the main loop to activate it on all platforms.
@@ -662,6 +680,52 @@ const GodotWebXR = {
 		GodotRuntime.setHeapValue(r_frame_rates, buf, 'i32');
 
 		return frame_rate_count;
+	},
+
+	godot_webxr_get_environment_depth_state__proxy: 'sync',
+	godot_webxr_get_environment_depth_state__sig: 'iii',
+	godot_webxr_get_environment_depth_state: function (r_usage, r_format) {
+		if (!GodotWebXR.session || !GodotWebXR.session.depthActive) {
+			return false;
+		}
+
+		GodotRuntime.setHeapValue(r_usage, GodotWebXR.session.depthUsage === 'gpu-optimized' ? 2 : 1, 'i32');
+
+		let format = 0;
+		switch (GodotWebXR.session.depthFormat) {
+		case 'luminance-alpha':
+			format = 0;
+			break;
+
+		case 'float32':
+			format = 1;
+			break;
+
+		case 'unsigned-short':
+		default:
+			format = 2;
+			break;
+		}
+		GodotRuntime.setHeapValue(r_format, format, 'i32');
+
+		return true;
+	},
+
+	godot_webxr_get_environment_depth_view_info__proxy: 'sync',
+	godot_webxr_get_environment_depth_view_info__sig: 'iiiiii',
+	godot_webxr_get_environment_depth_view_info: function (p_view, r_transform, r_projection, r_size, r_multiplier) {
+		if (!GodotWebXR.session || !GodotWebXR.session.depthActive || p_view >= GodotWebXR.env_depth.length) {
+			return false;
+		}
+
+		const info = GodotWebXR.env_depth[p_view];
+		if (!info) {
+			return false;
+		}
+
+		// GodotRuntime.heapCopy(HEAPF32, info., r_hand_joints);
+
+		return true;
 	},
 
 };

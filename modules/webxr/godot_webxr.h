@@ -95,9 +95,9 @@ extern void godot_webxr_update_target_frame_rate(float p_frame_rate);
 extern int godot_webxr_get_supported_frame_rates(float **r_frame_rates);
 
 extern bool godot_webxr_get_environment_depth_state(int *r_usage, int *r_format);
-extern bool godot_webxr_get_environment_depth_view(int p_view, float *r_transform, float *r_projection, int *r_size, float *r_multiplier);
-extern bool godot_webxr_get_environment_depth_cpu_data(int p_view, void *r_data);
-extern unsigned int godot_webxr_get_environment_depth_gpu_data(int p_view);
+extern bool godot_webxr_get_environment_depth_view_info(int p_view, float *r_transform, float *r_projection, int *r_size, float *r_multiplier);
+extern bool godot_webxr_get_environment_depth_view_cpu_data(int p_view, void *r_data);
+extern unsigned int godot_webxr_get_environment_depth_view_gpu_data(int p_view);
 
 #ifdef __cplusplus
 }

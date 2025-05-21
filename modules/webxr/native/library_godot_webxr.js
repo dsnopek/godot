@@ -723,7 +723,8 @@ const GodotWebXR = {
 			return false;
 		}
 
-		// GodotRuntime.heapCopy(HEAPF32, info., r_hand_joints);
+		GodotRuntime.heapCopy(HEAPF32, info.normDepthBufferFromNormView.matrix, r_transform);
+		GodotRuntime.heapCopy(HEAPF32, info.transform.matrix, r_projection);
 
 		return true;
 	},

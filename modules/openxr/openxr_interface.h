@@ -206,6 +206,15 @@ public:
 	virtual XRInterface::EnvironmentBlendMode get_environment_blend_mode() const override;
 	virtual bool set_environment_blend_mode(XRInterface::EnvironmentBlendMode mode) override;
 
+	virtual EnvironmentDepthUsage get_environment_depth_usage() const override;
+	virtual EnvironmentDepthFormat get_environment_depth_format() const override;
+	virtual Transform3D get_environment_depth_transform(uint32_t p_view) const override;
+	virtual Projection get_environment_depth_projection(uint32_t p_view) const override;
+	virtual void *get_environment_depth_cpu_data(uint32_t p_view) const override;
+	virtual RID get_environment_depth_gpu_data(uint32_t p_view) const override;
+	virtual Size2i get_environment_depth_map_size() const override;
+	virtual float get_environment_depth_multiplier() const override;
+
 	void on_state_ready();
 	void on_state_visible();
 	void on_state_focused();

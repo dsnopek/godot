@@ -1,6 +1,8 @@
 /* clang-format off */
 #[modes]
 
+mode_default =
+
 #[specializations]
 
 USE_MULTIVIEW = false
@@ -8,12 +10,13 @@ FORMAT_LUMINANCE_ALPHA = false
 
 #[vertex]
 
-layout(location = 0) out vec2 uv_interp;
+layout(location = 0) in vec2 vertex_attrib;
+
+out vec2 uv_interp;
 
 void main() {
-	vec2 base_arr[3] = vec2[](vec2(-1.0, -1.0), vec2(-1.0, 3.0), vec2(3.0, -1.0));
-	gl_Position = vec4(base_arr[gl_VertexIndex], 0.0, 1.0);
-	uv_interp.xy = clamp(gl_Position.xy, vec2(0.0, 0.0), vec2(1.0, 1.0)) * 2.0; // saturate(x) * 2.0
+	uv_interp = vertex_attrib * 0.5 + 0.5;
+	gl_Position = vec4(vertex_attrib, 1.0, 1.0);
 }
 
 #[fragment]

@@ -31,6 +31,7 @@
 #include "rasterizer_scene_gles3.h"
 
 #include "drivers/gles3/effects/copy_effects.h"
+#include "drivers/gles3/effects/environment_depth.h"
 #include "drivers/gles3/effects/feed_effects.h"
 #include "rasterizer_gles3.h"
 #include "storage/config.h"
@@ -2486,6 +2487,42 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 
 	scene_state.reset_gl_state();
 
+	// @todo replace this with something in `config` maybe?
+	bool use_environment_depth = false;
+	Ref<XRInterface> xr_interface = XRServer::get_singleton()->get_primary_interface();
+	if (xr_interface.is_valid() && xr_interface->get_environment_depth_usage() != XRInterface::XR_ENV_DEPTH_USAGE_NONE) {
+		use_environment_depth = true;
+	}
+
+	if (use_environment_depth) {
+		RENDER_TIMESTAMP("Render environment depth");
+
+		if (render_data.render_region != Rect2i()) {
+			glViewport(render_data.render_region.position.x, render_data.render_region.position.y, render_data.render_region.size.width, render_data.render_region.size.height);
+		}
+
+		scene_state.enable_gl_depth_test(true);
+		scene_state.enable_gl_depth_draw(true);
+		scene_state.enable_gl_blend(false);
+		glDepthFunc(GL_GEQUAL);
+		scene_state.enable_gl_scissor_test(false);
+
+		glColorMask(0, 0, 0, 0);
+		RasterizerGLES3::clear_depth(0.0);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		// Some desktop GL implementations fall apart when using Multiview with GL_NONE.
+		GLuint db = p_camera_data->view_count > 1 ? GL_COLOR_ATTACHMENT0 : GL_NONE;
+		glDrawBuffers(1, &db);
+
+		// @todo Handle CPU vs GPU data
+		// @todo Run the shader!
+		GLES3::EnvironmentDepth::get_singleton()->fill_depth_buffer();
+
+		glColorMask(1, 1, 1, 1);
+
+		fb_cleared = true;
+	}
+
 	// Do depth prepass if it's explicitly enabled
 	bool use_depth_prepass = config->use_depth_prepass;
 
@@ -2507,8 +2544,10 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 		scene_state.enable_gl_scissor_test(false);
 
 		glColorMask(0, 0, 0, 0);
-		RasterizerGLES3::clear_depth(0.0);
-		glClear(GL_DEPTH_BUFFER_BIT);
+		if (!fb_cleared) {
+			RasterizerGLES3::clear_depth(0.0);
+			glClear(GL_DEPTH_BUFFER_BIT);
+		}
 		// Some desktop GL implementations fall apart when using Multiview with GL_NONE.
 		GLuint db = p_camera_data->view_count > 1 ? GL_COLOR_ATTACHMENT0 : GL_NONE;
 		glDrawBuffers(1, &db);

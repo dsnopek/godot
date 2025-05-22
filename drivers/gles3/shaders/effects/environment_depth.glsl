@@ -46,5 +46,5 @@ void main() {
 #endif
 
 	// @todo Actually reproject this data.
-	gl_FragDepth = depth;
+	gl_FragDepth = 1.0 - depth;
 }

@@ -2506,6 +2506,7 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 		scene_state.enable_gl_blend(false);
 		glDepthFunc(GL_GEQUAL);
 		scene_state.enable_gl_scissor_test(false);
+		scene_state.set_gl_cull_mode(RS::CULL_MODE_DISABLED);
 
 		glColorMask(0, 0, 0, 0);
 		RasterizerGLES3::clear_depth(0.0);
@@ -2516,9 +2517,6 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 		glDrawBuffers(1, &db);
 
 		// @todo Handle CPU vs GPU data
-
-		// Test
-		glDisable(GL_CULL_FACE);
 
 		// We can always use zero, because if there is more than one view, then multiview will be used.
 		RID depth_map = xr_interface->get_environment_depth_gpu_data(0);

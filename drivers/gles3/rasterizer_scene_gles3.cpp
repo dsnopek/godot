@@ -2511,12 +2511,18 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 		RasterizerGLES3::clear_depth(0.0);
 		glClear(GL_DEPTH_BUFFER_BIT);
 		// Some desktop GL implementations fall apart when using Multiview with GL_NONE.
-		GLuint db = p_camera_data->view_count > 1 ? GL_COLOR_ATTACHMENT0 : GL_NONE;
+		//GLuint db = p_camera_data->view_count > 1 ? GL_COLOR_ATTACHMENT0 : GL_NONE;
+		GLuint db = GL_NONE;
 		glDrawBuffers(1, &db);
 
 		// @todo Handle CPU vs GPU data
-		// @todo Run the shader!
-		GLES3::EnvironmentDepth::get_singleton()->fill_depth_buffer();
+
+		// Test
+		glDisable(GL_CULL_FACE);
+
+		// We can always use zero, because if there is more than one view, then multiview will be used.
+		RID depth_map = xr_interface->get_environment_depth_gpu_data(0);
+		GLES3::EnvironmentDepth::get_singleton()->fill_depth_buffer(depth_map, p_camera_data->view_count > 1);
 
 		glColorMask(1, 1, 1, 1);
 

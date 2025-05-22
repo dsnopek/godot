@@ -32,6 +32,8 @@
 
 #include "environment_depth.h"
 
+#include "../storage/texture_storage.h"
+
 using namespace GLES3;
 
 EnvironmentDepth *EnvironmentDepth::singleton = nullptr;
@@ -81,7 +83,24 @@ EnvironmentDepth::~EnvironmentDepth() {
 	singleton = nullptr;
 }
 
-void EnvironmentDepth::fill_depth_buffer() {
+void EnvironmentDepth::fill_depth_buffer(RID p_depth_map, bool p_use_multiview) {
+	uint64_t specialization = p_use_multiview ? EnvironmentDepthShaderGLES3::USE_MULTIVIEW : 0;
+
+	bool success = env_depth.shader.version_bind_shader(env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
+	if (!success) {
+		return;
+	}
+
+	TextureStorage::get_singleton()->texture_bind(p_depth_map, 0);
+
+	// Sampling a depth buffer won't work unless the min and mag filter are nearest.
+	GLenum target = p_use_multiview ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
+	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glBindVertexArray(screen_triangle_array);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glBindVertexArray(0);
 }
 
 #endif // GLES3_ENABLED

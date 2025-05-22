@@ -22,10 +22,12 @@ void main() {
 #[fragment]
 
 #ifdef USE_MULTIVIEW
-uniform highp sampler2DArray env_depth_map; // texunit:-7
+uniform highp sampler2DArray env_depth_map; // texunit:0
 #else
-uniform highp sampler2D env_depth_map; // texunit:-7
+uniform highp sampler2D env_depth_map; // texunit:0
 #endif
+
+in vec2 uv_interp;
 
 void main() {
 	float multiplier = 1.0;

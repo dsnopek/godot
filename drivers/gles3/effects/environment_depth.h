@@ -51,7 +51,7 @@ private:
 public:
 	static EnvironmentDepth *get_singleton();
 
-	void fill_depth_buffer(RID p_depth_map, bool p_use_multiview);
+	void fill_depth_buffer(RID p_depth_map, uint32_t p_view_count, Projection *p_depth_projections, Projection *p_current_projections, bool p_use_luminance_alpha);
 
 	EnvironmentDepth();
 	~EnvironmentDepth();

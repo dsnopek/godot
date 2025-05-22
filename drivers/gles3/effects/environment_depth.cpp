@@ -83,18 +83,39 @@ EnvironmentDepth::~EnvironmentDepth() {
 	singleton = nullptr;
 }
 
-void EnvironmentDepth::fill_depth_buffer(RID p_depth_map, bool p_use_multiview) {
-	uint64_t specialization = p_use_multiview ? EnvironmentDepthShaderGLES3::USE_MULTIVIEW : 0;
+void EnvironmentDepth::fill_depth_buffer(RID p_depth_map, uint32_t p_view_count, Projection *p_depth_projections, Projection *p_current_projections, bool p_use_luminance_alpha) {
+	ERR_FAIL_COND(p_view_count > 2);
+
+	bool use_multiview = p_view_count > 1;
+
+	uint64_t specialization = use_multiview ? EnvironmentDepthShaderGLES3::USE_MULTIVIEW : 0;
+	if (p_use_luminance_alpha) {
+		specialization |= EnvironmentDepthShaderGLES3::FORMAT_LUMINANCE_ALPHA;
+	}
 
 	bool success = env_depth.shader.version_bind_shader(env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
 	if (!success) {
 		return;
 	}
 
+	for (uint32_t i = 0; i < p_view_count; i++) {
+		if (i == 0) {
+			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::DEPTH_PROJ_LEFT, p_depth_projections[i], env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
+			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::CUR_PROJ_LEFT, p_current_projections[i], env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
+			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::DEPTH_INV_PROJ_LEFT, p_depth_projections[i].inverse(), env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
+			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::CUR_INV_PROJ_LEFT, p_current_projections[i].inverse(), env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
+		} else {
+			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::DEPTH_PROJ_RIGHT, p_depth_projections[i], env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
+			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::CUR_PROJ_RIGHT, p_current_projections[i], env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
+			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::DEPTH_INV_PROJ_RIGHT, p_depth_projections[i].inverse(), env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
+			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::CUR_INV_PROJ_RIGHT, p_current_projections[i].inverse(), env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
+		}
+	}
+
 	TextureStorage::get_singleton()->texture_bind(p_depth_map, 0);
 
 	// Sampling a depth buffer won't work unless the min and mag filter are nearest.
-	GLenum target = p_use_multiview ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
+	GLenum target = use_multiview ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
 	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 

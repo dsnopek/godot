@@ -27,24 +27,73 @@ uniform highp sampler2DArray env_depth_map; // texunit:0
 uniform highp sampler2D env_depth_map; // texunit:0
 #endif
 
+uniform highp mat4 depth_proj_left;
+uniform highp mat4 depth_proj_right;
+
+uniform highp mat4 depth_inv_proj_left;
+uniform highp mat4 depth_inv_proj_right;
+
+uniform highp mat4 cur_proj_left;
+uniform highp mat4 cur_proj_right;
+
+uniform highp mat4 cur_inv_proj_left;
+uniform highp mat4 cur_inv_proj_right;
+
 in vec2 uv_interp;
 
 void main() {
 	float multiplier = 1.0;
 
-#ifdef USE_MULTIVIEW
-	vec3 uv = vec3(uv_interp, ViewIndex);
-#else
-	vec2 uv = uv_interp;
-#endif
+	mat4 depth_proj = ViewIndex == uint(0) ? depth_proj_left : depth_proj_right;
+	mat4 cur_proj = ViewIndex == uint(0) ? cur_proj_left : cur_proj_right;
+	mat4 depth_inv_proj = ViewIndex == uint(0) ? depth_inv_proj_left : depth_inv_proj_right;
+	mat4 cur_inv_proj = ViewIndex == uint(0) ? cur_inv_proj_left : cur_inv_proj_right;
 
-#ifdef FORMAT_LUMINANCE_ALPHA
-	vec2 packed_depth = texture(env_depth_map,  uv).ra;
-	float depth = dot(packed_depth, vec2(255.0, 256.0 * 255.0)) * multiplier;
-#else
-	float depth = texture(env_depth_map, uv).r * multiplier;
-#endif
+	vec4 clip = vec4(uv_interp * 2.0 - 1.0, 0.0, 1.0);
+	vec4 world_pos = cur_inv_proj * clip;
+	world_pos /= world_pos.w;
 
-	// @todo Actually reproject this data.
-	gl_FragDepth = 1.0 - depth;
+	vec4 reprojected = depth_proj * world_pos;
+	reprojected /= reprojected.w;
+	vec2 reprojected_uv = reprojected.xy * 0.5 + 0.5;
+
+	#ifdef USE_MULTIVIEW
+		vec3 depth_coord = vec3(reprojected_uv, ViewIndex);
+	#else
+		vec2 depth_coord = reprojected_uv;
+	#endif
+
+	#ifdef FORMAT_LUMINANCE_ALPHA
+		vec2 packed_depth = texture(env_depth_map, depth_coord).ra;
+		float depth = dot(packed_depth, vec2(255.0, 256.0 * 255.0));
+	#else
+		float depth = texture(env_depth_map, depth_coord).r;
+	#endif
+
+	//gl_FragDepth = depth;
+
+	vec4 clip_back = vec4(reprojected.xy, depth * 2.0 - 1.0, 1.0);
+	vec4 world_back = depth_inv_proj * clip_back;
+	world_back /= world_back.w;
+
+	vec4 cur_clip = cur_proj * world_back;
+	float ndc_z = cur_clip.z / cur_clip.w;
+
+	gl_FragDepth = ndc_z * 0.5 + 0.5;
+
+/*
+	// Reconstruct the depth position in clip space.
+	vec2 screen_ndc = uv_interp * 2.0 - 1.0;
+	vec4 depth_clip = vec4(screen_ndc, depth * 2.0 - 1.0, 1.0);
+
+	// Unproject into world space.
+	vec4 world_pos = depth_proj * depth_clip;
+	world_pos /= world_pos.w;
+
+	// Re-project depth the current camera.
+	vec4 cur_clip = cur_proj * world_pos;
+	float cur_depth = (cur_clip.z / cur_clip.w) * 0.5 + 0.5;
+
+	gl_FragDepth = cur_depth;
+*/
 }

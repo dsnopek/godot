@@ -2495,7 +2495,7 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 	}
 
 	if (use_environment_depth) {
-		RENDER_TIMESTAMP("Render environment depth");
+		RENDER_TIMESTAMP("Render Environment Depth");
 
 		if (render_data.render_region != Rect2i()) {
 			glViewport(render_data.render_region.position.x, render_data.render_region.position.y, render_data.render_region.size.width, render_data.render_region.size.height);
@@ -2516,11 +2516,25 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 		GLuint db = GL_NONE;
 		glDrawBuffers(1, &db);
 
-		// @todo Handle CPU vs GPU data
+		XRInterface::EnvironmentDepthFormat depth_format = xr_interface->get_environment_depth_format();
 
-		// We can always use zero, because if there is more than one view, then multiview will be used.
-		RID depth_map = xr_interface->get_environment_depth_gpu_data(0);
-		GLES3::EnvironmentDepth::get_singleton()->fill_depth_buffer(depth_map, p_camera_data->view_count > 1);
+		RID depth_map;
+		if (xr_interface->get_environment_depth_usage() == XRInterface::XR_ENV_DEPTH_USAGE_CPU) {
+			// @todo Create the depth map from the CPU data.
+		} else {
+			// We can always use zero, because if there is more than one view, then multiview will be used
+			// with a 2D texture array.
+			depth_map = xr_interface->get_environment_depth_gpu_data(0);
+		}
+
+		Projection depth_proj[2];
+		Projection cur_proj[2];
+		for (int i = 0; i < p_camera_data->view_count; i++) {
+			depth_proj[i] = xr_interface->get_environment_depth_projection(i);
+			cur_proj[i] = p_camera_data->view_projection[i] * p_camera_data->view_offset[i];
+		}
+
+		GLES3::EnvironmentDepth::get_singleton()->fill_depth_buffer(depth_map, p_camera_data->view_count, depth_proj, cur_proj, depth_format == XRInterface::XR_ENV_DEPTH_FORMAT_LUMINANCE_ALPHA);
 
 		glColorMask(1, 1, 1, 1);
 

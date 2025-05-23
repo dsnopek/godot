@@ -57,18 +57,18 @@ void main() {
 	reprojected /= reprojected.w;
 	vec2 reprojected_uv = reprojected.xy * 0.5 + 0.5;
 
-	#ifdef USE_MULTIVIEW
-		vec3 depth_coord = vec3(reprojected_uv, ViewIndex);
-	#else
-		vec2 depth_coord = reprojected_uv;
-	#endif
+#ifdef USE_MULTIVIEW
+	vec3 depth_coord = vec3(reprojected_uv, ViewIndex);
+#else
+	vec2 depth_coord = reprojected_uv;
+#endif
 
-	#ifdef FORMAT_LUMINANCE_ALPHA
-		vec2 packed_depth = texture(env_depth_map, depth_coord).ra;
-		float depth = dot(packed_depth, vec2(255.0, 256.0 * 255.0));
-	#else
-		float depth = texture(env_depth_map, depth_coord).r;
-	#endif
+#ifdef FORMAT_LUMINANCE_ALPHA
+	vec2 packed_depth = texture(env_depth_map, depth_coord).ra;
+	float depth = dot(packed_depth, vec2(255.0, 256.0 * 255.0));
+#else
+	float depth = texture(env_depth_map, depth_coord).r;
+#endif
 
 	if (depth == 0.0) {
 		discard;

@@ -27,6 +27,8 @@ uniform highp sampler2DArray env_depth_map; // texunit:0
 uniform highp sampler2D env_depth_map; // texunit:0
 #endif
 
+// @todo These uniforms should probably be in a UBO, but I was lazy - do this before taking out of draft!
+
 uniform highp mat4 depth_proj_left;
 uniform highp mat4 depth_proj_right;
 
@@ -74,9 +76,12 @@ void main() {
 		discard;
 	}
 
-	gl_FragDepth = 1.0 - depth;
+	// For debugging:
+	//gl_FragDepth = 1.0 - depth;
 
-/*
+	// Now that we've got the environment depth from the depth map, we need to reproject AGAIN,
+	// so that the depth value will be scaled per Godot's projection matrix.
+
 	vec4 clip_back = vec4(reprojected.xy, depth * 2.0 - 1.0, 1.0);
 	vec4 world_back = depth_inv_proj * clip_back;
 	world_back /= world_back.w;
@@ -84,22 +89,5 @@ void main() {
 	vec4 cur_clip = cur_proj * world_back;
 	float ndc_z = cur_clip.z / cur_clip.w;
 
-	gl_FragDepth = ndc_z * 0.5 + 0.5;
-*/
-
-/*
-	// Reconstruct the depth position in clip space.
-	vec2 screen_ndc = uv_interp * 2.0 - 1.0;
-	vec4 depth_clip = vec4(screen_ndc, depth * 2.0 - 1.0, 1.0);
-
-	// Unproject into world space.
-	vec4 world_pos = depth_proj * depth_clip;
-	world_pos /= world_pos.w;
-
-	// Re-project depth the current camera.
-	vec4 cur_clip = cur_proj * world_pos;
-	float cur_depth = (cur_clip.z / cur_clip.w) * 0.5 + 0.5;
-
-	gl_FragDepth = cur_depth;
-*/
+	gl_FragDepth = 1.0 - (ndc_z * 0.5 + 0.5);
 }

@@ -2531,7 +2531,8 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 		Projection cur_proj[2];
 		for (int i = 0; i < p_camera_data->view_count; i++) {
 			depth_proj[i] = xr_interface->get_environment_depth_projection(i);
-			cur_proj[i] = p_camera_data->view_projection[i] * p_camera_data->view_offset[i];
+			cur_proj[i] = p_camera_data->view_projection[i] * p_camera_data->view_offset[i] * p_camera_data->main_transform;
+			//cur_proj[i] = p_camera_data->view_projection[i] * p_camera_data->main_transform;
 		}
 
 		GLES3::EnvironmentDepth::get_singleton()->fill_depth_buffer(depth_map, p_camera_data->view_count, depth_proj, cur_proj, depth_format == XRInterface::XR_ENV_DEPTH_FORMAT_LUMINANCE_ALPHA);

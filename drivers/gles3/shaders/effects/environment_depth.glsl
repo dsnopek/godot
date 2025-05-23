@@ -49,7 +49,7 @@ void main() {
 	mat4 depth_inv_proj = ViewIndex == uint(0) ? depth_inv_proj_left : depth_inv_proj_right;
 	mat4 cur_inv_proj = ViewIndex == uint(0) ? cur_inv_proj_left : cur_inv_proj_right;
 
-	vec4 clip = vec4(uv_interp * 2.0 - 1.0, 0.0, 1.0);
+	vec4 clip = vec4(uv_interp * 2.0 - 1.0, 1.0, 1.0);
 	vec4 world_pos = cur_inv_proj * clip;
 	world_pos /= world_pos.w;
 
@@ -70,8 +70,13 @@ void main() {
 		float depth = texture(env_depth_map, depth_coord).r;
 	#endif
 
-	//gl_FragDepth = depth;
+	if (depth == 0.0) {
+		discard;
+	}
 
+	gl_FragDepth = 1.0 - depth;
+
+/*
 	vec4 clip_back = vec4(reprojected.xy, depth * 2.0 - 1.0, 1.0);
 	vec4 world_back = depth_inv_proj * clip_back;
 	world_back /= world_back.w;
@@ -80,6 +85,7 @@ void main() {
 	float ndc_z = cur_clip.z / cur_clip.w;
 
 	gl_FragDepth = ndc_z * 0.5 + 0.5;
+*/
 
 /*
 	// Reconstruct the depth position in clip space.

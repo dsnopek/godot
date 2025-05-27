@@ -2527,14 +2527,17 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 			depth_map = xr_interface->get_environment_depth_gpu_data(0);
 		}
 
-		Projection depth_proj[2];
-		Projection cur_proj[2];
+		Projection camera_to_depth[2];
+		Projection depth_to_camera[2];
 		for (int i = 0; i < p_camera_data->view_count; i++) {
-			depth_proj[i] = xr_interface->get_environment_depth_projection(i);
-			cur_proj[i] = p_camera_data->view_projection[i] * p_camera_data->view_offset[i] * p_camera_data->main_transform.inverse();
+			Projection depth_proj = xr_interface->get_environment_depth_projection(i);
+			Projection camera_proj = p_camera_data->view_projection[i] * p_camera_data->view_offset[i] * p_camera_data->main_transform.inverse();
+
+			camera_to_depth[i] = depth_proj * camera_proj.inverse();
+			depth_to_camera[i] = camera_proj * depth_proj.inverse();
 		}
 
-		GLES3::EnvironmentDepth::get_singleton()->fill_depth_buffer(depth_map, p_camera_data->view_count, depth_proj, cur_proj, depth_format == XRInterface::XR_ENV_DEPTH_FORMAT_LUMINANCE_ALPHA);
+		GLES3::EnvironmentDepth::get_singleton()->fill_depth_buffer(depth_map, p_camera_data->view_count, camera_to_depth, depth_to_camera, depth_format == XRInterface::XR_ENV_DEPTH_FORMAT_LUMINANCE_ALPHA);
 
 		glColorMask(1, 1, 1, 1);
 

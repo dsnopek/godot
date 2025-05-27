@@ -83,7 +83,7 @@ EnvironmentDepth::~EnvironmentDepth() {
 	singleton = nullptr;
 }
 
-void EnvironmentDepth::fill_depth_buffer(RID p_depth_map, uint32_t p_view_count, Projection *p_depth_projections, Projection *p_current_projections, bool p_use_luminance_alpha) {
+void EnvironmentDepth::fill_depth_buffer(RID p_depth_map, uint32_t p_view_count, Projection *p_camera_to_depth_projections, Projection *p_depth_to_camera_projections, bool p_use_luminance_alpha) {
 	ERR_FAIL_COND(p_view_count > 2);
 
 	bool use_multiview = p_view_count > 1;
@@ -100,15 +100,11 @@ void EnvironmentDepth::fill_depth_buffer(RID p_depth_map, uint32_t p_view_count,
 
 	for (uint32_t i = 0; i < p_view_count; i++) {
 		if (i == 0) {
-			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::DEPTH_PROJ_LEFT, p_depth_projections[i], env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
-			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::CUR_PROJ_LEFT, p_current_projections[i], env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
-			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::DEPTH_INV_PROJ_LEFT, p_depth_projections[i].inverse(), env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
-			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::CUR_INV_PROJ_LEFT, p_current_projections[i].inverse(), env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
+			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::CAMERA_TO_DEPTH_PROJ_LEFT, p_camera_to_depth_projections[i], env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
+			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::DEPTH_TO_CAMERA_PROJ_LEFT, p_depth_to_camera_projections[i], env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
 		} else {
-			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::DEPTH_PROJ_RIGHT, p_depth_projections[i], env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
-			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::CUR_PROJ_RIGHT, p_current_projections[i], env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
-			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::DEPTH_INV_PROJ_RIGHT, p_depth_projections[i].inverse(), env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
-			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::CUR_INV_PROJ_RIGHT, p_current_projections[i].inverse(), env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
+			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::CAMERA_TO_DEPTH_PROJ_RIGHT, p_camera_to_depth_projections[i], env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
+			env_depth.shader.version_set_uniform(EnvironmentDepthShaderGLES3::DEPTH_TO_CAMERA_PROJ_RIGHT, p_depth_to_camera_projections[i], env_depth.shader_version, EnvironmentDepthShaderGLES3::MODE_DEFAULT, specialization);
 		}
 	}
 

@@ -29,33 +29,22 @@ uniform highp sampler2D env_depth_map; // texunit:0
 
 // @todo These uniforms should probably be in a UBO, but I was lazy - do this before taking out of draft!
 
-uniform highp mat4 depth_proj_left;
-uniform highp mat4 depth_proj_right;
+uniform highp mat4 camera_to_depth_proj_left;
+uniform highp mat4 camera_to_depth_proj_right;
 
-uniform highp mat4 depth_inv_proj_left;
-uniform highp mat4 depth_inv_proj_right;
-
-uniform highp mat4 cur_proj_left;
-uniform highp mat4 cur_proj_right;
-
-uniform highp mat4 cur_inv_proj_left;
-uniform highp mat4 cur_inv_proj_right;
+uniform highp mat4 depth_to_camera_proj_left;
+uniform highp mat4 depth_to_camera_proj_right;
 
 in vec2 uv_interp;
 
 void main() {
 	float multiplier = 1.0;
 
-	mat4 depth_proj = ViewIndex == uint(0) ? depth_proj_left : depth_proj_right;
-	mat4 cur_proj = ViewIndex == uint(0) ? cur_proj_left : cur_proj_right;
-	mat4 depth_inv_proj = ViewIndex == uint(0) ? depth_inv_proj_left : depth_inv_proj_right;
-	mat4 cur_inv_proj = ViewIndex == uint(0) ? cur_inv_proj_left : cur_inv_proj_right;
+	mat4 camera_to_depth_proj = ViewIndex == uint(0) ? camera_to_depth_proj_left : camera_to_depth_proj_right;
+	mat4 depth_to_camera_proj = ViewIndex == uint(0) ? depth_to_camera_proj_left : depth_to_camera_proj_right;
 
 	vec4 clip = vec4(uv_interp * 2.0 - 1.0, 1.0, 1.0);
-	vec4 world_pos = cur_inv_proj * clip;
-	world_pos /= world_pos.w;
-
-	vec4 reprojected = depth_proj * world_pos;
+	vec4 reprojected = camera_to_depth_proj * clip;
 	reprojected /= reprojected.w;
 	vec2 reprojected_uv = reprojected.xy * 0.5 + 0.5;
 
@@ -83,11 +72,8 @@ void main() {
 	// so that the depth value will be scaled per Godot's projection matrix.
 
 	vec4 clip_back = vec4(reprojected.xy, depth * 2.0 - 1.0, 1.0);
-	vec4 world_back = depth_inv_proj * clip_back;
-	world_back /= world_back.w;
-
-	vec4 cur_clip = cur_proj * world_back;
-	float ndc_z = cur_clip.z / cur_clip.w;
+	clip_back = depth_to_camera_proj * clip_back;
+	float ndc_z = clip_back.z / clip_back.w;
 
 	gl_FragDepth = 1.0 - (ndc_z * 0.5 + 0.5);
 }

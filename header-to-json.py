@@ -4,6 +4,14 @@ import json
 import re
 import sys
 
+# TODO:
+#
+# - Parse descriptions into normal text
+#   - Decide on format for multiple line strings
+# - Parse function pointer arguments
+# - Parse interface doc comments into structured data (including argument docs)
+# - Include copyright info at the top of the file
+
 
 def main():
     fn = sys.argv[1]

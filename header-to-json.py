@@ -196,7 +196,17 @@ def main():
             parent_description.clear()
             description.clear()
 
-    print(json.dumps(stypes, indent=4))
+    api = {
+        "types": {
+            "simple": stypes,
+            "enumerations": enums,
+            "function pointers": function_pointers,
+            "structs": structs,
+        },
+        "interface": interfaces,
+    }
+
+    print(json.dumps(api, indent=4))
 
 
 if __name__ == "__main__":

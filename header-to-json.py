@@ -12,14 +12,14 @@ def main():
         lines = fd.readlines()
 
     enums = {}
-    typedefs = {}
+    stypes = {}
+    function_pointers = {}
     structs = {}
     interfaces = {}
 
     in_enum = False
     in_struct = False
-    in_typedef = False
-    in_interface = False
+    in_comment = False
 
     parent = ""
     parent_description = []
@@ -36,8 +36,19 @@ def main():
         if line.startswith("extern"):
             continue
 
-        if line.startswith("/*") or line.startswith("//"):
+        if line.startswith("//"):
             description.append(line)
+        elif line.startswith("/*"):
+            description.append(line)
+            if "*/" not in line:
+                in_comment = True
+        elif "*/" in line:
+            description.append(line)
+            in_comment = False
+        elif in_comment:
+            description.append(line)
+            continue
+
         if line == "/* VARIANT TYPES */":
             description.clear()
 
@@ -65,9 +76,9 @@ def main():
 
                 if len(description) > 0:
                     member["description"] = description[:]
+                    description.clear()
 
                 members.append(member)
-                description.clear()
 
         # Structs.
         if line.startswith("typedef struct {"):
@@ -98,10 +109,57 @@ def main():
 
                 if len(description) > 0:
                     member["description"] = description[:]
+                    description.clear()
 
                 members.append(member)
-                description.clear()
 
+        # Typedefs.
+        if line.startswith("typedef "):
+            m = re.match(r"^typedef ([^(]*)\(\*([a-zA-Z0-9]*)\)\(([^)]*)\);", line)
+            if m:
+                fp = {
+                    "returns": m.group(1).strip(),
+                    "arguments": m.group(3).strip(),
+                }
+
+                if len(description) > 0:
+                    fp["description"] = description[:]
+                    description.clear()
+
+                interface_name = None
+                if "description" in fp:
+                    for d in fp["description"]:
+                        if "@name" in d:
+                            interface_name = d.split("@name")[1].strip()
+                            break
+                if interface_name:
+                    fp["name"] = interface_name
+                    fp["type"] = m.group(2)
+                    # @todo Parse the doc string
+                    interfaces[interface_name] = fp
+                else:
+                    fp["name"] = m.group(2)
+                    function_pointers[fp["name"]] = fp
+
+            else:
+                m = re.match(r"^typedef (.*[ \*]) ?([a-zA-Z0-9]*);(?:\s+/[/*](.*))?$", line)
+                if m:
+                    inline_doc = m.group(3)
+                    if inline_doc:
+                        description.append(inline_doc.strip())
+
+                    stype = {
+                        "name": m.group(2),
+                        "type": m.group(1),
+                    }
+
+                    if len(description) > 0:
+                        stype["description"] = description[:]
+                        description.clear()
+
+                    stypes[stype["name"]] = stype
+
+        # Closing curly brace.
         if line.startswith("}"):
             m = re.match(r"^\} (\S+);(?:\s+/[/*](.*))?$", line)
             if m:
@@ -138,7 +196,7 @@ def main():
             parent_description.clear()
             description.clear()
 
-    print(json.dumps(structs, indent=4))
+    print(json.dumps(stypes, indent=4))
 
 
 if __name__ == "__main__":

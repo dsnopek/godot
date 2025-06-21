@@ -157,7 +157,11 @@ def write_interface(file, interface):
     file.write("*/\n")
 
     fn = interface.copy()
-    fn["name"] = "GDExtensionInterface" + "".join(word.capitalize() for word in interface["name"].split("_"))
+    if "legacy_type_name" in interface:
+        # @todo Don't do this in the Python version - only the legacy header generation in Godot.
+        fn["name"] = interface["legacy_type_name"]
+    else:
+        fn["name"] = "GDExtensionInterface" + "".join(word.capitalize() for word in interface["name"].split("_"))
     write_function_type(file, fn)
 
     file.write("\n")

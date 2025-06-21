@@ -292,8 +292,13 @@ def main():
 
                 if interface_name:
                     update_interface_from_doc(fp)
-                    # Remove this if we can!
-                    fp["ctype"] = m.group(2)
+
+                    ctype_name = "GDExtensionInterface" + "".join(
+                        word.capitalize() for word in interface_name.split("_")
+                    )
+                    if ctype_name != m.group(2):
+                        fp["legacy_type_name"] = m.group(2)
+
                     interfaces.append(fp)
                 else:
                     fp["name"] = m.group(2)

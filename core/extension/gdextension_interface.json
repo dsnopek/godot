@@ -3667,8 +3667,7 @@
                 "Gets the Godot version that the GDExtension was loaded into."
             ],
             "since": "4.1",
-            "deprecated": "Deprecated in Godot 4.5. Use `get_godot_version2` instead.",
-            "ctype": "GDExtensionInterfaceGetGodotVersion"
+            "deprecated": "Deprecated in Godot 4.5. Use `get_godot_version2` instead."
         },
         {
             "name": "get_godot_version2",
@@ -3687,8 +3686,7 @@
             "doc": [
                 "Gets the Godot version that the GDExtension was loaded into."
             ],
-            "since": "4.5",
-            "ctype": "GDExtensionInterfaceGetGodotVersion2"
+            "since": "4.5"
         },
         {
             "name": "mem_alloc",
@@ -3711,8 +3709,7 @@
                 "INTERFACE: Memory",
                 "Allocates memory."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceMemAlloc"
+            "since": "4.1"
         },
         {
             "name": "mem_realloc",
@@ -3741,8 +3738,7 @@
             "doc": [
                 "Reallocates memory."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceMemRealloc"
+            "since": "4.1"
         },
         {
             "name": "mem_free",
@@ -3761,8 +3757,7 @@
             "doc": [
                 "Frees memory."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceMemFree"
+            "since": "4.1"
         },
         {
             "name": "print_error",
@@ -3810,8 +3805,7 @@
                 "INTERFACE: Godot Core",
                 "Logs an error to Godot's built-in debugger and to the OS terminal."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePrintError"
+            "since": "4.1"
         },
         {
             "name": "print_error_with_message",
@@ -3865,8 +3859,7 @@
             "doc": [
                 "Logs an error with a message to Godot's built-in debugger and to the OS terminal."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePrintErrorWithMessage"
+            "since": "4.1"
         },
         {
             "name": "print_warning",
@@ -3913,8 +3906,7 @@
             "doc": [
                 "Logs a warning to Godot's built-in debugger and to the OS terminal."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePrintWarning"
+            "since": "4.1"
         },
         {
             "name": "print_warning_with_message",
@@ -3968,8 +3960,7 @@
             "doc": [
                 "Logs a warning with a message to Godot's built-in debugger and to the OS terminal."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePrintWarningWithMessage"
+            "since": "4.1"
         },
         {
             "name": "print_script_error",
@@ -4016,8 +4007,7 @@
             "doc": [
                 "Logs a script error to Godot's built-in debugger and to the OS terminal."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePrintScriptError"
+            "since": "4.1"
         },
         {
             "name": "print_script_error_with_message",
@@ -4071,8 +4061,7 @@
             "doc": [
                 "Logs a script error with a message to Godot's built-in debugger and to the OS terminal."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePrintScriptErrorWithMessage"
+            "since": "4.1"
         },
         {
             "name": "get_native_struct_size",
@@ -4094,8 +4083,7 @@
             "doc": [
                 "Gets the size of a native struct (ex. ObjectID) in bytes."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceGetNativeStructSize"
+            "since": "4.1"
         },
         {
             "name": "variant_new_copy",
@@ -4122,8 +4110,7 @@
                 "INTERFACE: Variant",
                 "Copies one Variant into a another."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantNewCopy"
+            "since": "4.1"
         },
         {
             "name": "variant_new_nil",
@@ -4142,8 +4129,7 @@
             "doc": [
                 "Creates a new Variant containing nil."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantNewNil"
+            "since": "4.1"
         },
         {
             "name": "variant_destroy",
@@ -4162,8 +4148,7 @@
             "doc": [
                 "Destroys a Variant."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantDestroy"
+            "since": "4.1"
         },
         {
             "name": "variant_call",
@@ -4218,8 +4203,7 @@
                 "Calls a method on a Variant.",
                 "@see Variant::callp()"
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantCall"
+            "since": "4.1"
         },
         {
             "name": "variant_call_static",
@@ -4274,8 +4258,7 @@
                 "Calls a static method on a Variant.",
                 "@see Variant::call_static()"
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantCallStatic"
+            "since": "4.1"
         },
         {
             "name": "variant_evaluate",
@@ -4323,8 +4306,7 @@
                 "Evaluate an operator on two Variants.",
                 "@see Variant::evaluate()"
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantEvaluate"
+            "since": "4.1"
         },
         {
             "name": "variant_set",
@@ -4365,8 +4347,7 @@
                 "Sets a key on a Variant to a value.",
                 "@see Variant::set()"
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantSet"
+            "since": "4.1"
         },
         {
             "name": "variant_set_named",
@@ -4407,8 +4388,7 @@
                 "Sets a named key on a Variant to a value.",
                 "@see Variant::set_named()"
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantSetNamed"
+            "since": "4.1"
         },
         {
             "name": "variant_set_keyed",
@@ -4449,8 +4429,7 @@
                 "Sets a keyed property on a Variant to a value.",
                 "@see Variant::set_keyed()"
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantSetKeyed"
+            "since": "4.1"
         },
         {
             "name": "variant_set_indexed",
@@ -4497,8 +4476,7 @@
             "doc": [
                 "Sets an index on a Variant to a value."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantSetIndexed"
+            "since": "4.1"
         },
         {
             "name": "variant_get",
@@ -4538,8 +4516,7 @@
             "doc": [
                 "Gets the value of a key from a Variant."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGet"
+            "since": "4.1"
         },
         {
             "name": "variant_get_named",
@@ -4579,8 +4556,7 @@
             "doc": [
                 "Gets the value of a named key from a Variant."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGetNamed"
+            "since": "4.1"
         },
         {
             "name": "variant_get_keyed",
@@ -4620,8 +4596,7 @@
             "doc": [
                 "Gets the value of a keyed property from a Variant."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGetKeyed"
+            "since": "4.1"
         },
         {
             "name": "variant_get_indexed",
@@ -4668,8 +4643,7 @@
             "doc": [
                 "Gets the value of an index from a Variant."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGetIndexed"
+            "since": "4.1"
         },
         {
             "name": "variant_iter_init",
@@ -4706,8 +4680,7 @@
                 "Initializes an iterator over a Variant.",
                 "@see Variant::iter_init()"
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantIterInit"
+            "since": "4.1"
         },
         {
             "name": "variant_iter_next",
@@ -4744,8 +4717,7 @@
                 "Gets the next value for an iterator over a Variant.",
                 "@see Variant::iter_next()"
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantIterNext"
+            "since": "4.1"
         },
         {
             "name": "variant_iter_get",
@@ -4786,8 +4758,7 @@
                 "Gets the next value for an iterator over a Variant.",
                 "@see Variant::iter_get()"
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantIterGet"
+            "since": "4.1"
         },
         {
             "name": "variant_hash",
@@ -4810,8 +4781,7 @@
                 "Gets the hash of a Variant.",
                 "@see Variant::hash()"
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantHash"
+            "since": "4.1"
         },
         {
             "name": "variant_recursive_hash",
@@ -4841,8 +4811,7 @@
                 "Gets the recursive hash of a Variant.",
                 "@see Variant::recursive_hash()"
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantRecursiveHash"
+            "since": "4.1"
         },
         {
             "name": "variant_hash_compare",
@@ -4872,8 +4841,7 @@
                 "Compares two Variants by their hash.",
                 "@see Variant::hash_compare()"
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantHashCompare"
+            "since": "4.1"
         },
         {
             "name": "variant_booleanize",
@@ -4895,8 +4863,7 @@
             "doc": [
                 "Converts a Variant to a boolean."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantBooleanize"
+            "since": "4.1"
         },
         {
             "name": "variant_duplicate",
@@ -4929,8 +4896,7 @@
             "doc": [
                 "Duplicates a Variant."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantDuplicate"
+            "since": "4.1"
         },
         {
             "name": "variant_stringify",
@@ -4956,8 +4922,7 @@
             "doc": [
                 "Converts a Variant to a string."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantStringify"
+            "since": "4.1"
         },
         {
             "name": "variant_get_type",
@@ -4979,8 +4944,7 @@
             "doc": [
                 "Gets the type of a Variant."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGetType"
+            "since": "4.1"
         },
         {
             "name": "variant_has_method",
@@ -5009,8 +4973,7 @@
             "doc": [
                 "Checks if a Variant has the given method."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantHasMethod"
+            "since": "4.1"
         },
         {
             "name": "variant_has_member",
@@ -5039,8 +5002,7 @@
             "doc": [
                 "Checks if a type of Variant has the given member."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantHasMember"
+            "since": "4.1"
         },
         {
             "name": "variant_has_key",
@@ -5076,8 +5038,7 @@
             "doc": [
                 "Checks if a Variant has a key."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantHasKey"
+            "since": "4.1"
         },
         {
             "name": "variant_get_object_instance_id",
@@ -5101,8 +5062,7 @@
                 "If the variant isn't of type GDEXTENSION_VARIANT_TYPE_OBJECT, then zero will be returned.",
                 "The instance ID will be returned even if the object is no longer valid - use `object_get_instance_by_id()` to check if the object is still valid."
             ],
-            "since": "4.4",
-            "ctype": "GDExtensionInterfaceVariantGetObjectInstanceId"
+            "since": "4.4"
         },
         {
             "name": "variant_get_type_name",
@@ -5128,8 +5088,7 @@
             "doc": [
                 "Gets the name of a Variant type."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGetTypeName"
+            "since": "4.1"
         },
         {
             "name": "variant_can_convert",
@@ -5158,8 +5117,7 @@
             "doc": [
                 "Checks if Variants can be converted from one type to another."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantCanConvert"
+            "since": "4.1"
         },
         {
             "name": "variant_can_convert_strict",
@@ -5188,8 +5146,7 @@
             "doc": [
                 "Checks if Variant can be converted from one type to another using stricter rules."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantCanConvertStrict"
+            "since": "4.1"
         },
         {
             "name": "get_variant_from_type_constructor",
@@ -5211,8 +5168,7 @@
             "doc": [
                 "Gets a pointer to a function that can create a Variant of the given type from a raw value."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceGetVariantFromTypeConstructor"
+            "since": "4.1"
         },
         {
             "name": "get_variant_to_type_constructor",
@@ -5234,8 +5190,7 @@
             "doc": [
                 "Gets a pointer to a function that can get the raw value from a Variant of the given type."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceGetVariantToTypeConstructor"
+            "since": "4.1"
         },
         {
             "name": "variant_get_ptr_internal_getter",
@@ -5263,7 +5218,7 @@
                 "Invoking the function with a variant of a mismatched type has undefined behavior, and may lead to a segmentation fault."
             ],
             "since": "4.4",
-            "ctype": "GDExtensionInterfaceGetVariantGetInternalPtrFunc"
+            "legacy_type_name": "GDExtensionInterfaceGetVariantGetInternalPtrFunc"
         },
         {
             "name": "variant_get_ptr_operator_evaluator",
@@ -5299,8 +5254,7 @@
             "doc": [
                 "Gets a pointer to a function that can evaluate the given Variant operator on the given Variant types."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGetPtrOperatorEvaluator"
+            "since": "4.1"
         },
         {
             "name": "variant_get_ptr_builtin_method",
@@ -5336,8 +5290,7 @@
             "doc": [
                 "Gets a pointer to a function that can call a builtin method on a type of Variant."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGetPtrBuiltinMethod"
+            "since": "4.1"
         },
         {
             "name": "variant_get_ptr_constructor",
@@ -5366,8 +5319,7 @@
             "doc": [
                 "Gets a pointer to a function that can call one of the constructors for a type of Variant."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGetPtrConstructor"
+            "since": "4.1"
         },
         {
             "name": "variant_get_ptr_destructor",
@@ -5389,8 +5341,7 @@
             "doc": [
                 "Gets a pointer to a function than can call the destructor for a type of Variant."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGetPtrDestructor"
+            "since": "4.1"
         },
         {
             "name": "variant_construct",
@@ -5437,8 +5388,7 @@
             "doc": [
                 "Constructs a Variant of the given type, using the first constructor that matches the given arguments."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantConstruct"
+            "since": "4.1"
         },
         {
             "name": "variant_get_ptr_setter",
@@ -5467,8 +5417,7 @@
             "doc": [
                 "Gets a pointer to a function that can call a member's setter on the given Variant type."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGetPtrSetter"
+            "since": "4.1"
         },
         {
             "name": "variant_get_ptr_getter",
@@ -5497,8 +5446,7 @@
             "doc": [
                 "Gets a pointer to a function that can call a member's getter on the given Variant type."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGetPtrGetter"
+            "since": "4.1"
         },
         {
             "name": "variant_get_ptr_indexed_setter",
@@ -5520,8 +5468,7 @@
             "doc": [
                 "Gets a pointer to a function that can set an index on the given Variant type."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGetPtrIndexedSetter"
+            "since": "4.1"
         },
         {
             "name": "variant_get_ptr_indexed_getter",
@@ -5543,8 +5490,7 @@
             "doc": [
                 "Gets a pointer to a function that can get an index on the given Variant type."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGetPtrIndexedGetter"
+            "since": "4.1"
         },
         {
             "name": "variant_get_ptr_keyed_setter",
@@ -5566,8 +5512,7 @@
             "doc": [
                 "Gets a pointer to a function that can set a key on the given Variant type."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGetPtrKeyedSetter"
+            "since": "4.1"
         },
         {
             "name": "variant_get_ptr_keyed_getter",
@@ -5589,8 +5534,7 @@
             "doc": [
                 "Gets a pointer to a function that can get a key on the given Variant type."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGetPtrKeyedGetter"
+            "since": "4.1"
         },
         {
             "name": "variant_get_ptr_keyed_checker",
@@ -5612,8 +5556,7 @@
             "doc": [
                 "Gets a pointer to a function that can check a key on the given Variant type."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGetPtrKeyedChecker"
+            "since": "4.1"
         },
         {
             "name": "variant_get_constant_value",
@@ -5646,8 +5589,7 @@
             "doc": [
                 "Gets the value of a constant from the given Variant type."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGetConstantValue"
+            "since": "4.1"
         },
         {
             "name": "variant_get_ptr_utility_function",
@@ -5676,8 +5618,7 @@
             "doc": [
                 "Gets a pointer to a function that can call a Variant utility function."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceVariantGetPtrUtilityFunction"
+            "since": "4.1"
         },
         {
             "name": "string_new_with_latin1_chars",
@@ -5704,8 +5645,7 @@
                 "INTERFACE: String Utilities",
                 "Creates a String from a Latin-1 encoded C string."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringNewWithLatin1Chars"
+            "since": "4.1"
         },
         {
             "name": "string_new_with_utf8_chars",
@@ -5731,8 +5671,7 @@
             "doc": [
                 "Creates a String from a UTF-8 encoded C string."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringNewWithUtf8Chars"
+            "since": "4.1"
         },
         {
             "name": "string_new_with_utf16_chars",
@@ -5758,8 +5697,7 @@
             "doc": [
                 "Creates a String from a UTF-16 encoded C string."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringNewWithUtf16Chars"
+            "since": "4.1"
         },
         {
             "name": "string_new_with_utf32_chars",
@@ -5785,8 +5723,7 @@
             "doc": [
                 "Creates a String from a UTF-32 encoded C string."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringNewWithUtf32Chars"
+            "since": "4.1"
         },
         {
             "name": "string_new_with_wide_chars",
@@ -5812,8 +5749,7 @@
             "doc": [
                 "Creates a String from a wide C string."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringNewWithWideChars"
+            "since": "4.1"
         },
         {
             "name": "string_new_with_latin1_chars_and_len",
@@ -5846,8 +5782,7 @@
             "doc": [
                 "Creates a String from a Latin-1 encoded C string with the given length."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringNewWithLatin1CharsAndLen"
+            "since": "4.1"
         },
         {
             "name": "string_new_with_utf8_chars_and_len",
@@ -5881,8 +5816,7 @@
                 "Creates a String from a UTF-8 encoded C string with the given length."
             ],
             "since": "4.1",
-            "deprecated": "Deprecated in Godot 4.3. Use `string_new_with_utf8_chars_and_len2` instead.",
-            "ctype": "GDExtensionInterfaceStringNewWithUtf8CharsAndLen"
+            "deprecated": "Deprecated in Godot 4.3. Use `string_new_with_utf8_chars_and_len2` instead."
         },
         {
             "name": "string_new_with_utf8_chars_and_len2",
@@ -5918,8 +5852,7 @@
             "doc": [
                 "Creates a String from a UTF-8 encoded C string with the given length."
             ],
-            "since": "4.3",
-            "ctype": "GDExtensionInterfaceStringNewWithUtf8CharsAndLen2"
+            "since": "4.3"
         },
         {
             "name": "string_new_with_utf16_chars_and_len",
@@ -5953,8 +5886,7 @@
                 "Creates a String from a UTF-16 encoded C string with the given length."
             ],
             "since": "4.1",
-            "deprecated": "Deprecated in Godot 4.3. Use `string_new_with_utf16_chars_and_len2` instead.",
-            "ctype": "GDExtensionInterfaceStringNewWithUtf16CharsAndLen"
+            "deprecated": "Deprecated in Godot 4.3. Use `string_new_with_utf16_chars_and_len2` instead."
         },
         {
             "name": "string_new_with_utf16_chars_and_len2",
@@ -5997,8 +5929,7 @@
             "doc": [
                 "Creates a String from a UTF-16 encoded C string with the given length."
             ],
-            "since": "4.3",
-            "ctype": "GDExtensionInterfaceStringNewWithUtf16CharsAndLen2"
+            "since": "4.3"
         },
         {
             "name": "string_new_with_utf32_chars_and_len",
@@ -6031,8 +5962,7 @@
             "doc": [
                 "Creates a String from a UTF-32 encoded C string with the given length."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringNewWithUtf32CharsAndLen"
+            "since": "4.1"
         },
         {
             "name": "string_new_with_wide_chars_and_len",
@@ -6065,8 +5995,7 @@
             "doc": [
                 "Creates a String from a wide C string with the given length."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringNewWithWideCharsAndLen"
+            "since": "4.1"
         },
         {
             "name": "string_to_latin1_chars",
@@ -6103,8 +6032,7 @@
                 "Converts a String to a Latin-1 encoded C string.",
                 "It doesn't write a null terminator."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringToLatin1Chars"
+            "since": "4.1"
         },
         {
             "name": "string_to_utf8_chars",
@@ -6141,8 +6069,7 @@
                 "Converts a String to a UTF-8 encoded C string.",
                 "It doesn't write a null terminator."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringToUtf8Chars"
+            "since": "4.1"
         },
         {
             "name": "string_to_utf16_chars",
@@ -6179,8 +6106,7 @@
                 "Converts a String to a UTF-16 encoded C string.",
                 "It doesn't write a null terminator."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringToUtf16Chars"
+            "since": "4.1"
         },
         {
             "name": "string_to_utf32_chars",
@@ -6217,8 +6143,7 @@
                 "Converts a String to a UTF-32 encoded C string.",
                 "It doesn't write a null terminator."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringToUtf32Chars"
+            "since": "4.1"
         },
         {
             "name": "string_to_wide_chars",
@@ -6255,8 +6180,7 @@
                 "Converts a String to a wide C string.",
                 "It doesn't write a null terminator."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringToWideChars"
+            "since": "4.1"
         },
         {
             "name": "string_operator_index",
@@ -6285,8 +6209,7 @@
             "doc": [
                 "Gets a pointer to the character at the given index from a String."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringOperatorIndex"
+            "since": "4.1"
         },
         {
             "name": "string_operator_index_const",
@@ -6315,8 +6238,7 @@
             "doc": [
                 "Gets a const pointer to the character at the given index from a String."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringOperatorIndexConst"
+            "since": "4.1"
         },
         {
             "name": "string_operator_plus_eq_string",
@@ -6342,8 +6264,7 @@
             "doc": [
                 "Appends another String to a String."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringOperatorPlusEqString"
+            "since": "4.1"
         },
         {
             "name": "string_operator_plus_eq_char",
@@ -6369,8 +6290,7 @@
             "doc": [
                 "Appends a character to a String."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringOperatorPlusEqChar"
+            "since": "4.1"
         },
         {
             "name": "string_operator_plus_eq_cstr",
@@ -6396,8 +6316,7 @@
             "doc": [
                 "Appends a Latin-1 encoded C string to a String."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringOperatorPlusEqCstr"
+            "since": "4.1"
         },
         {
             "name": "string_operator_plus_eq_wcstr",
@@ -6423,8 +6342,7 @@
             "doc": [
                 "Appends a wide C string to a String."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringOperatorPlusEqWcstr"
+            "since": "4.1"
         },
         {
             "name": "string_operator_plus_eq_c32str",
@@ -6450,8 +6368,7 @@
             "doc": [
                 "Appends a UTF-32 encoded C string to a String."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceStringOperatorPlusEqC32str"
+            "since": "4.1"
         },
         {
             "name": "string_resize",
@@ -6485,8 +6402,7 @@
                 "Warning: This is an error-prone operation - only use it if there's no other",
                 "efficient way to accomplish your goal."
             ],
-            "since": "4.2",
-            "ctype": "GDExtensionInterfaceStringResize"
+            "since": "4.2"
         },
         {
             "name": "string_name_new_with_latin1_chars",
@@ -6527,8 +6443,7 @@
                 "",
                 "`p_is_static` is purely an optimization and can easily introduce undefined behavior if used wrong. In case of doubt, set it to false."
             ],
-            "since": "4.2",
-            "ctype": "GDExtensionInterfaceStringNameNewWithLatin1Chars"
+            "since": "4.2"
         },
         {
             "name": "string_name_new_with_utf8_chars",
@@ -6554,8 +6469,7 @@
             "doc": [
                 "Creates a StringName from a UTF-8 encoded C string."
             ],
-            "since": "4.2",
-            "ctype": "GDExtensionInterfaceStringNameNewWithUtf8Chars"
+            "since": "4.2"
         },
         {
             "name": "string_name_new_with_utf8_chars_and_len",
@@ -6588,8 +6502,7 @@
             "doc": [
                 "Creates a StringName from a UTF-8 encoded string with a given number of characters."
             ],
-            "since": "4.2",
-            "ctype": "GDExtensionInterfaceStringNameNewWithUtf8CharsAndLen"
+            "since": "4.2"
         },
         {
             "name": "xml_parser_open_buffer",
@@ -6628,8 +6541,7 @@
                 "",
                 "@see XMLParser::open_buffer()"
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceXmlParserOpenBuffer"
+            "since": "4.1"
         },
         {
             "name": "file_access_store_buffer",
@@ -6665,8 +6577,7 @@
                 "",
                 "@see FileAccess::store_buffer()"
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceFileAccessStoreBuffer"
+            "since": "4.1"
         },
         {
             "name": "file_access_get_buffer",
@@ -6702,8 +6613,7 @@
             "doc": [
                 "Reads the next p_length bytes into the given buffer using an instance of FileAccess."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceFileAccessGetBuffer"
+            "since": "4.1"
         },
         {
             "name": "image_ptrw",
@@ -6728,8 +6638,7 @@
                 "",
                 "@see Image::ptrw()"
             ],
-            "since": "4.3",
-            "ctype": "GDExtensionInterfaceImagePtrw"
+            "since": "4.3"
         },
         {
             "name": "image_ptr",
@@ -6752,8 +6661,7 @@
                 "Returns read only pointer to internal Image buffer.",
                 "@see Image::ptr()"
             ],
-            "since": "4.3",
-            "ctype": "GDExtensionInterfaceImagePtr"
+            "since": "4.3"
         },
         {
             "name": "worker_thread_pool_add_native_group_task",
@@ -6820,8 +6728,7 @@
                 "",
                 "@see WorkerThreadPool::add_group_task()"
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceWorkerThreadPoolAddNativeGroupTask"
+            "since": "4.1"
         },
         {
             "name": "worker_thread_pool_add_native_task",
@@ -6871,8 +6778,7 @@
             "doc": [
                 "Adds a task to an instance of WorkerThreadPool."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceWorkerThreadPoolAddNativeTask"
+            "since": "4.1"
         },
         {
             "name": "packed_byte_array_operator_index",
@@ -6902,8 +6808,7 @@
                 "INTERFACE: Packed Array",
                 "Gets a pointer to a byte in a PackedByteArray."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePackedByteArrayOperatorIndex"
+            "since": "4.1"
         },
         {
             "name": "packed_byte_array_operator_index_const",
@@ -6932,8 +6837,7 @@
             "doc": [
                 "Gets a const pointer to a byte in a PackedByteArray."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePackedByteArrayOperatorIndexConst"
+            "since": "4.1"
         },
         {
             "name": "packed_float32_array_operator_index",
@@ -6962,8 +6866,7 @@
             "doc": [
                 "Gets a pointer to a 32-bit float in a PackedFloat32Array."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePackedFloat32ArrayOperatorIndex"
+            "since": "4.1"
         },
         {
             "name": "packed_float32_array_operator_index_const",
@@ -6992,8 +6895,7 @@
             "doc": [
                 "Gets a const pointer to a 32-bit float in a PackedFloat32Array."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePackedFloat32ArrayOperatorIndexConst"
+            "since": "4.1"
         },
         {
             "name": "packed_float64_array_operator_index",
@@ -7022,8 +6924,7 @@
             "doc": [
                 "Gets a pointer to a 64-bit float in a PackedFloat64Array."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePackedFloat64ArrayOperatorIndex"
+            "since": "4.1"
         },
         {
             "name": "packed_float64_array_operator_index_const",
@@ -7052,8 +6953,7 @@
             "doc": [
                 "Gets a const pointer to a 64-bit float in a PackedFloat64Array."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePackedFloat64ArrayOperatorIndexConst"
+            "since": "4.1"
         },
         {
             "name": "packed_int32_array_operator_index",
@@ -7082,8 +6982,7 @@
             "doc": [
                 "Gets a pointer to a 32-bit integer in a PackedInt32Array."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePackedInt32ArrayOperatorIndex"
+            "since": "4.1"
         },
         {
             "name": "packed_int32_array_operator_index_const",
@@ -7112,8 +7011,7 @@
             "doc": [
                 "Gets a const pointer to a 32-bit integer in a PackedInt32Array."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePackedInt32ArrayOperatorIndexConst"
+            "since": "4.1"
         },
         {
             "name": "packed_int64_array_operator_index",
@@ -7142,8 +7040,7 @@
             "doc": [
                 "Gets a pointer to a 64-bit integer in a PackedInt64Array."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePackedInt64ArrayOperatorIndex"
+            "since": "4.1"
         },
         {
             "name": "packed_int64_array_operator_index_const",
@@ -7172,8 +7069,7 @@
             "doc": [
                 "Gets a const pointer to a 64-bit integer in a PackedInt64Array."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePackedInt64ArrayOperatorIndexConst"
+            "since": "4.1"
         },
         {
             "name": "packed_string_array_operator_index",
@@ -7202,8 +7098,7 @@
             "doc": [
                 "Gets a pointer to a string in a PackedStringArray."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePackedStringArrayOperatorIndex"
+            "since": "4.1"
         },
         {
             "name": "packed_string_array_operator_index_const",
@@ -7232,8 +7127,7 @@
             "doc": [
                 "Gets a const pointer to a string in a PackedStringArray."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePackedStringArrayOperatorIndexConst"
+            "since": "4.1"
         },
         {
             "name": "packed_vector2_array_operator_index",
@@ -7262,8 +7156,7 @@
             "doc": [
                 "Gets a pointer to a Vector2 in a PackedVector2Array."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePackedVector2ArrayOperatorIndex"
+            "since": "4.1"
         },
         {
             "name": "packed_vector2_array_operator_index_const",
@@ -7292,8 +7185,7 @@
             "doc": [
                 "Gets a const pointer to a Vector2 in a PackedVector2Array."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePackedVector2ArrayOperatorIndexConst"
+            "since": "4.1"
         },
         {
             "name": "packed_vector3_array_operator_index",
@@ -7322,8 +7214,7 @@
             "doc": [
                 "Gets a pointer to a Vector3 in a PackedVector3Array."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePackedVector3ArrayOperatorIndex"
+            "since": "4.1"
         },
         {
             "name": "packed_vector3_array_operator_index_const",
@@ -7352,8 +7243,7 @@
             "doc": [
                 "Gets a const pointer to a Vector3 in a PackedVector3Array."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePackedVector3ArrayOperatorIndexConst"
+            "since": "4.1"
         },
         {
             "name": "packed_vector4_array_operator_index",
@@ -7382,8 +7272,7 @@
             "doc": [
                 "Gets a pointer to a Vector4 in a PackedVector4Array."
             ],
-            "since": "4.3",
-            "ctype": "GDExtensionInterfacePackedVector4ArrayOperatorIndex"
+            "since": "4.3"
         },
         {
             "name": "packed_vector4_array_operator_index_const",
@@ -7412,8 +7301,7 @@
             "doc": [
                 "Gets a const pointer to a Vector4 in a PackedVector4Array."
             ],
-            "since": "4.3",
-            "ctype": "GDExtensionInterfacePackedVector4ArrayOperatorIndexConst"
+            "since": "4.3"
         },
         {
             "name": "packed_color_array_operator_index",
@@ -7442,8 +7330,7 @@
             "doc": [
                 "Gets a pointer to a color in a PackedColorArray."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePackedColorArrayOperatorIndex"
+            "since": "4.1"
         },
         {
             "name": "packed_color_array_operator_index_const",
@@ -7472,8 +7359,7 @@
             "doc": [
                 "Gets a const pointer to a color in a PackedColorArray."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfacePackedColorArrayOperatorIndexConst"
+            "since": "4.1"
         },
         {
             "name": "array_operator_index",
@@ -7502,8 +7388,7 @@
             "doc": [
                 "Gets a pointer to a Variant in an Array."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceArrayOperatorIndex"
+            "since": "4.1"
         },
         {
             "name": "array_operator_index_const",
@@ -7532,8 +7417,7 @@
             "doc": [
                 "Gets a const pointer to a Variant in an Array."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceArrayOperatorIndexConst"
+            "since": "4.1"
         },
         {
             "name": "array_ref",
@@ -7560,8 +7444,7 @@
                 "Sets an Array to be a reference to another Array object."
             ],
             "since": "4.1",
-            "deprecated": "Deprecated in Godot 4.5. use `Array::operator=` instead.",
-            "ctype": "GDExtensionInterfaceArrayRef"
+            "deprecated": "Deprecated in Godot 4.5. use `Array::operator=` instead."
         },
         {
             "name": "array_set_typed",
@@ -7601,8 +7484,7 @@
             "doc": [
                 "Makes an Array into a typed Array."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceArraySetTyped"
+            "since": "4.1"
         },
         {
             "name": "dictionary_operator_index",
@@ -7632,8 +7514,7 @@
                 "INTERFACE: Dictionary",
                 "Gets a pointer to a Variant in a Dictionary with the given key."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceDictionaryOperatorIndex"
+            "since": "4.1"
         },
         {
             "name": "dictionary_operator_index_const",
@@ -7662,8 +7543,7 @@
             "doc": [
                 "Gets a const pointer to a Variant in a Dictionary with the given key."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceDictionaryOperatorIndexConst"
+            "since": "4.1"
         },
         {
             "name": "dictionary_set_typed",
@@ -7724,8 +7604,7 @@
             "doc": [
                 "Makes a Dictionary into a typed Dictionary."
             ],
-            "since": "4.4",
-            "ctype": "GDExtensionInterfaceDictionarySetTyped"
+            "since": "4.4"
         },
         {
             "name": "object_method_bind_call",
@@ -7780,8 +7659,7 @@
                 "INTERFACE: Object",
                 "Calls a method on an Object."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceObjectMethodBindCall"
+            "since": "4.1"
         },
         {
             "name": "object_method_bind_ptrcall",
@@ -7821,8 +7699,7 @@
             "doc": [
                 "Calls a method on an Object (using a \"ptrcall\")."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceObjectMethodBindPtrcall"
+            "since": "4.1"
         },
         {
             "name": "object_destroy",
@@ -7841,8 +7718,7 @@
             "doc": [
                 "Destroys an Object."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceObjectDestroy"
+            "since": "4.1"
         },
         {
             "name": "global_get_singleton",
@@ -7864,8 +7740,7 @@
             "doc": [
                 "Gets a global singleton by name."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceGlobalGetSingleton"
+            "since": "4.1"
         },
         {
             "name": "object_get_instance_binding",
@@ -7901,8 +7776,7 @@
             "doc": [
                 "Gets a pointer representing an Object's instance binding."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceObjectGetInstanceBinding"
+            "since": "4.1"
         },
         {
             "name": "object_set_instance_binding",
@@ -7942,8 +7816,7 @@
             "doc": [
                 "Sets an Object's instance binding."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceObjectSetInstanceBinding"
+            "since": "4.1"
         },
         {
             "name": "object_free_instance_binding",
@@ -7969,8 +7842,7 @@
             "doc": [
                 "Free an Object's instance binding."
             ],
-            "since": "4.2",
-            "ctype": "GDExtensionInterfaceObjectFreeInstanceBinding"
+            "since": "4.2"
         },
         {
             "name": "object_set_instance",
@@ -8004,8 +7876,7 @@
                 "Sets an extension class instance on a Object.",
                 "`p_classname` should be a registered extension class and should extend the `p_o` Object's class."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceObjectSetInstance"
+            "since": "4.1"
         },
         {
             "name": "object_get_class_name",
@@ -8043,8 +7914,7 @@
                 "If the GDExtension wraps the Godot object in an abstraction specific to its class, this is the",
                 "function that should be used to determine which wrapper to use."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceObjectGetClassName"
+            "since": "4.1"
         },
         {
             "name": "object_cast_to",
@@ -8073,8 +7943,7 @@
             "doc": [
                 "Casts an Object to a different type."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceObjectCastTo"
+            "since": "4.1"
         },
         {
             "name": "object_get_instance_from_id",
@@ -8096,8 +7965,7 @@
             "doc": [
                 "Gets an Object by its instance ID."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceObjectGetInstanceFromId"
+            "since": "4.1"
         },
         {
             "name": "object_get_instance_id",
@@ -8119,8 +7987,7 @@
             "doc": [
                 "Gets the instance ID from an Object."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceObjectGetInstanceId"
+            "since": "4.1"
         },
         {
             "name": "object_has_script_method",
@@ -8149,8 +8016,7 @@
             "doc": [
                 "Checks if this object has a script with the given method."
             ],
-            "since": "4.3",
-            "ctype": "GDExtensionInterfaceObjectHasScriptMethod"
+            "since": "4.3"
         },
         {
             "name": "object_call_script_method",
@@ -8204,8 +8070,7 @@
             "doc": [
                 "Call the given script method on this object."
             ],
-            "since": "4.3",
-            "ctype": "GDExtensionInterfaceObjectCallScriptMethod"
+            "since": "4.3"
         },
         {
             "name": "ref_get_object",
@@ -8228,8 +8093,7 @@
                 "INTERFACE: Reference",
                 "Gets the Object from a reference."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceRefGetObject"
+            "since": "4.1"
         },
         {
             "name": "ref_set_object",
@@ -8255,8 +8119,7 @@
             "doc": [
                 "Sets the Object referred to by a reference."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceRefSetObject"
+            "since": "4.1"
         },
         {
             "name": "script_instance_create",
@@ -8287,8 +8150,7 @@
                 "Creates a script instance that contains the given info and instance data."
             ],
             "since": "4.1",
-            "deprecated": "Deprecated in Godot 4.2. Use `script_instance_create3` instead.",
-            "ctype": "GDExtensionInterfaceScriptInstanceCreate"
+            "deprecated": "Deprecated in Godot 4.2. Use `script_instance_create3` instead."
         },
         {
             "name": "script_instance_create2",
@@ -8318,8 +8180,7 @@
                 "Creates a script instance that contains the given info and instance data."
             ],
             "since": "4.2",
-            "deprecated": "Deprecated in Godot 4.3. Use `script_instance_create3` instead.",
-            "ctype": "GDExtensionInterfaceScriptInstanceCreate2"
+            "deprecated": "Deprecated in Godot 4.3. Use `script_instance_create3` instead."
         },
         {
             "name": "script_instance_create3",
@@ -8348,8 +8209,7 @@
             "doc": [
                 "Creates a script instance that contains the given info and instance data."
             ],
-            "since": "4.3",
-            "ctype": "GDExtensionInterfaceScriptInstanceCreate3"
+            "since": "4.3"
         },
         {
             "name": "placeholder_script_instance_create",
@@ -8387,7 +8247,7 @@
                 "This interface is optional as a custom placeholder could also be created with script_instance_create()."
             ],
             "since": "4.2",
-            "ctype": "GDExtensionInterfacePlaceHolderScriptInstanceCreate"
+            "legacy_type_name": "GDExtensionInterfacePlaceHolderScriptInstanceCreate"
         },
         {
             "name": "placeholder_script_instance_update",
@@ -8423,7 +8283,7 @@
                 "such as the one returned by placeholder_script_instance_create()."
             ],
             "since": "4.2",
-            "ctype": "GDExtensionInterfacePlaceHolderScriptInstanceUpdate"
+            "legacy_type_name": "GDExtensionInterfacePlaceHolderScriptInstanceUpdate"
         },
         {
             "name": "object_get_script_instance",
@@ -8452,8 +8312,7 @@
             "doc": [
                 "Get the script instance data attached to this object."
             ],
-            "since": "4.2",
-            "ctype": "GDExtensionInterfaceObjectGetScriptInstance"
+            "since": "4.2"
         },
         {
             "name": "object_set_script_instance",
@@ -8479,8 +8338,7 @@
             "doc": [
                 "Set the script instance data attached to this object."
             ],
-            "since": "4.5",
-            "ctype": "GDExtensionInterfaceObjectSetScriptInstance"
+            "since": "4.5"
         },
         {
             "name": "callable_custom_create",
@@ -8510,8 +8368,7 @@
                 "Provided struct can be safely freed once the function returns."
             ],
             "since": "4.2",
-            "deprecated": "Deprecated in Godot 4.3. Use `callable_custom_create2` instead.",
-            "ctype": "GDExtensionInterfaceCallableCustomCreate"
+            "deprecated": "Deprecated in Godot 4.3. Use `callable_custom_create2` instead."
         },
         {
             "name": "callable_custom_create2",
@@ -8538,8 +8395,7 @@
                 "Creates a custom Callable object from a function pointer.",
                 "Provided struct can be safely freed once the function returns."
             ],
-            "since": "4.3",
-            "ctype": "GDExtensionInterfaceCallableCustomCreate2"
+            "since": "4.3"
         },
         {
             "name": "callable_custom_get_userdata",
@@ -8570,7 +8426,7 @@
                 "If the Callable is not a custom Callable or the token does not match the one provided to callable_custom_create() via GDExtensionCallableCustomInfo then NULL will be returned."
             ],
             "since": "4.2",
-            "ctype": "GDExtensionInterfaceCallableCustomGetUserData"
+            "legacy_type_name": "GDExtensionInterfaceCallableCustomGetUserData"
         },
         {
             "name": "classdb_construct_object",
@@ -8596,8 +8452,7 @@
                 "The passed class must be a built-in godot class, or an already-registered extension class. In both cases, object_set_instance() should be called to fully initialize the object."
             ],
             "since": "4.1",
-            "deprecated": "Deprecated in Godot 4.4. Use `classdb_construct_object2` instead.",
-            "ctype": "GDExtensionInterfaceClassdbConstructObject"
+            "deprecated": "Deprecated in Godot 4.4. Use `classdb_construct_object2` instead."
         },
         {
             "name": "classdb_construct_object2",
@@ -8622,8 +8477,7 @@
                 "",
                 "\"NOTIFICATION_POSTINITIALIZE\" must be sent after construction."
             ],
-            "since": "4.4",
-            "ctype": "GDExtensionInterfaceClassdbConstructObject2"
+            "since": "4.4"
         },
         {
             "name": "classdb_get_method_bind",
@@ -8659,8 +8513,7 @@
             "doc": [
                 "Gets a pointer to the MethodBind in ClassDB for the given class, method and hash."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceClassdbGetMethodBind"
+            "since": "4.1"
         },
         {
             "name": "classdb_get_class_tag",
@@ -8682,8 +8535,7 @@
             "doc": [
                 "Gets a pointer uniquely identifying the given built-in class in the ClassDB."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceClassdbGetClassTag"
+            "since": "4.1"
         },
         {
             "name": "classdb_register_extension_class",
@@ -8727,8 +8579,7 @@
                 "Provided struct can be safely freed once the function returns."
             ],
             "since": "4.1",
-            "deprecated": "Deprecated in Godot 4.2. Use `classdb_register_extension_class4` instead.",
-            "ctype": "GDExtensionInterfaceClassdbRegisterExtensionClass"
+            "deprecated": "Deprecated in Godot 4.2. Use `classdb_register_extension_class4` instead."
         },
         {
             "name": "classdb_register_extension_class2",
@@ -8770,8 +8621,7 @@
                 "Provided struct can be safely freed once the function returns."
             ],
             "since": "4.2",
-            "deprecated": "Deprecated in Godot 4.3. Use `classdb_register_extension_class4` instead.",
-            "ctype": "GDExtensionInterfaceClassdbRegisterExtensionClass2"
+            "deprecated": "Deprecated in Godot 4.3. Use `classdb_register_extension_class4` instead."
         },
         {
             "name": "classdb_register_extension_class3",
@@ -8813,8 +8663,7 @@
                 "Provided struct can be safely freed once the function returns."
             ],
             "since": "4.3",
-            "deprecated": "Deprecated in Godot 4.4. Use `classdb_register_extension_class4` instead.",
-            "ctype": "GDExtensionInterfaceClassdbRegisterExtensionClass3"
+            "deprecated": "Deprecated in Godot 4.4. Use `classdb_register_extension_class4` instead."
         },
         {
             "name": "classdb_register_extension_class4",
@@ -8855,8 +8704,7 @@
                 "Registers an extension class in the ClassDB.",
                 "Provided struct can be safely freed once the function returns."
             ],
-            "since": "4.4",
-            "ctype": "GDExtensionInterfaceClassdbRegisterExtensionClass4"
+            "since": "4.4"
         },
         {
             "name": "classdb_register_extension_class_method",
@@ -8890,8 +8738,7 @@
                 "Registers a method on an extension class in the ClassDB.",
                 "Provided struct can be safely freed once the function returns."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceClassdbRegisterExtensionClassMethod"
+            "since": "4.1"
         },
         {
             "name": "classdb_register_extension_class_virtual_method",
@@ -8925,8 +8772,7 @@
                 "Registers a virtual method on an extension class in ClassDB, that can be implemented by scripts or other extensions.",
                 "Provided struct can be safely freed once the function returns."
             ],
-            "since": "4.3",
-            "ctype": "GDExtensionInterfaceClassdbRegisterExtensionClassVirtualMethod"
+            "since": "4.3"
         },
         {
             "name": "classdb_register_extension_class_integer_constant",
@@ -8983,8 +8829,7 @@
                 "advised to treat bitfields as uint64_t, since this is generally clearer and can prevent mistakes like using -1 for setting all bits.",
                 "Language APIs should thus provide an abstraction that registers bitfields (uint64_t) separately from regular constants (int64_t)."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceClassdbRegisterExtensionClassIntegerConstant"
+            "since": "4.1"
         },
         {
             "name": "classdb_register_extension_class_property",
@@ -9032,8 +8877,7 @@
                 "Registers a property on an extension class in the ClassDB.",
                 "Provided struct can be safely freed once the function returns."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceClassdbRegisterExtensionClassProperty"
+            "since": "4.1"
         },
         {
             "name": "classdb_register_extension_class_property_indexed",
@@ -9088,8 +8932,7 @@
                 "Registers an indexed property on an extension class in the ClassDB.",
                 "Provided struct can be safely freed once the function returns."
             ],
-            "since": "4.2",
-            "ctype": "GDExtensionInterfaceClassdbRegisterExtensionClassPropertyIndexed"
+            "since": "4.2"
         },
         {
             "name": "classdb_register_extension_class_property_group",
@@ -9129,8 +8972,7 @@
             "doc": [
                 "Registers a property group on an extension class in the ClassDB."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceClassdbRegisterExtensionClassPropertyGroup"
+            "since": "4.1"
         },
         {
             "name": "classdb_register_extension_class_property_subgroup",
@@ -9170,8 +9012,7 @@
             "doc": [
                 "Registers a property subgroup on an extension class in the ClassDB."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceClassdbRegisterExtensionClassPropertySubgroup"
+            "since": "4.1"
         },
         {
             "name": "classdb_register_extension_class_signal",
@@ -9219,8 +9060,7 @@
                 "Registers a signal on an extension class in the ClassDB.",
                 "Provided structs can be safely freed once the function returns."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceClassdbRegisterExtensionClassSignal"
+            "since": "4.1"
         },
         {
             "name": "classdb_unregister_extension_class",
@@ -9247,8 +9087,7 @@
                 "Unregisters an extension class in the ClassDB.",
                 "Unregistering a parent class before a class that inherits it will result in failure. Inheritors must be unregistered first."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceClassdbUnregisterExtensionClass"
+            "since": "4.1"
         },
         {
             "name": "get_library_path",
@@ -9274,8 +9113,7 @@
             "doc": [
                 "Gets the path to the current GDExtension library."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceGetLibraryPath"
+            "since": "4.1"
         },
         {
             "name": "editor_add_plugin",
@@ -9295,8 +9133,7 @@
                 "Adds an editor plugin.",
                 "It's safe to call during initialization."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceEditorAddPlugin"
+            "since": "4.1"
         },
         {
             "name": "editor_remove_plugin",
@@ -9315,8 +9152,7 @@
             "doc": [
                 "Removes an editor plugin."
             ],
-            "since": "4.1",
-            "ctype": "GDExtensionInterfaceEditorRemovePlugin"
+            "since": "4.1"
         },
         {
             "name": "editor_help_load_xml_from_utf8_chars",
@@ -9337,7 +9173,7 @@
                 "The provided pointer can be immediately freed once the function returns."
             ],
             "since": "4.3",
-            "ctype": "GDExtensionsInterfaceEditorHelpLoadXmlFromUtf8Chars"
+            "legacy_type_name": "GDExtensionsInterfaceEditorHelpLoadXmlFromUtf8Chars"
         },
         {
             "name": "editor_help_load_xml_from_utf8_chars_and_len",
@@ -9365,7 +9201,7 @@
                 "The provided pointer can be immediately freed once the function returns."
             ],
             "since": "4.3",
-            "ctype": "GDExtensionsInterfaceEditorHelpLoadXmlFromUtf8CharsAndLen"
+            "legacy_type_name": "GDExtensionsInterfaceEditorHelpLoadXmlFromUtf8CharsAndLen"
         },
         {
             "name": "editor_register_get_classes_used_callback",
@@ -9395,8 +9231,7 @@
                 "In the provided callback, the GDExtension should provide the list of classes that _may_ be used statically, thus the time of invocation shouldn't matter.",
                 "If a GDExtension doesn't register a callback, Godot will assume that it could be using any classes."
             ],
-            "since": "4.5",
-            "ctype": "GDExtensionInterfaceEditorRegisterGetClassesUsedCallback"
+            "since": "4.5"
         },
         {
             "name": "register_main_loop_callbacks",
@@ -9422,8 +9257,7 @@
             "doc": [
                 "Registers callbacks to be called at different phases of the main loop."
             ],
-            "since": "4.5",
-            "ctype": "GDExtensionInterfaceRegisterMainLoopCallbacks"
+            "since": "4.5"
         }
     ]
 }

@@ -154,7 +154,7 @@ def write_interface(file, interface):
     file.write("/**\n")
     for d in doc:
         file.write(f" * {d}\n")
-    file.write("*/\n")
+    file.write(" */\n")
 
     fn = interface.copy()
     if "legacy_type_name" in interface:

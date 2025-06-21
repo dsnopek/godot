@@ -55,7 +55,7 @@ static const char *INTRO =
 		"#include <cstddef>\n"
 		"#include <cstdint>\n"
 		"\n"
-		"extern \" C \" {\n"
+		"extern \"C\" {\n"
 		"#endif\n"
 		"\n";
 
@@ -204,4 +204,70 @@ String GDExtensionInterfaceHeaderGenerator::make_args_text(const Array &p_args) 
 }
 
 void GDExtensionInterfaceHeaderGenerator::write_interface(const Ref<FileAccess> &p_fa, const Dictionary &p_interface) {
+	Vector<String> doc;
+
+	doc.push_back(String("@name ") + (String)p_interface["name"]);
+	doc.push_back(String("@since ") + (String)p_interface["since"]);
+
+	if (p_interface.has("deprecated")) {
+		String deprecated = p_interface["deprecated"];
+		if (deprecated.to_lower().begins_with("deprecated")) {
+			Vector<String> parts = deprecated.split_spaces(1);
+			deprecated = parts[1];
+		}
+		doc.push_back(String("@deprecated ") + deprecated);
+	}
+
+	Array orig_doc = p_interface["doc"];
+	for (int i = 0; i < orig_doc.size(); i++) {
+		// Put an empty line before the 1st and 2nd lines.
+		if (i <= 1) {
+			doc.push_back("");
+		}
+		doc.push_back(orig_doc[i]);
+	}
+
+	if (p_interface.has("args")) {
+		Array args = p_interface["args"];
+		for (const Variant &arg : args) {
+			Dictionary arg_dict = arg;
+			String arg_string = String("@param ") + (String)arg_dict["name"];
+			if (arg_dict.has("doc")) {
+				Array arg_doc = arg_dict["doc"];
+				for (const Variant &d : arg_doc) {
+					arg_string += String(" ") + (String)d;
+				}
+			}
+			doc.push_back(arg_string);
+		}
+	}
+
+	if (p_interface.has("ret")) {
+		Dictionary ret = p_interface["ret"];
+		String ret_string = String("@return");
+		if (ret.has("doc")) {
+			Array arg_doc = ret["doc"];
+			for (const Variant &d : arg_doc) {
+				ret_string += String(" ") + (String)d;
+			}
+		}
+		doc.push_back("");
+		doc.push_back(ret_string);
+	}
+
+	p_fa->store_string("/**\n");
+	for (const String &d : doc) {
+		p_fa->store_string(vformat(" * %s\n", d));
+	}
+	p_fa->store_string(" */\n");
+
+	Dictionary func = p_interface.duplicate();
+	if (p_interface.has("legacy_type_name")) {
+		func["name"] = p_interface["legacy_type_name"];
+	} else {
+		func["name"] = String("GDExtensionInterface") + ((String)p_interface["name"]).to_pascal_case();
+	}
+	write_function_type(p_fa, func);
+
+	p_fa->store_string("\n");
 }

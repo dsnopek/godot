@@ -4,6 +4,36 @@ import json
 import re
 import sys
 
+COPYRIGHT = """
+/**************************************************************************/
+/*                         This file is part of:                          */
+/*                             GODOT ENGINE                               */
+/*                        https://godotengine.org                         */
+/**************************************************************************/
+/* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
+/* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
+/*                                                                        */
+/* Permission is hereby granted, free of charge, to any person obtaining  */
+/* a copy of this software and associated documentation files (the        */
+/* "Software"), to deal in the Software without restriction, including    */
+/* without limitation the rights to use, copy, modify, merge, publish,    */
+/* distribute, sublicense, and/or sell copies of the Software, and to     */
+/* permit persons to whom the Software is furnished to do so, subject to  */
+/* the following conditions:                                              */
+/*                                                                        */
+/* The above copyright notice and this permission notice shall be         */
+/* included in all copies or substantial portions of the Software.        */
+/*                                                                        */
+/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,        */
+/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF     */
+/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. */
+/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY   */
+/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,   */
+/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE      */
+/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
+/**************************************************************************/
+"""
+
 # TODO:
 #
 # - Parse descriptions into normal text
@@ -11,6 +41,28 @@ import sys
 # - Parse function pointer arguments
 # - Parse interface doc comments into structured data (including argument docs)
 # - Include copyright info at the top of the file
+
+
+def clean_description(description):
+    out = []
+
+    for line in description:
+        if line.startswith("//") or line.startswith("/*"):
+            line = line[2:]
+        if line.endswith("*/"):
+            line = line[:-2]
+        if line.startswith("*"):
+            line = line[1:]
+        line = line.strip()
+
+        out.append(line)
+
+    if out[0] == "":
+        out = out[1:]
+    if out[-1] == "":
+        out = out[:-1]
+
+    return out
 
 
 def main():
@@ -41,6 +93,9 @@ def main():
         if line.startswith("extern"):
             continue
 
+        if line == "/* VARIANT TYPES */":
+            description.clear()
+
         if line.startswith("//"):
             description.append(line)
         elif line.startswith("/*"):
@@ -53,9 +108,6 @@ def main():
         elif in_comment:
             description.append(line)
             continue
-
-        if line == "/* VARIANT TYPES */":
-            description.clear()
 
         # Enums.
         if line.startswith("typedef enum {"):
@@ -80,7 +132,7 @@ def main():
                     member["value"] = len(members)
 
                 if len(description) > 0:
-                    member["doc"] = description[:]
+                    member["doc"] = clean_description(description)
                     description.clear()
 
                 members.append(member)
@@ -113,7 +165,7 @@ def main():
                 }
 
                 if len(description) > 0:
-                    member["doc"] = description[:]
+                    member["doc"] = clean_description(description)
                     description.clear()
 
                 members.append(member)
@@ -140,7 +192,7 @@ def main():
                 fp["args"] = m.group(3).strip()
 
                 if len(description) > 0:
-                    fp["doc"] = description[:]
+                    fp["doc"] = clean_description(description)
                     description.clear()
 
                 if interface_name:
@@ -166,7 +218,7 @@ def main():
                     }
 
                     if len(description) > 0:
-                        stype["doc"] = description[:]
+                        stype["doc"] = clean_description(description)
                         description.clear()
 
                     types.append(stype)
@@ -188,7 +240,7 @@ def main():
                         "members": members[:],
                     }
                     if len(parent_description) > 0:
-                        data["doc"] = parent_description[:]
+                        data["doc"] = clean_description(parent_description)
                     types.append(data)
                     in_enum = False
 
@@ -199,7 +251,7 @@ def main():
                         "members": members[:],
                     }
                     if len(parent_description) > 0:
-                        data["doc"] = parent_description[:]
+                        data["doc"] = clean_description(parent_description)
                     types.append(data)
                     in_struct = False
             else:
@@ -210,7 +262,11 @@ def main():
             parent_description.clear()
             description.clear()
 
+    copyright = list(filter(lambda x: x != "", map(lambda x: x.strip(), COPYRIGHT.split("\n"))))
+
     api = {
+        "_copyright": copyright,
+        "format_version": 1,
         "types": types,
         "interface": interfaces,
     }

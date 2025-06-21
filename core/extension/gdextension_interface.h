@@ -734,6 +734,9 @@ typedef enum {
 	GDEXTENSION_MAX_INITIALIZATION_LEVEL,
 } GDExtensionInitializationLevel;
 
+typedef void (*GDExtensionInitializeCallback)(void *p_userdata, GDExtensionInitializationLevel p_level);
+typedef void (*GDExtensionDeinitializeCallback)(void *p_userdata, GDExtensionInitializationLevel p_level);
+
 typedef struct {
 	/* Minimum initialization level required.
 	 * If Core or Servers, the extension needs editor or game restart to take effect */
@@ -741,8 +744,8 @@ typedef struct {
 	/* Up to the user to supply when initializing */
 	void *userdata;
 	/* This function will be called multiple times for each initialization level. */
-	void (*initialize)(void *userdata, GDExtensionInitializationLevel p_level);
-	void (*deinitialize)(void *userdata, GDExtensionInitializationLevel p_level);
+	GDExtensionInitializeCallback initialize;
+	GDExtensionDeinitializeCallback deinitialize;
 } GDExtensionInitialization;
 
 typedef void (*GDExtensionInterfaceFunctionPtr)();

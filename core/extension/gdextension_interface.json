@@ -4212,10 +4212,12 @@
                 }
             ],
             "doc": [
-                "Calls a method on a Variant.",
-                "@see Variant::callp()"
+                "Calls a method on a Variant."
             ],
-            "since": "4.1"
+            "since": "4.1",
+            "see": [
+                "Variant::callp()"
+            ]
         },
         {
             "name": "variant_call_static",
@@ -4267,10 +4269,12 @@
                 }
             ],
             "doc": [
-                "Calls a static method on a Variant.",
-                "@see Variant::call_static()"
+                "Calls a static method on a Variant."
             ],
-            "since": "4.1"
+            "since": "4.1",
+            "see": [
+                "Variant::call_static()"
+            ]
         },
         {
             "name": "variant_evaluate",
@@ -4315,10 +4319,12 @@
                 }
             ],
             "doc": [
-                "Evaluate an operator on two Variants.",
-                "@see Variant::evaluate()"
+                "Evaluate an operator on two Variants."
             ],
-            "since": "4.1"
+            "since": "4.1",
+            "see": [
+                "Variant::evaluate()"
+            ]
         },
         {
             "name": "variant_set",
@@ -4356,10 +4362,12 @@
                 }
             ],
             "doc": [
-                "Sets a key on a Variant to a value.",
-                "@see Variant::set()"
+                "Sets a key on a Variant to a value."
             ],
-            "since": "4.1"
+            "since": "4.1",
+            "see": [
+                "Variant::set()"
+            ]
         },
         {
             "name": "variant_set_named",
@@ -4397,10 +4405,12 @@
                 }
             ],
             "doc": [
-                "Sets a named key on a Variant to a value.",
-                "@see Variant::set_named()"
+                "Sets a named key on a Variant to a value."
             ],
-            "since": "4.1"
+            "since": "4.1",
+            "see": [
+                "Variant::set_named()"
+            ]
         },
         {
             "name": "variant_set_keyed",
@@ -4438,10 +4448,12 @@
                 }
             ],
             "doc": [
-                "Sets a keyed property on a Variant to a value.",
-                "@see Variant::set_keyed()"
+                "Sets a keyed property on a Variant to a value."
             ],
-            "since": "4.1"
+            "since": "4.1",
+            "see": [
+                "Variant::set_keyed()"
+            ]
         },
         {
             "name": "variant_set_indexed",
@@ -4689,10 +4701,12 @@
                 }
             ],
             "doc": [
-                "Initializes an iterator over a Variant.",
-                "@see Variant::iter_init()"
+                "Initializes an iterator over a Variant."
             ],
-            "since": "4.1"
+            "since": "4.1",
+            "see": [
+                "Variant::iter_init()"
+            ]
         },
         {
             "name": "variant_iter_next",
@@ -4726,10 +4740,12 @@
                 }
             ],
             "doc": [
-                "Gets the next value for an iterator over a Variant.",
-                "@see Variant::iter_next()"
+                "Gets the next value for an iterator over a Variant."
             ],
-            "since": "4.1"
+            "since": "4.1",
+            "see": [
+                "Variant::iter_next()"
+            ]
         },
         {
             "name": "variant_iter_get",
@@ -4767,10 +4783,12 @@
                 }
             ],
             "doc": [
-                "Gets the next value for an iterator over a Variant.",
-                "@see Variant::iter_get()"
+                "Gets the next value for an iterator over a Variant."
             ],
-            "since": "4.1"
+            "since": "4.1",
+            "see": [
+                "Variant::iter_get()"
+            ]
         },
         {
             "name": "variant_hash",
@@ -4790,10 +4808,12 @@
                 }
             ],
             "doc": [
-                "Gets the hash of a Variant.",
-                "@see Variant::hash()"
+                "Gets the hash of a Variant."
             ],
-            "since": "4.1"
+            "since": "4.1",
+            "see": [
+                "Variant::hash()"
+            ]
         },
         {
             "name": "variant_recursive_hash",
@@ -4820,10 +4840,12 @@
                 }
             ],
             "doc": [
-                "Gets the recursive hash of a Variant.",
-                "@see Variant::recursive_hash()"
+                "Gets the recursive hash of a Variant."
             ],
-            "since": "4.1"
+            "since": "4.1",
+            "see": [
+                "Variant::recursive_hash()"
+            ]
         },
         {
             "name": "variant_hash_compare",
@@ -4850,10 +4872,12 @@
                 }
             ],
             "doc": [
-                "Compares two Variants by their hash.",
-                "@see Variant::hash_compare()"
+                "Compares two Variants by their hash."
             ],
-            "since": "4.1"
+            "since": "4.1",
+            "see": [
+                "Variant::hash_compare()"
+            ]
         },
         {
             "name": "variant_booleanize",
@@ -6549,11 +6573,12 @@
             ],
             "doc": [
                 "INTERFACE: XMLParser Utilities",
-                "Opens a raw XML buffer on an XMLParser instance.",
-                "",
-                "@see XMLParser::open_buffer()"
+                "Opens a raw XML buffer on an XMLParser instance."
             ],
-            "since": "4.1"
+            "since": "4.1",
+            "see": [
+                "XMLParser::open_buffer()"
+            ]
         },
         {
             "name": "file_access_store_buffer",
@@ -6585,11 +6610,12 @@
             ],
             "doc": [
                 "INTERFACE: FileAccess Utilities",
-                "Stores the given buffer using an instance of FileAccess.",
-                "",
-                "@see FileAccess::store_buffer()"
+                "Stores the given buffer using an instance of FileAccess."
             ],
-            "since": "4.1"
+            "since": "4.1",
+            "see": [
+                "FileAccess::store_buffer()"
+            ]
         },
         {
             "name": "file_access_get_buffer",
@@ -6646,11 +6672,12 @@
             ],
             "doc": [
                 "INTERFACE: Image Utilities",
-                "Returns writable pointer to internal Image buffer.",
-                "",
-                "@see Image::ptrw()"
+                "Returns writable pointer to internal Image buffer."
             ],
-            "since": "4.3"
+            "since": "4.3",
+            "see": [
+                "Image::ptrw()"
+            ]
         },
         {
             "name": "image_ptr",
@@ -6670,10 +6697,12 @@
                 }
             ],
             "doc": [
-                "Returns read only pointer to internal Image buffer.",
-                "@see Image::ptr()"
+                "Returns read only pointer to internal Image buffer."
             ],
-            "since": "4.3"
+            "since": "4.3",
+            "see": [
+                "Image::ptr()"
+            ]
         },
         {
             "name": "worker_thread_pool_add_native_group_task",
@@ -6736,11 +6765,12 @@
             ],
             "doc": [
                 "INTERFACE: WorkerThreadPool Utilities",
-                "Adds a group task to an instance of WorkerThreadPool.",
-                "",
-                "@see WorkerThreadPool::add_group_task()"
+                "Adds a group task to an instance of WorkerThreadPool."
             ],
-            "since": "4.1"
+            "since": "4.1",
+            "see": [
+                "WorkerThreadPool::add_group_task()"
+            ]
         },
         {
             "name": "worker_thread_pool_add_native_task",

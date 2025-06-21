@@ -143,6 +143,13 @@ def update_interface_from_doc(interface):
                 print("*** In", interface["name"], "- unable to find return value!")
             continue
 
+        if line.startswith("@see"):
+            parts = line.split(" ", 1)
+            if "see" not in interface:
+                interface["see"] = []
+            interface["see"].append(parts[1])
+            continue
+
         if line.startswith("@note"):
             parts = line.split(" ", 1)
             line = parts[1]

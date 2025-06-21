@@ -151,6 +151,11 @@ def write_interface(file, interface):
         doc.append("")
         doc.append(f"@return {ret_doc}")
 
+    if "see" in interface:
+        doc.append("")
+        for see in interface["see"]:
+            doc.append(f"@see {see}")
+
     file.write("/**\n")
     for d in doc:
         file.write(f" * {d}\n")

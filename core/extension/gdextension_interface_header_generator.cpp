@@ -259,6 +259,16 @@ void GDExtensionInterfaceHeaderGenerator::write_interface(const Ref<FileAccess> 
 		}
 	}
 
+	if (p_interface.has("see")) {
+		Array see_array = p_interface["see"];
+		if (see_array.size() > 0) {
+			doc.push_back("");
+			for (const Variant &see : see_array) {
+				doc.push_back(String("@see ") + (String)see);
+			}
+		}
+	}
+
 	p_fa->store_string("/**\n");
 	for (const String &d : doc) {
 		if (d == "") {

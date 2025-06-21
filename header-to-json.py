@@ -85,6 +85,59 @@ def parse_args(text):
     return args
 
 
+def update_interface_from_doc(interface):
+    out = []
+
+    for line in interface["doc"]:
+        if line.startswith("@name"):
+            # We've already pulled this in.
+            continue
+
+        if line.startswith("@since"):
+            parts = line.split(" ", 1)
+            interface["since"] = parts[1]
+            continue
+
+        if line.startswith("@deprecated"):
+            parts = line.split(" ", 1)
+            interface["deprecated"] = parts[1]
+            continue
+
+        if line.startswith("@param"):
+            parts = line.split(" ", 2)
+            arg_name = parts[1]
+            arg_desc = parts[2]
+            arg_found = False
+            for arg in interface["args"]:
+                if arg["name"] == arg_name:
+                    arg_found = True
+                    arg["doc"] = [arg_desc]
+            if not arg_found:
+                print("*** In", interface["name"], "- unable to find arg:", arg_name)
+            continue
+
+        if line.startswith("@return"):
+            parts = line.split(" ", 1)
+            if len(parts) > 1 and "ret" in interface:
+                interface["ret"]["doc"] = [parts[1]]
+            else:
+                print("*** In", interface["name"], "- unable to find return value!")
+            continue
+
+        out.append(line)
+
+    while len(out) > 0 and out[0] == "":
+        out = out[1:]
+    while len(out) > 0 and out[-1] == "":
+        out = out[:-1]
+
+    # We have a single line separating the brief from the long description. We can remove that in the JSON.
+    if len(out) >= 2 and out[1] == "":
+        del out[1]
+
+    interface["doc"] = out
+
+
 def main():
     fn = sys.argv[1]
 
@@ -208,7 +261,9 @@ def main():
                     fp["name"] = m.group(2)
                     fp["type"] = "function"
 
-                fp["ret"] = m.group(1).strip()
+                fp["ret"] = {
+                    "type": m.group(1).strip(),
+                }
                 fp["args"] = parse_args(m.group(3).strip())
 
                 if len(description) > 0:
@@ -216,9 +271,9 @@ def main():
                     description.clear()
 
                 if interface_name:
+                    update_interface_from_doc(fp)
                     # Remove this if we can!
                     fp["ctype"] = m.group(2)
-                    # @todo Parse the doc string
                     interfaces.append(fp)
                 else:
                     fp["name"] = m.group(2)

@@ -724,6 +724,9 @@ typedef struct {
 
 } GDExtensionScriptInstanceInfo3;
 
+typedef void (*GDExtensionWorkerThreadPoolGroupTask)(void *, uint32_t);
+typedef void (*GDExtensionWorkerThreadPoolTask)(void *);
+
 /* INITIALIZATION */
 
 typedef enum {
@@ -1042,7 +1045,6 @@ typedef void (*GDExtensionInterfaceVariantCall)(GDExtensionVariantPtr p_self, GD
  *
  * Calls a static method on a Variant.
  *
- * @param p_self A pointer to the Variant.
  * @param p_method A pointer to a StringName identifying the method.
  * @param p_args A pointer to a C array of Variant.
  * @param p_argument_count The number of arguments.
@@ -1328,7 +1330,7 @@ typedef GDExtensionVariantType (*GDExtensionInterfaceVariantGetType)(GDExtension
  * @param p_self A pointer to the Variant.
  * @param p_method A pointer to a StringName with the method name.
  *
- * @return
+ * @return true if the variant has the given method; otherwise false.
  */
 typedef GDExtensionBool (*GDExtensionInterfaceVariantHasMethod)(GDExtensionConstVariantPtr p_self, GDExtensionConstStringNamePtr p_method);
 
@@ -1341,7 +1343,7 @@ typedef GDExtensionBool (*GDExtensionInterfaceVariantHasMethod)(GDExtensionConst
  * @param p_type The Variant type.
  * @param p_member A pointer to a StringName with the member name.
  *
- * @return
+ * @return true if the variant has the given method; otherwise false.
  */
 typedef GDExtensionBool (*GDExtensionInterfaceVariantHasMember)(GDExtensionVariantType p_type, GDExtensionConstStringNamePtr p_member);
 
@@ -1512,7 +1514,7 @@ typedef GDExtensionPtrDestructor (*GDExtensionInterfaceVariantGetPtrDestructor)(
  * Constructs a Variant of the given type, using the first constructor that matches the given arguments.
  *
  * @param p_type The Variant type.
- * @param p_base A pointer to a Variant to store the constructed value.
+ * @param r_base A pointer to a Variant to store the constructed value.
  * @param p_args A pointer to a C array of Variant pointers representing the arguments for the constructor.
  * @param p_argument_count The number of arguments to pass to the constructor.
  * @param r_error A pointer the structure which will be updated with error information.
@@ -1735,7 +1737,7 @@ typedef GDExtensionInt (*GDExtensionInterfaceStringNewWithUtf8CharsAndLen2)(GDEx
  *
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a UTF-16 encoded C string.
- * @param p_size The number of characters (not bytes).
+ * @param p_char_count The number of characters (not bytes).
  */
 typedef void (*GDExtensionInterfaceStringNewWithUtf16CharsAndLen)(GDExtensionUninitializedStringPtr r_dest, const char16_t *p_contents, GDExtensionInt p_char_count);
 
@@ -1747,7 +1749,7 @@ typedef void (*GDExtensionInterfaceStringNewWithUtf16CharsAndLen)(GDExtensionUni
  *
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a UTF-16 encoded C string.
- * @param p_size The number of characters (not bytes).
+ * @param p_char_count The number of characters (not bytes).
  * @param p_default_little_endian If true, UTF-16 use little endian.
  *
  * @return Error code signifying if the operation successful.
@@ -1762,7 +1764,7 @@ typedef GDExtensionInt (*GDExtensionInterfaceStringNewWithUtf16CharsAndLen2)(GDE
  *
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a UTF-32 encoded C string.
- * @param p_size The number of characters (not bytes).
+ * @param p_char_count The number of characters (not bytes).
  */
 typedef void (*GDExtensionInterfaceStringNewWithUtf32CharsAndLen)(GDExtensionUninitializedStringPtr r_dest, const char32_t *p_contents, GDExtensionInt p_char_count);
 
@@ -1774,7 +1776,7 @@ typedef void (*GDExtensionInterfaceStringNewWithUtf32CharsAndLen)(GDExtensionUni
  *
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a wide C string.
- * @param p_size The number of characters (not bytes).
+ * @param p_char_count The number of characters (not bytes).
  */
 typedef void (*GDExtensionInterfaceStringNewWithWideCharsAndLen)(GDExtensionUninitializedStringPtr r_dest, const wchar_t *p_contents, GDExtensionInt p_char_count);
 
@@ -2099,7 +2101,7 @@ typedef const uint8_t *(*GDExtensionInterfaceImagePtr)(GDExtensionObjectPtr p_in
  *
  * @see WorkerThreadPool::add_group_task()
  */
-typedef int64_t (*GDExtensionInterfaceWorkerThreadPoolAddNativeGroupTask)(GDExtensionObjectPtr p_instance, void (*p_func)(void *, uint32_t), void *p_userdata, int p_elements, int p_tasks, GDExtensionBool p_high_priority, GDExtensionConstStringPtr p_description);
+typedef int64_t (*GDExtensionInterfaceWorkerThreadPoolAddNativeGroupTask)(GDExtensionObjectPtr p_instance, GDExtensionWorkerThreadPoolGroupTask p_func, void *p_userdata, int p_elements, int p_tasks, GDExtensionBool p_high_priority, GDExtensionConstStringPtr p_description);
 
 /**
  * @name worker_thread_pool_add_native_task
@@ -2115,7 +2117,7 @@ typedef int64_t (*GDExtensionInterfaceWorkerThreadPoolAddNativeGroupTask)(GDExte
  *
  * @return The task ID.
  */
-typedef int64_t (*GDExtensionInterfaceWorkerThreadPoolAddNativeTask)(GDExtensionObjectPtr p_instance, void (*p_func)(void *), void *p_userdata, GDExtensionBool p_high_priority, GDExtensionConstStringPtr p_description);
+typedef int64_t (*GDExtensionInterfaceWorkerThreadPoolAddNativeTask)(GDExtensionObjectPtr p_instance, GDExtensionWorkerThreadPoolTask p_func, void *p_userdata, GDExtensionBool p_high_priority, GDExtensionConstStringPtr p_description);
 
 /* INTERFACE: Packed Array */
 
@@ -2533,10 +2535,10 @@ typedef GDExtensionObjectPtr (*GDExtensionInterfaceGlobalGetSingleton)(GDExtensi
  * Gets a pointer representing an Object's instance binding.
  *
  * @param p_o A pointer to the Object.
- * @param p_library A token the library received by the GDExtension's entry point function.
+ * @param p_token A token the library received by the GDExtension's entry point function.
  * @param p_callbacks A pointer to a GDExtensionInstanceBindingCallbacks struct.
  *
- * @return
+ * @return A pointer to the instance binding.
  */
 typedef void *(*GDExtensionInterfaceObjectGetInstanceBinding)(GDExtensionObjectPtr p_o, void *p_token, const GDExtensionInstanceBindingCallbacks *p_callbacks);
 
@@ -2547,7 +2549,7 @@ typedef void *(*GDExtensionInterfaceObjectGetInstanceBinding)(GDExtensionObjectP
  * Sets an Object's instance binding.
  *
  * @param p_o A pointer to the Object.
- * @param p_library A token the library received by the GDExtension's entry point function.
+ * @param p_token A token the library received by the GDExtension's entry point function.
  * @param p_binding A pointer to the instance binding.
  * @param p_callbacks A pointer to a GDExtensionInstanceBindingCallbacks struct.
  */
@@ -2560,7 +2562,7 @@ typedef void (*GDExtensionInterfaceObjectSetInstanceBinding)(GDExtensionObjectPt
  * Free an Object's instance binding.
  *
  * @param p_o A pointer to the Object.
- * @param p_library A token the library received by the GDExtension's entry point function.
+ * @param p_token A token the library received by the GDExtension's entry point function.
  */
 typedef void (*GDExtensionInterfaceObjectFreeInstanceBinding)(GDExtensionObjectPtr p_o, void *p_token);
 
@@ -3075,10 +3077,12 @@ typedef void (*GDExtensionInterfaceClassdbRegisterExtensionClassSignal)(GDExtens
  *
  * Unregisters an extension class in the ClassDB.
  *
+ * Unregistering a parent class before a class that inherits it will result in failure. Inheritors must be unregistered first.
+ *
  * @param p_library A pointer the library received by the GDExtension's entry point function.
  * @param p_class_name A pointer to a StringName with the class name.
  */
-typedef void (*GDExtensionInterfaceClassdbUnregisterExtensionClass)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name); /* Unregistering a parent class before a class that inherits it will result in failure. Inheritors must be unregistered first. */
+typedef void (*GDExtensionInterfaceClassdbUnregisterExtensionClass)(GDExtensionClassLibraryPtr p_library, GDExtensionConstStringNamePtr p_class_name);
 
 /**
  * @name get_library_path
@@ -3161,7 +3165,7 @@ typedef void (*GDExtensionInterfaceEditorRegisterGetClassesUsedCallback)(GDExten
  * Registers callbacks to be called at different phases of the main loop.
  *
  * @param p_library A pointer the library received by the GDExtension's entry point function.
- * @param p_callback A pointer to the structure that contains the callbacks.
+ * @param p_callbacks A pointer to the structure that contains the callbacks.
  */
 typedef void (*GDExtensionInterfaceRegisterMainLoopCallbacks)(GDExtensionClassLibraryPtr p_library, const GDExtensionMainLoopCallbacks *p_callbacks);
 

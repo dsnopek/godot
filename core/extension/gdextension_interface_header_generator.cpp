@@ -30,5 +30,65 @@
 
 #include "gdextension_interface_header_generator.h"
 
+#include "core/io/file_access.h"
+#include "core/io/json.h"
+#include "gdextension_interface_dump.gen.h"
+
+static const char *FILE_HEADER =
+		"/**************************************************************************/\n"
+		"/*  gdextension_interface.h                                               */\n";
+
+static const char *INTRO =
+		"\n"
+		"#pragma once\n"
+		"\n"
+		"/* This is a C class header, you can copy it and use it directly in your own binders.\n"
+		" * Together with the `extension_api.json` file, you should be able to generate any binder.\n"
+		" */\n"
+		"\n"
+		"#ifndef __cplusplus\n"
+		"#include <stddef.h>\n"
+		"#include <stdint.h>\n"
+		"\n"
+		"typedef uint32_t char32_t;\n"
+		"typedef uint16_t char16_t;\n"
+		"#else\n"
+		"#include <cstddef>\n"
+		"#include <cstdint>\n"
+		"\n"
+		"extern \" C \" {\n"
+		"#endif\n"
+		"\n";
+
+static const char *OUTRO =
+		"\n"
+		"#ifdef __cplusplus\n"
+		"}\n"
+		"#endif\n";
+
 void GDExtensionInterfaceHeaderGenerator::generate_gdextension_interface_header(const String &p_path) {
+	Ref<FileAccess> fa = FileAccess::open(p_path, FileAccess::WRITE);
+	ERR_FAIL_COND_MSG(fa.is_null(), vformat("Cannot open file '%s' for writing.", p_path));
+
+	Vector<uint8_t> bytes = GDExtensionInterfaceDump::load_gdextension_interface_file();
+	String json_string = String::utf8(Span<char>((char *)bytes.ptr(), bytes.size()));
+
+	Ref<JSON> json;
+	json.instantiate();
+	Error err = json->parse(json_string);
+	ERR_FAIL_COND(err);
+
+	Dictionary data = json->get_data();
+	ERR_FAIL_COND(data.size() == 0);
+
+	fa->store_string(FILE_HEADER);
+
+	Array copyright = data["_copyright"];
+	for (const Variant &line : copyright) {
+		fa->store_line(line);
+	}
+
+	fa->store_string(INTRO);
+
+	fa->store_string(OUTRO);
 }

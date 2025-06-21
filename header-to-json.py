@@ -214,7 +214,7 @@ def main():
                     stype = {
                         "name": m.group(2),
                         "type": "simple",
-                        "def": m.group(1),
+                        "def": m.group(1).strip(),
                     }
 
                     if len(description) > 0:

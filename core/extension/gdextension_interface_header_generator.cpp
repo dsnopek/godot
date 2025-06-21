@@ -179,7 +179,7 @@ void GDExtensionInterfaceHeaderGenerator::write_struct_type(const Ref<FileAccess
 		}
 		String member_type = member_dict["type"];
 		p_fa->store_string("\t" + member_type);
-		if (member_type.ends_with("*")) {
+		if (!member_type.ends_with("*")) {
 			p_fa->store_string(" ");
 		}
 		p_fa->store_string((String)member_dict["name"] + ";\n");

@@ -36,7 +36,7 @@ COPYRIGHT = """
 
 # TODO:
 #
-# - Parse interface doc comments into structured data (including argument docs)
+# - Should we remove p_ and r_ (and add a `is_return` to mark the returns?)
 
 
 def clean_description(description):
@@ -123,6 +123,10 @@ def update_interface_from_doc(interface):
             else:
                 print("*** In", interface["name"], "- unable to find return value!")
             continue
+
+        if line.startswith("@note"):
+            parts = line.split(" ", 1)
+            line = parts[1]
 
         out.append(line)
 

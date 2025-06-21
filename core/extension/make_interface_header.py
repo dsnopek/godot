@@ -48,7 +48,7 @@ extern "C" {
 """)
 
 
-def write_doc(file, doc, indent="", *, doxygen=False):
+def write_doc(file, doc, indent=""):
     if len(doc) == 1:
         file.write(f"{indent}/* {doc[0]} */\n")
         return

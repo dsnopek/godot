@@ -30,7 +30,6 @@
 
 #include "gdextension_interface_header_generator.h"
 
-#include "core/io/file_access.h"
 #include "core/io/json.h"
 #include "gdextension_interface_dump.gen.h"
 
@@ -90,5 +89,53 @@ void GDExtensionInterfaceHeaderGenerator::generate_gdextension_interface_header(
 
 	fa->store_string(INTRO);
 
+	Array types = data["types"];
+	for (const Variant &type : types) {
+		Dictionary type_dict = type;
+		if (type_dict.has("doc")) {
+			write_doc(fa, type_dict["doc"]);
+		}
+	}
+
 	fa->store_string(OUTRO);
+}
+
+void GDExtensionInterfaceHeaderGenerator::write_doc(const Ref<FileAccess> &p_fa, const Array &p_doc, const String &p_indent) {
+	if (p_doc.size() == 1) {
+		p_fa->store_string(vformat("%s/* %s */\n", p_indent, p_doc[0]));
+		return;
+	}
+
+	bool first = true;
+	for (const Variant &line : p_doc) {
+		if (first) {
+			p_fa->store_string(p_indent + "/* ");
+			first = false;
+		} else {
+			p_fa->store_string(p_indent + " * ");
+		}
+
+		p_fa->store_line(line);
+	}
+
+	p_fa->store_line(p_indent + " */\n");
+}
+
+void GDExtensionInterfaceHeaderGenerator::write_simple_type(const Ref<FileAccess> &p_fa, const Dictionary &p_type) {
+}
+
+void GDExtensionInterfaceHeaderGenerator::write_enum_type(const Ref<FileAccess> &p_fa, const Dictionary &p_enum) {
+}
+
+void GDExtensionInterfaceHeaderGenerator::write_function_type(const Ref<FileAccess> &p_fa, const Dictionary &p_func) {
+}
+
+void GDExtensionInterfaceHeaderGenerator::write_struct_type(const Ref<FileAccess> &p_fa, const Dictionary &p_struct) {
+}
+
+String GDExtensionInterfaceHeaderGenerator::make_args_text(const Array &p_args) {
+	return "";
+}
+
+void GDExtensionInterfaceHeaderGenerator::write_interface(const Ref<FileAccess> &p_fa, const Dictionary &p_interface) {
 }

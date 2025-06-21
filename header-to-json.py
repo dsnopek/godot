@@ -36,11 +36,7 @@ COPYRIGHT = """
 
 # TODO:
 #
-# - Parse descriptions into normal text
-#   - Decide on format for multiple line strings
-# - Parse function pointer arguments
 # - Parse interface doc comments into structured data (including argument docs)
-# - Include copyright info at the top of the file
 
 
 def clean_description(description):
@@ -63,6 +59,30 @@ def clean_description(description):
         out = out[:-1]
 
     return out
+
+
+def parse_args(text):
+    args = []
+
+    parts = filter(lambda x: x != "", map(lambda x: x.strip(), text.split(",")))
+    for part in parts:
+        words = list(filter(lambda x: x != "", map(lambda x: x.strip(), part.split(" "))))
+        if len(words) > 2:
+            words = [" ".join(words[:-1]), words[-1]]
+        if len(words) == 2 and words[1][0] == "*":
+            words[0] += " *"
+            words[1] = words[1][1:]
+        if len(words) == 0:
+            print("Unable to parse arg: ", part)
+
+        arg = {}
+        if len(words) == 2:
+            arg["name"] = words[1]
+        arg["type"] = words[0]
+
+        args.append(arg)
+
+    return args
 
 
 def main():
@@ -189,7 +209,7 @@ def main():
                     fp["type"] = "function"
 
                 fp["ret"] = m.group(1).strip()
-                fp["args"] = m.group(3).strip()
+                fp["args"] = parse_args(m.group(3).strip())
 
                 if len(description) > 0:
                     fp["doc"] = clean_description(description)

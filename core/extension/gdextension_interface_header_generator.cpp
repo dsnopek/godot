@@ -60,7 +60,6 @@ static const char *INTRO =
 		"\n";
 
 static const char *OUTRO =
-		"\n"
 		"#ifdef __cplusplus\n"
 		"}\n"
 		"#endif\n";
@@ -229,30 +228,35 @@ void GDExtensionInterfaceHeaderGenerator::write_interface(const Ref<FileAccess> 
 
 	if (p_interface.has("args")) {
 		Array args = p_interface["args"];
-		for (const Variant &arg : args) {
-			Dictionary arg_dict = arg;
-			String arg_string = String("@param ") + (String)arg_dict["name"];
-			if (arg_dict.has("doc")) {
-				Array arg_doc = arg_dict["doc"];
-				for (const Variant &d : arg_doc) {
-					arg_string += String(" ") + (String)d;
+		if (args.size() > 0) {
+			doc.push_back("");
+			for (const Variant &arg : args) {
+				Dictionary arg_dict = arg;
+				String arg_string = String("@param ") + (String)arg_dict["name"];
+				if (arg_dict.has("doc")) {
+					Array arg_doc = arg_dict["doc"];
+					for (const Variant &d : arg_doc) {
+						arg_string += String(" ") + (String)d;
+					}
 				}
+				doc.push_back(arg_string);
 			}
-			doc.push_back(arg_string);
 		}
 	}
 
 	if (p_interface.has("ret")) {
 		Dictionary ret = p_interface["ret"];
-		String ret_string = String("@return");
-		if (ret.has("doc")) {
-			Array arg_doc = ret["doc"];
-			for (const Variant &d : arg_doc) {
-				ret_string += String(" ") + (String)d;
+		if (ret["type"] != "void") {
+			String ret_string = String("@return");
+			if (ret.has("doc")) {
+				Array arg_doc = ret["doc"];
+				for (const Variant &d : arg_doc) {
+					ret_string += String(" ") + (String)d;
+				}
 			}
+			doc.push_back("");
+			doc.push_back(ret_string);
 		}
-		doc.push_back("");
-		doc.push_back(ret_string);
 	}
 
 	p_fa->store_string("/**\n");
@@ -265,7 +269,14 @@ void GDExtensionInterfaceHeaderGenerator::write_interface(const Ref<FileAccess> 
 	if (p_interface.has("legacy_type_name")) {
 		func["name"] = p_interface["legacy_type_name"];
 	} else {
-		func["name"] = String("GDExtensionInterface") + ((String)p_interface["name"]).to_pascal_case();
+		// Cannot use `to_pascal_case()` because it'll capitalize after numbers.
+		Vector<String> words = ((String)p_interface["name"]).split("_");
+		for (String &word : words) {
+			// Cannot use `capitalize()` on the whole string, because it'll separate numbers with a space.
+			const char32_t upper[2] = { String::char_uppercase(word[0]), 0 };
+			word = String(upper) + word.substr(1);
+		}
+		func["name"] = String("GDExtensionInterface") + String("").join(words);
 	}
 	write_function_type(p_fa, func);
 

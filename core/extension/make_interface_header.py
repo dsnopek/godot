@@ -41,7 +41,7 @@ extern "C" {
         for interface in data["interface"]:
             write_interface(file, interface)
 
-        file.write("""
+        file.write("""\
 #ifdef __cplusplus
 }
 #endif

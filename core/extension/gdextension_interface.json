@@ -40,10 +40,7 @@
                 },
                 {
                     "name": "GDEXTENSION_VARIANT_TYPE_BOOL",
-                    "value": 1,
-                    "doc": [
-                        "atomic types"
-                    ]
+                    "value": 1
                 },
                 {
                     "name": "GDEXTENSION_VARIANT_TYPE_INT",
@@ -59,10 +56,7 @@
                 },
                 {
                     "name": "GDEXTENSION_VARIANT_TYPE_VECTOR2",
-                    "value": 5,
-                    "doc": [
-                        "math types"
-                    ]
+                    "value": 5
                 },
                 {
                     "name": "GDEXTENSION_VARIANT_TYPE_VECTOR2I",
@@ -122,10 +116,7 @@
                 },
                 {
                     "name": "GDEXTENSION_VARIANT_TYPE_COLOR",
-                    "value": 20,
-                    "doc": [
-                        "misc types"
-                    ]
+                    "value": 20
                 },
                 {
                     "name": "GDEXTENSION_VARIANT_TYPE_STRING_NAME",
@@ -161,10 +152,7 @@
                 },
                 {
                     "name": "GDEXTENSION_VARIANT_TYPE_PACKED_BYTE_ARRAY",
-                    "value": 29,
-                    "doc": [
-                        "typed arrays"
-                    ]
+                    "value": 29
                 },
                 {
                     "name": "GDEXTENSION_VARIANT_TYPE_PACKED_INT32_ARRAY",
@@ -206,9 +194,6 @@
                     "name": "GDEXTENSION_VARIANT_TYPE_VARIANT_MAX",
                     "value": 39
                 }
-            ],
-            "doc": [
-                "VARIANT TYPES"
             ]
         },
         {
@@ -217,10 +202,7 @@
             "members": [
                 {
                     "name": "GDEXTENSION_VARIANT_OP_EQUAL",
-                    "value": 0,
-                    "doc": [
-                        "comparison"
-                    ]
+                    "value": 0
                 },
                 {
                     "name": "GDEXTENSION_VARIANT_OP_NOT_EQUAL",
@@ -244,10 +226,7 @@
                 },
                 {
                     "name": "GDEXTENSION_VARIANT_OP_ADD",
-                    "value": 6,
-                    "doc": [
-                        "mathematic"
-                    ]
+                    "value": 6
                 },
                 {
                     "name": "GDEXTENSION_VARIANT_OP_SUBTRACT",
@@ -279,10 +258,7 @@
                 },
                 {
                     "name": "GDEXTENSION_VARIANT_OP_SHIFT_LEFT",
-                    "value": 14,
-                    "doc": [
-                        "bitwise"
-                    ]
+                    "value": 14
                 },
                 {
                     "name": "GDEXTENSION_VARIANT_OP_SHIFT_RIGHT",
@@ -306,10 +282,7 @@
                 },
                 {
                     "name": "GDEXTENSION_VARIANT_OP_AND",
-                    "value": 20,
-                    "doc": [
-                        "logic"
-                    ]
+                    "value": 20
                 },
                 {
                     "name": "GDEXTENSION_VARIANT_OP_OR",
@@ -325,10 +298,7 @@
                 },
                 {
                     "name": "GDEXTENSION_VARIANT_OP_IN",
-                    "value": 24,
-                    "doc": [
-                        "containment"
-                    ]
+                    "value": 24
                 },
                 {
                     "name": "GDEXTENSION_VARIANT_OP_MAX",
@@ -502,9 +472,6 @@
                         "Used for const call."
                     ]
                 }
-            ],
-            "doc": [
-                "VARIANT DATA I/O"
             ]
         },
         {
@@ -887,10 +854,7 @@
         {
             "name": "GDExtensionClassInstancePtr",
             "type": "simple",
-            "def": "void *",
-            "doc": [
-                "EXTENSION CLASSES"
-            ]
+            "def": "void *"
         },
         {
             "name": "GDExtensionClassSet",
@@ -1920,10 +1884,11 @@
                 {
                     "name": "GDEXTENSION_METHOD_FLAG_STATIC",
                     "value": 32
+                },
+                {
+                    "name": "GDEXTENSION_METHOD_FLAGS_DEFAULT",
+                    "value": 1
                 }
-            ],
-            "doc": [
-                "Method"
             ]
         },
         {
@@ -2453,7 +2418,6 @@
             "type": "simple",
             "def": "void *",
             "doc": [
-                "SCRIPT INSTANCE EXTENSION",
                 "Pointer to custom ScriptInstance native implementation."
             ]
         },
@@ -3366,9 +3330,6 @@
                     "name": "GDEXTENSION_MAX_INITIALIZATION_LEVEL",
                     "value": 4
                 }
-            ],
-            "doc": [
-                "INITIALIZATION"
             ]
         },
         {
@@ -3484,7 +3445,7 @@
                 "",
                 "For example:",
                 "",
-                "GDExtensionBool my_extension_init(GDExtensionInterfaceGetProcAddress p_get_proc_address, GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization);",
+                "  GDExtensionBool my_extension_init(GDExtensionInterfaceGetProcAddress p_get_proc_address, GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization);",
                 "",
                 "This function's name must be specified as the 'entry_symbol' in the .gdextension file.",
                 "",
@@ -3498,16 +3459,16 @@
                 "",
                 "For example:",
                 "",
-                "GDExtensionInterfaceGetGodotVersion get_godot_version = (GDExtensionInterfaceGetGodotVersion)p_get_proc_address(\"get_godot_version\");",
+                "  GDExtensionInterfaceGetGodotVersion get_godot_version = (GDExtensionInterfaceGetGodotVersion)p_get_proc_address(\"get_godot_version\");",
                 "",
                 "(Note that snippet may cause \"cast between incompatible function types\" on some compilers, you can",
                 "silence this by adding an intermediary `void*` cast.)",
                 "",
                 "You can then call it like a normal function:",
                 "",
-                "GDExtensionGodotVersion godot_version;",
-                "get_godot_version(&godot_version);",
-                "printf(\"Godot v%d.%d.%d\\n\", godot_version.major, godot_version.minor, godot_version.patch);",
+                "  GDExtensionGodotVersion godot_version;",
+                "  get_godot_version(&godot_version);",
+                "  printf(\"Godot v%d.%d.%d\\n\", godot_version.major, godot_version.minor, godot_version.patch);",
                 "",
                 "All of these interface functions are described below, together with the name that's used to load it,",
                 "and the function pointer typedef that shows its signature."
@@ -3533,9 +3494,6 @@
                     "name": "string",
                     "type": "const char *"
                 }
-            ],
-            "doc": [
-                "INTERFACE"
             ]
         },
         {
@@ -3718,7 +3676,6 @@
                 }
             ],
             "doc": [
-                "INTERFACE: Memory",
                 "Allocates memory."
             ],
             "since": "4.1"
@@ -3814,7 +3771,6 @@
                 }
             ],
             "doc": [
-                "INTERFACE: Godot Core",
                 "Logs an error to Godot's built-in debugger and to the OS terminal."
             ],
             "since": "4.1"
@@ -4119,7 +4075,6 @@
                 }
             ],
             "doc": [
-                "INTERFACE: Variant",
                 "Copies one Variant into a another."
             ],
             "since": "4.1"
@@ -5678,7 +5633,6 @@
                 }
             ],
             "doc": [
-                "INTERFACE: String Utilities",
                 "Creates a String from a Latin-1 encoded C string."
             ],
             "since": "4.1"
@@ -6469,9 +6423,7 @@
                 }
             ],
             "doc": [
-                "INTERFACE: StringName Utilities",
                 "Creates a StringName from a Latin-1 encoded C string.",
-                "",
                 "If `p_is_static` is true, then:",
                 "- The StringName will reuse the `p_contents` buffer instead of copying it.",
                 "You must guarantee that the buffer remains valid for the duration of the application (e.g. string literal).",
@@ -6572,7 +6524,6 @@
                 }
             ],
             "doc": [
-                "INTERFACE: XMLParser Utilities",
                 "Opens a raw XML buffer on an XMLParser instance."
             ],
             "since": "4.1",
@@ -6609,7 +6560,6 @@
                 }
             ],
             "doc": [
-                "INTERFACE: FileAccess Utilities",
                 "Stores the given buffer using an instance of FileAccess."
             ],
             "since": "4.1",
@@ -6671,7 +6621,6 @@
                 }
             ],
             "doc": [
-                "INTERFACE: Image Utilities",
                 "Returns writable pointer to internal Image buffer."
             ],
             "since": "4.3",
@@ -6764,7 +6713,6 @@
                 }
             ],
             "doc": [
-                "INTERFACE: WorkerThreadPool Utilities",
                 "Adds a group task to an instance of WorkerThreadPool."
             ],
             "since": "4.1",
@@ -6847,7 +6795,6 @@
                 }
             ],
             "doc": [
-                "INTERFACE: Packed Array",
                 "Gets a pointer to a byte in a PackedByteArray."
             ],
             "since": "4.1"
@@ -7553,7 +7500,6 @@
                 }
             ],
             "doc": [
-                "INTERFACE: Dictionary",
                 "Gets a pointer to a Variant in a Dictionary with the given key."
             ],
             "since": "4.1"
@@ -7698,7 +7644,6 @@
                 }
             ],
             "doc": [
-                "INTERFACE: Object",
                 "Calls a method on an Object."
             ],
             "since": "4.1"
@@ -8132,7 +8077,6 @@
                 }
             ],
             "doc": [
-                "INTERFACE: Reference",
                 "Gets the Object from a reference."
             ],
             "since": "4.1"
@@ -8188,7 +8132,6 @@
                 }
             ],
             "doc": [
-                "INTERFACE: Script Instance",
                 "Creates a script instance that contains the given info and instance data."
             ],
             "since": "4.1",
@@ -8404,9 +8347,7 @@
                 }
             ],
             "doc": [
-                "INTERFACE: Callable",
                 "Creates a custom Callable object from a function pointer.",
-                "",
                 "Provided struct can be safely freed once the function returns."
             ],
             "since": "4.2",
@@ -8488,9 +8429,7 @@
                 }
             ],
             "doc": [
-                "INTERFACE: ClassDB",
                 "Constructs an Object of the requested class.",
-                "",
                 "The passed class must be a built-in godot class, or an already-registered extension class. In both cases, object_set_instance() should be called to fully initialize the object."
             ],
             "since": "4.1",
@@ -8615,9 +8554,7 @@
                 }
             ],
             "doc": [
-                "INTERFACE: ClassDB Extension",
                 "Registers an extension class in the ClassDB.",
-                "",
                 "Provided struct can be safely freed once the function returns."
             ],
             "since": "4.1",

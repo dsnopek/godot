@@ -39,6 +39,27 @@ COPYRIGHT = """
 # - Should we remove p_ and r_ (and add a `is_return` to mark the returns?)
 
 
+def clean_empty_strings(list_of_strings):
+    out = []
+
+    prev_was_empty = False
+    for s in list_of_strings:
+        if s == "":
+            if not prev_was_empty:
+                out.append(s)
+                prev_was_empty = True
+        else:
+            out.append(s)
+            prev_was_empty = False
+
+    while len(out) > 0 and out[0] == "":
+        out = out[1:]
+    while len(out) > 0 and out[-1] == "":
+        out = out[:-1]
+
+    return out
+
+
 def clean_description(description):
     out = []
 
@@ -53,10 +74,7 @@ def clean_description(description):
 
         out.append(line)
 
-    if out[0] == "":
-        out = out[1:]
-    if out[-1] == "":
-        out = out[:-1]
+    out = clean_empty_strings(out)
 
     return out
 
@@ -100,7 +118,7 @@ def update_interface_from_doc(interface):
 
         if line.startswith("@deprecated"):
             parts = line.split(" ", 1)
-            interface["deprecated"] = parts[1]
+            interface["deprecated"] = "Deprecated " + parts[1]
             continue
 
         if line.startswith("@param"):
@@ -130,10 +148,7 @@ def update_interface_from_doc(interface):
 
         out.append(line)
 
-    while len(out) > 0 and out[0] == "":
-        out = out[1:]
-    while len(out) > 0 and out[-1] == "":
-        out = out[:-1]
+    out = clean_empty_strings(out)
 
     # We have a single line separating the brief from the long description. We can remove that in the JSON.
     if len(out) >= 2 and out[1] == "":

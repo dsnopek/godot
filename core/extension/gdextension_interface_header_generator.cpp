@@ -261,7 +261,11 @@ void GDExtensionInterfaceHeaderGenerator::write_interface(const Ref<FileAccess> 
 
 	p_fa->store_string("/**\n");
 	for (const String &d : doc) {
-		p_fa->store_string(vformat(" * %s\n", d));
+		if (d == "") {
+			p_fa->store_string(" *\n");
+		} else {
+			p_fa->store_string(vformat(" * %s\n", d));
+		}
 	}
 	p_fa->store_string(" */\n");
 

@@ -10,7 +10,7 @@ import make_wrappers
 env.CommandNoCache(["ext_wrappers.gen.inc"], "make_wrappers.py", env.Run(make_wrappers.run))
 env.CommandNoCache(
     "gdextension_interface_dump.gen.h",
-    ["gdextension_interface.h", "make_interface_dumper.py"],
+    ["gdextension_interface.json", "make_interface_dumper.py"],
     env.Run(make_interface_dumper.run),
 )
 env.CommandNoCache(

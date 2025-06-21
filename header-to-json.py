@@ -265,8 +265,12 @@ def main():
 
         # Typedefs.
         if line.startswith("typedef "):
-            m = re.match(r"^typedef ([^(]*)\(\*([a-zA-Z0-9]*)\)\(([^)]*)\);", line)
+            m = re.match(r"^typedef ([^(]*)\(\*([a-zA-Z0-9]*)\)\(([^)]*)\);(?:\s+/[/*](.*))?$", line)
             if m:
+                inline_doc = m.group(4)
+                if inline_doc:
+                    description.append(inline_doc.strip())
+
                 fp = {}
 
                 interface_name = None

@@ -1155,6 +1155,9 @@
                     "name": "p_what",
                     "type": "int32_t"
                 }
+            ],
+            "doc": [
+                "Deprecated. Use GDExtensionClassNotification2 instead."
             ]
         },
         {
@@ -2528,6 +2531,9 @@
                     "name": "p_list",
                     "type": "const GDExtensionPropertyInfo *"
                 }
+            ],
+            "doc": [
+                "Deprecated. Use GDExtensionScriptInstanceFreePropertyList2 instead."
             ]
         },
         {
@@ -2731,6 +2737,9 @@
                     "name": "p_list",
                     "type": "const GDExtensionMethodInfo *"
                 }
+            ],
+            "doc": [
+                "Deprecated. Use GDExtensionScriptInstanceFreeMethodList2 instead."
             ]
         },
         {
@@ -2840,6 +2849,9 @@
                     "name": "p_what",
                     "type": "int32_t"
                 }
+            ],
+            "doc": [
+                "Deprecated. Use GDExtensionScriptInstanceNotification2 instead."
             ]
         },
         {

@@ -95,6 +95,21 @@ void GDExtensionInterfaceHeaderGenerator::generate_gdextension_interface_header(
 		if (type_dict.has("doc")) {
 			write_doc(fa, type_dict["doc"]);
 		}
+		String type_type = type_dict["type"];
+		if (type_type == "simple") {
+			write_simple_type(fa, type_dict);
+		} else if (type_type == "enum") {
+			write_enum_type(fa, type_dict);
+		} else if (type_type == "function") {
+			write_function_type(fa, type_dict);
+		} else if (type_type == "struct") {
+			write_struct_type(fa, type_dict);
+		}
+	}
+
+	Array interfaces = data["interface"];
+	for (const Variant &interface : interfaces) {
+		write_interface(fa, interface);
 	}
 
 	fa->store_string(OUTRO);
@@ -118,23 +133,74 @@ void GDExtensionInterfaceHeaderGenerator::write_doc(const Ref<FileAccess> &p_fa,
 		p_fa->store_line(line);
 	}
 
-	p_fa->store_line(p_indent + " */\n");
+	p_fa->store_string(p_indent + " */\n");
 }
 
 void GDExtensionInterfaceHeaderGenerator::write_simple_type(const Ref<FileAccess> &p_fa, const Dictionary &p_type) {
+	String def = p_type["def"];
+	p_fa->store_string("typedef " + def);
+	if (!def.ends_with("*")) {
+		p_fa->store_string(" ");
+	}
+	p_fa->store_string((String)p_type["name"] + ";\n");
 }
 
 void GDExtensionInterfaceHeaderGenerator::write_enum_type(const Ref<FileAccess> &p_fa, const Dictionary &p_enum) {
+	p_fa->store_string("typedef enum {\n");
+	Array members = p_enum["members"];
+	for (const Variant &member : members) {
+		Dictionary member_dict = member;
+		if (member_dict.has("doc")) {
+			write_doc(p_fa, member_dict["doc"], "\t");
+		}
+		p_fa->store_string(vformat("\t%s = %s,\n", member_dict["name"], (int)member_dict["value"]));
+	}
+	p_fa->store_string(vformat("} %s;\n\n", p_enum["name"]));
 }
 
 void GDExtensionInterfaceHeaderGenerator::write_function_type(const Ref<FileAccess> &p_fa, const Dictionary &p_func) {
+	Dictionary ret = p_func["ret"];
+	String ret_type = ret["type"];
+	p_fa->store_string("typedef " + ret_type);
+	if (!ret_type.ends_with("*")) {
+		p_fa->store_string(" ");
+	}
+	String args_text = p_func.has("args") ? make_args_text(p_func["args"]) : "";
+	p_fa->store_string(vformat("(*%s)(%s);\n", p_func["name"], args_text));
 }
 
 void GDExtensionInterfaceHeaderGenerator::write_struct_type(const Ref<FileAccess> &p_fa, const Dictionary &p_struct) {
+	p_fa->store_string("typedef struct {\n");
+	Array members = p_struct["members"];
+	for (const Variant &member : members) {
+		Dictionary member_dict = member;
+		if (member_dict.has("doc")) {
+			write_doc(p_fa, member_dict["doc"], "\t");
+		}
+		String member_type = member_dict["type"];
+		p_fa->store_string("\t" + member_type);
+		if (member_type.ends_with("*")) {
+			p_fa->store_string(" ");
+		}
+		p_fa->store_string((String)member_dict["name"] + ";\n");
+	}
+	p_fa->store_string(vformat("} %s;\n\n", p_struct["name"]));
 }
 
 String GDExtensionInterfaceHeaderGenerator::make_args_text(const Array &p_args) {
-	return "";
+	Vector<String> combined;
+	for (const Variant &arg : p_args) {
+		Dictionary arg_dict = arg;
+		String arg_text = arg_dict["type"];
+		if (arg_dict.has("name")) {
+			if (!arg_text.ends_with("*")) {
+				arg_text += " ";
+			}
+			arg_text += (String)arg_dict["name"];
+		}
+		combined.push_back(arg_text);
+	}
+	return String(", ").join(combined);
 }
 
 void GDExtensionInterfaceHeaderGenerator::write_interface(const Ref<FileAccess> &p_fa, const Dictionary &p_interface) {

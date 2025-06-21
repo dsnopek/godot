@@ -19,11 +19,8 @@ def main():
     with open(fn, "rt") as fd:
         lines = fd.readlines()
 
-    enums = {}
-    stypes = {}
-    function_pointers = {}
-    structs = {}
-    interfaces = {}
+    types = []
+    interfaces = []
 
     in_enum = False
     in_struct = False
@@ -83,7 +80,7 @@ def main():
                     member["value"] = len(members)
 
                 if len(description) > 0:
-                    member["description"] = description[:]
+                    member["doc"] = description[:]
                     description.clear()
 
                 members.append(member)
@@ -111,12 +108,12 @@ def main():
                         member_name = member_name[1:]
 
                 member = {
-                    "type": member_type,
                     "name": member_name,
+                    "type": member_type,
                 }
 
                 if len(description) > 0:
-                    member["description"] = description[:]
+                    member["doc"] = description[:]
                     description.clear()
 
                 members.append(member)
@@ -125,29 +122,35 @@ def main():
         if line.startswith("typedef "):
             m = re.match(r"^typedef ([^(]*)\(\*([a-zA-Z0-9]*)\)\(([^)]*)\);", line)
             if m:
-                fp = {
-                    "returns": m.group(1).strip(),
-                    "arguments": m.group(3).strip(),
-                }
-
-                if len(description) > 0:
-                    fp["description"] = description[:]
-                    description.clear()
+                fp = {}
 
                 interface_name = None
-                if "description" in fp:
-                    for d in fp["description"]:
+                if len(description) > 0:
+                    for d in description:
                         if "@name" in d:
                             interface_name = d.split("@name")[1].strip()
                             break
                 if interface_name:
                     fp["name"] = interface_name
-                    fp["type"] = m.group(2)
-                    # @todo Parse the doc string
-                    interfaces[interface_name] = fp
                 else:
                     fp["name"] = m.group(2)
-                    function_pointers[fp["name"]] = fp
+                    fp["type"] = "function"
+
+                fp["ret"] = m.group(1).strip()
+                fp["args"] = m.group(3).strip()
+
+                if len(description) > 0:
+                    fp["doc"] = description[:]
+                    description.clear()
+
+                if interface_name:
+                    # Remove this if we can!
+                    fp["ctype"] = m.group(2)
+                    # @todo Parse the doc string
+                    interfaces.append(fp)
+                else:
+                    fp["name"] = m.group(2)
+                    types.append(fp)
 
             else:
                 m = re.match(r"^typedef (.*[ \*]) ?([a-zA-Z0-9]*);(?:\s+/[/*](.*))?$", line)
@@ -158,14 +161,15 @@ def main():
 
                     stype = {
                         "name": m.group(2),
-                        "type": m.group(1),
+                        "type": "simple",
+                        "def": m.group(1),
                     }
 
                     if len(description) > 0:
-                        stype["description"] = description[:]
+                        stype["doc"] = description[:]
                         description.clear()
 
-                    stypes[stype["name"]] = stype
+                    types.append(stype)
 
         # Closing curly brace.
         if line.startswith("}"):
@@ -180,21 +184,23 @@ def main():
                 if in_enum:
                     data = {
                         "name": parent,
+                        "type": "enum",
                         "members": members[:],
                     }
                     if len(parent_description) > 0:
-                        data["description"] = parent_description[:]
-                    enums[parent] = data
+                        data["doc"] = parent_description[:]
+                    types.append(data)
                     in_enum = False
 
                 if in_struct:
                     data = {
                         "name": parent,
+                        "type": "struct",
                         "members": members[:],
                     }
                     if len(parent_description) > 0:
-                        data["description"] = parent_description[:]
-                    structs[parent] = data
+                        data["doc"] = parent_description[:]
+                    types.append(data)
                     in_struct = False
             else:
                 print("*** NO PARENT: ", line)
@@ -205,12 +211,7 @@ def main():
             description.clear()
 
     api = {
-        "types": {
-            "simple": stypes,
-            "enumerations": enums,
-            "function pointers": function_pointers,
-            "structs": structs,
-        },
+        "types": types,
         "interface": interfaces,
     }
 

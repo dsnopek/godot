@@ -141,7 +141,7 @@ void GDExtensionInterfaceHeaderGenerator::write_simple_type(const Ref<FileAccess
 	if (!def.ends_with("*")) {
 		p_fa->store_string(" ");
 	}
-	p_fa->store_string((String)p_type["name"] + ";\n");
+	p_fa->store_string(vformat("%s;%s\n", p_type["name"], make_deprecated_note(p_type)));
 }
 
 void GDExtensionInterfaceHeaderGenerator::write_enum_type(const Ref<FileAccess> &p_fa, const Dictionary &p_enum) {
@@ -154,7 +154,7 @@ void GDExtensionInterfaceHeaderGenerator::write_enum_type(const Ref<FileAccess> 
 		}
 		p_fa->store_string(vformat("\t%s = %s,\n", member_dict["name"], (int)member_dict["value"]));
 	}
-	p_fa->store_string(vformat("} %s;\n\n", p_enum["name"]));
+	p_fa->store_string(vformat("} %s;%s\n\n", p_enum["name"], make_deprecated_note(p_enum)));
 }
 
 void GDExtensionInterfaceHeaderGenerator::write_function_type(const Ref<FileAccess> &p_fa, const Dictionary &p_func) {
@@ -165,7 +165,7 @@ void GDExtensionInterfaceHeaderGenerator::write_function_type(const Ref<FileAcce
 		p_fa->store_string(" ");
 	}
 	String args_text = p_func.has("args") ? make_args_text(p_func["args"]) : "";
-	p_fa->store_string(vformat("(*%s)(%s);\n", p_func["name"], args_text));
+	p_fa->store_string(vformat("(*%s)(%s);%s\n", p_func["name"], args_text, make_deprecated_note(p_func)));
 }
 
 void GDExtensionInterfaceHeaderGenerator::write_struct_type(const Ref<FileAccess> &p_fa, const Dictionary &p_struct) {
@@ -183,7 +183,14 @@ void GDExtensionInterfaceHeaderGenerator::write_struct_type(const Ref<FileAccess
 		}
 		p_fa->store_string((String)member_dict["name"] + ";\n");
 	}
-	p_fa->store_string(vformat("} %s;\n\n", p_struct["name"]));
+	p_fa->store_string(vformat("} %s;%s\n\n", p_struct["name"], make_deprecated_note(p_struct)));
+}
+
+String GDExtensionInterfaceHeaderGenerator::make_deprecated_note(const Dictionary &p_type) {
+	if (!p_type.has("deprecated")) {
+		return "";
+	}
+	return vformat(" /* %s */", p_type["deprecated"]);
 }
 
 String GDExtensionInterfaceHeaderGenerator::make_args_text(const Array &p_args) {
@@ -280,6 +287,7 @@ void GDExtensionInterfaceHeaderGenerator::write_interface(const Ref<FileAccess> 
 	p_fa->store_string(" */\n");
 
 	Dictionary func = p_interface.duplicate();
+	func.erase("deprecated");
 	if (p_interface.has("legacy_type_name")) {
 		func["name"] = p_interface["legacy_type_name"];
 	} else {

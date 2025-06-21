@@ -66,11 +66,17 @@ def write_doc(file, doc, indent=""):
     file.write(indent + " */\n")
 
 
+def make_deprecated_note(type):
+    if "deprecated" not in type:
+        return ""
+    return f" /* {type['deprecated']} */"
+
+
 def write_simple_type(file, type):
     file.write(f"typedef {type['def']}")
     if type["def"][-1] != "*":
         file.write(" ")
-    file.write(f"{type['name']};\n")
+    file.write(f"{type['name']};{make_deprecated_note(type)}\n")
 
 
 def write_enum_type(file, enum):
@@ -79,7 +85,7 @@ def write_enum_type(file, enum):
         if "doc" in member:
             write_doc(file, member["doc"], "\t")
         file.write(f"\t{member['name']} = {member['value']},\n")
-    file.write(f"}} {enum['name']};\n\n")
+    file.write(f"}} {enum['name']};{make_deprecated_note(enum)}\n\n")
 
 
 def make_args_text(args):
@@ -99,7 +105,7 @@ def write_function_type(file, fn):
     if fn["ret"]["type"][-1] != "*":
         file.write(" ")
     args_text = make_args_text(fn["args"]) if ("args" in fn) else ""
-    file.write(f"(*{fn['name']})({args_text});\n")
+    file.write(f"(*{fn['name']})({args_text});{make_deprecated_note(fn)}\n")
 
 
 def write_struct_type(file, struct):
@@ -112,7 +118,7 @@ def write_struct_type(file, struct):
             file.write(" ")
         file.write(f"{member['name']};\n")
 
-    file.write(f"}} {struct['name']};\n\n")
+    file.write(f"}} {struct['name']};{make_deprecated_note(struct)}\n\n")
 
 
 def write_interface(file, interface):
@@ -162,6 +168,8 @@ def write_interface(file, interface):
     file.write(" */\n")
 
     fn = interface.copy()
+    if "deprecated" in fn:
+        del fn["deprecated"]
     if "legacy_type_name" in interface:
         # @todo Don't do this in the Python version - only the legacy header generation in Godot.
         fn["name"] = interface["legacy_type_name"]

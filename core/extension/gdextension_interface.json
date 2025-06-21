@@ -1120,9 +1120,7 @@
                     "type": "int32_t"
                 }
             ],
-            "doc": [
-                "Deprecated. Use GDExtensionClassNotification2 instead."
-            ]
+            "deprecated": "Deprecated. Use GDExtensionClassNotification2 instead."
         },
         {
             "name": "GDExtensionClassNotification2",
@@ -1467,9 +1465,7 @@
                     ]
                 }
             ],
-            "doc": [
-                "Deprecated. Use GDExtensionClassCreationInfo4 instead."
-            ]
+            "deprecated": "Deprecated. Use GDExtensionClassCreationInfo4 instead."
         },
         {
             "name": "GDExtensionClassCreationInfo2",
@@ -1587,9 +1583,7 @@
                     ]
                 }
             ],
-            "doc": [
-                "Deprecated. Use GDExtensionClassCreationInfo4 instead."
-            ]
+            "deprecated": "Deprecated. Use GDExtensionClassCreationInfo4 instead."
         },
         {
             "name": "GDExtensionClassCreationInfo3",
@@ -1711,9 +1705,7 @@
                     ]
                 }
             ],
-            "doc": [
-                "Deprecated. Use GDExtensionClassCreationInfo4 instead."
-            ]
+            "deprecated": "Deprecated. Use GDExtensionClassCreationInfo4 instead."
         },
         {
             "name": "GDExtensionClassCreationInfo4",
@@ -2344,9 +2336,7 @@
                     "type": "GDExtensionCallableCustomToString"
                 }
             ],
-            "doc": [
-                "Deprecated. Use GDExtensionCallableCustomInfo2 instead."
-            ]
+            "deprecated": "Deprecated. Use GDExtensionCallableCustomInfo2 instead."
         },
         {
             "name": "GDExtensionCallableCustomInfo2",
@@ -2496,9 +2486,7 @@
                     "type": "const GDExtensionPropertyInfo *"
                 }
             ],
-            "doc": [
-                "Deprecated. Use GDExtensionScriptInstanceFreePropertyList2 instead."
-            ]
+            "deprecated": "Deprecated. Use GDExtensionScriptInstanceFreePropertyList2 instead."
         },
         {
             "name": "GDExtensionScriptInstanceFreePropertyList2",
@@ -2702,9 +2690,7 @@
                     "type": "const GDExtensionMethodInfo *"
                 }
             ],
-            "doc": [
-                "Deprecated. Use GDExtensionScriptInstanceFreeMethodList2 instead."
-            ]
+            "deprecated": "Deprecated. Use GDExtensionScriptInstanceFreeMethodList2 instead."
         },
         {
             "name": "GDExtensionScriptInstanceFreeMethodList2",
@@ -2814,9 +2800,7 @@
                     "type": "int32_t"
                 }
             ],
-            "doc": [
-                "Deprecated. Use GDExtensionScriptInstanceNotification2 instead."
-            ]
+            "deprecated": "Deprecated. Use GDExtensionScriptInstanceNotification2 instead."
         },
         {
             "name": "GDExtensionScriptInstanceNotification2",
@@ -3048,9 +3032,7 @@
                     "type": "GDExtensionScriptInstanceFree"
                 }
             ],
-            "doc": [
-                "Deprecated. Use GDExtensionScriptInstanceInfo3 instead."
-            ]
+            "deprecated": "Deprecated. Use GDExtensionScriptInstanceInfo3 instead."
         },
         {
             "name": "GDExtensionScriptInstanceInfo2",
@@ -3160,9 +3142,7 @@
                     "type": "GDExtensionScriptInstanceFree"
                 }
             ],
-            "doc": [
-                "Deprecated. Use GDExtensionScriptInstanceInfo3 instead."
-            ]
+            "deprecated": "Deprecated. Use GDExtensionScriptInstanceInfo3 instead."
         },
         {
             "name": "GDExtensionScriptInstanceInfo3",

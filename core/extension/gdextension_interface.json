@@ -3516,6 +3516,10 @@
                 {
                     "name": "patch",
                     "type": "uint32_t"
+                },
+                {
+                    "name": "string",
+                    "type": "const char *"
                 }
             ],
             "doc": [
@@ -3546,10 +3550,38 @@
                     ]
                 },
                 {
+                    "name": "status",
+                    "type": "const char *",
+                    "doc": [
+                        "(e.g. \"stable\", \"beta\", \"rc1\", \"rc2\")"
+                    ]
+                },
+                {
+                    "name": "build",
+                    "type": "const char *",
+                    "doc": [
+                        "(e.g. \"custom_build\")"
+                    ]
+                },
+                {
+                    "name": "hash",
+                    "type": "const char *",
+                    "doc": [
+                        "Full Git commit hash."
+                    ]
+                },
+                {
                     "name": "timestamp",
                     "type": "uint64_t",
                     "doc": [
                         "Git commit date UNIX timestamp in seconds, or 0 if unavailable."
+                    ]
+                },
+                {
+                    "name": "string",
+                    "type": "const char *",
+                    "doc": [
+                        "(e.g. \"Godot v3.1.4.stable.official.mono\")"
                     ]
                 }
             ]
@@ -4197,7 +4229,10 @@
             "args": [
                 {
                     "name": "p_type",
-                    "type": "GDExtensionVariantType"
+                    "type": "GDExtensionVariantType",
+                    "doc": [
+                        "The variant type."
+                    ]
                 },
                 {
                     "name": "p_method",
@@ -6752,7 +6787,10 @@
                 },
                 {
                     "name": "p_elements",
-                    "type": "int"
+                    "type": "int",
+                    "doc": [
+                        "The number of element needed in the group."
+                    ]
                 },
                 {
                     "name": "p_tasks",
@@ -8506,7 +8544,10 @@
         {
             "name": "callable_custom_get_userdata",
             "ret": {
-                "type": "void *"
+                "type": "void *",
+                "doc": [
+                    "The userdata pointer given when creating this custom Callable."
+                ]
             },
             "args": [
                 {

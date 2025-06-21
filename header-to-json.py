@@ -36,6 +36,7 @@ COPYRIGHT = """
 
 # TODO:
 #
+# - Parse "deprecated" in docs and mark structs or whatever with it
 # - Should we remove p_ and r_ (and add a `is_return` to mark the returns?)
 
 
@@ -235,7 +236,7 @@ def main():
             parent_description = description[:]
             description.clear()
         elif in_struct:
-            m = re.match(r"^([a-zA-Z0-9_]+) (\S+);(?:\s+/[/*](.*))?$", line)
+            m = re.match(r"^([a-zA-Z0-9_ ]+) (\S+);(?:\s+/[/*](.*))?$", line)
             if m:
                 inline_doc = m.group(3)
                 if inline_doc:
@@ -349,7 +350,8 @@ def main():
                     types.append(data)
                     in_struct = False
             else:
-                print("*** NO PARENT: ", line)
+                # print("*** NO PARENT: ", line)
+                pass
 
             parent = ""
             members.clear()

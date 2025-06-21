@@ -38,7 +38,8 @@ extern "C" {
             else:
                 raise Exception(f"Unknown type: {type['type']}")
 
-        pass
+        for interface in data["interface"]:
+            write_interface(file, interface)
 
         file.write("""
 #ifdef __cplusplus
@@ -47,7 +48,7 @@ extern "C" {
 """)
 
 
-def write_doc(file, doc, indent=""):
+def write_doc(file, doc, indent="", *, doxygen=False):
     if len(doc) == 1:
         file.write(f"{indent}/* {doc[0]} */\n")
         return
@@ -112,3 +113,51 @@ def write_struct_type(file, struct):
         file.write(f"{member['name']};\n")
 
     file.write(f"}} {struct['name']};\n\n")
+
+
+def write_interface(file, interface):
+    doc = [
+        f"@name {interface['name']}",
+        f"@since {interface['since']}",
+    ]
+
+    if "deprecated" in interface:
+        if interface["deprecated"].lower().startswith("deprecated "):
+            parts = interface["deprecated"].split(" ", 1)
+            interface["deprecated"] = parts[1]
+        doc.append(f"@deprecated {interface['deprecated']}")
+
+    doc += [
+        "",
+        interface["doc"][0],
+    ]
+
+    if len(interface["doc"]) > 1:
+        doc.append("")
+        doc += interface["doc"][1:]
+
+    if "args" in interface:
+        doc.append("")
+        for arg in interface["args"]:
+            if "doc" not in arg:
+                raise Exception(f"Interface function {interface['name']} is missing docs for {arg['name']} argument")
+            arg_doc = " ".join(arg["doc"])
+            doc.append(f"@param {arg['name']} {arg_doc}")
+
+    if "ret" in interface and interface["ret"]["type"] != "void":
+        if "doc" not in interface["ret"]:
+            raise Exception(f"Interface function {interface['name']} is missing docs for return value")
+        ret_doc = " ".join(interface["ret"]["doc"])
+        doc.append("")
+        doc.append(f"@return {ret_doc}")
+
+    file.write("/**\n")
+    for d in doc:
+        file.write(f" * {d}\n")
+    file.write("*/\n")
+
+    fn = interface.copy()
+    fn["name"] = "GDExtensionInterface" + "".join(word.capitalize() for word in interface["name"].split("_"))
+    write_function_type(file, fn)
+
+    file.write("\n")

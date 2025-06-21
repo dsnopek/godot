@@ -214,7 +214,7 @@ def main():
                     description.append(inline_doc.strip())
 
                 member = {
-                    "name": m.group(1),
+                    "name": m.group(1).rstrip(",").strip(),
                 }
 
                 member_value = m.group(2)

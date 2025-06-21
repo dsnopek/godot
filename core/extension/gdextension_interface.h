@@ -2572,7 +2572,7 @@ typedef void (*GDExtensionInterfaceObjectFreeInstanceBinding)(GDExtensionObjectP
  *
  * Sets an extension class instance on a Object.
  *
- * `p_classname` should be a registered extension class and should extend the `p_o` object's class.
+ * `p_classname` should be a registered extension class and should extend the `p_o` Object's class.
  *
  * @param p_o A pointer to the Object.
  * @param p_classname A pointer to a StringName with the registered extension class's name.

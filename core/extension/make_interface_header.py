@@ -25,8 +25,8 @@ extern "C" {
 """)
 
         for type in data["types"]:
-            if "doc" in type:
-                write_doc(file, type["doc"])
+            if "description" in type:
+                write_doc(file, type["description"])
             if type["type"] == "simple":
                 write_simple_type(file, type)
             elif type["type"] == "enum":
@@ -81,10 +81,10 @@ def write_simple_type(file, type):
 
 def write_enum_type(file, enum):
     file.write("typedef enum {\n")
-    for member in enum["members"]:
-        if "doc" in member:
-            write_doc(file, member["doc"], "\t")
-        file.write(f"\t{member['name']} = {member['value']},\n")
+    for value in enum["values"]:
+        if "description" in value:
+            write_doc(file, value["description"], "\t")
+        file.write(f"\t{value['name']} = {value['value']},\n")
     file.write(f"}} {enum['name']};{make_deprecated_note(enum)}\n\n")
 
 
@@ -101,18 +101,18 @@ def make_args_text(args):
 
 
 def write_function_type(file, fn):
-    file.write(f"typedef {fn['ret']['type']}")
-    if fn["ret"]["type"][-1] != "*":
+    file.write(f"typedef {fn['return_value']['type']}")
+    if fn["return_value"]["type"][-1] != "*":
         file.write(" ")
-    args_text = make_args_text(fn["args"]) if ("args" in fn) else ""
+    args_text = make_args_text(fn["arguments"]) if ("arguments" in fn) else ""
     file.write(f"(*{fn['name']})({args_text});{make_deprecated_note(fn)}\n")
 
 
 def write_struct_type(file, struct):
     file.write("typedef struct {\n")
     for member in struct["members"]:
-        if "doc" in member:
-            write_doc(file, member["doc"], "\t")
+        if "description" in member:
+            write_doc(file, member["description"], "\t")
         file.write(f"\t{member['type']}")
         if member["type"][-1] != "*":
             file.write(" ")
@@ -135,25 +135,25 @@ def write_interface(file, interface):
 
     doc += [
         "",
-        interface["doc"][0],
+        interface["description"][0],
     ]
 
-    if len(interface["doc"]) > 1:
+    if len(interface["description"]) > 1:
         doc.append("")
-        doc += interface["doc"][1:]
+        doc += interface["description"][1:]
 
-    if "args" in interface:
+    if "arguments" in interface:
         doc.append("")
-        for arg in interface["args"]:
-            if "doc" not in arg:
+        for arg in interface["arguments"]:
+            if "description" not in arg:
                 raise Exception(f"Interface function {interface['name']} is missing docs for {arg['name']} argument")
-            arg_doc = " ".join(arg["doc"])
+            arg_doc = " ".join(arg["description"])
             doc.append(f"@param {arg['name']} {arg_doc}")
 
-    if "ret" in interface and interface["ret"]["type"] != "void":
-        if "doc" not in interface["ret"]:
+    if "return_value" in interface and interface["return_value"]["type"] != "void":
+        if "description" not in interface["return_value"]:
             raise Exception(f"Interface function {interface['name']} is missing docs for return value")
-        ret_doc = " ".join(interface["ret"]["doc"])
+        ret_doc = " ".join(interface["return_value"]["description"])
         doc.append("")
         doc.append(f"@return {ret_doc}")
 

@@ -93,8 +93,8 @@ void GDExtensionInterfaceHeaderGenerator::generate_gdextension_interface_header(
 	Array types = data["types"];
 	for (const Variant &type : types) {
 		Dictionary type_dict = type;
-		if (type_dict.has("doc")) {
-			write_doc(fa, type_dict["doc"]);
+		if (type_dict.has("description")) {
+			write_doc(fa, type_dict["description"]);
 		}
 		String type_type = type_dict["type"];
 		if (type_type == "simple") {
@@ -152,25 +152,25 @@ void GDExtensionInterfaceHeaderGenerator::write_simple_type(const Ref<FileAccess
 
 void GDExtensionInterfaceHeaderGenerator::write_enum_type(const Ref<FileAccess> &p_fa, const Dictionary &p_enum) {
 	p_fa->store_string("typedef enum {\n");
-	Array members = p_enum["members"];
-	for (const Variant &member : members) {
-		Dictionary member_dict = member;
-		if (member_dict.has("doc")) {
-			write_doc(p_fa, member_dict["doc"], "\t");
+	Array values = p_enum["values"];
+	for (const Variant &value : values) {
+		Dictionary value_dict = value;
+		if (value_dict.has("description")) {
+			write_doc(p_fa, value_dict["description"], "\t");
 		}
-		p_fa->store_string(vformat("\t%s = %s,\n", member_dict["name"], (int)member_dict["value"]));
+		p_fa->store_string(vformat("\t%s = %s,\n", value_dict["name"], (int)value_dict["value"]));
 	}
 	p_fa->store_string(vformat("} %s;%s\n\n", p_enum["name"], make_deprecated_note(p_enum)));
 }
 
 void GDExtensionInterfaceHeaderGenerator::write_function_type(const Ref<FileAccess> &p_fa, const Dictionary &p_func) {
-	Dictionary ret = p_func["ret"];
+	Dictionary ret = p_func["return_value"];
 	String ret_type = ret["type"];
 	p_fa->store_string("typedef " + ret_type);
 	if (!ret_type.ends_with("*")) {
 		p_fa->store_string(" ");
 	}
-	String args_text = p_func.has("args") ? make_args_text(p_func["args"]) : "";
+	String args_text = p_func.has("arguments") ? make_args_text(p_func["arguments"]) : "";
 	p_fa->store_string(vformat("(*%s)(%s);%s\n", p_func["name"], args_text, make_deprecated_note(p_func)));
 }
 
@@ -179,8 +179,8 @@ void GDExtensionInterfaceHeaderGenerator::write_struct_type(const Ref<FileAccess
 	Array members = p_struct["members"];
 	for (const Variant &member : members) {
 		Dictionary member_dict = member;
-		if (member_dict.has("doc")) {
-			write_doc(p_fa, member_dict["doc"], "\t");
+		if (member_dict.has("description")) {
+			write_doc(p_fa, member_dict["description"], "\t");
 		}
 		String member_type = member_dict["type"];
 		p_fa->store_string("\t" + member_type);
@@ -230,7 +230,7 @@ void GDExtensionInterfaceHeaderGenerator::write_interface(const Ref<FileAccess> 
 		doc.push_back(String("@deprecated ") + deprecated);
 	}
 
-	Array orig_doc = p_interface["doc"];
+	Array orig_doc = p_interface["description"];
 	for (int i = 0; i < orig_doc.size(); i++) {
 		// Put an empty line before the 1st and 2nd lines.
 		if (i <= 1) {
@@ -239,15 +239,15 @@ void GDExtensionInterfaceHeaderGenerator::write_interface(const Ref<FileAccess> 
 		doc.push_back(orig_doc[i]);
 	}
 
-	if (p_interface.has("args")) {
-		Array args = p_interface["args"];
+	if (p_interface.has("arguments")) {
+		Array args = p_interface["arguments"];
 		if (args.size() > 0) {
 			doc.push_back("");
 			for (const Variant &arg : args) {
 				Dictionary arg_dict = arg;
 				String arg_string = String("@param ") + (String)arg_dict["name"];
-				if (arg_dict.has("doc")) {
-					Array arg_doc = arg_dict["doc"];
+				if (arg_dict.has("description")) {
+					Array arg_doc = arg_dict["description"];
 					for (const Variant &d : arg_doc) {
 						arg_string += String(" ") + (String)d;
 					}
@@ -257,12 +257,12 @@ void GDExtensionInterfaceHeaderGenerator::write_interface(const Ref<FileAccess> 
 		}
 	}
 
-	if (p_interface.has("ret")) {
-		Dictionary ret = p_interface["ret"];
+	if (p_interface.has("return_value")) {
+		Dictionary ret = p_interface["return_value"];
 		if (ret["type"] != "void") {
 			String ret_string = String("@return");
-			if (ret.has("doc")) {
-				Array arg_doc = ret["doc"];
+			if (ret.has("description")) {
+				Array arg_doc = ret["description"];
 				for (const Variant &d : arg_doc) {
 					ret_string += String(" ") + (String)d;
 				}

@@ -32,7 +32,7 @@
     "types": [
         {
             "name": "GDExtensionVariantType",
-            "type": "enum",
+            "kind": "enum",
             "values": [
                 {
                     "name": "GDEXTENSION_VARIANT_TYPE_NIL",
@@ -198,7 +198,7 @@
         },
         {
             "name": "GDExtensionVariantOperator",
-            "type": "enum",
+            "kind": "enum",
             "values": [
                 {
                     "name": "GDEXTENSION_VARIANT_OP_EQUAL",
@@ -308,7 +308,7 @@
         },
         {
             "name": "GDExtensionVariantPtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "void *",
             "description": [
                 "In this API there are multiple functions which expect the caller to pass a pointer",
@@ -330,107 +330,107 @@
         },
         {
             "name": "GDExtensionConstVariantPtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "const void *"
         },
         {
             "name": "GDExtensionUninitializedVariantPtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "void *"
         },
         {
             "name": "GDExtensionStringNamePtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "void *"
         },
         {
             "name": "GDExtensionConstStringNamePtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "const void *"
         },
         {
             "name": "GDExtensionUninitializedStringNamePtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "void *"
         },
         {
             "name": "GDExtensionStringPtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "void *"
         },
         {
             "name": "GDExtensionConstStringPtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "const void *"
         },
         {
             "name": "GDExtensionUninitializedStringPtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "void *"
         },
         {
             "name": "GDExtensionObjectPtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "void *"
         },
         {
             "name": "GDExtensionConstObjectPtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "const void *"
         },
         {
             "name": "GDExtensionUninitializedObjectPtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "void *"
         },
         {
             "name": "GDExtensionTypePtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "void *"
         },
         {
             "name": "GDExtensionConstTypePtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "const void *"
         },
         {
             "name": "GDExtensionUninitializedTypePtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "void *"
         },
         {
             "name": "GDExtensionMethodBindPtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "const void *"
         },
         {
             "name": "GDExtensionInt",
-            "type": "simple",
+            "kind": "simple",
             "def": "int64_t"
         },
         {
             "name": "GDExtensionBool",
-            "type": "simple",
+            "kind": "simple",
             "def": "uint8_t"
         },
         {
             "name": "GDObjectInstanceID",
-            "type": "simple",
+            "kind": "simple",
             "def": "uint64_t"
         },
         {
             "name": "GDExtensionRefPtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "void *"
         },
         {
             "name": "GDExtensionConstRefPtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "const void *"
         },
         {
             "name": "GDExtensionCallErrorType",
-            "type": "enum",
+            "kind": "enum",
             "values": [
                 {
                     "name": "GDEXTENSION_CALL_OK",
@@ -476,7 +476,7 @@
         },
         {
             "name": "GDExtensionCallError",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "error",
@@ -494,7 +494,7 @@
         },
         {
             "name": "GDExtensionVariantFromTypeConstructorFunc",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -509,7 +509,7 @@
         },
         {
             "name": "GDExtensionTypeFromVariantConstructorFunc",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -524,7 +524,7 @@
         },
         {
             "name": "GDExtensionVariantGetInternalPtrFunc",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void *"
             },
@@ -536,7 +536,7 @@
         },
         {
             "name": "GDExtensionPtrOperatorEvaluator",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -557,7 +557,7 @@
         },
         {
             "name": "GDExtensionPtrBuiltInMethod",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -582,7 +582,7 @@
         },
         {
             "name": "GDExtensionPtrConstructor",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -599,7 +599,7 @@
         },
         {
             "name": "GDExtensionPtrDestructor",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -612,7 +612,7 @@
         },
         {
             "name": "GDExtensionPtrSetter",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -629,7 +629,7 @@
         },
         {
             "name": "GDExtensionPtrGetter",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -646,7 +646,7 @@
         },
         {
             "name": "GDExtensionPtrIndexedSetter",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -667,7 +667,7 @@
         },
         {
             "name": "GDExtensionPtrIndexedGetter",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -688,7 +688,7 @@
         },
         {
             "name": "GDExtensionPtrKeyedSetter",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -709,7 +709,7 @@
         },
         {
             "name": "GDExtensionPtrKeyedGetter",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -730,7 +730,7 @@
         },
         {
             "name": "GDExtensionPtrKeyedChecker",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "uint32_t"
             },
@@ -747,7 +747,7 @@
         },
         {
             "name": "GDExtensionPtrUtilityFunction",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -768,7 +768,7 @@
         },
         {
             "name": "GDExtensionClassConstructor",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionObjectPtr"
             },
@@ -776,7 +776,7 @@
         },
         {
             "name": "GDExtensionInstanceBindingCreateCallback",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void *"
             },
@@ -793,7 +793,7 @@
         },
         {
             "name": "GDExtensionInstanceBindingFreeCallback",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -814,7 +814,7 @@
         },
         {
             "name": "GDExtensionInstanceBindingReferenceCallback",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -835,7 +835,7 @@
         },
         {
             "name": "GDExtensionInstanceBindingCallbacks",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "create_callback",
@@ -853,12 +853,12 @@
         },
         {
             "name": "GDExtensionClassInstancePtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "void *"
         },
         {
             "name": "GDExtensionClassSet",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -879,7 +879,7 @@
         },
         {
             "name": "GDExtensionClassGet",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -900,7 +900,7 @@
         },
         {
             "name": "GDExtensionClassGetRID",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "uint64_t"
             },
@@ -913,7 +913,7 @@
         },
         {
             "name": "GDExtensionPropertyInfo",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "type",
@@ -949,7 +949,7 @@
         },
         {
             "name": "GDExtensionMethodInfo",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "name",
@@ -996,7 +996,7 @@
         },
         {
             "name": "GDExtensionClassGetPropertyList",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "const GDExtensionPropertyInfo *"
             },
@@ -1013,7 +1013,7 @@
         },
         {
             "name": "GDExtensionClassFreePropertyList",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -1030,7 +1030,7 @@
         },
         {
             "name": "GDExtensionClassFreePropertyList2",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -1051,7 +1051,7 @@
         },
         {
             "name": "GDExtensionClassPropertyCanRevert",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -1068,7 +1068,7 @@
         },
         {
             "name": "GDExtensionClassPropertyGetRevert",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -1089,7 +1089,7 @@
         },
         {
             "name": "GDExtensionClassValidateProperty",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -1106,7 +1106,7 @@
         },
         {
             "name": "GDExtensionClassNotification",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -1124,7 +1124,7 @@
         },
         {
             "name": "GDExtensionClassNotification2",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -1145,7 +1145,7 @@
         },
         {
             "name": "GDExtensionClassToString",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -1166,7 +1166,7 @@
         },
         {
             "name": "GDExtensionClassReference",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -1179,7 +1179,7 @@
         },
         {
             "name": "GDExtensionClassUnreference",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -1192,7 +1192,7 @@
         },
         {
             "name": "GDExtensionClassCallVirtual",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -1213,7 +1213,7 @@
         },
         {
             "name": "GDExtensionClassCreateInstance",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionObjectPtr"
             },
@@ -1226,7 +1226,7 @@
         },
         {
             "name": "GDExtensionClassCreateInstance2",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionObjectPtr"
             },
@@ -1243,7 +1243,7 @@
         },
         {
             "name": "GDExtensionClassFreeInstance",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -1260,7 +1260,7 @@
         },
         {
             "name": "GDExtensionClassRecreateInstance",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionClassInstancePtr"
             },
@@ -1277,7 +1277,7 @@
         },
         {
             "name": "GDExtensionClassGetVirtual",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionClassCallVirtual"
             },
@@ -1294,7 +1294,7 @@
         },
         {
             "name": "GDExtensionClassGetVirtual2",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionClassCallVirtual"
             },
@@ -1315,7 +1315,7 @@
         },
         {
             "name": "GDExtensionClassGetVirtualCallData",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void *"
             },
@@ -1332,7 +1332,7 @@
         },
         {
             "name": "GDExtensionClassGetVirtualCallData2",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void *"
             },
@@ -1353,7 +1353,7 @@
         },
         {
             "name": "GDExtensionClassCallVirtualWithData",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -1382,7 +1382,7 @@
         },
         {
             "name": "GDExtensionClassCreationInfo",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "is_virtual",
@@ -1469,7 +1469,7 @@
         },
         {
             "name": "GDExtensionClassCreationInfo2",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "is_virtual",
@@ -1587,7 +1587,7 @@
         },
         {
             "name": "GDExtensionClassCreationInfo3",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "is_virtual",
@@ -1709,7 +1709,7 @@
         },
         {
             "name": "GDExtensionClassCreationInfo4",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "is_virtual",
@@ -1830,12 +1830,12 @@
         },
         {
             "name": "GDExtensionClassLibraryPtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "void *"
         },
         {
             "name": "GDExtensionEditorGetClassesUsedCallback",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -1851,7 +1851,7 @@
         },
         {
             "name": "GDExtensionClassMethodFlags",
-            "type": "enum",
+            "kind": "enum",
             "values": [
                 {
                     "name": "GDEXTENSION_METHOD_FLAG_NORMAL",
@@ -1885,7 +1885,7 @@
         },
         {
             "name": "GDExtensionClassMethodArgumentMetadata",
-            "type": "enum",
+            "kind": "enum",
             "values": [
                 {
                     "name": "GDEXTENSION_METHOD_ARGUMENT_METADATA_NONE",
@@ -1943,7 +1943,7 @@
         },
         {
             "name": "GDExtensionClassMethodCall",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -1976,7 +1976,7 @@
         },
         {
             "name": "GDExtensionClassMethodValidatedCall",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -2001,7 +2001,7 @@
         },
         {
             "name": "GDExtensionClassMethodPtrCall",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -2026,7 +2026,7 @@
         },
         {
             "name": "GDExtensionClassMethodInfo",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "name",
@@ -2101,7 +2101,7 @@
         },
         {
             "name": "GDExtensionClassVirtualMethodInfo",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "name",
@@ -2138,7 +2138,7 @@
         },
         {
             "name": "GDExtensionCallableCustomCall",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -2167,7 +2167,7 @@
         },
         {
             "name": "GDExtensionCallableCustomIsValid",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -2180,7 +2180,7 @@
         },
         {
             "name": "GDExtensionCallableCustomFree",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -2193,7 +2193,7 @@
         },
         {
             "name": "GDExtensionCallableCustomHash",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "uint32_t"
             },
@@ -2206,7 +2206,7 @@
         },
         {
             "name": "GDExtensionCallableCustomEqual",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -2223,7 +2223,7 @@
         },
         {
             "name": "GDExtensionCallableCustomLessThan",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -2240,7 +2240,7 @@
         },
         {
             "name": "GDExtensionCallableCustomToString",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -2261,7 +2261,7 @@
         },
         {
             "name": "GDExtensionCallableCustomGetArgumentCount",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionInt"
             },
@@ -2278,7 +2278,7 @@
         },
         {
             "name": "GDExtensionCallableCustomInfo",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "callable_userdata",
@@ -2340,7 +2340,7 @@
         },
         {
             "name": "GDExtensionCallableCustomInfo2",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "callable_userdata",
@@ -2405,7 +2405,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceDataPtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "void *",
             "description": [
                 "Pointer to custom ScriptInstance native implementation."
@@ -2413,7 +2413,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceSet",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -2434,7 +2434,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceGet",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -2455,7 +2455,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceGetPropertyList",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "const GDExtensionPropertyInfo *"
             },
@@ -2472,7 +2472,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceFreePropertyList",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -2490,7 +2490,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceFreePropertyList2",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -2511,7 +2511,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceGetClassCategory",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -2528,7 +2528,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceGetPropertyType",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionVariantType"
             },
@@ -2549,7 +2549,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceValidateProperty",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -2566,7 +2566,7 @@
         },
         {
             "name": "GDExtensionScriptInstancePropertyCanRevert",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -2583,7 +2583,7 @@
         },
         {
             "name": "GDExtensionScriptInstancePropertyGetRevert",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -2604,7 +2604,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceGetOwner",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionObjectPtr"
             },
@@ -2617,7 +2617,7 @@
         },
         {
             "name": "GDExtensionScriptInstancePropertyStateAdd",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -2638,7 +2638,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceGetPropertyState",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -2659,7 +2659,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceGetMethodList",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "const GDExtensionMethodInfo *"
             },
@@ -2676,7 +2676,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceFreeMethodList",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -2694,7 +2694,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceFreeMethodList2",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -2715,7 +2715,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceHasMethod",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -2732,7 +2732,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceGetMethodArgumentCount",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionInt"
             },
@@ -2753,7 +2753,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceCall",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -2786,7 +2786,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceNotification",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -2804,7 +2804,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceNotification2",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -2825,7 +2825,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceToString",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -2846,7 +2846,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceRefCountIncremented",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -2859,7 +2859,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceRefCountDecremented",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -2872,7 +2872,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceGetScript",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionObjectPtr"
             },
@@ -2885,7 +2885,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceIsPlaceholder",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -2898,12 +2898,12 @@
         },
         {
             "name": "GDExtensionScriptLanguagePtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "void *"
         },
         {
             "name": "GDExtensionScriptInstanceGetLanguage",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionScriptLanguagePtr"
             },
@@ -2916,7 +2916,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceFree",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -2929,7 +2929,7 @@
         },
         {
             "name": "GDExtensionScriptInstancePtr",
-            "type": "simple",
+            "kind": "simple",
             "def": "void *",
             "description": [
                 "Pointer to ScriptInstance."
@@ -2937,7 +2937,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceInfo",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "set_func",
@@ -3036,7 +3036,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceInfo2",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "set_func",
@@ -3146,7 +3146,7 @@
         },
         {
             "name": "GDExtensionScriptInstanceInfo3",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "set_func",
@@ -3259,7 +3259,7 @@
         },
         {
             "name": "GDExtensionWorkerThreadPoolGroupTask",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -3275,7 +3275,7 @@
         },
         {
             "name": "GDExtensionWorkerThreadPoolTask",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -3288,7 +3288,7 @@
         },
         {
             "name": "GDExtensionInitializationLevel",
-            "type": "enum",
+            "kind": "enum",
             "values": [
                 {
                     "name": "GDEXTENSION_INITIALIZATION_CORE",
@@ -3314,7 +3314,7 @@
         },
         {
             "name": "GDExtensionInitializeCallback",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -3331,7 +3331,7 @@
         },
         {
             "name": "GDExtensionDeinitializeCallback",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -3348,7 +3348,7 @@
         },
         {
             "name": "GDExtensionInitialization",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "minimum_initialization_level",
@@ -3380,7 +3380,7 @@
         },
         {
             "name": "GDExtensionInterfaceFunctionPtr",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -3388,7 +3388,7 @@
         },
         {
             "name": "GDExtensionInterfaceGetProcAddress",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionInterfaceFunctionPtr"
             },
@@ -3401,7 +3401,7 @@
         },
         {
             "name": "GDExtensionInitializationFunction",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "GDExtensionBool"
             },
@@ -3456,7 +3456,7 @@
         },
         {
             "name": "GDExtensionGodotVersion",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "major",
@@ -3478,7 +3478,7 @@
         },
         {
             "name": "GDExtensionGodotVersion2",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "major",
@@ -3538,7 +3538,7 @@
         },
         {
             "name": "GDExtensionMainLoopStartupCallback",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -3549,7 +3549,7 @@
         },
         {
             "name": "GDExtensionMainLoopShutdownCallback",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -3560,7 +3560,7 @@
         },
         {
             "name": "GDExtensionMainLoopFrameCallback",
-            "type": "function",
+            "kind": "function",
             "return_value": {
                 "type": "void"
             },
@@ -3571,7 +3571,7 @@
         },
         {
             "name": "GDExtensionMainLoopCallbacks",
-            "type": "struct",
+            "kind": "struct",
             "members": [
                 {
                     "name": "startup_func",

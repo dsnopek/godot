@@ -27,13 +27,13 @@ extern "C" {
         for type in data["types"]:
             if "description" in type:
                 write_doc(file, type["description"])
-            if type["type"] == "simple":
+            if type["kind"] == "simple":
                 write_simple_type(file, type)
-            elif type["type"] == "enum":
+            elif type["kind"] == "enum":
                 write_enum_type(file, type)
-            elif type["type"] == "function":
+            elif type["kind"] == "function":
                 write_function_type(file, type)
-            elif type["type"] == "struct":
+            elif type["kind"] == "struct":
                 write_struct_type(file, type)
             else:
                 raise Exception(f"Unknown type: {type['type']}")

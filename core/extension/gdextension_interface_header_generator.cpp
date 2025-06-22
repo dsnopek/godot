@@ -96,14 +96,14 @@ void GDExtensionInterfaceHeaderGenerator::generate_gdextension_interface_header(
 		if (type_dict.has("description")) {
 			write_doc(fa, type_dict["description"]);
 		}
-		String type_type = type_dict["type"];
-		if (type_type == "simple") {
+		String kind = type_dict["kind"];
+		if (kind == "simple") {
 			write_simple_type(fa, type_dict);
-		} else if (type_type == "enum") {
+		} else if (kind == "enum") {
 			write_enum_type(fa, type_dict);
-		} else if (type_type == "function") {
+		} else if (kind == "function") {
 			write_function_type(fa, type_dict);
-		} else if (type_type == "struct") {
+		} else if (kind == "struct") {
 			write_struct_type(fa, type_dict);
 		}
 	}

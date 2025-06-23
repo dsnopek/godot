@@ -142,7 +142,7 @@ void GDExtensionInterfaceHeaderGenerator::write_doc(const Ref<FileAccess> &p_fa,
 }
 
 void GDExtensionInterfaceHeaderGenerator::write_simple_type(const Ref<FileAccess> &p_fa, const Dictionary &p_type) {
-	String def = p_type["def"];
+	String def = p_type["type"];
 	p_fa->store_string("typedef " + def);
 	if (!def.ends_with("*")) {
 		p_fa->store_string(" ");

@@ -2,10 +2,34 @@ import json
 
 import methods
 
+BASE_TYPES = [
+    "void",
+    "int",
+    "int8_t",
+    "uint8_t",
+    "int16_t",
+    "uint16_t",
+    "int32_t",
+    "uint32_t",
+    "int64_t",
+    "uint64_t",
+    "size_t",
+    "char",
+    "char16_t",
+    "char32_t",
+    "wchar_t",
+    "float",
+    "double",
+]
+
 
 def run(target, source, env):
     buffer = methods.get_buffer(str(source[0]))
     data = json.loads(buffer)
+
+    valid_data_types = {}
+    for type in BASE_TYPES:
+        valid_data_types[type] = True
 
     with methods.generated_wrapper(str(target[0])) as file:
         file.write("""\
@@ -25,20 +49,27 @@ extern "C" {
 """)
 
         for type in data["types"]:
+            kind = type["kind"]
+
+            check_type(kind, type, valid_data_types)
+            valid_data_types[type["name"]] = True
+
             if "description" in type:
                 write_doc(file, type["description"])
-            if type["kind"] == "simple":
+
+            if kind == "simple":
                 write_simple_type(file, type)
-            elif type["kind"] == "enum":
+            elif kind == "enum":
                 write_enum_type(file, type)
-            elif type["kind"] == "function":
+            elif kind == "function":
                 write_function_type(file, type)
-            elif type["kind"] == "struct":
+            elif kind == "struct":
                 write_struct_type(file, type)
             else:
-                raise Exception(f"Unknown type: {type['type']}")
+                raise Exception(f"Unknown kind of type: {kind}")
 
         for interface in data["interface"]:
+            check_type("function", interface, valid_data_types)
             write_interface(file, interface)
 
         file.write("""\
@@ -46,6 +77,42 @@ extern "C" {
 }
 #endif
 """)
+
+
+class UnknownTypeError(Exception):
+    def __init__(self, unknown, parent, item=None):
+        self.unknown = unknown
+        self.parent = parent
+        if item:
+            msg = f"Unknown type '{unknown}' for '{item}' used in '{parent}'"
+        else:
+            msg = f"Unknown type '{unknown}' used in '{parent}'"
+        super().__init__(msg)
+
+
+def clean_type_name(type_name):
+    if type_name.startswith("const "):
+        type_name = type_name[6:]
+    if type_name.endswith(" *"):
+        type_name = type_name[:-2]
+    return type_name
+
+
+def check_type(kind, type, valid_data_types):
+    if kind == "simple":
+        if clean_type_name(type["type"]) not in valid_data_types:
+            raise UnknownTypeError(type["type"], type["name"])
+    elif kind == "struct":
+        for member in type["members"]:
+            if clean_type_name(member["type"]) not in valid_data_types:
+                raise UnknownTypeError(member["type"], type["name"], member["name"])
+    elif kind == "function":
+        for arg in type["arguments"]:
+            if clean_type_name(arg["type"]) not in valid_data_types:
+                raise UnknownTypeError(arg["type"], type["name"], arg.get("name"))
+        if "return_value" in type:
+            if clean_type_name(type["return_value"]["type"]) not in valid_data_types:
+                raise UnknownTypeError(type["return_value"]["type"], type["name"])
 
 
 def write_doc(file, doc, indent=""):
@@ -56,12 +123,13 @@ def write_doc(file, doc, indent=""):
     first = True
     for line in doc:
         if first:
-            file.write(indent + "/* ")
+            file.write(indent + "/*")
             first = False
         else:
-            file.write(indent + " * ")
+            file.write(indent + " *")
 
-        file.write(line)
+        if line != "":
+            file.write(" " + line)
         file.write("\n")
     file.write(indent + " */\n")
 
@@ -73,8 +141,8 @@ def make_deprecated_note(type):
 
 
 def write_simple_type(file, type):
-    file.write(f"typedef {type['def']}")
-    if type["def"][-1] != "*":
+    file.write(f"typedef {type['type']}")
+    if type["type"][-1] != "*":
         file.write(" ")
     file.write(f"{type['name']};{make_deprecated_note(type)}\n")
 
@@ -164,7 +232,10 @@ def write_interface(file, interface):
 
     file.write("/**\n")
     for d in doc:
-        file.write(f" * {d}\n")
+        if d != "":
+            file.write(f" * {d}\n")
+        else:
+            file.write(" *\n")
     file.write(" */\n")
 
     fn = interface.copy()

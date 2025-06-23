@@ -309,7 +309,7 @@
         {
             "name": "GDExtensionVariantPtr",
             "kind": "simple",
-            "def": "void *",
+            "type": "void *",
             "description": [
                 "In this API there are multiple functions which expect the caller to pass a pointer",
                 "on return value as parameter.",
@@ -331,102 +331,102 @@
         {
             "name": "GDExtensionConstVariantPtr",
             "kind": "simple",
-            "def": "const void *"
+            "type": "const void *"
         },
         {
             "name": "GDExtensionUninitializedVariantPtr",
             "kind": "simple",
-            "def": "void *"
+            "type": "void *"
         },
         {
             "name": "GDExtensionStringNamePtr",
             "kind": "simple",
-            "def": "void *"
+            "type": "void *"
         },
         {
             "name": "GDExtensionConstStringNamePtr",
             "kind": "simple",
-            "def": "const void *"
+            "type": "const void *"
         },
         {
             "name": "GDExtensionUninitializedStringNamePtr",
             "kind": "simple",
-            "def": "void *"
+            "type": "void *"
         },
         {
             "name": "GDExtensionStringPtr",
             "kind": "simple",
-            "def": "void *"
+            "type": "void *"
         },
         {
             "name": "GDExtensionConstStringPtr",
             "kind": "simple",
-            "def": "const void *"
+            "type": "const void *"
         },
         {
             "name": "GDExtensionUninitializedStringPtr",
             "kind": "simple",
-            "def": "void *"
+            "type": "void *"
         },
         {
             "name": "GDExtensionObjectPtr",
             "kind": "simple",
-            "def": "void *"
+            "type": "void *"
         },
         {
             "name": "GDExtensionConstObjectPtr",
             "kind": "simple",
-            "def": "const void *"
+            "type": "const void *"
         },
         {
             "name": "GDExtensionUninitializedObjectPtr",
             "kind": "simple",
-            "def": "void *"
+            "type": "void *"
         },
         {
             "name": "GDExtensionTypePtr",
             "kind": "simple",
-            "def": "void *"
+            "type": "void *"
         },
         {
             "name": "GDExtensionConstTypePtr",
             "kind": "simple",
-            "def": "const void *"
+            "type": "const void *"
         },
         {
             "name": "GDExtensionUninitializedTypePtr",
             "kind": "simple",
-            "def": "void *"
+            "type": "void *"
         },
         {
             "name": "GDExtensionMethodBindPtr",
             "kind": "simple",
-            "def": "const void *"
+            "type": "const void *"
         },
         {
             "name": "GDExtensionInt",
             "kind": "simple",
-            "def": "int64_t"
+            "type": "int64_t"
         },
         {
             "name": "GDExtensionBool",
             "kind": "simple",
-            "def": "uint8_t"
+            "type": "uint8_t"
         },
         {
             "name": "GDObjectInstanceID",
             "kind": "simple",
-            "def": "uint64_t"
+            "type": "uint64_t"
         },
         {
             "name": "GDExtensionRefPtr",
             "kind": "simple",
-            "def": "void *"
+            "type": "void *"
         },
         {
             "name": "GDExtensionConstRefPtr",
             "kind": "simple",
-            "def": "const void *"
+            "type": "const void *"
         },
         {
             "name": "GDExtensionCallErrorType",
@@ -854,7 +854,7 @@
         {
             "name": "GDExtensionClassInstancePtr",
             "kind": "simple",
-            "def": "void *"
+            "type": "void *"
         },
         {
             "name": "GDExtensionClassSet",
@@ -1831,7 +1831,7 @@
         {
             "name": "GDExtensionClassLibraryPtr",
             "kind": "simple",
-            "def": "void *"
+            "type": "void *"
         },
         {
             "name": "GDExtensionEditorGetClassesUsedCallback",
@@ -2406,7 +2406,7 @@
         {
             "name": "GDExtensionScriptInstanceDataPtr",
             "kind": "simple",
-            "def": "void *",
+            "type": "void *",
             "description": [
                 "Pointer to custom ScriptInstance native implementation."
             ]
@@ -2899,7 +2899,7 @@
         {
             "name": "GDExtensionScriptLanguagePtr",
             "kind": "simple",
-            "def": "void *"
+            "type": "void *"
         },
         {
             "name": "GDExtensionScriptInstanceGetLanguage",
@@ -2930,7 +2930,7 @@
         {
             "name": "GDExtensionScriptInstancePtr",
             "kind": "simple",
-            "def": "void *",
+            "type": "void *",
             "description": [
                 "Pointer to ScriptInstance."
             ]

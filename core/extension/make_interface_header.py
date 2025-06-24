@@ -1,5 +1,6 @@
 import difflib
 import json
+from collections import OrderedDict
 
 import methods
 
@@ -27,7 +28,7 @@ BASE_TYPES = [
 def run(target, source, env):
     filename = str(source[0])
     buffer = methods.get_buffer(filename)
-    data = json.loads(buffer)
+    data = json.loads(buffer, object_pairs_hook=OrderedDict)
     check_formatting(buffer.decode("utf-8"), data, filename)
 
     valid_data_types = {}

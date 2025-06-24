@@ -142,12 +142,8 @@ void GDExtensionInterfaceHeaderGenerator::write_doc(const Ref<FileAccess> &p_fa,
 }
 
 void GDExtensionInterfaceHeaderGenerator::write_simple_type(const Ref<FileAccess> &p_fa, const Dictionary &p_type) {
-	String def = p_type["type"];
-	p_fa->store_string("typedef " + def);
-	if (!def.ends_with("*")) {
-		p_fa->store_string(" ");
-	}
-	p_fa->store_string(vformat("%s;%s\n", p_type["name"], make_deprecated_note(p_type)));
+	String type_and_name = format_type_and_name(p_type["type"], p_type["name"]);
+	p_fa->store_string(vformat("typedef %s;%s\n", type_and_name, make_deprecated_note(p_type)));
 }
 
 void GDExtensionInterfaceHeaderGenerator::write_enum_type(const Ref<FileAccess> &p_fa, const Dictionary &p_enum) {
@@ -164,14 +160,10 @@ void GDExtensionInterfaceHeaderGenerator::write_enum_type(const Ref<FileAccess> 
 }
 
 void GDExtensionInterfaceHeaderGenerator::write_function_type(const Ref<FileAccess> &p_fa, const Dictionary &p_func) {
-	Dictionary ret = p_func["return_value"];
-	String ret_type = ret["type"];
-	p_fa->store_string("typedef " + ret_type);
-	if (!ret_type.ends_with("*")) {
-		p_fa->store_string(" ");
-	}
 	String args_text = p_func.has("arguments") ? make_args_text(p_func["arguments"]) : "";
-	p_fa->store_string(vformat("(*%s)(%s);%s\n", p_func["name"], args_text, make_deprecated_note(p_func)));
+	String name_and_args = vformat("(*%s)(%s)", p_func["name"], args_text);
+	Dictionary ret = p_func["return_value"];
+	p_fa->store_string(vformat("typedef %s;%s\n", format_type_and_name(ret["type"], name_and_args), make_deprecated_note(p_func)));
 }
 
 void GDExtensionInterfaceHeaderGenerator::write_struct_type(const Ref<FileAccess> &p_fa, const Dictionary &p_struct) {
@@ -182,14 +174,26 @@ void GDExtensionInterfaceHeaderGenerator::write_struct_type(const Ref<FileAccess
 		if (member_dict.has("description")) {
 			write_doc(p_fa, member_dict["description"], "\t");
 		}
-		String member_type = member_dict["type"];
-		p_fa->store_string("\t" + member_type);
-		if (!member_type.ends_with("*")) {
-			p_fa->store_string(" ");
-		}
-		p_fa->store_string((String)member_dict["name"] + ";\n");
+		p_fa->store_string(vformat("\t%s;\n", format_type_and_name(member_dict["type"], member_dict["name"])));
 	}
 	p_fa->store_string(vformat("} %s;%s\n\n", p_struct["name"], make_deprecated_note(p_struct)));
+}
+
+String GDExtensionInterfaceHeaderGenerator::format_type_and_name(const String &p_type, const String &p_name) {
+	String ret = p_type;
+	bool is_pointer = false;
+	if (ret.ends_with("*")) {
+		ret = ret.substr(0, ret.size() - 2) + " *";
+		is_pointer = true;
+	}
+	if (!p_name.is_empty()) {
+		if (is_pointer) {
+			ret = ret + p_name;
+		} else {
+			ret = ret + " " + p_name;
+		}
+	}
+	return ret;
 }
 
 String GDExtensionInterfaceHeaderGenerator::make_deprecated_note(const Dictionary &p_type) {
@@ -203,14 +207,7 @@ String GDExtensionInterfaceHeaderGenerator::make_args_text(const Array &p_args) 
 	Vector<String> combined;
 	for (const Variant &arg : p_args) {
 		Dictionary arg_dict = arg;
-		String arg_text = arg_dict["type"];
-		if (arg_dict.has("name")) {
-			if (!arg_text.ends_with("*")) {
-				arg_text += " ";
-			}
-			arg_text += (String)arg_dict["name"];
-		}
-		combined.push_back(arg_text);
+		combined.push_back(format_type_and_name(arg_dict["type"], arg_dict.get("name", String())));
 	}
 	return String(", ").join(combined);
 }

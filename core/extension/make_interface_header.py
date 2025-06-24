@@ -1,3 +1,4 @@
+import difflib
 import json
 
 import methods
@@ -24,8 +25,10 @@ BASE_TYPES = [
 
 
 def run(target, source, env):
-    buffer = methods.get_buffer(str(source[0]))
+    filename = str(source[0])
+    buffer = methods.get_buffer(filename)
     data = json.loads(buffer)
+    check_formatting(buffer.decode("utf-8"), data, filename)
 
     valid_data_types = {}
     for type in BASE_TYPES:
@@ -77,6 +80,28 @@ extern "C" {
 }
 #endif
 """)
+
+
+# Serialize back into JSON to see if the formatting remains the same.
+def check_formatting(buffer, data, filename):
+    buffer2 = json.dumps(data, indent=4)
+
+    lines1 = buffer.splitlines()
+    lines2 = buffer2.splitlines()
+
+    diff = difflib.unified_diff(
+        lines1,
+        lines2,
+        fromfile="a/" + filename,
+        tofile="b/" + filename,
+        lineterm="",
+    )
+
+    diff = list(diff)
+    if len(diff) > 0:
+        print(" *** Apply this patch to fix: ***\n")
+        print("\n".join(diff))
+        raise Exception(f"Formatting issues in {filename}")
 
 
 class UnknownTypeError(Exception):

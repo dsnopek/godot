@@ -90,28 +90,40 @@ class UnknownTypeError(Exception):
         super().__init__(msg)
 
 
-def clean_type_name(type_name):
+def base_type_name(type_name):
     if type_name.startswith("const "):
         type_name = type_name[6:]
-    if type_name.endswith(" *"):
-        type_name = type_name[:-2]
+    if type_name.endswith("*"):
+        type_name = type_name[:-1]
     return type_name
+
+
+def format_type_and_name(type, name=None):
+    ret = type
+    if ret[-1] == "*":
+        ret = ret[:-1] + " *"
+    if name:
+        if ret[-1] == "*":
+            ret = ret + name
+        else:
+            ret = ret + " " + name
+    return ret
 
 
 def check_type(kind, type, valid_data_types):
     if kind == "simple":
-        if clean_type_name(type["type"]) not in valid_data_types:
+        if base_type_name(type["type"]) not in valid_data_types:
             raise UnknownTypeError(type["type"], type["name"])
     elif kind == "struct":
         for member in type["members"]:
-            if clean_type_name(member["type"]) not in valid_data_types:
+            if base_type_name(member["type"]) not in valid_data_types:
                 raise UnknownTypeError(member["type"], type["name"], member["name"])
     elif kind == "function":
         for arg in type["arguments"]:
-            if clean_type_name(arg["type"]) not in valid_data_types:
+            if base_type_name(arg["type"]) not in valid_data_types:
                 raise UnknownTypeError(arg["type"], type["name"], arg.get("name"))
         if "return_value" in type:
-            if clean_type_name(type["return_value"]["type"]) not in valid_data_types:
+            if base_type_name(type["return_value"]["type"]) not in valid_data_types:
                 raise UnknownTypeError(type["return_value"]["type"], type["name"])
 
 
@@ -141,10 +153,7 @@ def make_deprecated_note(type):
 
 
 def write_simple_type(file, type):
-    file.write(f"typedef {type['type']}")
-    if type["type"][-1] != "*":
-        file.write(" ")
-    file.write(f"{type['name']};{make_deprecated_note(type)}\n")
+    file.write(f"typedef {format_type_and_name(type['type'], type['name'])};{make_deprecated_note(type)}\n")
 
 
 def write_enum_type(file, enum):
@@ -159,21 +168,16 @@ def write_enum_type(file, enum):
 def make_args_text(args):
     combined = []
     for arg in args:
-        arg_text = arg["type"]
-        if "name" in arg:
-            if arg["type"][-1] != "*":
-                arg_text += " "
-            arg_text += arg["name"]
-        combined.append(arg_text)
+        combined.append(format_type_and_name(arg["type"], arg.get("name")))
     return ", ".join(combined)
 
 
 def write_function_type(file, fn):
-    file.write(f"typedef {fn['return_value']['type']}")
-    if fn["return_value"]["type"][-1] != "*":
-        file.write(" ")
     args_text = make_args_text(fn["arguments"]) if ("arguments" in fn) else ""
-    file.write(f"(*{fn['name']})({args_text});{make_deprecated_note(fn)}\n")
+    name_and_args = f"(*{fn['name']})({args_text})"
+    file.write(
+        f"typedef {format_type_and_name(fn['return_value']['type'], name_and_args)};{make_deprecated_note(fn)}\n"
+    )
 
 
 def write_struct_type(file, struct):
@@ -181,11 +185,7 @@ def write_struct_type(file, struct):
     for member in struct["members"]:
         if "description" in member:
             write_doc(file, member["description"], "\t")
-        file.write(f"\t{member['type']}")
-        if member["type"][-1] != "*":
-            file.write(" ")
-        file.write(f"{member['name']};\n")
-
+        file.write(f"\t{format_type_and_name(member['type'], member['name'])};\n")
     file.write(f"}} {struct['name']};{make_deprecated_note(struct)}\n\n")
 
 

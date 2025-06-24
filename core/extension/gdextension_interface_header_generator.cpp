@@ -97,7 +97,7 @@ void GDExtensionInterfaceHeaderGenerator::generate_gdextension_interface_header(
 			write_doc(fa, type_dict["description"]);
 		}
 		String kind = type_dict["kind"];
-		if (kind == "simple") {
+		if (kind == "alias") {
 			write_simple_type(fa, type_dict);
 		} else if (kind == "enum") {
 			write_enum_type(fa, type_dict);

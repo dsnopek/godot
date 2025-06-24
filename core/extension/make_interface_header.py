@@ -57,7 +57,7 @@ extern "C" {
             if "description" in type:
                 write_doc(file, type["description"])
 
-            if kind == "simple":
+            if kind == "alias":
                 write_simple_type(file, type)
             elif kind == "enum":
                 write_enum_type(file, type)
@@ -111,7 +111,7 @@ def format_type_and_name(type, name=None):
 
 
 def check_type(kind, type, valid_data_types):
-    if kind == "simple":
+    if kind == "alias":
         if base_type_name(type["type"]) not in valid_data_types:
             raise UnknownTypeError(type["type"], type["name"])
     elif kind == "struct":

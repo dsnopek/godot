@@ -52,6 +52,7 @@ extern "C" {
 
 """)
 
+        handles = []
         for type in data["types"]:
             kind = type["kind"]
 
@@ -61,7 +62,15 @@ extern "C" {
             if "description" in type:
                 write_doc(file, type["description"])
 
-            if kind == "alias":
+            if kind == "handle":
+                # @todo In the future, let's write these as `struct *` so the compiler can help us type check.
+                type["type"] = "void*"
+                write_simple_type(file, type)
+                handles.append(type["name"])
+            elif kind == "alias":
+                # @todo For now, convert handles used in aliases into `void *`.
+                for handle in handles:
+                    type["type"] = type["type"].replace(handle, "void*")
                 write_simple_type(file, type)
             elif kind == "enum":
                 write_enum_type(file, type)

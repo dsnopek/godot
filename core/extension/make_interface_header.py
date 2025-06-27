@@ -30,6 +30,7 @@ def run(target, source, env):
     buffer = methods.get_buffer(filename)
     data = json.loads(buffer, object_pairs_hook=OrderedDict)
     check_formatting(buffer.decode("utf-8"), data, filename)
+    check_allowed_keys(data, ["_copyright", "format_version", "types", "interface"])
 
     valid_data_types = {}
     for type in BASE_TYPES:
@@ -63,20 +64,25 @@ extern "C" {
                 write_doc(file, type["description"])
 
             if kind == "handle":
-                # @todo In the future, let's write these as `struct *` so the compiler can help us type check.
+                check_allowed_keys(type, ["name", "kind"], ["description"])
+                # @todo In the future, let's write these as `struct *` so the compiler can help us with type checking.
                 type["type"] = "void*"
                 write_simple_type(file, type)
                 handles.append(type["name"])
             elif kind == "alias":
-                # @todo For now, convert handles used in aliases into `void *`.
+                check_allowed_keys(type, ["name", "kind", "type"], ["description"])
+                # @todo For now, convert handles used in aliases into `void *`, but in the future leave them be.
                 for handle in handles:
                     type["type"] = type["type"].replace(handle, "void*")
                 write_simple_type(file, type)
             elif kind == "enum":
+                check_allowed_keys(type, ["name", "kind", "type", "values"], ["description"])
                 write_enum_type(file, type)
             elif kind == "function":
+                check_allowed_keys(type, ["name", "kind", "return_value", "arguments"], ["description"])
                 write_function_type(file, type)
             elif kind == "struct":
+                check_allowed_keys(type, ["name", "kind", "members"], ["description"])
                 write_struct_type(file, type)
             else:
                 raise Exception(f"Unknown kind of type: {kind}")
@@ -92,7 +98,7 @@ extern "C" {
 """)
 
 
-# Serialize back into JSON to see if the formatting remains the same.
+# Serialize back into JSON in order to see if the formatting remains the same.
 def check_formatting(buffer, data, filename):
     buffer2 = json.dumps(data, indent=4)
 
@@ -112,6 +118,17 @@ def check_formatting(buffer, data, filename):
         print(" *** Apply this patch to fix: ***\n")
         print("\n".join(diff))
         raise Exception(f"Formatting issues in {filename}")
+
+
+def check_allowed_keys(data, required, optional=[]):
+    keys = data.keys()
+    allowed = required + optional
+    for k in keys:
+        if k not in allowed:
+            raise Exception(f"Found unknown key '{k}'")
+    for r in required:
+        if r not in keys:
+            raise Exception(f"Missing required key '{r}'")
 
 
 class UnknownTypeError(Exception):

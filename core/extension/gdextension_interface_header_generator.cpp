@@ -90,8 +90,6 @@ void GDExtensionInterfaceHeaderGenerator::generate_gdextension_interface_header(
 
 	fa->store_string(INTRO);
 
-	Vector<String> handles;
-
 	Array types = data["types"];
 	for (const Variant &type : types) {
 		Dictionary type_dict = type;
@@ -100,15 +98,9 @@ void GDExtensionInterfaceHeaderGenerator::generate_gdextension_interface_header(
 		}
 		String kind = type_dict["kind"];
 		if (kind == "handle") {
-			// For backwards compatibility, we treat the handle types as `void *`.
-			type_dict["type"] = "void*";
+			type_dict["type"] = type_dict.get("const", false) ? "const void*" : "void*";
 			write_simple_type(fa, type_dict);
-			handles.push_back(type_dict["name"]);
 		} else if (kind == "alias") {
-			// For backwards compatibility, we convert handles used in aliases into `void *`.
-			for (const String &handle : handles) {
-				type_dict["type"] = ((String)type_dict["type"]).replace(handle, "void*");
-			}
 			write_simple_type(fa, type_dict);
 		} else if (kind == "enum") {
 			write_enum_type(fa, type_dict);

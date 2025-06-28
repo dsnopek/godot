@@ -329,8 +329,9 @@
         },
         {
             "name": "GDExtensionConstVariantPtr",
-            "kind": "alias",
-            "type": "const GDExtensionVariantPtr"
+            "kind": "handle",
+            "parent": "GDExtensionVariantPtr",
+            "const": true
         },
         {
             "name": "GDExtensionUninitializedVariantPtr",
@@ -342,8 +343,9 @@
         },
         {
             "name": "GDExtensionConstStringNamePtr",
-            "kind": "alias",
-            "type": "const GDExtensionStringNamePtr"
+            "kind": "handle",
+            "parent": "GDExtensionStringNamePtr",
+            "const": true
         },
         {
             "name": "GDExtensionUninitializedStringNamePtr",
@@ -355,8 +357,9 @@
         },
         {
             "name": "GDExtensionConstStringPtr",
-            "kind": "alias",
-            "type": "const GDExtensionStringPtr"
+            "kind": "handle",
+            "parent": "GDExtensionStringPtr",
+            "const": true
         },
         {
             "name": "GDExtensionUninitializedStringPtr",
@@ -368,11 +371,13 @@
         },
         {
             "name": "GDExtensionConstObjectPtr",
-            "kind": "alias",
-            "type": "const GDExtensionObjectPtr"
+            "kind": "handle",
+            "parent": "GDExtensionObjectPtr",
+            "const": true
         },
         {
             "name": "GDExtensionUninitializedObjectPtr",
+            "parent": "GDExtensionObjectPtr",
             "kind": "handle"
         },
         {
@@ -381,8 +386,9 @@
         },
         {
             "name": "GDExtensionConstTypePtr",
-            "kind": "alias",
-            "type": "const GDExtensionTypePtr"
+            "kind": "handle",
+            "parent": "GDExtensionTypePtr",
+            "const": true
         },
         {
             "name": "GDExtensionUninitializedTypePtr",
@@ -390,7 +396,8 @@
         },
         {
             "name": "GDExtensionMethodBindPtr",
-            "kind": "handle"
+            "kind": "handle",
+            "const": true
         },
         {
             "name": "GDExtensionInt",
@@ -413,8 +420,9 @@
         },
         {
             "name": "GDExtensionConstRefPtr",
-            "kind": "alias",
-            "type": "const GDExtensionRefPtr"
+            "kind": "handle",
+            "parent": "GDExtensionRefPtr",
+            "const": true
         },
         {
             "name": "GDExtensionCallErrorType",
@@ -2646,7 +2654,7 @@
             "name": "GDExtensionScriptInstanceGetMethodList",
             "kind": "function",
             "return_value": {
-                "type": "const GDExtensionMethodInfo*"
+                "type": "GDExtensionMethodInfo*"
             },
             "arguments": [
                 {
@@ -7565,7 +7573,7 @@
             "arguments": [
                 {
                     "name": "p_method_bind",
-                    "type": "const GDExtensionMethodBindPtr",
+                    "type": "GDExtensionMethodBindPtr",
                     "description": [
                         "A pointer to the MethodBind representing the method on the Object's class."
                     ]
@@ -7619,7 +7627,7 @@
             "arguments": [
                 {
                     "name": "p_method_bind",
-                    "type": "const GDExtensionMethodBindPtr",
+                    "type": "GDExtensionMethodBindPtr",
                     "description": [
                         "A pointer to the MethodBind representing the method on the Object's class."
                     ]
@@ -8426,7 +8434,7 @@
         {
             "name": "classdb_get_method_bind",
             "return_value": {
-                "type": "const GDExtensionMethodBindPtr",
+                "type": "GDExtensionMethodBindPtr",
                 "description": [
                     "A pointer to the MethodBind from ClassDB."
                 ]

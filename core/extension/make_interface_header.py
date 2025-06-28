@@ -64,16 +64,15 @@ extern "C" {
                 write_doc(file, type["description"])
 
             if kind == "handle":
-                check_allowed_keys(type, ["name", "kind"], ["description", "deprecated"])
+                check_allowed_keys(type, ["name", "kind"], ["const", "parent", "description", "deprecated"])
+                if "parent" in type and type["parent"] not in handles:
+                    raise UnknownTypeError(type["parent"], type["name"])
                 # @todo In the future, let's write these as `struct *` so the compiler can help us with type checking.
-                type["type"] = "void*"
+                type["type"] = "void*" if not type.get("const", False) else "const void*"
                 write_simple_type(file, type)
                 handles.append(type["name"])
             elif kind == "alias":
                 check_allowed_keys(type, ["name", "kind", "type"], ["description", "deprecated"])
-                # @todo For now, convert handles used in aliases into `void *`, but in the future leave them be.
-                for handle in handles:
-                    type["type"] = type["type"].replace(handle, "void*")
                 write_simple_type(file, type)
             elif kind == "enum":
                 check_allowed_keys(type, ["name", "kind", "values"], ["description", "deprecated"])

@@ -64,31 +64,36 @@ extern "C" {
                 write_doc(file, type["description"])
 
             if kind == "handle":
-                check_allowed_keys(type, ["name", "kind"], ["description"])
+                check_allowed_keys(type, ["name", "kind"], ["description", "deprecated"])
                 # @todo In the future, let's write these as `struct *` so the compiler can help us with type checking.
                 type["type"] = "void*"
                 write_simple_type(file, type)
                 handles.append(type["name"])
             elif kind == "alias":
-                check_allowed_keys(type, ["name", "kind", "type"], ["description"])
+                check_allowed_keys(type, ["name", "kind", "type"], ["description", "deprecated"])
                 # @todo For now, convert handles used in aliases into `void *`, but in the future leave them be.
                 for handle in handles:
                     type["type"] = type["type"].replace(handle, "void*")
                 write_simple_type(file, type)
             elif kind == "enum":
-                check_allowed_keys(type, ["name", "kind", "type", "values"], ["description"])
+                check_allowed_keys(type, ["name", "kind", "values"], ["description", "deprecated"])
                 write_enum_type(file, type)
             elif kind == "function":
-                check_allowed_keys(type, ["name", "kind", "return_value", "arguments"], ["description"])
+                check_allowed_keys(type, ["name", "kind", "return_value", "arguments"], ["description", "deprecated"])
                 write_function_type(file, type)
             elif kind == "struct":
-                check_allowed_keys(type, ["name", "kind", "members"], ["description"])
+                check_allowed_keys(type, ["name", "kind", "members"], ["description", "deprecated"])
                 write_struct_type(file, type)
             else:
                 raise Exception(f"Unknown kind of type: {kind}")
 
         for interface in data["interface"]:
             check_type("function", interface, valid_data_types)
+            check_allowed_keys(
+                interface,
+                ["name", "return_value", "arguments", "since", "description"],
+                ["see", "legacy_type_name", "deprecated"],
+            )
             write_interface(file, interface)
 
         file.write("""\
@@ -211,6 +216,7 @@ def write_simple_type(file, type):
 def write_enum_type(file, enum):
     file.write("typedef enum {\n")
     for value in enum["values"]:
+        check_allowed_keys(value, ["name", "value"], ["description", "deprecated"])
         if "description" in value:
             write_doc(file, value["description"], "\t")
         file.write(f"\t{value['name']} = {value['value']},\n")
@@ -220,6 +226,7 @@ def write_enum_type(file, enum):
 def make_args_text(args):
     combined = []
     for arg in args:
+        check_allowed_keys(arg, ["type"], ["name", "description"])
         combined.append(format_type_and_name(arg["type"], arg.get("name")))
     return ", ".join(combined)
 
@@ -235,6 +242,7 @@ def write_function_type(file, fn):
 def write_struct_type(file, struct):
     file.write("typedef struct {\n")
     for member in struct["members"]:
+        check_allowed_keys(member, ["name", "type"], ["description"])
         if "description" in member:
             write_doc(file, member["description"], "\t")
         file.write(f"\t{format_type_and_name(member['type'], member['name'])};\n")

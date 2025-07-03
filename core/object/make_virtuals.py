@@ -25,9 +25,9 @@ proto = """#define GDVIRTUAL$VER($ALIAS $RET m_name $ARG)\\
 				uint32_t hash = mi.get_compatibility_hash();\\
 				_gdvirtual_##$VARNAME = nullptr;\\
 				if (_get_extension()->get_virtual_call_data2 && _get_extension()->call_virtual_with_data) {\\
-					_gdvirtual_##$VARNAME = _get_extension()->get_virtual_call_data2(_get_extension()->class_userdata, &_gdvirtual_##$VARNAME##_sn, hash);\\
+					_gdvirtual_##$VARNAME = _get_extension()->get_virtual_call_data2(_get_extension()->class_userdata, to_gdextension(&_gdvirtual_##$VARNAME##_sn), hash);\\
 				} else if (_get_extension()->get_virtual2) {\\
-					_gdvirtual_##$VARNAME = (void *)_get_extension()->get_virtual2(_get_extension()->class_userdata, &_gdvirtual_##$VARNAME##_sn, hash);\\
+					_gdvirtual_##$VARNAME = (void *)_get_extension()->get_virtual2(_get_extension()->class_userdata, to_gdextension(&_gdvirtual_##$VARNAME##_sn), hash);\\
 				}\\
 				_GDVIRTUAL_GET_DEPRECATED(_gdvirtual_##$VARNAME, _gdvirtual_##$VARNAME##_sn, $COMPAT)\\
 				_GDVIRTUAL_TRACK(_gdvirtual_##$VARNAME);\\
@@ -39,7 +39,7 @@ proto = """#define GDVIRTUAL$VER($ALIAS $RET m_name $ARG)\\
 				$CALLPTRARGS\\
 				$CALLPTRRETDEF\\
 				if (_get_extension()->call_virtual_with_data) {\\
-					_get_extension()->call_virtual_with_data(_get_extension_instance(), &_gdvirtual_##$VARNAME##_sn, _gdvirtual_##$VARNAME, $CALLPTRARGPASS, $CALLPTRRETPASS);\\
+					_get_extension()->call_virtual_with_data(_get_extension_instance(), to_gdextension(&_gdvirtual_##$VARNAME##_sn), _gdvirtual_##$VARNAME, $CALLPTRARGPASS, $CALLPTRRETPASS);\\
 					$CALLPTRRET\\
 				} else {\\
 					((GDExtensionClassCallVirtual)_gdvirtual_##$VARNAME)(_get_extension_instance(), $CALLPTRARGPASS, $CALLPTRRETPASS);\\
@@ -61,9 +61,9 @@ proto = """#define GDVIRTUAL$VER($ALIAS $RET m_name $ARG)\\
 				uint32_t hash = mi.get_compatibility_hash();\\
 				_gdvirtual_##$VARNAME = nullptr;\\
 				if (_get_extension()->get_virtual_call_data2 && _get_extension()->call_virtual_with_data) {\\
-					_gdvirtual_##$VARNAME = _get_extension()->get_virtual_call_data2(_get_extension()->class_userdata, &_gdvirtual_##$VARNAME##_sn, hash);\\
+					_gdvirtual_##$VARNAME = _get_extension()->get_virtual_call_data2(_get_extension()->class_userdata, to_gdextension(&_gdvirtual_##$VARNAME##_sn), hash);\\
 				} else if (_get_extension()->get_virtual2) {\\
-					_gdvirtual_##$VARNAME = (void *)_get_extension()->get_virtual2(_get_extension()->class_userdata, &_gdvirtual_##$VARNAME##_sn, hash);\\
+					_gdvirtual_##$VARNAME = (void *)_get_extension()->get_virtual2(_get_extension()->class_userdata, to_gdextension(&_gdvirtual_##$VARNAME##_sn), hash);\\
 				}\\
 				_GDVIRTUAL_GET_DEPRECATED(_gdvirtual_##$VARNAME, _gdvirtual_##$VARNAME##_sn, $COMPAT)\\
 				_GDVIRTUAL_TRACK(_gdvirtual_##$VARNAME);\\
@@ -167,7 +167,7 @@ def generate_version(argcount, const=False, returns=False, required=False, compa
         callptrargs += (
             f"PtrToArg<m_type{i + 1}>::EncodeT argval{i + 1} = (PtrToArg<m_type{i + 1}>::EncodeT)arg{i + 1};\\\n"
         )
-        callptrargsptr += f"&argval{i + 1}"
+        callptrargsptr += f"to_gdextension_type_ptr(&argval{i + 1})"
         if method_info:
             method_info += "\\\n\t\t"
         method_info += f"method_info.arguments.push_back(GetTypeInfo<m_type{i + 1}>::get_class_info());\\\n"
@@ -193,7 +193,7 @@ def generate_version(argcount, const=False, returns=False, required=False, compa
         callargtext += "m_ret &r_ret"
         s = s.replace("$CALLSIBEGIN", "Variant ret = ")
         s = s.replace("$CALLSIRET", "r_ret = VariantCaster<m_ret>::cast(ret);")
-        s = s.replace("$CALLPTRRETPASS", "&ret")
+        s = s.replace("$CALLPTRRETPASS", "to_gdextension_type_ptr(&ret)")
         s = s.replace("$CALLPTRRET", "r_ret = (m_ret)ret;")
     else:
         s = s.replace("$CALLSIBEGIN", "")
@@ -218,6 +218,7 @@ def run(target, source, env):
 #pragma once
 
 #include "core/object/script_instance.h"
+#include "core/extension/gdextension_interface_conv.h"
 
 inline constexpr uintptr_t _INVALID_GDVIRTUAL_FUNC_ADDR = static_cast<uintptr_t>(-1);
 
@@ -237,9 +238,9 @@ inline constexpr uintptr_t _INVALID_GDVIRTUAL_FUNC_ADDR = static_cast<uintptr_t>
 #define _GDVIRTUAL_GET_DEPRECATED(m_virtual, m_name_sn, m_compat)\\
 	else if (m_compat || ClassDB::get_virtual_method_compatibility_hashes(get_class_static(), m_name_sn).size() == 0) {\\
 		if (_get_extension()->get_virtual_call_data && _get_extension()->call_virtual_with_data) {\\
-			m_virtual = _get_extension()->get_virtual_call_data(_get_extension()->class_userdata, &m_name_sn);\\
+			m_virtual = _get_extension()->get_virtual_call_data(_get_extension()->class_userdata, to_gdextension(&m_name_sn));\\
 		} else if (_get_extension()->get_virtual) {\\
-			m_virtual = (void *)_get_extension()->get_virtual(_get_extension()->class_userdata, &m_name_sn);\\
+			m_virtual = (void *)_get_extension()->get_virtual(_get_extension()->class_userdata, to_gdextension(&m_name_sn));\\
 		}\\
 	}
 #else

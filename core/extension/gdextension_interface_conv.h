@@ -34,6 +34,7 @@
 
 class MethodBind;
 class Object;
+class RID;
 class StringName;
 class String;
 class Variant;
@@ -73,6 +74,28 @@ inline typename GDExtensionPtrTraits<T>::OpaquePtr to_gdextension(T *p_godot_typ
 }
 
 template <typename T>
-T *from_gdextension(typename GDExtensionPtrTraits<T>::OpaquePtr p_gdextension_type) {
+inline T *from_gdextension(typename GDExtensionPtrTraits<T>::OpaquePtr p_gdextension_type) {
 	return GDExtensionPtrTraits<T>::from(p_gdextension_type);
+}
+
+template <typename T>
+struct GDExtensionEncodedPtrTraits;
+
+#define GDEXTENSION_ENCODED_TYPE_PTR(m_type)                                \
+	template <>                                                             \
+	struct GDExtensionEncodedPtrTraits<m_type> {                            \
+		static inline GDExtensionTypePtr convert(m_type *p_encoded_value) { \
+			return reinterpret_cast<GDExtensionTypePtr>(p_encoded_value);   \
+		}                                                                   \
+	};
+
+// Any encoded type (ie `PtrToArg<T>::EncodedT`) can be converted to `GDExtensionTypePtr`.
+GDEXTENSION_ENCODED_TYPE_PTR(int64_t);
+GDEXTENSION_ENCODED_TYPE_PTR(double);
+GDEXTENSION_ENCODED_TYPE_PTR(RID);
+GDEXTENSION_ENCODED_TYPE_PTR(String);
+
+template <typename T>
+inline GDExtensionTypePtr to_gdextension_type_ptr(T *p_encoded_value) {
+	return GDExtensionEncodedPtrTraits<T>::convert(p_encoded_value);
 }

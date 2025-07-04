@@ -2726,7 +2726,7 @@ String Node::to_string() {
 	if (_get_extension() && _get_extension()->to_string) {
 		String ret;
 		GDExtensionBool is_valid;
-		_get_extension()->to_string(_get_extension_instance(), &is_valid, &ret);
+		_get_extension()->to_string(_get_extension_instance(), &is_valid, to_gdextension(&ret));
 		if (is_valid) {
 			return ret;
 		}

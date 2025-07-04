@@ -166,7 +166,7 @@ public:
 	void call(const Variant **p_arguments, int p_argcount, Variant &r_return_value, Callable::CallError &r_call_error) const override {
 		GDExtensionCallError error;
 
-		call_func(userdata, (GDExtensionConstVariantPtr *)p_arguments, p_argcount, (GDExtensionVariantPtr)&r_return_value, &error);
+		call_func(userdata, to_gdextension(p_arguments), p_argcount, to_gdextension(&r_return_value), &error);
 
 		r_call_error.error = (Callable::CallError::Error)error.error;
 		r_call_error.argument = error.argument;
@@ -307,15 +307,15 @@ static void gdextension_variant_new_nil(GDExtensionUninitializedVariantPtr r_des
 	memnew_placement(reinterpret_cast<Variant *>(r_dest), Variant);
 }
 static void gdextension_variant_destroy(GDExtensionVariantPtr p_self) {
-	reinterpret_cast<Variant *>(p_self)->~Variant();
+	from_gdextension<Variant>(p_self)->~Variant();
 }
 
 // variant type
 
 static void gdextension_variant_call(GDExtensionVariantPtr p_self, GDExtensionConstStringNamePtr p_method, const GDExtensionConstVariantPtr *p_args, GDExtensionInt p_argcount, GDExtensionUninitializedVariantPtr r_return, GDExtensionCallError *r_error) {
-	Variant *self = (Variant *)p_self;
-	const StringName method = *reinterpret_cast<const StringName *>(p_method);
-	const Variant **args = (const Variant **)p_args;
+	Variant *self = from_gdextension(p_self);
+	const StringName method = *from_gdextension<StringName>(p_method);
+	const Variant **args = from_gdextension<const Variant *>(p_args);
 	Callable::CallError error;
 	memnew_placement(r_return, Variant);
 	Variant *ret = reinterpret_cast<Variant *>(r_return);

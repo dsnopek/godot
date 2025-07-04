@@ -594,18 +594,18 @@ void Object::validate_property(PropertyInfo &p_property) const {
 		StringName prop_name = p_property.name;
 		GDExtensionPropertyInfo gdext_prop = {
 			(GDExtensionVariantType)p_property.type,
-			&prop_name,
-			&p_property.class_name,
+			to_gdextension(&prop_name),
+			to_gdextension(&p_property.class_name),
 			(uint32_t)p_property.hint,
-			&p_property.hint_string,
+			to_gdextension(&p_property.hint_string),
 			p_property.usage,
 		};
 		if (_extension->validate_property(_extension_instance, &gdext_prop)) {
 			p_property.type = (Variant::Type)gdext_prop.type;
-			p_property.name = *reinterpret_cast<StringName *>(gdext_prop.name);
-			p_property.class_name = *reinterpret_cast<StringName *>(gdext_prop.class_name);
+			p_property.name = *from_gdextension(gdext_prop.name);
+			p_property.class_name = *from_gdextension(gdext_prop.class_name);
 			p_property.hint = (PropertyHint)gdext_prop.hint;
-			p_property.hint_string = *reinterpret_cast<String *>(gdext_prop.hint_string);
+			p_property.hint_string = *from_gdextension(gdext_prop.hint_string);
 			p_property.usage = gdext_prop.usage;
 		};
 	}
@@ -977,7 +977,7 @@ String Object::to_string() {
 	if (_extension && _extension->to_string) {
 		String ret;
 		GDExtensionBool is_valid;
-		_extension->to_string(_extension_instance, &is_valid, &ret);
+		_extension->to_string(_extension_instance, &is_valid, to_gdextension(&ret));
 		if (is_valid) {
 			return ret;
 		}

@@ -167,7 +167,7 @@ def generate_version(argcount, const=False, returns=False, required=False, compa
         callptrargs += (
             f"PtrToArg<m_type{i + 1}>::EncodeT argval{i + 1} = (PtrToArg<m_type{i + 1}>::EncodeT)arg{i + 1};\\\n"
         )
-        callptrargsptr += f"to_gdextension_type_ptr(&argval{i + 1})"
+        callptrargsptr += f"to_gdextension_type_ptr<m_type{i + 1}>(&argval{i + 1})"
         if method_info:
             method_info += "\\\n\t\t"
         method_info += f"method_info.arguments.push_back(GetTypeInfo<m_type{i + 1}>::get_class_info());\\\n"
@@ -193,7 +193,7 @@ def generate_version(argcount, const=False, returns=False, required=False, compa
         callargtext += "m_ret &r_ret"
         s = s.replace("$CALLSIBEGIN", "Variant ret = ")
         s = s.replace("$CALLSIRET", "r_ret = VariantCaster<m_ret>::cast(ret);")
-        s = s.replace("$CALLPTRRETPASS", "to_gdextension_type_ptr(&ret)")
+        s = s.replace("$CALLPTRRETPASS", "to_gdextension_type_ptr<m_ret>(&ret)")
         s = s.replace("$CALLPTRRET", "r_ret = (m_ret)ret;")
     else:
         s = s.replace("$CALLSIBEGIN", "")

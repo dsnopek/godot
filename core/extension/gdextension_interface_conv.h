@@ -59,6 +59,7 @@ struct GDExtensionPtrTraits;
 
 GDEXTENSION_PTR_CONV(Variant, GDExtensionVariantPtr);
 GDEXTENSION_PTR_CONV(const Variant, GDExtensionConstVariantPtr);
+GDEXTENSION_PTR_CONV(const Variant *, GDExtensionConstVariantPtr *);
 GDEXTENSION_PTR_CONV(StringName, GDExtensionStringNamePtr);
 GDEXTENSION_PTR_CONV(const StringName, GDExtensionConstStringNamePtr);
 GDEXTENSION_PTR_CONV(String, GDExtensionStringPtr);

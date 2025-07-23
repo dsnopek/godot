@@ -72,9 +72,16 @@ class XRDebuggerRuntimeEditor : public XROrigin3D {
 	XRController3D *xr_controller_left = nullptr;
 	XRController3D *xr_controller_right = nullptr;
 
-	void _on_controller_button_pressed(const String &p_name);
+	bool select_pressed = false;
+
+	void _on_controller_button_pressed(const String &p_name, XRController3D *p_controller);
+	bool _is_descendent(Node *p_node);
+	void _select_with_ray();
 
 	void set_enabled(bool p_enable);
+
+protected:
+	void _notification(int p_what);
 
 public:
 	XRDebuggerRuntimeEditor();

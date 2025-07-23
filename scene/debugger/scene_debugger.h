@@ -247,6 +247,7 @@ public:
 
 private:
 	friend class SceneDebugger;
+	friend class XRDebuggerRuntimeEditor;
 
 	NodeType node_select_type = NODE_TYPE_2D;
 	SelectMode node_select_mode = SELECT_MODE_SINGLE;

@@ -32,8 +32,10 @@
 
 #include "xr_debugger.h"
 
+#include "core/debugger/engine_debugger.h"
 #include "scene/3d/mesh_instance_3d.h"
 #include "scene/3d/xr/xr_nodes.h"
+#include "scene/debugger/scene_debugger.h"
 #include "scene/main/scene_tree.h"
 #include "scene/main/window.h"
 #include "scene/resources/3d/primitive_meshes.h"
@@ -78,11 +80,87 @@ XRDebugger::~XRDebugger() {
 	deinitialize();
 }
 
-void XRDebuggerRuntimeEditor::_on_controller_button_pressed(const String &p_name) {
+void XRDebuggerRuntimeEditor::_on_controller_button_pressed(const String &p_name, XRController3D *p_controller) {
 	// @todo We need to have an action set for OpenXR, and it needs to know to switch to it - not sure how to handle that yet.
-	if (p_name == "menu_button") {
+
+	if (p_controller == xr_controller_left && p_name == "menu_button") {
 		set_enabled(!enabled);
+	} else if (p_controller == xr_controller_right && p_name == "trigger_click") {
+		select_pressed = true;
 	}
+}
+
+bool XRDebuggerRuntimeEditor::_is_descendent(Node *p_node) {
+	Node *parent = p_node->get_parent();
+	while (parent) {
+		if (parent == this) {
+			return true;
+		}
+		parent = parent->get_parent();
+	}
+	return false;
+}
+
+void XRDebuggerRuntimeEditor::_select_with_ray() {
+	Window *root = SceneTree::get_singleton()->get_root();
+
+	Transform3D controller_transform = xr_controller_right->get_global_transform();
+	Vector3 pos = controller_transform.origin;
+	Vector3 ray = -controller_transform.get_basis().get_column(2);
+	// @todo This is 10m ahead - how far should this be?
+	Vector3 to = pos + (ray * 10.0);
+
+	Node3D *closest_node = nullptr;
+	float closest_distance = 0.0;
+
+#ifndef PHYSICS_3D_DISABLED
+	// @todo Try with physics objects first...
+#endif
+
+	Vector<ObjectID> items = RS::get_singleton()->instances_cull_ray(pos, to, root->get_world_3d()->get_scenario());
+	for (int i = 0; i < items.size(); i++) {
+		Object *obj = ObjectDB::get_instance(items[i]);
+
+		GeometryInstance3D *geo_instance = Object::cast_to<GeometryInstance3D>(obj);
+		if (geo_instance) {
+			if (_is_descendent(geo_instance)) {
+				// Discard our child nodes, those are part of the UI.
+				continue;
+			}
+
+			Ref<TriangleMesh> mesh_collision = geo_instance->generate_triangle_mesh();
+			if (mesh_collision.is_valid()) {
+				Transform3D gt = geo_instance->get_global_transform();
+				Transform3D ai = gt.affine_inverse();
+				Vector3 point, normal;
+				if (mesh_collision->intersect_ray(ai.xform(pos), ai.basis.xform(ray).normalized(), point, normal)) {
+					float distance = pos.distance_to(point);
+					if (!closest_node || distance < closest_distance) {
+						closest_node = geo_instance;
+						closest_distance = distance;
+					}
+				}
+			}
+		}
+	}
+
+	Vector<Node *> selected_nodes;
+
+	Array message;
+	if (closest_node) {
+		selected_nodes.push_back(closest_node);
+
+		SceneDebuggerObject obj(closest_node->get_instance_id());
+		Array arr;
+		obj.serialize(arr);
+		message.append(arr);
+
+		EngineDebugger::get_singleton()->send_message("remote_objects_selected", message);
+	} else {
+		EngineDebugger::get_singleton()->send_message("remote_nothing_selected", message);
+	}
+
+	RuntimeNodeSelect::get_singleton()->_set_selected_nodes(selected_nodes);
 }
 
 void XRDebuggerRuntimeEditor::set_enabled(bool p_enable) {
@@ -91,14 +169,21 @@ void XRDebuggerRuntimeEditor::set_enabled(bool p_enable) {
 	}
 	enabled = p_enable;
 
-	if (enabled) {
-		print_line("Do the thing!");
-		xr_controller_left->set_visible(true);
-		xr_controller_right->set_visible(true);
-	} else {
-		print_line("Stop doing the thing");
-		xr_controller_left->set_visible(false);
-		xr_controller_right->set_visible(false);
+	set_physics_process(enabled);
+	xr_controller_left->set_visible(enabled);
+	xr_controller_right->set_visible(enabled);
+}
+
+void XRDebuggerRuntimeEditor::_notification(int p_what) {
+	switch (p_what) {
+		case NOTIFICATION_PHYSICS_PROCESS: {
+			if (select_pressed) {
+				select_pressed = false;
+				if (enabled) {
+					_select_with_ray();
+				}
+			}
+		} break;
 	}
 }
 
@@ -114,7 +199,7 @@ XRDebuggerRuntimeEditor::XRDebuggerRuntimeEditor() {
 	xr_controller_left = memnew(XRController3D);
 	xr_controller_left->set_tracker("left_hand");
 	xr_controller_left->set_visible(false);
-	xr_controller_left->connect("button_pressed", callable_mp(this, &XRDebuggerRuntimeEditor::_on_controller_button_pressed));
+	xr_controller_left->connect("button_pressed", callable_mp(this, &XRDebuggerRuntimeEditor::_on_controller_button_pressed).bind(xr_controller_left));
 	add_child(xr_controller_left);
 
 	Ref<BoxMesh> box_mesh;
@@ -128,6 +213,7 @@ XRDebuggerRuntimeEditor::XRDebuggerRuntimeEditor() {
 	xr_controller_right = memnew(XRController3D);
 	xr_controller_right->set_tracker("right_hand");
 	xr_controller_right->set_visible(false);
+	xr_controller_right->connect("button_pressed", callable_mp(this, &XRDebuggerRuntimeEditor::_on_controller_button_pressed).bind(xr_controller_right));
 	add_child(xr_controller_right);
 
 	Ref<BoxMesh> ray_mesh;

@@ -105,20 +105,21 @@ void XRDebuggerRuntimeEditor::set_enabled(bool p_enable) {
 XRDebuggerRuntimeEditor::XRDebuggerRuntimeEditor() {
 	set_name("XRDebuggerRuntimeEditor");
 	set_current(false);
+	set_process_mode(Node::PROCESS_MODE_ALWAYS);
 
 	xr_camera = memnew(XRCamera3D);
 	xr_camera->set_current(false);
 	add_child(xr_camera);
-
-	Ref<BoxMesh> box_mesh;
-	box_mesh.instantiate();
-	box_mesh->set_size(Vector3(0.1, 0.1, 0.1));
 
 	xr_controller_left = memnew(XRController3D);
 	xr_controller_left->set_tracker("left_hand");
 	xr_controller_left->set_visible(false);
 	xr_controller_left->connect("button_pressed", callable_mp(this, &XRDebuggerRuntimeEditor::_on_controller_button_pressed));
 	add_child(xr_controller_left);
+
+	Ref<BoxMesh> box_mesh;
+	box_mesh.instantiate();
+	box_mesh->set_size(Vector3(0.4, 0.4, 0.05));
 
 	MeshInstance3D *left_mesh_instance = memnew(MeshInstance3D);
 	left_mesh_instance->set_mesh(box_mesh);
@@ -129,8 +130,13 @@ XRDebuggerRuntimeEditor::XRDebuggerRuntimeEditor() {
 	xr_controller_right->set_visible(false);
 	add_child(xr_controller_right);
 
+	Ref<BoxMesh> ray_mesh;
+	ray_mesh.instantiate();
+	ray_mesh->set_size(Vector3(0.01, 0.01, 10.0));
+
 	MeshInstance3D *right_mesh_instance = memnew(MeshInstance3D);
-	right_mesh_instance->set_mesh(box_mesh);
+	right_mesh_instance->set_mesh(ray_mesh);
+	right_mesh_instance->set_position(Vector3(0.0, 0.0, -5.0));
 	xr_controller_right->add_child(right_mesh_instance);
 }
 

@@ -38,77 +38,54 @@
 #include "scene/main/window.h"
 #include "scene/resources/3d/primitive_meshes.h"
 
+XRDebuggerRuntimeEditor *XRDebugger::get_runtime_editor() {
+	return runtime_editor_id.is_valid() ? Object::cast_to<XRDebuggerRuntimeEditor>(ObjectDB::get_instance(runtime_editor_id)) : nullptr;
+}
+
 void XRDebugger::initialize() {
 	SceneTree *scene_tree = SceneTree::get_singleton();
 	ERR_FAIL_NULL(scene_tree);
 
-	if (initialized) {
+	XRDebuggerRuntimeEditor *runtime_editor = get_runtime_editor();
+	if (runtime_editor) {
 		return;
 	}
-	initialized = true;
 
-	xr_origin = memnew(XROrigin3D);
-	xr_origin->set_name("XRDebugger");
-	xr_origin->set_current(false);
+	runtime_editor = memnew(XRDebuggerRuntimeEditor);
+	runtime_editor_id = runtime_editor->get_instance_id();
 
-	xr_camera = memnew(XRCamera3D);
-	xr_camera->set_current(false);
-	xr_origin->add_child(xr_camera);
-
-	Ref<BoxMesh> box_mesh;
-	box_mesh.instantiate();
-	box_mesh->set_size(Vector3(0.1, 0.1, 0.1));
-
-	xr_controller_left = memnew(XRController3D);
-	xr_controller_left->set_tracker("left_hand");
-	xr_controller_left->set_visible(false);
-	xr_controller_left->connect("button_pressed", callable_mp(this, &XRDebugger::_on_controller_button_pressed));
-	xr_origin->add_child(xr_controller_left);
-
-	MeshInstance3D *left_mesh_instance = memnew(MeshInstance3D);
-	left_mesh_instance->set_mesh(box_mesh);
-	xr_controller_left->add_child(left_mesh_instance);
-
-	xr_controller_right = memnew(XRController3D);
-	xr_controller_right->set_tracker("right_hand");
-	xr_controller_right->set_visible(false);
-	xr_origin->add_child(xr_controller_right);
-
-	MeshInstance3D *right_mesh_instance = memnew(MeshInstance3D);
-	right_mesh_instance->set_mesh(box_mesh);
-	xr_controller_right->add_child(right_mesh_instance);
-
-	scene_tree->get_root()->add_child(xr_origin);
+	scene_tree->get_root()->add_child(runtime_editor);
 }
 
 void XRDebugger::deinitialize() {
-	// @todo This isn't right - I think the scene tree is already gone by the time we get here
 	SceneTree *scene_tree = SceneTree::get_singleton();
 	ERR_FAIL_NULL(scene_tree);
 
-	if (!initialized) {
+	XRDebuggerRuntimeEditor *runtime_editor = get_runtime_editor();
+	if (runtime_editor) {
 		return;
 	}
 
-	scene_tree->get_root()->remove_child(xr_origin);
-	xr_origin->queue_free();
-
-	xr_origin = nullptr;
-	xr_camera = nullptr;
-	xr_controller_left = nullptr;
-	xr_controller_right = nullptr;
-
-	initialized = false;
+	runtime_editor_id = ObjectID();
+	runtime_editor->queue_free();
+	scene_tree->get_root()->remove_child(runtime_editor);
 }
 
-void XRDebugger::_on_controller_button_pressed(const String &p_name) {
+XRDebugger::XRDebugger() {
+}
+
+XRDebugger::~XRDebugger() {
+	deinitialize();
+}
+
+void XRDebuggerRuntimeEditor::_on_controller_button_pressed(const String &p_name) {
 	// @todo We need to have an action set for OpenXR, and it needs to know to switch to it - not sure how to handle that yet.
 	if (p_name == "menu_button") {
 		set_enabled(!enabled);
 	}
 }
 
-void XRDebugger::set_enabled(bool p_enable) {
+void XRDebuggerRuntimeEditor::set_enabled(bool p_enable) {
 	if (enabled == p_enable) {
 		return;
 	}
@@ -125,11 +102,39 @@ void XRDebugger::set_enabled(bool p_enable) {
 	}
 }
 
-XRDebugger::XRDebugger() {
+XRDebuggerRuntimeEditor::XRDebuggerRuntimeEditor() {
+	set_name("XRDebuggerRuntimeEditor");
+	set_current(false);
+
+	xr_camera = memnew(XRCamera3D);
+	xr_camera->set_current(false);
+	add_child(xr_camera);
+
+	Ref<BoxMesh> box_mesh;
+	box_mesh.instantiate();
+	box_mesh->set_size(Vector3(0.1, 0.1, 0.1));
+
+	xr_controller_left = memnew(XRController3D);
+	xr_controller_left->set_tracker("left_hand");
+	xr_controller_left->set_visible(false);
+	xr_controller_left->connect("button_pressed", callable_mp(this, &XRDebuggerRuntimeEditor::_on_controller_button_pressed));
+	add_child(xr_controller_left);
+
+	MeshInstance3D *left_mesh_instance = memnew(MeshInstance3D);
+	left_mesh_instance->set_mesh(box_mesh);
+	xr_controller_left->add_child(left_mesh_instance);
+
+	xr_controller_right = memnew(XRController3D);
+	xr_controller_right->set_tracker("right_hand");
+	xr_controller_right->set_visible(false);
+	add_child(xr_controller_right);
+
+	MeshInstance3D *right_mesh_instance = memnew(MeshInstance3D);
+	right_mesh_instance->set_mesh(box_mesh);
+	xr_controller_right->add_child(right_mesh_instance);
 }
 
-XRDebugger::~XRDebugger() {
-	deinitialize();
+XRDebuggerRuntimeEditor::~XRDebuggerRuntimeEditor() {
 }
 
 #endif

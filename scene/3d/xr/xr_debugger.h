@@ -32,13 +32,11 @@
 
 #ifdef DEBUG_ENABLED
 
-#include "core/object/object.h"
 #include "core/templates/local_vector.h"
+#include "scene/3d/xr/xr_nodes.h"
 
 class SceneDebugger;
-class XROrigin3D;
-class XRCamera3D;
-class XRController3D;
+class XRDebuggerRuntimeEditor;
 
 class XRDebugger : public Object {
 	GDSOFTCLASS(XRDebugger, Object);
@@ -47,21 +45,9 @@ class XRDebugger : public Object {
 
 	inline static XRDebugger *singleton = nullptr;
 
-	bool initialized = false;
-	bool enabled = false;
+	ObjectID runtime_editor_id;
 
-	ObjectID original_xr_origin;
-	ObjectID original_xr_camera;
-	LocalVector<ObjectID> original_xr_controllers;
-
-	XROrigin3D *xr_origin = nullptr;
-	XRCamera3D *xr_camera = nullptr;
-	XRController3D *xr_controller_left = nullptr;
-	XRController3D *xr_controller_right = nullptr;
-
-	void _on_controller_button_pressed(const String &p_name);
-
-	void set_enabled(bool p_enable);
+	XRDebuggerRuntimeEditor *get_runtime_editor();
 
 public:
 	static XRDebugger *get_singleton() { return singleton; }
@@ -71,6 +57,28 @@ public:
 
 	XRDebugger();
 	~XRDebugger();
+};
+
+class XRDebuggerRuntimeEditor : public XROrigin3D {
+	GDSOFTCLASS(XRDebuggerRuntimeEditor, XROrigin3D);
+
+	bool enabled = false;
+
+	ObjectID original_xr_origin;
+	ObjectID original_xr_camera;
+	LocalVector<ObjectID> original_xr_controllers;
+
+	XRCamera3D *xr_camera = nullptr;
+	XRController3D *xr_controller_left = nullptr;
+	XRController3D *xr_controller_right = nullptr;
+
+	void _on_controller_button_pressed(const String &p_name);
+
+	void set_enabled(bool p_enable);
+
+public:
+	XRDebuggerRuntimeEditor();
+	~XRDebuggerRuntimeEditor();
 };
 
 #endif

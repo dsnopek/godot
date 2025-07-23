@@ -60,13 +60,18 @@ public:
 };
 
 class XRDebuggerRuntimeEditor : public XROrigin3D {
-	GDSOFTCLASS(XRDebuggerRuntimeEditor, XROrigin3D);
+	GDCLASS(XRDebuggerRuntimeEditor, XROrigin3D);
 
 	bool enabled = false;
 
-	ObjectID original_xr_origin;
-	ObjectID original_xr_camera;
-	LocalVector<ObjectID> original_xr_controllers;
+	ObjectID original_xr_origin_id;
+	ObjectID original_xr_camera_id;
+
+	struct ControllerInfo {
+		StringName tracker;
+		ObjectID controller_id;
+	};
+	LocalVector<ControllerInfo> original_xr_controllers;
 
 	XRCamera3D *xr_camera = nullptr;
 	XRController3D *xr_controller_left = nullptr;

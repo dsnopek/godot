@@ -41,7 +41,7 @@
 #include "scene/resources/3d/primitive_meshes.h"
 
 XRDebuggerRuntimeEditor *XRDebugger::get_runtime_editor() {
-	return runtime_editor_id.is_valid() ? Object::cast_to<XRDebuggerRuntimeEditor>(ObjectDB::get_instance(runtime_editor_id)) : nullptr;
+	return runtime_editor_id.is_valid() ? ObjectDB::get_instance<XRDebuggerRuntimeEditor>(runtime_editor_id) : nullptr;
 }
 
 void XRDebugger::initialize() {
@@ -172,10 +172,98 @@ void XRDebuggerRuntimeEditor::set_enabled(bool p_enable) {
 	set_physics_process(enabled);
 	xr_controller_left->set_visible(enabled);
 	xr_controller_right->set_visible(enabled);
+
+	if (enabled) {
+		SceneTree *scene_tree = SceneTree::get_singleton();
+		Window *root = scene_tree->get_root();
+		XROrigin3D *current_xr_origin = nullptr;
+
+		TypedArray<Node> potential_origins = root->find_children("*", "XROrigin3D", true, false);
+		for (const Variant &item : potential_origins) {
+			XROrigin3D *potential_origin = Object::cast_to<XROrigin3D>(item);
+			if (!potential_origin || potential_origin == this) {
+				continue;
+			}
+
+			if (potential_origin->is_current()) {
+				current_xr_origin = potential_origin;
+				break;
+			}
+		}
+
+		if (current_xr_origin) {
+			original_xr_origin_id = current_xr_origin->get_instance_id();
+			set_global_transform(current_xr_origin->get_global_transform());
+
+			XRCamera3D *current_xr_camera = nullptr;
+			TypedArray<XRCamera3D> potential_cameras = current_xr_origin->find_children("*", "XRCamera3D", true, false);
+			for (const Variant &item : potential_cameras) {
+				XRCamera3D *potential_camera = Object::cast_to<XRCamera3D>(item);
+				if (!potential_camera || _is_descendent(potential_camera)) {
+					continue;
+				}
+
+				if (potential_camera->is_current()) {
+					current_xr_camera = potential_camera;
+					break;
+				}
+			}
+			if (current_xr_camera) {
+				original_xr_camera_id = current_xr_camera->get_instance_id();
+			}
+
+			TypedArray<XRController3D> controllers = current_xr_origin->find_children("*", "XRController3D", true, false);
+			for (const Variant &item : controllers) {
+				XRController3D *controller = Object::cast_to<XRController3D>(item);
+				if (!controller || _is_descendent(controller)) {
+					continue;
+				}
+
+				original_xr_controllers.push_back({
+						controller->get_tracker(), // tracker
+						controller->get_instance_id(), // controller_id
+				});
+
+				controller->set_tracker("/disabled/by/xr/debugger");
+			}
+		}
+
+		set_current(true);
+		xr_camera->set_current(true);
+	} else {
+		XROrigin3D *original_xr_origin = ObjectDB::get_instance<XROrigin3D>(original_xr_origin_id);
+		if (original_xr_origin) {
+			original_xr_origin->set_current(true);
+		} else {
+			set_current(false);
+		}
+		original_xr_origin_id = ObjectID();
+
+		XRCamera3D *original_xr_camera = ObjectDB::get_instance<XRCamera3D>(original_xr_camera_id);
+		if (original_xr_camera) {
+			original_xr_camera->set_current(true);
+		} else {
+			xr_camera->set_current(false);
+		}
+		original_xr_camera_id = ObjectID();
+
+		for (const ControllerInfo &ci : original_xr_controllers) {
+			XRController3D *xr_controller = ObjectDB::get_instance<XRController3D>(ci.controller_id);
+			if (xr_controller) {
+				xr_controller->set_tracker(ci.tracker);
+			}
+		}
+		original_xr_controllers.clear();
+	}
 }
 
 void XRDebuggerRuntimeEditor::_notification(int p_what) {
 	switch (p_what) {
+		case NOTIFICATION_ENTER_TREE: {
+			// Ensure that we don't take over from the user's XROrigin3D.
+			callable_mp(static_cast<XROrigin3D *>(this), &XROrigin3D::set_current).bind(false);
+		} break;
+
 		case NOTIFICATION_PHYSICS_PROCESS: {
 			if (select_pressed) {
 				select_pressed = false;

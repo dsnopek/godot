@@ -65,7 +65,7 @@ GDEXTENSION_PTR_CONV(StringName, GDExtensionStringNamePtr);
 GDEXTENSION_PTR_CONV(const StringName, GDExtensionConstStringNamePtr);
 GDEXTENSION_PTR_CONV(String, GDExtensionStringPtr);
 GDEXTENSION_PTR_CONV(const String, GDExtensionConstStringPtr);
-GDEXTENSION_PTR_CONV(GDExtension, GDExtensionLibraryPtr);
+GDEXTENSION_PTR_CONV(GDExtension, GDExtensionClassLibraryPtr);
 GDEXTENSION_PTR_CONV(Object, GDExtensionObjectPtr);
 GDEXTENSION_PTR_CONV(const Object, GDExtensionConstObjectPtr);
 GDEXTENSION_PTR_CONV(const MethodBind, GDExtensionMethodBindPtr);

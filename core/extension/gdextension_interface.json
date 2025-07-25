@@ -849,7 +849,10 @@
         },
         {
             "name": "GDExtensionClassInstancePtr",
-            "kind": "handle"
+            "kind": "handle",
+            "description": [
+                "An instance of the native class within the extension which is bound to a Godot Object."
+            ]
         },
         {
             "name": "GDExtensionClassSet",

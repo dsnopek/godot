@@ -1561,7 +1561,7 @@ static void gdextension_placeholder_script_instance_update(GDExtensionScriptInst
 	placeholder->update(properties_list, values_map);
 }
 
-static GDExtensionScriptInstancePtr gdextension_object_get_script_instance(GDExtensionConstObjectPtr p_object, GDExtensionConstObjectPtr p_language) {
+static GDExtensionScriptInstanceDataPtr gdextension_object_get_script_instance(GDExtensionConstObjectPtr p_object, GDExtensionConstObjectPtr p_language) {
 	if (!p_object || !p_language) {
 		return nullptr;
 	}
@@ -1573,7 +1573,7 @@ static GDExtensionScriptInstancePtr gdextension_object_get_script_instance(GDExt
 	}
 
 	const ScriptLanguage *language = script_instance_extension->get_language();
-	if (language != p_language) {
+	if (language != from_gdextension<const Object>(p_language)) {
 		return nullptr;
 	}
 

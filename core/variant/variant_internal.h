@@ -32,6 +32,7 @@
 
 #include "variant.h"
 
+#include "core/extension/gdextension_interface_conv.h"
 #include "core/templates/simple_type.h"
 
 // For use when you want to access the internal pointer of a Variant directly.
@@ -1443,8 +1444,8 @@ struct VariantTypeConstructor {
 		memnew_placement(r_variant, Variant(*((T *)p_value)));
 	}
 
-	_FORCE_INLINE_ static void type_from_variant(GDExtensionUninitializedTypePtr *r_value, GDExtensionVariantPtr *p_variant) {
+	_FORCE_INLINE_ static void type_from_variant(GDExtensionUninitializedTypePtr r_value, GDExtensionVariantPtr p_variant) {
 		// r_value is provided by caller as uninitialized memory
-		memnew_placement(r_value, T(*from_gdextension(p_variant)));
+		memnew_placement(r_value, T(*from_gdextension<Variant>(p_variant)));
 	}
 };

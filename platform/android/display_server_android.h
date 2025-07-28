@@ -72,6 +72,7 @@ class DisplayServerAndroid : public DisplayServer {
 
 	bool keep_screen_on;
 	bool swap_buffers_flag;
+	bool swap_own_buffers = false;
 
 	CursorShape cursor_shape = CursorShape::CURSOR_ARROW;
 
@@ -79,6 +80,13 @@ class DisplayServerAndroid : public DisplayServer {
 	RenderingContextDriver *rendering_context = nullptr;
 	RenderingDevice *rendering_device = nullptr;
 #endif
+
+#ifdef GLES3_ENABLED
+	void *egl_display = nullptr;
+	void *egl_surface = nullptr;
+	void *egl_context = nullptr;
+#endif
+
 	NativeMenu *native_menu = nullptr;
 
 	ObjectID window_attached_instance_id;
@@ -193,6 +201,7 @@ public:
 
 	virtual void window_set_max_size(const Size2i p_size, WindowID p_window = MAIN_WINDOW_ID) override;
 	virtual Size2i window_get_max_size(WindowID p_window = MAIN_WINDOW_ID) const override;
+	virtual void gl_window_make_current(DisplayServer::WindowID p_window_id) override;
 
 	virtual void window_set_min_size(const Size2i p_size, WindowID p_window = MAIN_WINDOW_ID) override;
 	virtual Size2i window_get_min_size(WindowID p_window = MAIN_WINDOW_ID) const override;
@@ -251,7 +260,9 @@ public:
 
 	void reset_swap_buffers_flag();
 	bool should_swap_buffers() const;
+	inline bool get_swap_own_buffers() const { return swap_own_buffers; }
 	virtual void swap_buffers() override;
+	virtual void release_rendering_thread() override;
 
 	virtual void set_native_icon(const String &p_filename) override;
 	virtual void set_icon(const Ref<Image> &p_icon) override;

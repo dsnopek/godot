@@ -484,20 +484,13 @@ int64_t DisplayServerAndroid::window_get_native_handle(HandleType p_handle_type,
 		}
 #ifdef GLES3_ENABLED
 		case DISPLAY_HANDLE: {
-			if (rendering_driver == "opengl3") {
-				return reinterpret_cast<int64_t>(eglGetCurrentDisplay());
-			}
-			return 0;
+			return reinterpret_cast<int64_t>(egl_display);
 		}
 		case OPENGL_CONTEXT: {
-			if (rendering_driver == "opengl3") {
-				return reinterpret_cast<int64_t>(eglGetCurrentContext());
-			}
-			return 0;
+			return reinterpret_cast<int64_t>(egl_context);
 		}
 		case EGL_DISPLAY: {
-			// @todo Find a way to get this from the Java side.
-			return 0;
+			return reinterpret_cast<int64_t>(egl_display);
 		}
 		case EGL_CONFIG: {
 			// @todo Find a way to get this from the Java side.
@@ -792,6 +785,13 @@ DisplayServerAndroid::DisplayServerAndroid(const String &p_rendering_driver, Dis
 #if defined(GLES3_ENABLED)
 	if (rendering_driver == "opengl3") {
 		RasterizerGLES3::make_current(false);
+		swap_own_buffers = OS::get_singleton()->is_separate_thread_rendering_enabled();
+		// These will have been set via eglMakeCurrent() on the Java side. It would be nice to explicitly pass
+		// them from Java, but there's no way to get the native handles with javax.microedition.khronos.egl;
+		// we'd need to switch to android.opengl.
+		egl_display = eglGetCurrentDisplay();
+		egl_surface = eglGetCurrentSurface(EGL_DRAW);
+		egl_context = eglGetCurrentContext();
 	}
 #endif
 
@@ -963,6 +963,28 @@ bool DisplayServerAndroid::should_swap_buffers() const {
 
 void DisplayServerAndroid::swap_buffers() {
 	swap_buffers_flag = true;
+
+#ifdef GLES3_ENABLED
+	if (swap_own_buffers) {
+		eglSwapBuffers(egl_display, egl_surface);
+	}
+#endif
+}
+
+void DisplayServerAndroid::gl_window_make_current(DisplayServer::WindowID p_window_id) {
+#ifdef GLES3_ENABLED
+	if (swap_own_buffers && egl_display && p_window_id == DisplayServer::MAIN_WINDOW_ID) {
+		eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
+	}
+#endif
+}
+
+void DisplayServerAndroid::release_rendering_thread() {
+#ifdef GLES3_ENABLED
+	if (swap_own_buffers && egl_display) {
+		eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+	}
+#endif
 }
 
 void DisplayServerAndroid::set_native_icon(const String &p_filename) {

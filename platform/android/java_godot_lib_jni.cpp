@@ -267,7 +267,7 @@ JNIEXPORT jboolean JNICALL Java_org_godotengine_godot_GodotLib_step(JNIEnv *env,
 		Main::setup2(false); // The logo is shown in the next frame otherwise we run into rendering issues
 		input_handler = new AndroidInputHandler();
 		step.increment();
-		return true;
+		return !DisplayServerAndroid::get_singleton()->get_swap_own_buffers();
 	}
 
 	if (step.get() == STEP_SHOW_LOGO) {
@@ -286,12 +286,12 @@ JNIEXPORT jboolean JNICALL Java_org_godotengine_godot_GodotLib_step(JNIEnv *env,
 		}
 
 		step.increment();
-		return true;
+		return !DisplayServerAndroid::get_singleton()->get_swap_own_buffers();
 	}
 
 	if (step.get() == STEP_STARTED) {
 		if (Main::start() != EXIT_SUCCESS) {
-			return true; // should exit instead and print the error
+			return !DisplayServerAndroid::get_singleton()->get_swap_own_buffers(); // should exit instead and print the error
 		}
 
 		godot_java->on_godot_setup_completed(env);
@@ -305,12 +305,13 @@ JNIEXPORT jboolean JNICALL Java_org_godotengine_godot_GodotLib_step(JNIEnv *env,
 	DisplayServerAndroid::get_singleton()->process_magnetometer(magnetometer);
 	DisplayServerAndroid::get_singleton()->process_gyroscope(gyroscope);
 
+	bool swap_own_buffers = DisplayServerAndroid::get_singleton()->get_swap_own_buffers();
 	bool should_swap_buffers = false;
 	if (os_android->main_loop_iterate(&should_swap_buffers)) {
 		_terminate(env, false);
 	}
 
-	return should_swap_buffers;
+	return !swap_own_buffers && should_swap_buffers;
 }
 
 // Called on the UI thread

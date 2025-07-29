@@ -136,31 +136,26 @@ void OpenXRCompositionLayerEquirect::update_transform() {
 
 void OpenXRCompositionLayerEquirect::_set_transform_rt(const Transform3D &p_transform) {
 	ERR_NOT_ON_RENDER_THREAD;
-	;
 	composition_layer.pose = get_openxr_pose(p_transform);
 }
 
 void OpenXRCompositionLayerEquirect::_set_radius_rt(float p_radius) {
 	ERR_NOT_ON_RENDER_THREAD;
-	;
 	composition_layer.radius = p_radius;
 }
 
 void OpenXRCompositionLayerEquirect::_set_central_horizontal_angle(float p_angle) {
 	ERR_NOT_ON_RENDER_THREAD;
-	;
 	composition_layer.centralHorizontalAngle = p_angle;
 }
 
 void OpenXRCompositionLayerEquirect::_set_upper_vertical_angle(float p_angle) {
 	ERR_NOT_ON_RENDER_THREAD;
-	;
 	composition_layer.upperVerticalAngle = p_angle;
 }
 
 void OpenXRCompositionLayerEquirect::_set_lower_vertical_angle(float p_angle) {
 	ERR_NOT_ON_RENDER_THREAD;
-	;
 	composition_layer.lowerVerticalAngle = p_angle;
 }
 

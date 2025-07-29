@@ -64,6 +64,12 @@ protected:
 
 	void update_transform();
 
+	void _set_transform_rt(const Transform3D &p_transform);
+	void _set_radius_rt(float p_radius);
+	void _set_central_horizontal_angle(float p_angle);
+	void _set_upper_vertical_angle(float p_angle);
+	void _set_lower_vertical_angle(float p_angle);
+
 	virtual Ref<Mesh> _create_fallback_mesh() override;
 
 public:

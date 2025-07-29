@@ -57,6 +57,9 @@ protected:
 
 	void update_transform();
 
+	void _set_transform_rt(const Transform3D &p_transform);
+	void _set_quad_size_rt(const Size2 &p_size);
+
 	virtual Ref<Mesh> _create_fallback_mesh() override;
 
 public:

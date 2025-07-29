@@ -122,14 +122,43 @@ void OpenXRCompositionLayerCylinder::_notification(int p_what) {
 }
 
 void OpenXRCompositionLayerCylinder::update_transform() {
-	composition_layer.pose = get_openxr_pose();
+	RenderingServer *rendering_server = RenderingServer::get_singleton();
+	ERR_FAIL_NULL(rendering_server);
+	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerCylinder::_set_transform_rt).bind(get_transform()));
+}
+
+void OpenXRCompositionLayerCylinder::_set_transform_rt(const Transform3D &p_transform) {
+	ERR_NOT_ON_RENDER_THREAD;
+	;
+	composition_layer.pose = get_openxr_pose(p_transform);
+}
+
+void OpenXRCompositionLayerCylinder::_set_radius_rt(float p_radius) {
+	ERR_NOT_ON_RENDER_THREAD;
+	;
+	composition_layer.radius = p_radius;
+}
+
+void OpenXRCompositionLayerCylinder::_set_aspect_ratio_rt(float p_aspect_ratio) {
+	ERR_NOT_ON_RENDER_THREAD;
+	;
+	composition_layer.aspectRatio = p_aspect_ratio;
+}
+
+void OpenXRCompositionLayerCylinder::_set_central_angle(float p_central_angle) {
+	ERR_NOT_ON_RENDER_THREAD;
+	;
+	composition_layer.centralAngle = p_central_angle;
 }
 
 void OpenXRCompositionLayerCylinder::set_radius(float p_radius) {
 	ERR_FAIL_COND(p_radius <= 0);
 	radius = p_radius;
-	composition_layer.radius = radius;
 	update_fallback_mesh();
+
+	RenderingServer *rendering_server = RenderingServer::get_singleton();
+	ERR_FAIL_NULL(rendering_server);
+	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerCylinder::_set_radius_rt).bind(p_radius));
 }
 
 float OpenXRCompositionLayerCylinder::get_radius() const {
@@ -139,8 +168,11 @@ float OpenXRCompositionLayerCylinder::get_radius() const {
 void OpenXRCompositionLayerCylinder::set_aspect_ratio(float p_aspect_ratio) {
 	ERR_FAIL_COND(p_aspect_ratio <= 0);
 	aspect_ratio = p_aspect_ratio;
-	composition_layer.aspectRatio = aspect_ratio;
 	update_fallback_mesh();
+
+	RenderingServer *rendering_server = RenderingServer::get_singleton();
+	ERR_FAIL_NULL(rendering_server);
+	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerCylinder::_set_aspect_ratio_rt).bind(p_aspect_ratio));
 }
 
 float OpenXRCompositionLayerCylinder::get_aspect_ratio() const {
@@ -150,8 +182,11 @@ float OpenXRCompositionLayerCylinder::get_aspect_ratio() const {
 void OpenXRCompositionLayerCylinder::set_central_angle(float p_central_angle) {
 	ERR_FAIL_COND(p_central_angle <= 0);
 	central_angle = p_central_angle;
-	composition_layer.centralAngle = central_angle;
 	update_fallback_mesh();
+
+	RenderingServer *rendering_server = RenderingServer::get_singleton();
+	ERR_FAIL_NULL(rendering_server);
+	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerCylinder::_set_central_angle).bind(p_central_angle));
 }
 
 float OpenXRCompositionLayerCylinder::get_central_angle() const {

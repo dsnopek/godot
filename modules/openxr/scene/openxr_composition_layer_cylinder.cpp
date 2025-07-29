@@ -129,25 +129,21 @@ void OpenXRCompositionLayerCylinder::update_transform() {
 
 void OpenXRCompositionLayerCylinder::_set_transform_rt(const Transform3D &p_transform) {
 	ERR_NOT_ON_RENDER_THREAD;
-	;
 	composition_layer.pose = get_openxr_pose(p_transform);
 }
 
 void OpenXRCompositionLayerCylinder::_set_radius_rt(float p_radius) {
 	ERR_NOT_ON_RENDER_THREAD;
-	;
 	composition_layer.radius = p_radius;
 }
 
 void OpenXRCompositionLayerCylinder::_set_aspect_ratio_rt(float p_aspect_ratio) {
 	ERR_NOT_ON_RENDER_THREAD;
-	;
 	composition_layer.aspectRatio = p_aspect_ratio;
 }
 
 void OpenXRCompositionLayerCylinder::_set_central_angle(float p_central_angle) {
 	ERR_NOT_ON_RENDER_THREAD;
-	;
 	composition_layer.centralAngle = p_central_angle;
 }
 

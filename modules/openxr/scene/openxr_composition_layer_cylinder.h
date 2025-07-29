@@ -62,6 +62,11 @@ protected:
 
 	void update_transform();
 
+	void _set_transform_rt(const Transform3D &p_transform);
+	void _set_radius_rt(float p_radius);
+	void _set_aspect_ratio_rt(float p_aspect_ratio);
+	void _set_central_angle(float p_central_angle);
+
 	virtual Ref<Mesh> _create_fallback_mesh() override;
 
 public:

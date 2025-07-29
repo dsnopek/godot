@@ -65,13 +65,30 @@ void OpenXRCompositionLayerQuad::_notification(int p_what) {
 }
 
 void OpenXRCompositionLayerQuad::update_transform() {
-	composition_layer.pose = get_openxr_pose();
+	RenderingServer *rendering_server = RenderingServer::get_singleton();
+	ERR_FAIL_NULL(rendering_server);
+	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerQuad::_set_transform_rt).bind(get_transform()));
+}
+
+void OpenXRCompositionLayerQuad::_set_transform_rt(const Transform3D &p_transform) {
+	ERR_NOT_ON_RENDER_THREAD;
+	;
+	composition_layer.pose = get_openxr_pose(p_transform);
+}
+
+void OpenXRCompositionLayerQuad::_set_quad_size_rt(const Size2 &p_size) {
+	ERR_NOT_ON_RENDER_THREAD;
+	;
+	composition_layer.size = { (float)quad_size.x, (float)quad_size.y };
 }
 
 void OpenXRCompositionLayerQuad::set_quad_size(const Size2 &p_size) {
 	quad_size = p_size;
-	composition_layer.size = { (float)quad_size.x, (float)quad_size.y };
 	update_fallback_mesh();
+
+	RenderingServer *rendering_server = RenderingServer::get_singleton();
+	ERR_FAIL_NULL(rendering_server);
+	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerQuad::_set_quad_size_rt).bind(p_size));
 }
 
 Size2 OpenXRCompositionLayerQuad::get_quad_size() const {

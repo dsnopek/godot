@@ -265,9 +265,9 @@ void OpenXRCompositionLayer::update_fallback_mesh() {
 	should_update_fallback_mesh = true;
 }
 
-XrPosef OpenXRCompositionLayer::get_openxr_pose() {
+XrPosef OpenXRCompositionLayer::get_openxr_pose(const Transform3D &p_transform) const {
 	Transform3D reference_frame = XRServer::get_singleton()->get_reference_frame();
-	Transform3D transform = reference_frame.inverse() * get_transform();
+	Transform3D transform = reference_frame.inverse() * p_transform;
 	Quaternion quat(transform.basis.orthonormalized());
 	return {
 		{ (float)quat.x, (float)quat.y, (float)quat.z, (float)quat.w },

@@ -129,14 +129,49 @@ void OpenXRCompositionLayerEquirect::_notification(int p_what) {
 }
 
 void OpenXRCompositionLayerEquirect::update_transform() {
-	composition_layer.pose = get_openxr_pose();
+	RenderingServer *rendering_server = RenderingServer::get_singleton();
+	ERR_FAIL_NULL(rendering_server);
+	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerEquirect::_set_transform_rt).bind(get_transform()));
+}
+
+void OpenXRCompositionLayerEquirect::_set_transform_rt(const Transform3D &p_transform) {
+	ERR_NOT_ON_RENDER_THREAD;
+	;
+	composition_layer.pose = get_openxr_pose(p_transform);
+}
+
+void OpenXRCompositionLayerEquirect::_set_radius_rt(float p_radius) {
+	ERR_NOT_ON_RENDER_THREAD;
+	;
+	composition_layer.radius = p_radius;
+}
+
+void OpenXRCompositionLayerEquirect::_set_central_horizontal_angle(float p_angle) {
+	ERR_NOT_ON_RENDER_THREAD;
+	;
+	composition_layer.centralHorizontalAngle = p_angle;
+}
+
+void OpenXRCompositionLayerEquirect::_set_upper_vertical_angle(float p_angle) {
+	ERR_NOT_ON_RENDER_THREAD;
+	;
+	composition_layer.upperVerticalAngle = p_angle;
+}
+
+void OpenXRCompositionLayerEquirect::_set_lower_vertical_angle(float p_angle) {
+	ERR_NOT_ON_RENDER_THREAD;
+	;
+	composition_layer.lowerVerticalAngle = p_angle;
 }
 
 void OpenXRCompositionLayerEquirect::set_radius(float p_radius) {
 	ERR_FAIL_COND(p_radius <= 0);
 	radius = p_radius;
-	composition_layer.radius = radius;
 	update_fallback_mesh();
+
+	RenderingServer *rendering_server = RenderingServer::get_singleton();
+	ERR_FAIL_NULL(rendering_server);
+	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerEquirect::_set_radius_rt).bind(p_radius));
 }
 
 float OpenXRCompositionLayerEquirect::get_radius() const {
@@ -146,8 +181,11 @@ float OpenXRCompositionLayerEquirect::get_radius() const {
 void OpenXRCompositionLayerEquirect::set_central_horizontal_angle(float p_angle) {
 	ERR_FAIL_COND(p_angle <= 0);
 	central_horizontal_angle = p_angle;
-	composition_layer.centralHorizontalAngle = central_horizontal_angle;
 	update_fallback_mesh();
+
+	RenderingServer *rendering_server = RenderingServer::get_singleton();
+	ERR_FAIL_NULL(rendering_server);
+	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerEquirect::_set_central_horizontal_angle).bind(p_angle));
 }
 
 float OpenXRCompositionLayerEquirect::get_central_horizontal_angle() const {
@@ -157,8 +195,11 @@ float OpenXRCompositionLayerEquirect::get_central_horizontal_angle() const {
 void OpenXRCompositionLayerEquirect::set_upper_vertical_angle(float p_angle) {
 	ERR_FAIL_COND(p_angle <= 0 || p_angle > (Math::PI / 2.0));
 	upper_vertical_angle = p_angle;
-	composition_layer.upperVerticalAngle = p_angle;
 	update_fallback_mesh();
+
+	RenderingServer *rendering_server = RenderingServer::get_singleton();
+	ERR_FAIL_NULL(rendering_server);
+	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerEquirect::_set_upper_vertical_angle).bind(p_angle));
 }
 
 float OpenXRCompositionLayerEquirect::get_upper_vertical_angle() const {
@@ -168,8 +209,11 @@ float OpenXRCompositionLayerEquirect::get_upper_vertical_angle() const {
 void OpenXRCompositionLayerEquirect::set_lower_vertical_angle(float p_angle) {
 	ERR_FAIL_COND(p_angle <= 0 || p_angle > (Math::PI / 2.0));
 	lower_vertical_angle = p_angle;
-	composition_layer.lowerVerticalAngle = -p_angle;
 	update_fallback_mesh();
+
+	RenderingServer *rendering_server = RenderingServer::get_singleton();
+	ERR_FAIL_NULL(rendering_server);
+	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerEquirect::_set_lower_vertical_angle).bind(p_angle));
 }
 
 float OpenXRCompositionLayerEquirect::get_lower_vertical_angle() const {

@@ -216,30 +216,27 @@ void OpenXRCompositionLayer::_remove_fallback_node() {
 }
 
 void OpenXRCompositionLayer::_setup_composition_layer_provider() {
+	RenderingServer *rs = RenderingServer::get_singleton();
 	if (use_android_surface || layer_viewport) {
-		if (composition_layer_extension) {
-			composition_layer_extension->register_viewport_composition_layer_provider(openxr_layer_provider);
-			registered = true;
-		}
+		rs->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayer::_register_composition_layer_provider_rt));
+		registered = true;
 
 		// NOTE: We don't setup/clear when using Android surfaces, so we don't destroy the surface unexpectedly.
 		if (layer_viewport) {
 			// Set our properties on the layer provider, which will create all the necessary resources (ex swap chains).
-			openxr_layer_provider->set_viewport(layer_viewport->get_viewport_rid(), layer_viewport->get_size());
+			rs->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayer::_set_layer_viewport_rt).bind(layer_viewport->get_viewport_rid(), layer_viewport->get_size()));
 		}
 	}
 }
 
 void OpenXRCompositionLayer::_clear_composition_layer_provider() {
-	if (composition_layer_extension) {
-		composition_layer_extension->unregister_viewport_composition_layer_provider(openxr_layer_provider);
-		registered = false;
-	}
+	rs->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayer::_unregister_composition_layer_provider_rt));
+	registered = false;
 
 	// NOTE: We don't setup/clear when using Android surfaces, so we don't destroy the surface unexpectedly.
 	if (!use_android_surface) {
 		// This will reset the viewport and free all the resources (ex swap chains) used by the layer.
-		openxr_layer_provider->set_viewport(RID(), Size2i());
+		rs->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayer::_set_layer_viewport_rt).bind(RID(), Size2i()));
 	}
 }
 
@@ -285,6 +282,67 @@ bool OpenXRCompositionLayer::is_viewport_in_use(SubViewport *p_viewport) {
 	return false;
 }
 
+void OpenXRCompositionLayer::_register_composition_layer_provider_rt() {
+	ERR_NOT_ON_RENDER_THREAD;
+	composition_layer_extension->register_viewport_composition_layer_provider(openxr_layer_provider);
+}
+
+void OpenXRCompositionLayer::_unregister_composition_layer_provider_rt() {
+	ERR_NOT_ON_RENDER_THREAD;
+	composition_layer_extension->unregister_viewport_composition_layer_provider(openxr_layer_provider);
+}
+
+void OpenXRCompositionLayer::_set_layer_viewport_rt(RID p_viewport, const Size2i &p_size) {
+	ERR_NOT_ON_RENDER_THREAD;
+	openxr_layer_provider->set_viewport(p_viewport, p_size);
+}
+
+void OpenXRCompositionLayer::_set_use_android_surface_rt(bool p_use_android_surface, const Size2i &p_size) {
+	ERR_NOT_ON_RENDER_THREAD;
+	openxr_layer_provider->set_use_android_surface(p_use_android_surface, p_size);
+}
+
+void OpenXRCompositionLayer::_set_sort_order_rt(int p_order) {
+	ERR_NOT_ON_RENDER_THREAD;
+	openxr_layer_provider->set_sort_order(p_order);
+}
+
+void OpenXRCompositionLayer::_set_alpha_blend_rt(bool p_alpha_blend) {
+}
+
+void OpenXRCompositionLayer::_set_min_filter_rt(Filter p_mode) {
+}
+
+void OpenXRCompositionLayer::_set_mag_filter_rt(Filter p_mode) {
+}
+
+void OpenXRCompositionLayer::_set_mipmap_mode_rt(MipmapMode p_mode) {
+}
+
+void OpenXRCompositionLayer::_set_horizontal_wrap_rt(Wrap p_mode) {
+}
+
+void OpenXRCompositionLayer::_set_vertical_wrap_rt(Wrap p_mode) {
+}
+
+void OpenXRCompositionLayer::_set_red_swizzle_rt(Swizzle p_mode) {
+}
+
+void OpenXRCompositionLayer::_set_green_swizzle_rt(Swizzle p_mode) {
+}
+
+void OpenXRCompositionLayer::_set_blue_swizzle_rt(Swizzle p_mode) {
+}
+
+void OpenXRCompositionLayer::_set_alpha_swizzle_rt(Swizzle p_mode) {
+}
+
+void OpenXRCompositionLayer::_set_max_anisotropy_rt(float p_value) {
+}
+
+void OpenXRCompositionLayer::_set_border_color_rt(const Color &p_color) {
+}
+
 void OpenXRCompositionLayer::set_layer_viewport(SubViewport *p_viewport) {
 	if (layer_viewport == p_viewport) {
 		return;
@@ -313,10 +371,11 @@ void OpenXRCompositionLayer::set_layer_viewport(SubViewport *p_viewport) {
 	if (fallback) {
 		_reset_fallback_material();
 	} else if (openxr_session_running && is_visible() && is_inside_tree()) {
+		RenderingServer *rs = RenderingServer::get_singleton();
 		if (layer_viewport) {
-			openxr_layer_provider->set_viewport(layer_viewport->get_viewport_rid(), layer_viewport->get_size());
+			rs->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayer::_set_layer_viewport_rt).bind(layer_viewport->get_viewport_rid(), layer_viewport->get_size()));
 		} else {
-			openxr_layer_provider->set_viewport(RID(), Size2i());
+			rs->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayer::_set_layer_viewport_rt).bind(RID(), Size2i()));
 		}
 	}
 }
@@ -326,12 +385,14 @@ void OpenXRCompositionLayer::set_use_android_surface(bool p_use_android_surface)
 		return;
 	}
 
+	RenderingServer *rs = RenderingServer::get_singleton();
+
 	use_android_surface = p_use_android_surface;
 	if (use_android_surface) {
 		set_layer_viewport(nullptr);
-		openxr_layer_provider->set_use_android_surface(true, android_surface_size);
+		rs->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayer::_set_use_android_surface_rt).bind(true, android_surface_size));
 	} else {
-		openxr_layer_provider->set_use_android_surface(false, Size2i());
+		rs->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayer::_set_use_android_surface_rt).bind(false, Size2i()));
 	}
 
 	notify_property_list_changed();
@@ -348,7 +409,7 @@ void OpenXRCompositionLayer::set_android_surface_size(Size2i p_size) {
 
 	android_surface_size = p_size;
 	if (use_android_surface) {
-		openxr_layer_provider->set_use_android_surface(true, android_surface_size);
+		rs->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayer::_set_use_android_surface_rt).bind(true, android_surface_size));
 	}
 }
 
@@ -540,7 +601,7 @@ float OpenXRCompositionLayer::get_max_anisotropy() const {
 	return swapchain_state->max_anisotropy;
 }
 
-void OpenXRCompositionLayer::set_border_color(Color p_color) {
+void OpenXRCompositionLayer::set_border_color(const Color &p_color) {
 	if (swapchain_state->border_color == p_color) {
 		return;
 	}

@@ -132,8 +132,6 @@ protected:
 
 	OpenXRCompositionLayer(XrCompositionLayerBaseHeader *p_composition_layer);
 
-	void _register_composition_layer_provider_rt();
-	void _unregister_composition_layer_provider_rt();
 	void _set_layer_viewport_rt(RID p_viewport, const Size2i &p_size);
 	void _set_use_android_surface_rt(bool p_use_android_surface, const2i &p_size);
 	void _set_sort_order_rt(int p_order);

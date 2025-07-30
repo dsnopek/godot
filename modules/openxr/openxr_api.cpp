@@ -2522,6 +2522,12 @@ void OpenXRAPI::end_frame() {
 	Vector<OrderedCompositionLayer> ordered_layers_list;
 	bool projection_layer_is_first = true;
 
+	// We pass a whole bunch of pointers to structs in `xrEndFrame()`. We use this mutex to
+	// prevent those from becoming invalid before we manage to pass them to `xrEndFrame()`.
+	// For example, this can happen if using multithreaded rendering and removing a composition
+	// layer after we've added it to the list but before calling `xrEndFrame()`.
+	MutexLock lock(end_frame_mutex);
+
 	// Add composition layers from providers
 	for (OpenXRExtensionWrapper *extension : composition_layer_providers) {
 		for (int i = 0; i < extension->get_composition_layer_count(); i++) {

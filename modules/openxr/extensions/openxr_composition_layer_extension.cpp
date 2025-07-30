@@ -113,10 +113,12 @@ int OpenXRCompositionLayerExtension::get_composition_layer_order(int p_index) {
 }
 
 void OpenXRCompositionLayerExtension::register_viewport_composition_layer_provider(OpenXRViewportCompositionLayerProvider *p_composition_layer) {
+	MutexLock lock(OpenXRAPI::get_singleton()->get_end_frame_mutex());
 	composition_layers.push_back(p_composition_layer);
 }
 
 void OpenXRCompositionLayerExtension::unregister_viewport_composition_layer_provider(OpenXRViewportCompositionLayerProvider *p_composition_layer) {
+	MutexLock lock(OpenXRAPI::get_singleton()->get_end_frame_mutex());
 	composition_layers.erase(p_composition_layer);
 }
 
@@ -258,6 +260,8 @@ void OpenXRViewportCompositionLayerProvider::set_use_android_surface(bool p_use_
 
 #ifdef ANDROID_ENABLED
 void OpenXRViewportCompositionLayerProvider::create_android_surface() {
+	MutexLock lock(android_surface.mutex);
+
 	ERR_FAIL_COND(android_surface.swapchain != XR_NULL_HANDLE || android_surface.surface.is_valid());
 	ERR_FAIL_COND(!openxr_api || !openxr_api->is_running());
 

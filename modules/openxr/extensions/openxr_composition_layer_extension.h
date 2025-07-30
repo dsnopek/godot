@@ -167,6 +167,7 @@ private:
 	struct {
 		XrSwapchain swapchain = XR_NULL_HANDLE;
 		Ref<JavaObject> surface;
+		Mutex mutex;
 	} android_surface;
 #endif
 

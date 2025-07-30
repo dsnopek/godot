@@ -93,6 +93,9 @@ private:
 	LocalVector<XrExtensionProperties> supported_extensions;
 	Vector<CharString> enabled_extensions;
 
+	// Use to prevent making any of the data used by xrEndFrame invalid.
+	Mutex end_frame_mutex;
+
 	// composition layer providers
 	Vector<OpenXRExtensionWrapper *> composition_layer_providers;
 
@@ -585,6 +588,8 @@ public:
 	Vector2 get_action_vector2(RID p_action, RID p_tracker);
 	XRPose::TrackingConfidence get_action_pose(RID p_action, RID p_tracker, Transform3D &r_transform, Vector3 &r_linear_velocity, Vector3 &r_angular_velocity);
 	bool trigger_haptic_pulse(RID p_action, RID p_tracker, float p_frequency, float p_amplitude, XrDuration p_duration_ns);
+
+	inline Mutex &get_end_frame_mutex() { return end_frame_mutex; }
 
 	void register_composition_layer_provider(OpenXRExtensionWrapper *p_extension);
 	void unregister_composition_layer_provider(OpenXRExtensionWrapper *p_extension);

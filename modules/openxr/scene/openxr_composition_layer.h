@@ -93,7 +93,8 @@ private:
 	bool openxr_session_running = false;
 	bool registered = false;
 
-	OpenXRViewportCompositionLayerProvider::SwapchainState *swapchain_state = nullptr;
+	OpenXRViewportCompositionLayerProvider::SwapchainState *swapchain_render_state = nullptr;
+	OpenXRViewportCompositionLayerProvider::SwapchainState swapchain_local_state;
 
 	Dictionary extension_property_values;
 
@@ -130,6 +131,24 @@ protected:
 	bool is_viewport_in_use(SubViewport *p_viewport);
 
 	OpenXRCompositionLayer(XrCompositionLayerBaseHeader *p_composition_layer);
+
+	void _register_composition_layer_provider_rt();
+	void _unregister_composition_layer_provider_rt();
+	void _set_layer_viewport_rt(RID p_viewport, const Size2i &p_size);
+	void _set_use_android_surface_rt(bool p_use_android_surface, const2i &p_size);
+	void _set_sort_order_rt(int p_order);
+	void _set_alpha_blend_rt(bool p_alpha_blend);
+	void _set_min_filter_rt(Filter p_mode);
+	void _set_mag_filter_rt(Filter p_mode);
+	void _set_mipmap_mode_rt(MipmapMode p_mode);
+	void _set_horizontal_wrap_rt(Wrap p_mode);
+	void _set_vertical_wrap_rt(Wrap p_mode);
+	void _set_red_swizzle_rt(Swizzle p_mode);
+	void _set_green_swizzle_rt(Swizzle p_mode);
+	void _set_blue_swizzle_rt(Swizzle p_mode);
+	void _set_alpha_swizzle_rt(Swizzle p_mode);
+	void _set_max_anisotropy_rt(float p_value);
+	void _set_border_color_rt(const Color &p_color);
 
 public:
 	void set_layer_viewport(SubViewport *p_viewport);
@@ -183,7 +202,7 @@ public:
 	void set_max_anisotropy(float p_value);
 	float get_max_anisotropy() const;
 
-	void set_border_color(Color p_color);
+	void set_border_color(const Color &p_color);
 	Color get_border_color() const;
 
 	virtual PackedStringArray get_configuration_warnings() const override;

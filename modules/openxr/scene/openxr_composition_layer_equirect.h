@@ -37,25 +37,15 @@
 class OpenXRCompositionLayerEquirect : public OpenXRCompositionLayer {
 	GDCLASS(OpenXRCompositionLayerEquirect, OpenXRCompositionLayer);
 
-	XrCompositionLayerEquirect2KHR composition_layer = {
-		XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR, // type
-		nullptr, // next
-		0, // layerFlags
-		XR_NULL_HANDLE, // space
-		XR_EYE_VISIBILITY_BOTH, // eyeVisibility
-		{}, // subImage
-		{ { 0, 0, 0, 0 }, { 0, 0, 0 } }, // pose
-		1.0, // radius
-		Math::PI / 2.0, // centralHorizontalAngle
-		Math::PI / 4.0, // upperVerticalAngle
-		-Math::PI / 4.0, // lowerVerticalAngle
-	};
+	XrCompositionLayerEquirect2KHR *composition_layer = nullptr;
 
 	float radius = 1.0;
 	float central_horizontal_angle = Math::PI / 2.0;
 	float upper_vertical_angle = Math::PI / 4.0;
 	float lower_vertical_angle = Math::PI / 4.0;
 	uint32_t fallback_segments = 10;
+
+	XrCompositionLayerEquirect2KHR *create_openxr_composition_layer();
 
 protected:
 	static void _bind_methods();

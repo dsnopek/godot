@@ -37,23 +37,14 @@
 class OpenXRCompositionLayerCylinder : public OpenXRCompositionLayer {
 	GDCLASS(OpenXRCompositionLayerCylinder, OpenXRCompositionLayer);
 
-	XrCompositionLayerCylinderKHR composition_layer = {
-		XR_TYPE_COMPOSITION_LAYER_CYLINDER_KHR, // type
-		nullptr, // next
-		0, // layerFlags
-		XR_NULL_HANDLE, // space
-		XR_EYE_VISIBILITY_BOTH, // eyeVisibility
-		{}, // subImage
-		{ { 0, 0, 0, 0 }, { 0, 0, 0 } }, // pose
-		1.0, // radius
-		Math::PI / 2.0, // centralAngle
-		1.0, // aspectRatio
-	};
+	XrCompositionLayerCylinderKHR *composition_layer = nullptr;
 
 	float radius = 1.0;
 	float aspect_ratio = 1.0;
 	float central_angle = Math::PI / 2.0;
 	uint32_t fallback_segments = 10;
+
+	XrCompositionLayerCylinderKHR *create_openxr_composition_layer();
 
 protected:
 	static void _bind_methods();

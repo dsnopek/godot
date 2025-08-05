@@ -90,14 +90,8 @@ void OpenXRCompositionLayerExtension::on_session_destroyed() {
 
 void OpenXRCompositionLayerExtension::on_pre_render() {
 #ifdef ANDROID_ENABLED
-	free_queued_android_surface_swapchains();
+	free_queued_resources();
 #endif
-
-	for (OpenXRViewportCompositionLayerProvider *provider : composition_layer_free_queue) {
-		unregister_viewport_composition_layer_provider(provider);
-		OpenXRViewportCompositionLayerProvider::_delete(provider);
-	}
-	composition_layer_free_queue.clear();
 
 	for (OpenXRViewportCompositionLayerProvider *composition_layer : composition_layers) {
 		composition_layer->on_pre_render();
@@ -123,6 +117,7 @@ OpenXRViewportCompositionLayerProvider *OpenXRCompositionLayerExtension::create_
 }
 
 void OpenXRCompositionLayerExtension::free_viewport_composition_layer_provider(OpenXRViewportCompositionLayerProvider *p_provider) {
+	MutexLock lock(free_queue_mutex);
 	composition_layer_free_queue.push_back(p_provider);
 }
 
@@ -155,6 +150,23 @@ bool OpenXRCompositionLayerExtension::is_available(XrStructureType p_which) {
 	}
 }
 
+void OpenXRCompositionLayerExtension::free_queued_resources() {
+	MutexLock lock(free_queue_mutex);
+
+#ifdef ANDROID_ENABLED
+	for (XrSwapchain swapchain : android_surface_swapchain_free_queue) {
+		xrDestroySwapchain(swapchain);
+	}
+	android_surface_swapchain_free_queue.clear();
+#endif
+
+	for (OpenXRViewportCompositionLayerProvider *provider : composition_layer_free_queue) {
+		unregister_viewport_composition_layer_provider(provider);
+		memdelete(provider);
+	}
+	composition_layer_free_queue.clear();
+}
+
 #ifdef ANDROID_ENABLED
 bool OpenXRCompositionLayerExtension::create_android_surface_swapchain(XrSwapchainCreateInfo *p_info, XrSwapchain *r_swapchain, jobject *r_surface) {
 	if (android_surface_ext_available) {
@@ -174,14 +186,8 @@ bool OpenXRCompositionLayerExtension::create_android_surface_swapchain(XrSwapcha
 }
 
 void OpenXRCompositionLayerExtension::free_android_surface_swapchain(XrSwapchain p_swapchain) {
+	MutexLock lock(free_queue_mutex);
 	android_surface_swapchain_free_queue.push_back(p_swapchain);
-}
-
-void OpenXRCompositionLayerExtension::free_queued_android_surface_swapchains() {
-	for (XrSwapchain swapchain : android_surface_swapchain_free_queue) {
-		xrDestroySwapchain(swapchain);
-	}
-	android_surface_swapchain_free_queue.clear();
 }
 #endif
 

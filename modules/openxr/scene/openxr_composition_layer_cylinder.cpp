@@ -35,11 +35,29 @@
 #include "scene/resources/mesh.h"
 
 OpenXRCompositionLayerCylinder::OpenXRCompositionLayerCylinder() :
-		OpenXRCompositionLayer((XrCompositionLayerBaseHeader *)&composition_layer) {
+		OpenXRCompositionLayer((XrCompositionLayerBaseHeader *)create_openxr_composition_layer()) {
 	XRServer::get_singleton()->connect("reference_frame_changed", callable_mp(this, &OpenXRCompositionLayerCylinder::update_transform));
 }
 
 OpenXRCompositionLayerCylinder::~OpenXRCompositionLayerCylinder() {
+}
+
+XrCompositionLayerCylinderKHR *OpenXRCompositionLayerCylinder::create_openxr_composition_layer() {
+	ERR_FAIL_COND_V(composition_layer, composition_layer);
+	composition_layer = (XrCompositionLayerCylinderKHR *)memalloc(sizeof(XrCompositionLayerCylinderKHR));
+	*composition_layer = {
+		XR_TYPE_COMPOSITION_LAYER_CYLINDER_KHR, // type
+		nullptr, // next
+		0, // layerFlags
+		XR_NULL_HANDLE, // space
+		XR_EYE_VISIBILITY_BOTH, // eyeVisibility
+		{}, // subImage
+		{ { 0, 0, 0, 0 }, { 0, 0, 0 } }, // pose
+		1.0, // radius
+		Math::PI / 2.0, // centralAngle
+		1.0, // aspectRatio
+	};
+	return composition_layer;
 }
 
 void OpenXRCompositionLayerCylinder::_bind_methods() {
@@ -129,22 +147,22 @@ void OpenXRCompositionLayerCylinder::update_transform() {
 
 void OpenXRCompositionLayerCylinder::_set_transform_rt(const Transform3D &p_transform) {
 	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer.pose = get_openxr_pose(p_transform);
+	composition_layer->pose = get_openxr_pose(p_transform);
 }
 
 void OpenXRCompositionLayerCylinder::_set_radius_rt(float p_radius) {
 	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer.radius = p_radius;
+	composition_layer->radius = p_radius;
 }
 
 void OpenXRCompositionLayerCylinder::_set_aspect_ratio_rt(float p_aspect_ratio) {
 	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer.aspectRatio = p_aspect_ratio;
+	composition_layer->aspectRatio = p_aspect_ratio;
 }
 
 void OpenXRCompositionLayerCylinder::_set_central_angle(float p_central_angle) {
 	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer.centralAngle = p_central_angle;
+	composition_layer->centralAngle = p_central_angle;
 }
 
 void OpenXRCompositionLayerCylinder::set_radius(float p_radius) {

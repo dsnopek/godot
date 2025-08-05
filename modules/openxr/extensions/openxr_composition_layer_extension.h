@@ -89,14 +89,16 @@ private:
 
 	Vector<OpenXRViewportCompositionLayerProvider *> composition_layers;
 	Vector<OpenXRViewportCompositionLayerProvider *> composition_layer_free_queue;
+	Mutex free_queue_mutex;
 
 	bool cylinder_ext_available = false;
 	bool equirect_ext_available = false;
 	bool android_surface_ext_available = false;
 
+	void free_queued_resources();
+
 #ifdef ANDROID_ENABLED
 	Vector<XrSwapchain> android_surface_swapchain_free_queue;
-	void free_queued_android_surface_swapchains();
 
 	EXT_PROTO_XRRESULT_FUNC1(xrDestroySwapchain, (XrSwapchain), swapchain)
 	EXT_PROTO_XRRESULT_FUNC4(xrCreateSwapchainAndroidSurfaceKHR, (XrSession), session, (const XrSwapchainCreateInfo *), info, (XrSwapchain *), swapchain, (jobject *), surface)
@@ -202,17 +204,11 @@ private:
 	int get_sort_order() const { return sort_order; }
 	XrCompositionLayerBaseHeader *get_composition_layer();
 
-	OpenXRViewportCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer);
-	~OpenXRViewportCompositionLayerProvider();
-
-	static void _delete(OpenXRViewportCompositionLayerProvider *p_provider) { memdelete(p_provider); }
-
 public:
 	XrStructureType get_openxr_type() { return composition_layer->type; }
 	Ref<JavaObject> get_android_surface();
 
-	// All of the following functions must be called on the render thread.
-
+	// The following functions must be called on the render thread.
 	void set_viewport(RID p_viewport, Size2i p_size);
 	void set_use_android_surface(bool p_enable, Size2i p_size);
 	void set_sort_order(int p_sort_order);
@@ -229,4 +225,8 @@ public:
 	void set_max_anisotropy(float p_value);
 	void set_border_color(const Color &p_color);
 	void set_extension_property_values(const Dictionary &p_property_values);
+
+	// Do not call these directly! Use the methods on OpenXRCompositionLayerExtension instead.
+	OpenXRViewportCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer);
+	~OpenXRViewportCompositionLayerProvider();
 };

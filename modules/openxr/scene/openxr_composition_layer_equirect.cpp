@@ -35,11 +35,30 @@
 #include "scene/resources/mesh.h"
 
 OpenXRCompositionLayerEquirect::OpenXRCompositionLayerEquirect() :
-		OpenXRCompositionLayer((XrCompositionLayerBaseHeader *)&composition_layer) {
+		OpenXRCompositionLayer((XrCompositionLayerBaseHeader *)create_openxr_composition_layer()) {
 	XRServer::get_singleton()->connect("reference_frame_changed", callable_mp(this, &OpenXRCompositionLayerEquirect::update_transform));
 }
 
 OpenXRCompositionLayerEquirect::~OpenXRCompositionLayerEquirect() {
+}
+
+XrCompositionLayerEquirect2KHR *OpenXRCompositionLayerEquirect::create_openxr_composition_layer() {
+	ERR_FAIL_COND_V(composition_layer, composition_layer);
+	composition_layer = (XrCompositionLayerEquirect2KHR *)memalloc(sizeof(XrCompositionLayerEquirect2KHR));
+	*composition_layer = {
+		XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR, // type
+		nullptr, // next
+		0, // layerFlags
+		XR_NULL_HANDLE, // space
+		XR_EYE_VISIBILITY_BOTH, // eyeVisibility
+		{}, // subImage
+		{ { 0, 0, 0, 0 }, { 0, 0, 0 } }, // pose
+		1.0, // radius
+		Math::PI / 2.0, // centralHorizontalAngle
+		Math::PI / 4.0, // upperVerticalAngle
+		-Math::PI / 4.0, // lowerVerticalAngle
+	};
+	return composition_layer;
 }
 
 void OpenXRCompositionLayerEquirect::_bind_methods() {
@@ -136,27 +155,27 @@ void OpenXRCompositionLayerEquirect::update_transform() {
 
 void OpenXRCompositionLayerEquirect::_set_transform_rt(const Transform3D &p_transform) {
 	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer.pose = get_openxr_pose(p_transform);
+	composition_layer->pose = get_openxr_pose(p_transform);
 }
 
 void OpenXRCompositionLayerEquirect::_set_radius_rt(float p_radius) {
 	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer.radius = p_radius;
+	composition_layer->radius = p_radius;
 }
 
 void OpenXRCompositionLayerEquirect::_set_central_horizontal_angle(float p_angle) {
 	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer.centralHorizontalAngle = p_angle;
+	composition_layer->centralHorizontalAngle = p_angle;
 }
 
 void OpenXRCompositionLayerEquirect::_set_upper_vertical_angle(float p_angle) {
 	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer.upperVerticalAngle = p_angle;
+	composition_layer->upperVerticalAngle = p_angle;
 }
 
 void OpenXRCompositionLayerEquirect::_set_lower_vertical_angle(float p_angle) {
 	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer.lowerVerticalAngle = p_angle;
+	composition_layer->lowerVerticalAngle = p_angle;
 }
 
 void OpenXRCompositionLayerEquirect::set_radius(float p_radius) {

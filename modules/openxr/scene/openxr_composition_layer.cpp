@@ -51,7 +51,7 @@ static const char *HOLE_PUNCH_SHADER_CODE =
 OpenXRCompositionLayer::OpenXRCompositionLayer(XrCompositionLayerBaseHeader *p_composition_layer) {
 	composition_layer_base_header = p_composition_layer;
 	openxr_layer_provider = memnew(OpenXRViewportCompositionLayerProvider(composition_layer_base_header));
-	swapchain_state = openxr_layer_provider->get_swapchain_state();
+	swapchain_render_state = openxr_layer_provider->get_swapchain_state();
 
 	openxr_api = OpenXRAPI::get_singleton();
 	composition_layer_extension = OpenXRCompositionLayerExtension::get_singleton();
@@ -224,9 +224,8 @@ void OpenXRCompositionLayer::_setup_composition_layer_provider() {
 
 		// NOTE: We don't setup/clear when using Android surfaces, so we don't destroy the surface unexpectedly.
 		if (layer_viewport) {
-			RenderingServer *rs = RenderingServer::get_singleton();
 			// Set our properties on the layer provider, which will create all the necessary resources (ex swap chains).
-			rs->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayer::_set_layer_viewport_rt).bind(layer_viewport->get_viewport_rid(), layer_viewport->get_size()));
+			RenderingServer::get_singleton()->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayer::_set_layer_viewport_rt).bind(layer_viewport->get_viewport_rid(), layer_viewport->get_size()));
 		}
 	}
 }
@@ -240,7 +239,7 @@ void OpenXRCompositionLayer::_clear_composition_layer_provider() {
 	// NOTE: We don't setup/clear when using Android surfaces, so we don't destroy the surface unexpectedly.
 	if (!use_android_surface) {
 		// This will reset the viewport and free all the resources (ex swap chains) used by the layer.
-		rs->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayer::_set_layer_viewport_rt).bind(RID(), Size2i()));
+		RenderingServer::get_singleton()->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayer::_set_layer_viewport_rt).bind(RID(), Size2i()));
 	}
 }
 
@@ -438,7 +437,7 @@ void OpenXRCompositionLayer::set_android_surface_size(Size2i p_size) {
 
 	android_surface_size = p_size;
 	if (use_android_surface) {
-		rs->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayer::_set_use_android_surface_rt).bind(true, android_surface_size));
+		RenderingServer::get_singleton()->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayer::_set_use_android_surface_rt).bind(true, android_surface_size));
 	}
 }
 
@@ -575,7 +574,7 @@ void OpenXRCompositionLayer::set_red_swizzle(Swizzle p_mode) {
 }
 
 OpenXRCompositionLayer::Swizzle OpenXRCompositionLayer::get_red_swizzle() const {
-	return (OpenXRCompositionLayer::Swizzle)swapchain_local_state->red_swizzle;
+	return (OpenXRCompositionLayer::Swizzle)swapchain_local_state.red_swizzle;
 }
 
 void OpenXRCompositionLayer::set_green_swizzle(Swizzle p_mode) {
@@ -640,7 +639,7 @@ void OpenXRCompositionLayer::set_border_color(const Color &p_color) {
 }
 
 Color OpenXRCompositionLayer::get_border_color() const {
-	return swapchain_state.border_color;
+	return swapchain_local_state.border_color;
 }
 
 Ref<JavaObject> OpenXRCompositionLayer::get_android_surface() {

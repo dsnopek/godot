@@ -35,11 +35,27 @@
 #include "scene/resources/3d/primitive_meshes.h"
 
 OpenXRCompositionLayerQuad::OpenXRCompositionLayerQuad() :
-		OpenXRCompositionLayer((XrCompositionLayerBaseHeader *)&composition_layer) {
+		OpenXRCompositionLayer((XrCompositionLayerBaseHeader *)create_openxr_composition_layer()) {
 	XRServer::get_singleton()->connect("reference_frame_changed", callable_mp(this, &OpenXRCompositionLayerQuad::update_transform));
 }
 
 OpenXRCompositionLayerQuad::~OpenXRCompositionLayerQuad() {
+}
+
+XrCompositionLayerQuad *OpenXRCompositionLayerQuad::create_openxr_composition_layer() {
+	ERR_FAIL_COND_V(composition_layer, composition_layer);
+	composition_layer = (XrCompositionLayerQuad *)memalloc(sizeof(XrCompositionLayerQuad));
+	*composition_layer = {
+		XR_TYPE_COMPOSITION_LAYER_QUAD, // type
+		nullptr, // next
+		0, // layerFlags
+		XR_NULL_HANDLE, // space
+		XR_EYE_VISIBILITY_BOTH, // eyeVisibility
+		{}, // subImage
+		{ { 0, 0, 0, 0 }, { 0, 0, 0 } }, // pose
+		{ 1.0, 1.0 }, // size
+	};
+	return composition_layer;
 }
 
 void OpenXRCompositionLayerQuad::_bind_methods() {
@@ -72,12 +88,12 @@ void OpenXRCompositionLayerQuad::update_transform() {
 
 void OpenXRCompositionLayerQuad::_set_transform_rt(const Transform3D &p_transform) {
 	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer.pose = get_openxr_pose(p_transform);
+	composition_layer->pose = get_openxr_pose(p_transform);
 }
 
 void OpenXRCompositionLayerQuad::_set_quad_size_rt(const Size2 &p_size) {
 	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer.size = { (float)quad_size.x, (float)quad_size.y };
+	composition_layer->size = { (float)quad_size.x, (float)quad_size.y };
 }
 
 void OpenXRCompositionLayerQuad::set_quad_size(const Size2 &p_size) {

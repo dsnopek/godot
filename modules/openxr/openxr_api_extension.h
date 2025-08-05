@@ -90,6 +90,9 @@ public:
 
 	uint64_t get_hand_tracker(int p_hand_index);
 
+	void lock_end_frame_mutex();
+	void unlock_end_frame_mutex();
+
 	void register_composition_layer_provider(OpenXRExtensionWrapper *p_extension);
 	void unregister_composition_layer_provider(OpenXRExtensionWrapper *p_extension);
 

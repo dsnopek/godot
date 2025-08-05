@@ -49,12 +49,11 @@ static const char *HOLE_PUNCH_SHADER_CODE =
 		"}\n";
 
 OpenXRCompositionLayer::OpenXRCompositionLayer(XrCompositionLayerBaseHeader *p_composition_layer) {
-	composition_layer_base_header = p_composition_layer;
-	openxr_layer_provider = memnew(OpenXRViewportCompositionLayerProvider(composition_layer_base_header));
-	swapchain_render_state = openxr_layer_provider->get_swapchain_state();
-
 	openxr_api = OpenXRAPI::get_singleton();
 	composition_layer_extension = OpenXRCompositionLayerExtension::get_singleton();
+
+	composition_layer_base_header = p_composition_layer;
+	openxr_layer_provider = OpenXRCompositionLayerExtension::get_singleton()->create_viewport_composition_layer_provider(composition_layer_base_header);
 
 	if (openxr_api) {
 		openxr_session_running = openxr_api->is_running();
@@ -86,7 +85,7 @@ OpenXRCompositionLayer::~OpenXRCompositionLayer() {
 
 	if (openxr_layer_provider != nullptr) {
 		_clear_composition_layer_provider();
-		memdelete(openxr_layer_provider);
+		OpenXRCompositionLayerExtension::get_singleton()->free_viewport_composition_layer_provider(openxr_layer_provider);
 		openxr_layer_provider = nullptr;
 	}
 }
@@ -286,89 +285,63 @@ bool OpenXRCompositionLayer::is_viewport_in_use(SubViewport *p_viewport) {
 }
 
 void OpenXRCompositionLayer::_set_layer_viewport_rt(RID p_viewport, const Size2i &p_size) {
-	ERR_NOT_ON_RENDER_THREAD;
 	openxr_layer_provider->set_viewport(p_viewport, p_size);
 }
 
 void OpenXRCompositionLayer::_set_use_android_surface_rt(bool p_use_android_surface, const Size2i &p_size) {
-	ERR_NOT_ON_RENDER_THREAD;
 	openxr_layer_provider->set_use_android_surface(p_use_android_surface, p_size);
 }
 
 void OpenXRCompositionLayer::_set_sort_order_rt(int p_order) {
-	ERR_NOT_ON_RENDER_THREAD;
 	openxr_layer_provider->set_sort_order(p_order);
 }
 
 void OpenXRCompositionLayer::_set_alpha_blend_rt(bool p_alpha_blend) {
-	ERR_NOT_ON_RENDER_THREAD;
 	openxr_layer_provider->set_alpha_blend(p_alpha_blend);
 }
 
 void OpenXRCompositionLayer::_set_min_filter_rt(Filter p_mode) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_render_state->min_filter = (OpenXRViewportCompositionLayerProvider::Filter)p_mode;
-	swapchain_render_state->dirty = true;
+	openxr_layer_provider->set_min_filter((OpenXRViewportCompositionLayerProvider::Filter)p_mode);
 }
 
 void OpenXRCompositionLayer::_set_mag_filter_rt(Filter p_mode) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_render_state->mag_filter = (OpenXRViewportCompositionLayerProvider::Filter)p_mode;
-	swapchain_render_state->dirty = true;
+	openxr_layer_provider->set_mag_filter((OpenXRViewportCompositionLayerProvider::Filter)p_mode);
 }
 
 void OpenXRCompositionLayer::_set_mipmap_mode_rt(MipmapMode p_mode) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_render_state->mipmap_mode = (OpenXRViewportCompositionLayerProvider::MipmapMode)p_mode;
-	swapchain_render_state->dirty = true;
+	openxr_layer_provider->set_mipmap_mode((OpenXRViewportCompositionLayerProvider::MipmapMode)p_mode);
 }
 
 void OpenXRCompositionLayer::_set_horizontal_wrap_rt(Wrap p_mode) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_render_state->horizontal_wrap = (OpenXRViewportCompositionLayerProvider::Wrap)p_mode;
-	swapchain_render_state->dirty = true;
+	openxr_layer_provider->set_horizontal_wrap((OpenXRViewportCompositionLayerProvider::Wrap)p_mode);
 }
 
 void OpenXRCompositionLayer::_set_vertical_wrap_rt(Wrap p_mode) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_render_state->vertical_wrap = (OpenXRViewportCompositionLayerProvider::Wrap)p_mode;
-	swapchain_render_state->dirty = true;
+	openxr_layer_provider->set_vertical_wrap((OpenXRViewportCompositionLayerProvider::Wrap)p_mode);
 }
 
 void OpenXRCompositionLayer::_set_red_swizzle_rt(Swizzle p_mode) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_render_state->red_swizzle = (OpenXRViewportCompositionLayerProvider::Swizzle)p_mode;
-	swapchain_render_state->dirty = true;
+	openxr_layer_provider->set_red_swizzle((OpenXRViewportCompositionLayerProvider::Swizzle)p_mode);
 }
 
 void OpenXRCompositionLayer::_set_green_swizzle_rt(Swizzle p_mode) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_render_state->green_swizzle = (OpenXRViewportCompositionLayerProvider::Swizzle)p_mode;
-	swapchain_render_state->dirty = true;
+	openxr_layer_provider->set_green_swizzle((OpenXRViewportCompositionLayerProvider::Swizzle)p_mode);
 }
 
 void OpenXRCompositionLayer::_set_blue_swizzle_rt(Swizzle p_mode) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_render_state->blue_swizzle = (OpenXRViewportCompositionLayerProvider::Swizzle)p_mode;
-	swapchain_render_state->dirty = true;
+	openxr_layer_provider->set_blue_swizzle((OpenXRViewportCompositionLayerProvider::Swizzle)p_mode);
 }
 
 void OpenXRCompositionLayer::_set_alpha_swizzle_rt(Swizzle p_mode) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_render_state->alpha_swizzle = (OpenXRViewportCompositionLayerProvider::Swizzle)p_mode;
-	swapchain_render_state->dirty = true;
+	openxr_layer_provider->set_alpha_swizzle((OpenXRViewportCompositionLayerProvider::Swizzle)p_mode);
 }
 
 void OpenXRCompositionLayer::_set_max_anisotropy_rt(float p_value) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_render_state->max_anisotropy = p_value;
-	swapchain_render_state->dirty = true;
+	openxr_layer_provider->set_max_anisotropy(p_value);
 }
 
 void OpenXRCompositionLayer::_set_border_color_rt(const Color &p_color) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_render_state->border_color = p_color;
-	swapchain_render_state->dirty = true;
+	openxr_layer_provider->set_border_color(p_color);
 }
 
 void OpenXRCompositionLayer::set_layer_viewport(SubViewport *p_viewport) {
@@ -473,23 +446,25 @@ bool OpenXRCompositionLayer::get_enable_hole_punch() const {
 }
 
 void OpenXRCompositionLayer::set_sort_order(int p_order) {
-	openxr_layer_provider->set_sort_order(p_order);
+	sort_order = p_order;
+	RenderingServer::get_singleton()->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayer::_set_sort_order_rt).bind(p_order));
 	update_configuration_warnings();
 }
 
 int OpenXRCompositionLayer::get_sort_order() const {
-	return openxr_layer_provider->get_sort_order();
+	return sort_order;
 }
 
 void OpenXRCompositionLayer::set_alpha_blend(bool p_alpha_blend) {
-	openxr_layer_provider->set_alpha_blend(p_alpha_blend);
+	alpha_blend = p_alpha_blend;
+	RenderingServer::get_singleton()->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayer::_set_alpha_blend_rt).bind(p_alpha_blend));
 	if (fallback) {
 		_reset_fallback_material();
 	}
 }
 
 bool OpenXRCompositionLayer::get_alpha_blend() const {
-	return openxr_layer_provider->get_alpha_blend();
+	return alpha_blend;
 }
 
 bool OpenXRCompositionLayer::is_natively_supported() const {

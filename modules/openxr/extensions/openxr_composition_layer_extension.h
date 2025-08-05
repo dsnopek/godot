@@ -70,6 +70,9 @@ public:
 	virtual XrCompositionLayerBaseHeader *get_composition_layer(int p_index) override;
 	virtual int get_composition_layer_order(int p_index) override;
 
+	OpenXRViewportCompositionLayerProvider *create_viewport_composition_layer_provider(XrCompositionLayerBaseHeader *p_layer);
+	void free_viewport_composition_layer_provider(OpenXRViewportCompositionLayerProvider *p_provider);
+
 	void register_viewport_composition_layer_provider(OpenXRViewportCompositionLayerProvider *p_composition_layer);
 	void unregister_viewport_composition_layer_provider(OpenXRViewportCompositionLayerProvider *p_composition_layer);
 
@@ -85,6 +88,7 @@ private:
 	static OpenXRCompositionLayerExtension *singleton;
 
 	Vector<OpenXRViewportCompositionLayerProvider *> composition_layers;
+	Vector<OpenXRViewportCompositionLayerProvider *> composition_layer_free_queue;
 
 	bool cylinder_ext_available = false;
 	bool equirect_ext_available = false;
@@ -146,10 +150,11 @@ public:
 		Swizzle alpha_swizzle = Swizzle::SWIZZLE_ALPHA;
 		float max_anisotropy = 1.0;
 		Color border_color = { 0.0, 0.0, 0.0, 0.0 };
-		bool dirty = false;
 	};
 
 private:
+	friend class OpenXRCompositionLayerExtension;
+
 	XrCompositionLayerBaseHeader *composition_layer = nullptr;
 	int sort_order = 1;
 	bool alpha_blend = false;
@@ -174,6 +179,9 @@ private:
 	bool use_android_surface = false;
 	Size2i swapchain_size;
 
+	SwapchainState swapchain_state;
+	bool swapchain_state_is_dirty = false;
+
 	OpenXRAPI *openxr_api = nullptr;
 	OpenXRCompositionLayerExtension *composition_layer_extension = nullptr;
 
@@ -184,37 +192,41 @@ private:
 	void update_swapchain_sub_image(XrSwapchainSubImage &r_swapchain_sub_image);
 	void free_swapchain();
 
-	SwapchainState swapchain_state;
+	void on_pre_render();
+	void update_swapchain_state();
 
 #ifdef ANDROID_ENABLED
 	void create_android_surface();
 #endif
 
-public:
-	XrStructureType get_openxr_type() { return composition_layer->type; }
-
-	void set_sort_order(int p_sort_order) { sort_order = p_sort_order; }
 	int get_sort_order() const { return sort_order; }
-
-	void set_alpha_blend(bool p_alpha_blend);
-	bool get_alpha_blend() const { return alpha_blend; }
-
-	void set_viewport(RID p_viewport, Size2i p_size);
-	RID get_viewport() const { return subviewport.viewport; }
-
-	void set_use_android_surface(bool p_enable, Size2i p_size);
-	bool get_use_android_surface() const { return use_android_surface; }
-
-	Ref<JavaObject> get_android_surface();
-
-	void set_extension_property_values(const Dictionary &p_property_values);
-
-	void on_pre_render();
 	XrCompositionLayerBaseHeader *get_composition_layer();
-
-	void update_swapchain_state();
-	SwapchainState *get_swapchain_state();
 
 	OpenXRViewportCompositionLayerProvider(XrCompositionLayerBaseHeader *p_composition_layer);
 	~OpenXRViewportCompositionLayerProvider();
+
+	static void _delete(OpenXRViewportCompositionLayerProvider *p_provider) { memdelete(p_provider); }
+
+public:
+	XrStructureType get_openxr_type() { return composition_layer->type; }
+	Ref<JavaObject> get_android_surface();
+
+	// All of the following functions must be called on the render thread.
+
+	void set_viewport(RID p_viewport, Size2i p_size);
+	void set_use_android_surface(bool p_enable, Size2i p_size);
+	void set_sort_order(int p_sort_order);
+	void set_alpha_blend(bool p_alpha_blend);
+	void set_min_filter(Filter p_mode);
+	void set_mag_filter(Filter p_mode);
+	void set_mipmap_mode(MipmapMode p_mode);
+	void set_horizontal_wrap(Wrap p_mode);
+	void set_vertical_wrap(Wrap p_mode);
+	void set_red_swizzle(Swizzle p_mode);
+	void set_blue_swizzle(Swizzle p_mode);
+	void set_green_swizzle(Swizzle p_mode);
+	void set_alpha_swizzle(Swizzle p_mode);
+	void set_max_anisotropy(float p_value);
+	void set_border_color(const Color &p_color);
+	void set_extension_property_values(const Dictionary &p_property_values);
 };

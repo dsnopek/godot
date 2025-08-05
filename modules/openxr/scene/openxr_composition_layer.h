@@ -88,6 +88,8 @@ private:
 	bool use_android_surface = false;
 	Size2i android_surface_size = Size2i(1024, 1024);
 	bool enable_hole_punch = false;
+	bool alpha_blend = false;
+	int sort_order = 0;
 	MeshInstance3D *fallback = nullptr;
 	bool should_update_fallback_mesh = false;
 	bool openxr_session_running = false;

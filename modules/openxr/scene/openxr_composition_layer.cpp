@@ -84,7 +84,6 @@ OpenXRCompositionLayer::~OpenXRCompositionLayer() {
 	composition_layer_nodes.erase(this);
 
 	if (openxr_layer_provider != nullptr) {
-		_clear_composition_layer_provider();
 		OpenXRCompositionLayerExtension::get_singleton()->free_viewport_composition_layer_provider(openxr_layer_provider);
 		openxr_layer_provider = nullptr;
 	}

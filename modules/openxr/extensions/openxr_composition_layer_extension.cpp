@@ -82,16 +82,11 @@ void OpenXRCompositionLayerExtension::on_session_created(const XrSession p_sessi
 
 void OpenXRCompositionLayerExtension::on_session_destroyed() {
 	OpenXRAPI::get_singleton()->unregister_composition_layer_provider(this);
-
-#ifdef ANDROID_ENABLED
-	free_queued_android_surface_swapchains();
-#endif
+	free_queued_resources();
 }
 
 void OpenXRCompositionLayerExtension::on_pre_render() {
-#ifdef ANDROID_ENABLED
 	free_queued_resources();
-#endif
 
 	for (OpenXRViewportCompositionLayerProvider *composition_layer : composition_layers) {
 		composition_layer->on_pre_render();

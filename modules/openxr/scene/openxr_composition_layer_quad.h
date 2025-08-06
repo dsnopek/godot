@@ -37,7 +37,7 @@
 class OpenXRCompositionLayerQuad : public OpenXRCompositionLayer {
 	GDCLASS(OpenXRCompositionLayerQuad, OpenXRCompositionLayer);
 
-	XrCompositionLayerQuad *composition_layer = nullptr;
+	XrCompositionLayerQuad *composition_layer;
 	Size2 quad_size = Size2(1.0, 1.0);
 
 	XrCompositionLayerQuad *create_openxr_composition_layer();

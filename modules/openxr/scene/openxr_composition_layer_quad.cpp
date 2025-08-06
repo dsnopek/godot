@@ -43,7 +43,6 @@ OpenXRCompositionLayerQuad::~OpenXRCompositionLayerQuad() {
 }
 
 XrCompositionLayerQuad *OpenXRCompositionLayerQuad::create_openxr_composition_layer() {
-	ERR_FAIL_COND_V(composition_layer, composition_layer);
 	composition_layer = (XrCompositionLayerQuad *)memalloc(sizeof(XrCompositionLayerQuad));
 	*composition_layer = {
 		XR_TYPE_COMPOSITION_LAYER_QUAD, // type

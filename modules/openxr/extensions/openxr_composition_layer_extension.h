@@ -123,6 +123,8 @@ public:
 
 	OPENXR_LAYER_FUNC1(set_quad_size, const Size2 &);
 
+	Ref<JavaObject> composition_layer_get_android_surface(RID p_layer);
+
 	bool is_available(XrStructureType p_which);
 	bool is_android_surface_swapchain_available() { return android_surface_ext_available; }
 

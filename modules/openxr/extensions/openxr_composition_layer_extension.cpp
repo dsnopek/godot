@@ -146,6 +146,12 @@ void OpenXRCompositionLayerExtension::composition_layer_unregister(RID p_layer) 
 	RenderingServer::get_singleton()->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerExtension::_composition_layer_unregister_rt).bind(p_layer));
 }
 
+Ref<JavaObject> OpenXRCompositionLayerExtension::composition_layer_get_android_surface(RID p_layer) {
+	CompositionLayer *layer = composition_layer_owner.get_or_null(p_layer);
+	ERR_FAIL_NULL_V(layer, Ref<JavaObject>());
+	return layer->get_android_surface();
+}
+
 void OpenXRCompositionLayerExtension::_composition_layer_free_rt(RID p_layer) {
 	_composition_layer_unregister_rt(p_layer);
 

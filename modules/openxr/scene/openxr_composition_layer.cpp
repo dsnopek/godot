@@ -555,7 +555,7 @@ Color OpenXRCompositionLayer::get_border_color() const {
 #endif
 
 Ref<JavaObject> OpenXRCompositionLayer::get_android_surface() {
-	return composition_layer_extension->composition_layer_get_android_surface(composition_layer, composition_layer);
+	return composition_layer_extension->composition_layer_get_android_surface(composition_layer);
 }
 
 Vector2 OpenXRCompositionLayer::intersects_ray(const Vector3 &p_origin, const Vector3 &p_direction) const {

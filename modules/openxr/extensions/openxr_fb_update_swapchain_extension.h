@@ -43,6 +43,7 @@
 class OpenXRFBUpdateSwapchainExtension : public OpenXRExtensionWrapper {
 	GDCLASS(OpenXRFBUpdateSwapchainExtension, OpenXRExtensionWrapper);
 
+#if 0
 protected:
 	static void _bind_methods() {}
 
@@ -88,4 +89,5 @@ private:
 	// OpenXR API call wrappers
 	EXT_PROTO_XRRESULT_FUNC2(xrUpdateSwapchainFB, (XrSwapchain), swapchain, (const XrSwapchainStateBaseHeaderFB *), state);
 	EXT_PROTO_XRRESULT_FUNC2(xrGetSwapchainStateFB, (XrSwapchain), swapchain, (XrSwapchainStateBaseHeaderFB *), state);
+#endif
 };

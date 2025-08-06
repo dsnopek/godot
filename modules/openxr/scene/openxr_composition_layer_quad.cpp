@@ -34,6 +34,8 @@
 
 #include "scene/resources/3d/primitive_meshes.h"
 
+#if 0
+
 OpenXRCompositionLayerQuad::OpenXRCompositionLayerQuad() :
 		OpenXRCompositionLayer((XrCompositionLayerBaseHeader *)create_openxr_composition_layer()) {
 	XRServer::get_singleton()->connect("reference_frame_changed", callable_mp(this, &OpenXRCompositionLayerQuad::update_transform));
@@ -140,3 +142,4 @@ Vector2 OpenXRCompositionLayerQuad::intersects_ray(const Vector3 &p_origin, cons
 
 	return Vector2(-1.0, -1.0);
 }
+#endif

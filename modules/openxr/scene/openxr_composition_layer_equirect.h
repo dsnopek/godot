@@ -37,6 +37,7 @@
 class OpenXRCompositionLayerEquirect : public OpenXRCompositionLayer {
 	GDCLASS(OpenXRCompositionLayerEquirect, OpenXRCompositionLayer);
 
+#if 0
 	XrCompositionLayerEquirect2KHR *composition_layer = nullptr;
 
 	float radius = 1.0;
@@ -82,4 +83,5 @@ public:
 
 	OpenXRCompositionLayerEquirect();
 	~OpenXRCompositionLayerEquirect();
+#endif
 };

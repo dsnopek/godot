@@ -46,6 +46,7 @@
 #define GL_CLAMP_TO_BORDER 0x812D
 #endif
 
+#if 0
 OpenXRFBUpdateSwapchainExtension *OpenXRFBUpdateSwapchainExtension::singleton = nullptr;
 
 OpenXRFBUpdateSwapchainExtension *OpenXRFBUpdateSwapchainExtension::get_singleton() {
@@ -345,3 +346,4 @@ uint32_t OpenXRFBUpdateSwapchainExtension::swizzle_to_vk(OpenXRViewportCompositi
 #endif
 	return 0;
 }
+#endif

@@ -37,6 +37,7 @@
 class OpenXRCompositionLayerCylinder : public OpenXRCompositionLayer {
 	GDCLASS(OpenXRCompositionLayerCylinder, OpenXRCompositionLayer);
 
+#if 0
 	XrCompositionLayerCylinderKHR *composition_layer = nullptr;
 
 	float radius = 1.0;
@@ -77,4 +78,5 @@ public:
 
 	OpenXRCompositionLayerCylinder();
 	~OpenXRCompositionLayerCylinder();
+#endif
 };

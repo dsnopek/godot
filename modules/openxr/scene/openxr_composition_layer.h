@@ -30,9 +30,6 @@
 
 #pragma once
 
-#include <openxr/openxr.h>
-
-#include "../extensions/openxr_composition_layer_extension.h"
 #include "scene/3d/node_3d.h"
 
 class JavaObject;
@@ -40,12 +37,12 @@ class MeshInstance3D;
 class Mesh;
 class OpenXRAPI;
 class OpenXRCompositionLayerExtension;
-class OpenXRViewportCompositionLayerProvider;
 class SubViewport;
 
 class OpenXRCompositionLayer : public Node3D {
 	GDCLASS(OpenXRCompositionLayer, Node3D);
 
+#if 0
 public:
 	// Must be identical to Filter enum definition in OpenXRViewportCompositionLayerProvider.
 	enum Filter {
@@ -210,9 +207,10 @@ public:
 	virtual Vector2 intersects_ray(const Vector3 &p_origin, const Vector3 &p_direction) const;
 
 	~OpenXRCompositionLayer();
+#endif
 };
 
-VARIANT_ENUM_CAST(OpenXRCompositionLayer::Filter)
-VARIANT_ENUM_CAST(OpenXRCompositionLayer::MipmapMode)
-VARIANT_ENUM_CAST(OpenXRCompositionLayer::Wrap)
-VARIANT_ENUM_CAST(OpenXRCompositionLayer::Swizzle)
+//VARIANT_ENUM_CAST(OpenXRCompositionLayer::Filter)
+//VARIANT_ENUM_CAST(OpenXRCompositionLayer::MipmapMode)
+//VARIANT_ENUM_CAST(OpenXRCompositionLayer::Wrap)
+//VARIANT_ENUM_CAST(OpenXRCompositionLayer::Swizzle)

@@ -34,6 +34,8 @@
 
 #include "scene/resources/mesh.h"
 
+#if 0
+
 OpenXRCompositionLayerEquirect::OpenXRCompositionLayerEquirect() :
 		OpenXRCompositionLayer((XrCompositionLayerBaseHeader *)create_openxr_composition_layer()) {
 	XRServer::get_singleton()->connect("reference_frame_changed", callable_mp(this, &OpenXRCompositionLayerEquirect::update_transform));
@@ -294,3 +296,4 @@ Vector2 OpenXRCompositionLayerEquirect::intersects_ray(const Vector3 &p_origin, 
 
 	return Vector2(u, v);
 }
+#endif

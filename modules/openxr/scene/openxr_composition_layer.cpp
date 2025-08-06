@@ -30,6 +30,7 @@
 
 #include "openxr_composition_layer.h"
 
+#if 0
 #include "../openxr_api.h"
 #include "../openxr_interface.h"
 
@@ -778,3 +779,4 @@ PackedStringArray OpenXRCompositionLayer::get_configuration_warnings() const {
 
 	return warnings;
 }
+#endif

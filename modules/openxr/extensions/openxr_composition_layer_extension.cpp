@@ -147,6 +147,7 @@ void OpenXRCompositionLayerExtension::composition_layer_unregister(RID p_layer) 
 }
 
 Ref<JavaObject> OpenXRCompositionLayerExtension::composition_layer_get_android_surface(RID p_layer) {
+	// @todo Is this thread-safe? I feel like we need to lock on freeing items?
 	CompositionLayer *layer = composition_layer_owner.get_or_null(p_layer);
 	ERR_FAIL_NULL_V(layer, Ref<JavaObject>());
 	return layer->get_android_surface();

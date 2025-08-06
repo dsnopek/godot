@@ -30,23 +30,13 @@
 
 #include "openxr_composition_layer_quad.h"
 
+#include "../extensions/openxr_composition_layer_extension.h"
 #include "../openxr_interface.h"
 
 #include "scene/resources/3d/primitive_meshes.h"
 
-#if 0
-
-OpenXRCompositionLayerQuad::OpenXRCompositionLayerQuad() :
-		OpenXRCompositionLayer((XrCompositionLayerBaseHeader *)create_openxr_composition_layer()) {
-	XRServer::get_singleton()->connect("reference_frame_changed", callable_mp(this, &OpenXRCompositionLayerQuad::update_transform));
-}
-
-OpenXRCompositionLayerQuad::~OpenXRCompositionLayerQuad() {
-}
-
-XrCompositionLayerQuad *OpenXRCompositionLayerQuad::create_openxr_composition_layer() {
-	composition_layer = (XrCompositionLayerQuad *)memalloc(sizeof(XrCompositionLayerQuad));
-	*composition_layer = {
+OpenXRCompositionLayerQuad::OpenXRCompositionLayerQuad() {
+	XrCompositionLayerQuad openxr_composition_layer = {
 		XR_TYPE_COMPOSITION_LAYER_QUAD, // type
 		nullptr, // next
 		0, // layerFlags
@@ -54,9 +44,12 @@ XrCompositionLayerQuad *OpenXRCompositionLayerQuad::create_openxr_composition_la
 		XR_EYE_VISIBILITY_BOTH, // eyeVisibility
 		{}, // subImage
 		{ { 0, 0, 0, 0 }, { 0, 0, 0 } }, // pose
-		{ 1.0, 1.0 }, // size
+		{ (float)quad_size.x, (float)quad_size.y }, // size
 	};
-	return composition_layer;
+	composition_layer = composition_layer_extension->composition_layer_create((XrCompositionLayerBaseHeader *)&openxr_composition_layer);
+}
+
+OpenXRCompositionLayerQuad::~OpenXRCompositionLayerQuad() {
 }
 
 void OpenXRCompositionLayerQuad::_bind_methods() {
@@ -73,37 +66,10 @@ Ref<Mesh> OpenXRCompositionLayerQuad::_create_fallback_mesh() {
 	return mesh;
 }
 
-void OpenXRCompositionLayerQuad::_notification(int p_what) {
-	switch (p_what) {
-		case NOTIFICATION_LOCAL_TRANSFORM_CHANGED: {
-			update_transform();
-		} break;
-	}
-}
-
-void OpenXRCompositionLayerQuad::update_transform() {
-	RenderingServer *rendering_server = RenderingServer::get_singleton();
-	ERR_FAIL_NULL(rendering_server);
-	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerQuad::_set_transform_rt).bind(get_transform()));
-}
-
-void OpenXRCompositionLayerQuad::_set_transform_rt(const Transform3D &p_transform) {
-	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer->pose = get_openxr_pose(p_transform);
-}
-
-void OpenXRCompositionLayerQuad::_set_quad_size_rt(const Size2 &p_size) {
-	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer->size = { (float)quad_size.x, (float)quad_size.y };
-}
-
 void OpenXRCompositionLayerQuad::set_quad_size(const Size2 &p_size) {
 	quad_size = p_size;
+	composition_layer_extension->composition_layer_set_quad_size(composition_layer, p_size);
 	update_fallback_mesh();
-
-	RenderingServer *rendering_server = RenderingServer::get_singleton();
-	ERR_FAIL_NULL(rendering_server);
-	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerQuad::_set_quad_size_rt).bind(p_size));
 }
 
 Size2 OpenXRCompositionLayerQuad::get_quad_size() const {
@@ -142,4 +108,3 @@ Vector2 OpenXRCompositionLayerQuad::intersects_ray(const Vector3 &p_origin, cons
 
 	return Vector2(-1.0, -1.0);
 }
-#endif

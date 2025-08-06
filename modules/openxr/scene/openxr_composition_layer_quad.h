@@ -37,21 +37,10 @@
 class OpenXRCompositionLayerQuad : public OpenXRCompositionLayer {
 	GDCLASS(OpenXRCompositionLayerQuad, OpenXRCompositionLayer);
 
-#if 0
-	XrCompositionLayerQuad *composition_layer;
 	Size2 quad_size = Size2(1.0, 1.0);
-
-	XrCompositionLayerQuad *create_openxr_composition_layer();
 
 protected:
 	static void _bind_methods();
-
-	void _notification(int p_what);
-
-	void update_transform();
-
-	void _set_transform_rt(const Transform3D &p_transform);
-	void _set_quad_size_rt(const Size2 &p_size);
 
 	virtual Ref<Mesh> _create_fallback_mesh() override;
 
@@ -63,5 +52,4 @@ public:
 
 	OpenXRCompositionLayerQuad();
 	~OpenXRCompositionLayerQuad();
-#endif
 };

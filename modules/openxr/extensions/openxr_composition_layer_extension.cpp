@@ -237,7 +237,7 @@ void OpenXRCompositionLayerExtension::free_android_surface_swapchain(XrSwapchain
 ////////////////////////////////////////////////////////////////////////////
 // OpenXRCompositionLayerExtension::CompositionLayer
 
-void OpenXRCompositionLayerExtension::CompositionLayer::set_viewport(RID p_viewport, Size2i p_size) {
+void OpenXRCompositionLayerExtension::CompositionLayer::set_viewport(RID p_viewport, const Size2i &p_size) {
 	ERR_FAIL_COND(use_android_surface);
 
 	if (subviewport.viewport != p_viewport) {
@@ -257,7 +257,7 @@ void OpenXRCompositionLayerExtension::CompositionLayer::set_viewport(RID p_viewp
 	}
 }
 
-void OpenXRCompositionLayerExtension::CompositionLayer::set_use_android_surface(bool p_use_android_surface, Size2i p_size) {
+void OpenXRCompositionLayerExtension::CompositionLayer::set_use_android_surface(bool p_use_android_surface, const Size2i &p_size) {
 #ifdef ANDROID_ENABLED
 	if (p_use_android_surface == use_android_surface) {
 		if (use_android_surface && swapchain_size != p_size) {
@@ -299,9 +299,40 @@ void OpenXRCompositionLayerExtension::CompositionLayer::set_alpha_blend(bool p_a
 	}
 }
 
+void OpenXRCompositionLayerExtension::CompositionLayer::set_transform(const Transform3D &p_transform) {
+	Transform3D reference_frame = XRServer::get_singleton()->get_reference_frame();
+	Transform3D transform = reference_frame.inverse() * p_transform;
+	Quaternion quat(transform.basis.orthonormalized());
+
+	XrPosef pose = {
+		{ (float)quat.x, (float)quat.y, (float)quat.z, (float)quat.w },
+		{ (float)transform.origin.x, (float)transform.origin.y, (float)transform.origin.z }
+	};
+
+	switch (composition_layer.type) {
+		case XR_TYPE_COMPOSITION_LAYER_QUAD: {
+			composition_layer_quad.pose = pose;
+		} break;
+		case XR_TYPE_COMPOSITION_LAYER_CYLINDER_KHR: {
+			composition_layer_cylinder.pose = pose;
+		} break;
+		case XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR: {
+			composition_layer_equirect.pose = pose;
+		} break;
+		default: {
+			ERR_PRINT(vformat("Cannot set transform on unsupported composition layer type: %s", composition_layer.type));
+		}
+	}
+}
+
 void OpenXRCompositionLayerExtension::CompositionLayer::set_extension_property_values(const Dictionary &p_property_values) {
 	extension_property_values = p_property_values;
 	extension_property_values_changed = true;
+}
+
+void OpenXRCompositionLayerExtension::CompositionLayer::set_quad_size(const Size2 &p_size) {
+	ERR_FAIL_COND(composition_layer.type != XR_TYPE_COMPOSITION_LAYER_QUAD);
+	composition_layer_quad.size = { (float)p_size.x, (float)p_size.y };
 }
 
 Ref<JavaObject> OpenXRCompositionLayerExtension::CompositionLayer::get_android_surface() {

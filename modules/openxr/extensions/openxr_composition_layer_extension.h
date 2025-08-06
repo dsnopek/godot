@@ -46,24 +46,24 @@ class JavaObject;
 
 // This extension provides access to composition layers for displaying 2D content through the XR compositor.
 
-#define OPENXR_LAYER_FUNC1(m_name, m_arg1)                                                                                                                                \
-	void _composition_layer_provider_##m_name##_rt(RID p_layer, m_arg1 p1) {                                                                                              \
-		CompositionLayer *layer = composition_layer_owner.get_or_null(p_layer);                                                                                           \
-		ERR_FAIL_NULL(layer);                                                                                                                                             \
-		layer->m_name(p1);                                                                                                                                                \
-	}                                                                                                                                                                     \
-	void composition_layer_provider_##m_name(RID p_layer, m_arg1 p1) {                                                                                                    \
-		RenderingServer::get_singleton()->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerExtension::_composition_layer_provider_##m_name##_rt).bind(p1)); \
+#define OPENXR_LAYER_FUNC1(m_name, m_arg1)                                                                                                                       \
+	void _composition_layer_##m_name##_rt(RID p_layer, m_arg1 p1) {                                                                                              \
+		CompositionLayer *layer = composition_layer_owner.get_or_null(p_layer);                                                                                  \
+		ERR_FAIL_NULL(layer);                                                                                                                                    \
+		layer->m_name(p1);                                                                                                                                       \
+	}                                                                                                                                                            \
+	void composition_layer_##m_name(RID p_layer, m_arg1 p1) {                                                                                                    \
+		RenderingServer::get_singleton()->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerExtension::_composition_layer_##m_name##_rt).bind(p1)); \
 	}
 
-#define OPENXR_LAYER_FUNC2(m_name, m_arg1, m_arg2)                                                                                                                            \
-	void _composition_layer_provider_##m_name##_rt(RID p_layer, m_arg1 p1, m_arg2 p2) {                                                                                       \
-		CompositionLayer *layer = composition_layer_owner.get_or_null(p_layer);                                                                                               \
-		ERR_FAIL_NULL(layer);                                                                                                                                                 \
-		layer->m_name(p1, p2);                                                                                                                                                \
-	}                                                                                                                                                                         \
-	void composition_layer_provider_##m_name(RID p_layer, m_arg1 p1, m_arg2 p2) {                                                                                             \
-		RenderingServer::get_singleton()->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerExtension::_composition_layer_provider_##m_name##_rt).bind(p1, p2)); \
+#define OPENXR_LAYER_FUNC2(m_name, m_arg1, m_arg2)                                                                                                                   \
+	void _composition_layer_##m_name##_rt(RID p_layer, m_arg1 p1, m_arg2 p2) {                                                                                       \
+		CompositionLayer *layer = composition_layer_owner.get_or_null(p_layer);                                                                                      \
+		ERR_FAIL_NULL(layer);                                                                                                                                        \
+		layer->m_name(p1, p2);                                                                                                                                       \
+	}                                                                                                                                                                \
+	void composition_layer_##m_name(RID p_layer, m_arg1 p1, m_arg2 p2) {                                                                                             \
+		RenderingServer::get_singleton()->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerExtension::_composition_layer_##m_name##_rt).bind(p1, p2)); \
 	}
 
 // @todo There was a comment here before - bring it back!
@@ -113,12 +113,15 @@ public:
 	void composition_layer_unregister(RID p_layer);
 
 	// @todo all the forwarding methods
-	OPENXR_LAYER_FUNC2(set_viewport, RID, Size2i);
-	OPENXR_LAYER_FUNC2(set_use_android_surface, bool, Size2i);
+	OPENXR_LAYER_FUNC2(set_viewport, RID, const Size2i &);
+	OPENXR_LAYER_FUNC2(set_use_android_surface, bool, const Size2i &);
 	OPENXR_LAYER_FUNC1(set_sort_order, int);
 	OPENXR_LAYER_FUNC1(set_alpha_blend, bool);
+	OPENXR_LAYER_FUNC1(set_transform, const Transform3D &);
 	// @todo All the swapchain state stuff
 	OPENXR_LAYER_FUNC1(set_extension_property_values, Dictionary)
+
+	OPENXR_LAYER_FUNC1(set_quad_size, const Size2 &);
 
 	bool is_available(XrStructureType p_which);
 	bool is_android_surface_swapchain_available() { return android_surface_ext_available; }
@@ -176,12 +179,15 @@ private:
 		//SwapchainState swapchain_state;
 		bool swapchain_state_is_dirty = false;
 
-		void set_viewport(RID p_viewport, Size2i p_size);
-		void set_use_android_surface(bool p_use_android_surface, Size2i p_size);
+		void set_viewport(RID p_viewport, const Size2i &p_size);
+		void set_use_android_surface(bool p_use_android_surface, const Size2i &p_size);
 
 		void set_sort_order(int p_sort_order) { sort_order = p_sort_order; }
 		void set_alpha_blend(bool p_alpha_blend);
+		void set_transform(const Transform3D &p_transform);
 		void set_extension_property_values(const Dictionary &p_extension_property_values);
+
+		void set_quad_size(const Size2 &p_size);
 
 		Ref<JavaObject> get_android_surface();
 		void on_pre_render();

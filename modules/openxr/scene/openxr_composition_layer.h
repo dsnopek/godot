@@ -42,7 +42,6 @@ class SubViewport;
 class OpenXRCompositionLayer : public Node3D {
 	GDCLASS(OpenXRCompositionLayer, Node3D);
 
-#if 0
 public:
 	// Must be identical to Filter enum definition in OpenXRViewportCompositionLayerProvider.
 	enum Filter {
@@ -77,10 +76,10 @@ public:
 		SWIZZLE_ONE,
 	};
 
-private:
-	XrCompositionLayerBaseHeader *composition_layer_base_header = nullptr;
-	OpenXRViewportCompositionLayerProvider *openxr_layer_provider = nullptr;
+protected:
+	RID composition_layer;
 
+private:
 	SubViewport *layer_viewport = nullptr;
 	bool use_android_surface = false;
 	Size2i android_surface_size = Size2i(1024, 1024);
@@ -92,8 +91,10 @@ private:
 	bool openxr_session_running = false;
 	bool registered = false;
 
+	/*
 	OpenXRViewportCompositionLayerProvider::SwapchainState *swapchain_render_state = nullptr;
 	OpenXRViewportCompositionLayerProvider::SwapchainState swapchain_local_state;
+	*/
 
 	Dictionary extension_property_values;
 
@@ -102,8 +103,8 @@ private:
 	void _reset_fallback_material();
 	void _remove_fallback_node();
 
-	void _setup_composition_layer_provider();
-	void _clear_composition_layer_provider();
+	void _setup_composition_layer();
+	void _clear_composition_layer();
 
 protected:
 	OpenXRAPI *openxr_api = nullptr;
@@ -122,30 +123,13 @@ protected:
 
 	virtual Ref<Mesh> _create_fallback_mesh() = 0;
 
+	void update_transform();
 	void update_fallback_mesh();
-
-	XrPosef get_openxr_pose(const Transform3D &p_transform) const;
 
 	static Vector<OpenXRCompositionLayer *> composition_layer_nodes;
 	bool is_viewport_in_use(SubViewport *p_viewport);
 
-	OpenXRCompositionLayer(XrCompositionLayerBaseHeader *p_composition_layer);
-
-	void _set_layer_viewport_rt(RID p_viewport, const Size2i &p_size);
-	void _set_use_android_surface_rt(bool p_use_android_surface, const Size2i &p_size);
-	void _set_sort_order_rt(int p_order);
-	void _set_alpha_blend_rt(bool p_alpha_blend);
-	void _set_min_filter_rt(Filter p_mode);
-	void _set_mag_filter_rt(Filter p_mode);
-	void _set_mipmap_mode_rt(MipmapMode p_mode);
-	void _set_horizontal_wrap_rt(Wrap p_mode);
-	void _set_vertical_wrap_rt(Wrap p_mode);
-	void _set_red_swizzle_rt(Swizzle p_mode);
-	void _set_green_swizzle_rt(Swizzle p_mode);
-	void _set_blue_swizzle_rt(Swizzle p_mode);
-	void _set_alpha_swizzle_rt(Swizzle p_mode);
-	void _set_max_anisotropy_rt(float p_value);
-	void _set_border_color_rt(const Color &p_color);
+	OpenXRCompositionLayer();
 
 public:
 	void set_layer_viewport(SubViewport *p_viewport);
@@ -169,6 +153,7 @@ public:
 	Ref<JavaObject> get_android_surface();
 	bool is_natively_supported() const;
 
+#if 0
 	void set_min_filter(Filter p_mode);
 	Filter get_min_filter() const;
 
@@ -201,16 +186,16 @@ public:
 
 	void set_border_color(const Color &p_color);
 	Color get_border_color() const;
+#endif
 
 	virtual PackedStringArray get_configuration_warnings() const override;
 
 	virtual Vector2 intersects_ray(const Vector3 &p_origin, const Vector3 &p_direction) const;
 
 	~OpenXRCompositionLayer();
-#endif
 };
 
-//VARIANT_ENUM_CAST(OpenXRCompositionLayer::Filter)
-//VARIANT_ENUM_CAST(OpenXRCompositionLayer::MipmapMode)
-//VARIANT_ENUM_CAST(OpenXRCompositionLayer::Wrap)
-//VARIANT_ENUM_CAST(OpenXRCompositionLayer::Swizzle)
+VARIANT_ENUM_CAST(OpenXRCompositionLayer::Filter)
+VARIANT_ENUM_CAST(OpenXRCompositionLayer::MipmapMode)
+VARIANT_ENUM_CAST(OpenXRCompositionLayer::Wrap)
+VARIANT_ENUM_CAST(OpenXRCompositionLayer::Swizzle)

@@ -46,7 +46,6 @@
 #define GL_CLAMP_TO_BORDER 0x812D
 #endif
 
-#if 0
 OpenXRFBUpdateSwapchainExtension *OpenXRFBUpdateSwapchainExtension::singleton = nullptr;
 
 OpenXRFBUpdateSwapchainExtension *OpenXRFBUpdateSwapchainExtension::get_singleton() {
@@ -123,6 +122,7 @@ bool OpenXRFBUpdateSwapchainExtension::is_android_ext_enabled() const {
 	return fb_swapchain_update_state_android_ext;
 }
 
+#if 0
 void OpenXRFBUpdateSwapchainExtension::update_swapchain_state(XrSwapchain p_swapchain, const OpenXRViewportCompositionLayerProvider::SwapchainState *p_swapchain_state) {
 	if (!p_swapchain_state) {
 		return;
@@ -187,6 +187,7 @@ void OpenXRFBUpdateSwapchainExtension::update_swapchain_state(XrSwapchain p_swap
 #endif
 	}
 }
+#endif
 
 void OpenXRFBUpdateSwapchainExtension::update_swapchain_surface_size(XrSwapchain p_swapchain, const Size2i &p_size) {
 #ifdef ANDROID_ENABLED
@@ -208,6 +209,7 @@ void OpenXRFBUpdateSwapchainExtension::update_swapchain_surface_size(XrSwapchain
 #endif
 }
 
+#if 0
 uint32_t OpenXRFBUpdateSwapchainExtension::filter_to_gl(OpenXRViewportCompositionLayerProvider::Filter p_filter, OpenXRViewportCompositionLayerProvider::MipmapMode p_mipmap_mode) {
 #ifdef XR_USE_GRAPHICS_API_OPENGL_ES
 	switch (p_mipmap_mode) {

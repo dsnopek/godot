@@ -236,8 +236,7 @@ bool OpenXRCompositionLayerExtension::create_android_surface_swapchain(XrSwapcha
 }
 
 void OpenXRCompositionLayerExtension::free_android_surface_swapchain(XrSwapchain p_swapchain) {
-	MutexLock lock(free_queue_mutex);
-	android_surface_swapchain_free_queue.push_back(p_swapchain);
+	xrDestroySwapchain(p_swapchain);
 }
 #endif
 
@@ -626,10 +625,9 @@ void OpenXRCompositionLayerExtension::CompositionLayer::create_android_surface()
 	MutexLock lock(android_surface.mutex);
 
 	ERR_FAIL_COND(android_surface.swapchain != XR_NULL_HANDLE || android_surface.surface.is_valid());
-	ERR_FAIL_COND(!openxr_api || !openxr_api->is_running());
 
 	void *next_pointer = nullptr;
-	for (OpenXRExtensionWrapper *wrapper : openxr_api->get_registered_extension_wrappers()) {
+	for (OpenXRExtensionWrapper *wrapper : OpenXRAPI::get_registered_extension_wrappers()) {
 		void *np = wrapper->set_android_surface_swapchain_create_info_and_get_next_pointer(extension_property_values, next_pointer);
 		if (np != nullptr) {
 			next_pointer = np;
@@ -653,7 +651,7 @@ void OpenXRCompositionLayerExtension::CompositionLayer::create_android_surface()
 	};
 
 	jobject surface;
-	composition_layer_extension->create_android_surface_swapchain(&info, &android_surface.swapchain, &surface);
+	OpenXRCompositionLayerExtension::get_singleton()->create_android_surface_swapchain(&info, &android_surface.swapchain, &surface);
 
 	swapchain_state_is_dirty = true;
 

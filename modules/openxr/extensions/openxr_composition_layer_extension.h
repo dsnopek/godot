@@ -108,15 +108,15 @@ public:
 	};
 
 	struct SwapchainState {
-		Filter min_filter = FILTER_LINEAR;
-		Filter mag_filter = FILTER_LINEAR;
-		MipmapMode mipmap_mode = MIPMAP_MODE_LINEAR;
-		Wrap horizontal_wrap = WRAP_CLAMP_TO_BORDER;
-		Wrap vertical_wrap = WRAP_CLAMP_TO_BORDER;
-		Swizzle red_swizzle = SWIZZLE_RED;
-		Swizzle green_swizzle = SWIZZLE_GREEN;
-		Swizzle blue_swizzle = SWIZZLE_BLUE;
-		Swizzle alpha_swizzle = SWIZZLE_ALPHA;
+		Filter min_filter = Filter::FILTER_LINEAR;
+		Filter mag_filter = Filter::FILTER_LINEAR;
+		MipmapMode mipmap_mode = MipmapMode::MIPMAP_MODE_LINEAR;
+		Wrap horizontal_wrap = Wrap::WRAP_CLAMP_TO_BORDER;
+		Wrap vertical_wrap = Wrap::WRAP_CLAMP_TO_BORDER;
+		Swizzle red_swizzle = Swizzle::SWIZZLE_RED;
+		Swizzle green_swizzle = Swizzle::SWIZZLE_GREEN;
+		Swizzle blue_swizzle = Swizzle::SWIZZLE_BLUE;
+		Swizzle alpha_swizzle = Swizzle::SWIZZLE_ALPHA;
 		float max_anisotropy = 1.0;
 		Color border_color = { 0.0, 0.0, 0.0, 0.0 };
 	};

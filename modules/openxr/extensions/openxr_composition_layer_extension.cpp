@@ -82,12 +82,9 @@ void OpenXRCompositionLayerExtension::on_session_created(const XrSession p_sessi
 
 void OpenXRCompositionLayerExtension::on_session_destroyed() {
 	OpenXRAPI::get_singleton()->unregister_composition_layer_provider(this);
-	//free_queued_resources();
 }
 
 void OpenXRCompositionLayerExtension::on_pre_render() {
-	//free_queued_resources();
-
 	for (CompositionLayer *composition_layer : registered_composition_layers) {
 		composition_layer->on_pre_render();
 	}
@@ -147,7 +144,7 @@ void OpenXRCompositionLayerExtension::composition_layer_unregister(RID p_layer) 
 }
 
 Ref<JavaObject> OpenXRCompositionLayerExtension::composition_layer_get_android_surface(RID p_layer) {
-	// @todo Is this thread-safe? I feel like we need to lock on freeing items?
+	MutexLock lock(composition_layer_mutex);
 	CompositionLayer *layer = composition_layer_owner.get_or_null(p_layer);
 	ERR_FAIL_NULL_V(layer, Ref<JavaObject>());
 	return layer->get_android_surface();
@@ -156,6 +153,7 @@ Ref<JavaObject> OpenXRCompositionLayerExtension::composition_layer_get_android_s
 void OpenXRCompositionLayerExtension::_composition_layer_free_rt(RID p_layer) {
 	_composition_layer_unregister_rt(p_layer);
 
+	MutexLock lock(composition_layer_mutex);
 	CompositionLayer *layer = composition_layer_owner.get_or_null(p_layer);
 	if (layer) {
 		for (OpenXRExtensionWrapper *extension : OpenXRAPI::get_registered_extension_wrappers()) {
@@ -198,25 +196,6 @@ bool OpenXRCompositionLayerExtension::is_available(XrStructureType p_which) {
 	}
 }
 
-/*
-void OpenXRCompositionLayerExtension::free_queued_resources() {
-	MutexLock lock(free_queue_mutex);
-
-#ifdef ANDROID_ENABLED
-	for (XrSwapchain swapchain : android_surface_swapchain_free_queue) {
-		xrDestroySwapchain(swapchain);
-	}
-	android_surface_swapchain_free_queue.clear();
-#endif
-
-	for (OpenXRViewportCompositionLayerProvider *provider : composition_layer_free_queue) {
-		unregister_viewport_composition_layer_provider(provider);
-		memdelete(provider);
-	}
-	composition_layer_free_queue.clear();
-}
-*/
-
 #ifdef ANDROID_ENABLED
 bool OpenXRCompositionLayerExtension::create_android_surface_swapchain(XrSwapchainCreateInfo *p_info, XrSwapchain *r_swapchain, jobject *r_surface) {
 	if (android_surface_ext_available) {
@@ -233,10 +212,6 @@ bool OpenXRCompositionLayerExtension::create_android_surface_swapchain(XrSwapcha
 	}
 
 	return false;
-}
-
-void OpenXRCompositionLayerExtension::free_android_surface_swapchain(XrSwapchain p_swapchain) {
-	xrDestroySwapchain(p_swapchain);
 }
 #endif
 
@@ -379,7 +354,6 @@ void OpenXRCompositionLayerExtension::CompositionLayer::set_equirect_lower_verti
 Ref<JavaObject> OpenXRCompositionLayerExtension::CompositionLayer::get_android_surface() {
 #ifdef ANDROID_ENABLED
 	if (use_android_surface) {
-		MutexLock lock(android_surface.mutex);
 		return android_surface.surface;
 	}
 #endif
@@ -389,6 +363,7 @@ Ref<JavaObject> OpenXRCompositionLayerExtension::CompositionLayer::get_android_s
 void OpenXRCompositionLayerExtension::CompositionLayer::on_pre_render() {
 #ifdef ANDROID_ENABLED
 	if (use_android_surface) {
+		MutexLock lock(OpenXRCompositionLayerExtension::get_singleton()->composition_layer_mutex);
 		if (android_surface.surface.is_null()) {
 			create_android_surface();
 		}
@@ -603,8 +578,7 @@ void OpenXRCompositionLayerExtension::CompositionLayer::free_swapchain() {
 #ifdef ANDROID_ENABLED
 	if (use_android_surface) {
 		if (android_surface.swapchain != XR_NULL_HANDLE) {
-			OpenXRCompositionLayerExtension::get_singleton()->free_android_surface_swapchain(android_surface.swapchain);
-
+			OpenXRCompositionLayerExtension::get_singleton()->xrDestroySwapchain(android_surface.swapchain);
 			android_surface.swapchain = XR_NULL_HANDLE;
 			android_surface.surface.unref();
 		}
@@ -622,8 +596,6 @@ void OpenXRCompositionLayerExtension::CompositionLayer::free_swapchain() {
 
 #ifdef ANDROID_ENABLED
 void OpenXRCompositionLayerExtension::CompositionLayer::create_android_surface() {
-	MutexLock lock(android_surface.mutex);
-
 	ERR_FAIL_COND(android_surface.swapchain != XR_NULL_HANDLE || android_surface.surface.is_valid());
 
 	void *next_pointer = nullptr;

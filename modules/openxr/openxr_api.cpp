@@ -2522,12 +2522,6 @@ void OpenXRAPI::end_frame() {
 	Vector<OrderedCompositionLayer> ordered_layers_list;
 	bool projection_layer_is_first = true;
 
-	// We pass a whole bunch of pointers to structs in `xrEndFrame()`. We use this mutex to
-	// prevent those from becoming invalid before we manage to pass them to `xrEndFrame()`.
-	// For example, this can happen if using multithreaded rendering and removing a composition
-	// layer after we've added it to the list but before calling `xrEndFrame()`.
-	MutexLock lock(end_frame_mutex);
-
 	// Add composition layers from providers
 	for (OpenXRExtensionWrapper *extension : composition_layer_providers) {
 		for (int i = 0; i < extension->get_composition_layer_count(); i++) {
@@ -3717,32 +3711,26 @@ bool OpenXRAPI::trigger_haptic_pulse(RID p_action, RID p_tracker, float p_freque
 }
 
 void OpenXRAPI::register_composition_layer_provider(OpenXRExtensionWrapper *p_extension) {
-	MutexLock lock(end_frame_mutex);
 	composition_layer_providers.append(p_extension);
 }
 
 void OpenXRAPI::unregister_composition_layer_provider(OpenXRExtensionWrapper *p_extension) {
-	MutexLock lock(end_frame_mutex);
 	composition_layer_providers.erase(p_extension);
 }
 
 void OpenXRAPI::register_projection_views_extension(OpenXRExtensionWrapper *p_extension) {
-	MutexLock lock(end_frame_mutex);
 	projection_views_extensions.append(p_extension);
 }
 
 void OpenXRAPI::unregister_projection_views_extension(OpenXRExtensionWrapper *p_extension) {
-	MutexLock lock(end_frame_mutex);
 	projection_views_extensions.erase(p_extension);
 }
 
 void OpenXRAPI::register_frame_info_extension(OpenXRExtensionWrapper *p_extension) {
-	MutexLock lock(end_frame_mutex);
 	frame_info_extensions.append(p_extension);
 }
 
 void OpenXRAPI::unregister_frame_info_extension(OpenXRExtensionWrapper *p_extension) {
-	MutexLock lock(end_frame_mutex);
 	frame_info_extensions.erase(p_extension);
 }
 

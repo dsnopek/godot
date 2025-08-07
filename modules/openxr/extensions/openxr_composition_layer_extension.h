@@ -150,7 +150,6 @@ private:
 
 #ifdef ANDROID_ENABLED
 	bool create_android_surface_swapchain(XrSwapchainCreateInfo *p_info, XrSwapchain *r_swapchain, jobject *r_surface);
-	void free_android_surface_swapchain(XrSwapchain p_swapchain);
 
 	EXT_PROTO_XRRESULT_FUNC1(xrDestroySwapchain, (XrSwapchain), swapchain)
 	EXT_PROTO_XRRESULT_FUNC4(xrCreateSwapchainAndroidSurfaceKHR, (XrSession), session, (const XrSwapchainCreateInfo *), info, (XrSwapchain *), swapchain, (jobject *), surface)
@@ -180,7 +179,6 @@ private:
 		struct {
 			XrSwapchain swapchain = XR_NULL_HANDLE;
 			Ref<JavaObject> surface;
-			Mutex mutex;
 		} android_surface;
 #endif
 
@@ -226,6 +224,7 @@ private:
 #endif
 	};
 
+	Mutex composition_layer_mutex;
 	RID_Owner<CompositionLayer, true> composition_layer_owner;
 	LocalVector<CompositionLayer *> registered_composition_layers;
 };

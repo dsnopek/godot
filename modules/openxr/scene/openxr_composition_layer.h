@@ -30,6 +30,8 @@
 
 #pragma once
 
+#include <openxr/openxr.h>
+
 #include "scene/3d/node_3d.h"
 
 class JavaObject;
@@ -122,6 +124,7 @@ protected:
 	virtual void _on_openxr_session_stopping();
 
 	virtual Ref<Mesh> _create_fallback_mesh() = 0;
+	virtual XrStructureType _get_openxr_type() const = 0;
 
 	void update_transform();
 	void update_fallback_mesh();

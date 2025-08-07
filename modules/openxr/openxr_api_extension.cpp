@@ -63,9 +63,6 @@ void OpenXRAPIExtension::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("get_hand_tracker", "hand_index"), &OpenXRAPIExtension::get_hand_tracker);
 
-	ClassDB::bind_method(D_METHOD("lock_end_frame_mutex"), &OpenXRAPIExtension::lock_end_frame_mutex);
-	ClassDB::bind_method(D_METHOD("unlock_end_frame_mutex"), &OpenXRAPIExtension::unlock_end_frame_mutex);
-
 	ClassDB::bind_method(D_METHOD("register_composition_layer_provider", "extension"), &OpenXRAPIExtension::register_composition_layer_provider);
 	ClassDB::bind_method(D_METHOD("unregister_composition_layer_provider", "extension"), &OpenXRAPIExtension::unregister_composition_layer_provider);
 
@@ -231,16 +228,6 @@ uint64_t OpenXRAPIExtension::action_get_handle(RID p_action) {
 uint64_t OpenXRAPIExtension::get_hand_tracker(int p_hand_index) {
 	ERR_FAIL_NULL_V(OpenXRAPI::get_singleton(), 0);
 	return (uint64_t)OpenXRAPI::get_singleton()->get_hand_tracker(p_hand_index);
-}
-
-void OpenXRAPIExtension::lock_end_frame_mutex() {
-	ERR_FAIL_NULL(OpenXRAPI::get_singleton());
-	OpenXRAPI::get_singleton()->get_end_frame_mutex().lock();
-}
-
-void OpenXRAPIExtension::unlock_end_frame_mutex() {
-	ERR_FAIL_NULL(OpenXRAPI::get_singleton());
-	OpenXRAPI::get_singleton()->get_end_frame_mutex().unlock();
 }
 
 void OpenXRAPIExtension::register_composition_layer_provider(OpenXRExtensionWrapper *p_extension) {

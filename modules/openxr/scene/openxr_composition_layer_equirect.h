@@ -47,6 +47,9 @@ protected:
 	static void _bind_methods();
 
 	virtual Ref<Mesh> _create_fallback_mesh() override;
+	virtual XrStructureType _get_openxr_type() const override {
+		return XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR;
+	}
 
 public:
 	void set_radius(float p_radius);

@@ -123,6 +123,10 @@ public:
 
 	OPENXR_LAYER_FUNC1(set_quad_size, const Size2 &);
 
+	OPENXR_LAYER_FUNC1(set_cylinder_radius, float);
+	OPENXR_LAYER_FUNC1(set_cylinder_aspect_ratio, float);
+	OPENXR_LAYER_FUNC1(set_cylinder_central_angle, float);
+
 	Ref<JavaObject> composition_layer_get_android_surface(RID p_layer);
 
 	bool is_available(XrStructureType p_which);
@@ -191,6 +195,10 @@ private:
 
 		void set_quad_size(const Size2 &p_size);
 
+		void set_cylinder_radius(float p_radius);
+		void set_cylinder_aspect_ratio(float p_aspect_ratio);
+		void set_cylinder_central_angle(float p_central_angle);
+
 		Ref<JavaObject> get_android_surface();
 		void on_pre_render();
 		XrCompositionLayerBaseHeader *get_composition_layer();
@@ -209,7 +217,7 @@ private:
 	};
 
 	RID_Owner<CompositionLayer, true> composition_layer_owner;
-	Vector<CompositionLayer *> registered_composition_layers;
+	LocalVector<CompositionLayer *> registered_composition_layers;
 };
 
 #undef OPENXR_LAYER_FUNC1

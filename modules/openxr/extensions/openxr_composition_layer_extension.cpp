@@ -98,12 +98,12 @@ int OpenXRCompositionLayerExtension::get_composition_layer_count() {
 }
 
 XrCompositionLayerBaseHeader *OpenXRCompositionLayerExtension::get_composition_layer(int p_index) {
-	ERR_FAIL_INDEX_V(p_index, registered_composition_layers.size(), nullptr);
+	ERR_FAIL_UNSIGNED_INDEX_V((unsigned int)p_index, registered_composition_layers.size(), nullptr);
 	return registered_composition_layers[p_index]->get_composition_layer();
 }
 
 int OpenXRCompositionLayerExtension::get_composition_layer_order(int p_index) {
-	ERR_FAIL_INDEX_V(p_index, registered_composition_layers.size(), 1);
+	ERR_FAIL_UNSIGNED_INDEX_V((unsigned int)p_index, registered_composition_layers.size(), 1);
 	return registered_composition_layers[p_index]->sort_order;
 }
 
@@ -340,6 +340,21 @@ void OpenXRCompositionLayerExtension::CompositionLayer::set_extension_property_v
 void OpenXRCompositionLayerExtension::CompositionLayer::set_quad_size(const Size2 &p_size) {
 	ERR_FAIL_COND(composition_layer.type != XR_TYPE_COMPOSITION_LAYER_QUAD);
 	composition_layer_quad.size = { (float)p_size.x, (float)p_size.y };
+}
+
+void OpenXRCompositionLayerExtension::CompositionLayer::set_cylinder_radius(float p_radius) {
+	ERR_FAIL_COND(composition_layer.type != XR_TYPE_COMPOSITION_LAYER_CYLINDER_KHR);
+	composition_layer_cylinder.radius = p_radius;
+}
+
+void OpenXRCompositionLayerExtension::CompositionLayer::set_cylinder_aspect_ratio(float p_aspect_ratio) {
+	ERR_FAIL_COND(composition_layer.type != XR_TYPE_COMPOSITION_LAYER_CYLINDER_KHR);
+	composition_layer_cylinder.aspectRatio = p_aspect_ratio;
+}
+
+void OpenXRCompositionLayerExtension::CompositionLayer::set_cylinder_central_angle(float p_central_angle) {
+	ERR_FAIL_COND(composition_layer.type != XR_TYPE_COMPOSITION_LAYER_CYLINDER_KHR);
+	composition_layer_cylinder.centralAngle = p_central_angle;
 }
 
 Ref<JavaObject> OpenXRCompositionLayerExtension::CompositionLayer::get_android_surface() {

@@ -30,24 +30,13 @@
 
 #include "openxr_composition_layer_cylinder.h"
 
+#include "../extensions/openxr_composition_layer_extension.h"
 #include "../openxr_interface.h"
 
 #include "scene/resources/mesh.h"
 
-#if 0
-
-OpenXRCompositionLayerCylinder::OpenXRCompositionLayerCylinder() :
-		OpenXRCompositionLayer((XrCompositionLayerBaseHeader *)create_openxr_composition_layer()) {
-	XRServer::get_singleton()->connect("reference_frame_changed", callable_mp(this, &OpenXRCompositionLayerCylinder::update_transform));
-}
-
-OpenXRCompositionLayerCylinder::~OpenXRCompositionLayerCylinder() {
-}
-
-XrCompositionLayerCylinderKHR *OpenXRCompositionLayerCylinder::create_openxr_composition_layer() {
-	ERR_FAIL_COND_V(composition_layer, composition_layer);
-	composition_layer = (XrCompositionLayerCylinderKHR *)memalloc(sizeof(XrCompositionLayerCylinderKHR));
-	*composition_layer = {
+OpenXRCompositionLayerCylinder::OpenXRCompositionLayerCylinder() {
+	XrCompositionLayerCylinderKHR openxr_composition_layer = {
 		XR_TYPE_COMPOSITION_LAYER_CYLINDER_KHR, // type
 		nullptr, // next
 		0, // layerFlags
@@ -55,11 +44,14 @@ XrCompositionLayerCylinderKHR *OpenXRCompositionLayerCylinder::create_openxr_com
 		XR_EYE_VISIBILITY_BOTH, // eyeVisibility
 		{}, // subImage
 		{ { 0, 0, 0, 0 }, { 0, 0, 0 } }, // pose
-		1.0, // radius
-		Math::PI / 2.0, // centralAngle
-		1.0, // aspectRatio
+		radius, // radius
+		central_angle, // centralAngle
+		aspect_ratio, // aspectRatio
 	};
-	return composition_layer;
+	composition_layer = composition_layer_extension->composition_layer_create((XrCompositionLayerBaseHeader *)&openxr_composition_layer);
+}
+
+OpenXRCompositionLayerCylinder::~OpenXRCompositionLayerCylinder() {
 }
 
 void OpenXRCompositionLayerCylinder::_bind_methods() {
@@ -133,48 +125,11 @@ Ref<Mesh> OpenXRCompositionLayerCylinder::_create_fallback_mesh() {
 	return mesh;
 }
 
-void OpenXRCompositionLayerCylinder::_notification(int p_what) {
-	switch (p_what) {
-		case NOTIFICATION_LOCAL_TRANSFORM_CHANGED: {
-			update_transform();
-		} break;
-	}
-}
-
-void OpenXRCompositionLayerCylinder::update_transform() {
-	RenderingServer *rendering_server = RenderingServer::get_singleton();
-	ERR_FAIL_NULL(rendering_server);
-	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerCylinder::_set_transform_rt).bind(get_transform()));
-}
-
-void OpenXRCompositionLayerCylinder::_set_transform_rt(const Transform3D &p_transform) {
-	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer->pose = get_openxr_pose(p_transform);
-}
-
-void OpenXRCompositionLayerCylinder::_set_radius_rt(float p_radius) {
-	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer->radius = p_radius;
-}
-
-void OpenXRCompositionLayerCylinder::_set_aspect_ratio_rt(float p_aspect_ratio) {
-	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer->aspectRatio = p_aspect_ratio;
-}
-
-void OpenXRCompositionLayerCylinder::_set_central_angle(float p_central_angle) {
-	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer->centralAngle = p_central_angle;
-}
-
 void OpenXRCompositionLayerCylinder::set_radius(float p_radius) {
 	ERR_FAIL_COND(p_radius <= 0);
 	radius = p_radius;
+	composition_layer_extension->composition_layer_set_cylinder_radius(composition_layer, p_radius);
 	update_fallback_mesh();
-
-	RenderingServer *rendering_server = RenderingServer::get_singleton();
-	ERR_FAIL_NULL(rendering_server);
-	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerCylinder::_set_radius_rt).bind(p_radius));
 }
 
 float OpenXRCompositionLayerCylinder::get_radius() const {
@@ -184,11 +139,8 @@ float OpenXRCompositionLayerCylinder::get_radius() const {
 void OpenXRCompositionLayerCylinder::set_aspect_ratio(float p_aspect_ratio) {
 	ERR_FAIL_COND(p_aspect_ratio <= 0);
 	aspect_ratio = p_aspect_ratio;
+	composition_layer_extension->composition_layer_set_cylinder_aspect_ratio(composition_layer, p_aspect_ratio);
 	update_fallback_mesh();
-
-	RenderingServer *rendering_server = RenderingServer::get_singleton();
-	ERR_FAIL_NULL(rendering_server);
-	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerCylinder::_set_aspect_ratio_rt).bind(p_aspect_ratio));
 }
 
 float OpenXRCompositionLayerCylinder::get_aspect_ratio() const {
@@ -198,11 +150,8 @@ float OpenXRCompositionLayerCylinder::get_aspect_ratio() const {
 void OpenXRCompositionLayerCylinder::set_central_angle(float p_central_angle) {
 	ERR_FAIL_COND(p_central_angle <= 0);
 	central_angle = p_central_angle;
+	composition_layer_extension->composition_layer_set_cylinder_central_angle(composition_layer, p_central_angle);
 	update_fallback_mesh();
-
-	RenderingServer *rendering_server = RenderingServer::get_singleton();
-	ERR_FAIL_NULL(rendering_server);
-	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerCylinder::_set_central_angle).bind(p_central_angle));
 }
 
 float OpenXRCompositionLayerCylinder::get_central_angle() const {
@@ -263,4 +212,3 @@ Vector2 OpenXRCompositionLayerCylinder::intersects_ray(const Vector3 &p_origin, 
 
 	return Vector2(u, v);
 }
-#endif

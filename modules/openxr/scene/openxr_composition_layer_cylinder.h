@@ -37,27 +37,13 @@
 class OpenXRCompositionLayerCylinder : public OpenXRCompositionLayer {
 	GDCLASS(OpenXRCompositionLayerCylinder, OpenXRCompositionLayer);
 
-#if 0
-	XrCompositionLayerCylinderKHR *composition_layer = nullptr;
-
 	float radius = 1.0;
 	float aspect_ratio = 1.0;
 	float central_angle = Math::PI / 2.0;
 	uint32_t fallback_segments = 10;
 
-	XrCompositionLayerCylinderKHR *create_openxr_composition_layer();
-
 protected:
 	static void _bind_methods();
-
-	void _notification(int p_what);
-
-	void update_transform();
-
-	void _set_transform_rt(const Transform3D &p_transform);
-	void _set_radius_rt(float p_radius);
-	void _set_aspect_ratio_rt(float p_aspect_ratio);
-	void _set_central_angle(float p_central_angle);
 
 	virtual Ref<Mesh> _create_fallback_mesh() override;
 
@@ -78,5 +64,4 @@ public:
 
 	OpenXRCompositionLayerCylinder();
 	~OpenXRCompositionLayerCylinder();
-#endif
 };

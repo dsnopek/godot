@@ -45,7 +45,7 @@
 #endif // DISABLE_DEPRECATED
 
 #include "scene/openxr_composition_layer.h"
-//#include "scene/openxr_composition_layer_cylinder.h"
+#include "scene/openxr_composition_layer_cylinder.h"
 //#include "scene/openxr_composition_layer_equirect.h"
 #include "scene/openxr_composition_layer_quad.h"
 #include "scene/openxr_render_model.h"
@@ -235,7 +235,7 @@ void initialize_openxr_module(ModuleInitializationLevel p_level) {
 
 		GDREGISTER_ABSTRACT_CLASS(OpenXRCompositionLayer);
 		//GDREGISTER_CLASS(OpenXRCompositionLayerEquirect);
-		//GDREGISTER_CLASS(OpenXRCompositionLayerCylinder);
+		GDREGISTER_CLASS(OpenXRCompositionLayerCylinder);
 		GDREGISTER_CLASS(OpenXRCompositionLayerQuad);
 
 #ifndef DISABLE_DEPRECATED

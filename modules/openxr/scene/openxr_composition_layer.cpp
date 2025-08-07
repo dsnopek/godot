@@ -110,7 +110,6 @@ void OpenXRCompositionLayer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_android_surface"), &OpenXRCompositionLayer::get_android_surface);
 	ClassDB::bind_method(D_METHOD("is_natively_supported"), &OpenXRCompositionLayer::is_natively_supported);
 
-#if 0
 	ClassDB::bind_method(D_METHOD("set_min_filter", "mode"), &OpenXRCompositionLayer::set_min_filter);
 	ClassDB::bind_method(D_METHOD("get_min_filter"), &OpenXRCompositionLayer::get_min_filter);
 
@@ -143,7 +142,6 @@ void OpenXRCompositionLayer::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("set_border_color", "color"), &OpenXRCompositionLayer::set_border_color);
 	ClassDB::bind_method(D_METHOD("get_border_color"), &OpenXRCompositionLayer::get_border_color);
-#endif
 
 	ClassDB::bind_method(D_METHOD("intersects_ray", "origin", "direction"), &OpenXRCompositionLayer::intersects_ray);
 
@@ -154,7 +152,6 @@ void OpenXRCompositionLayer::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "alpha_blend", PROPERTY_HINT_NONE, ""), "set_alpha_blend", "get_alpha_blend");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "enable_hole_punch", PROPERTY_HINT_NONE, ""), "set_enable_hole_punch", "get_enable_hole_punch");
 
-#if 0
 	ADD_GROUP("Swapchain State", "swapchain_state_");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "swapchain_state_min_filter", PROPERTY_HINT_ENUM, "Nearest,Linear,Cubic"), "set_min_filter", "get_min_filter");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "swapchain_state_mag_filter", PROPERTY_HINT_ENUM, "Nearest,Linear,Cubic"), "set_mag_filter", "get_mag_filter");
@@ -168,7 +165,6 @@ void OpenXRCompositionLayer::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "swapchain_state_max_anisotropy", PROPERTY_HINT_RANGE, "1.0,16.0,0.001"), "set_max_anisotropy", "get_max_anisotropy");
 	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "swapchain_state_border_color"), "set_border_color", "get_border_color");
 	ADD_GROUP("", "");
-#endif
 
 	BIND_ENUM_CONSTANT(FILTER_NEAREST);
 	BIND_ENUM_CONSTANT(FILTER_LINEAR);
@@ -405,6 +401,138 @@ bool OpenXRCompositionLayer::is_natively_supported() const {
 		return composition_layer_extension->is_available(_get_openxr_type());
 	}
 	return false;
+}
+
+void OpenXRCompositionLayer::set_min_filter(Filter p_mode) {
+	if (min_filter == p_mode) {
+		return;
+	}
+	min_filter = p_mode;
+	composition_layer_extension->composition_layer_set_min_filter(composition_layer, (OpenXRCompositionLayerExtension::Filter)p_mode);
+}
+
+OpenXRCompositionLayer::Filter OpenXRCompositionLayer::get_min_filter() const {
+	return min_filter;
+}
+
+void OpenXRCompositionLayer::set_mag_filter(Filter p_mode) {
+	if (mag_filter == p_mode) {
+		return;
+	}
+	mag_filter = p_mode;
+	composition_layer_extension->composition_layer_set_mag_filter(composition_layer, (OpenXRCompositionLayerExtension::Filter)p_mode);
+}
+
+OpenXRCompositionLayer::Filter OpenXRCompositionLayer::get_mag_filter() const {
+	return mag_filter;
+}
+
+void OpenXRCompositionLayer::set_mipmap_mode(MipmapMode p_mode) {
+	if (mipmap_mode == p_mode) {
+		return;
+	}
+	mipmap_mode = p_mode;
+	composition_layer_extension->composition_layer_set_mipmap_mode(composition_layer, (OpenXRCompositionLayerExtension::MipmapMode)p_mode);
+}
+
+OpenXRCompositionLayer::MipmapMode OpenXRCompositionLayer::get_mipmap_mode() const {
+	return mipmap_mode;
+}
+
+void OpenXRCompositionLayer::set_horizontal_wrap(Wrap p_mode) {
+	if (horizontal_wrap == p_mode) {
+		return;
+	}
+	horizontal_wrap = p_mode;
+	composition_layer_extension->composition_layer_set_horizontal_wrap(composition_layer, (OpenXRCompositionLayerExtension::Wrap)p_mode);
+}
+
+OpenXRCompositionLayer::Wrap OpenXRCompositionLayer::get_horizontal_wrap() const {
+	return horizontal_wrap;
+}
+
+void OpenXRCompositionLayer::set_vertical_wrap(Wrap p_mode) {
+	if (vertical_wrap == p_mode) {
+		return;
+	}
+	vertical_wrap = p_mode;
+	composition_layer_extension->composition_layer_set_vertical_wrap(composition_layer, (OpenXRCompositionLayerExtension::Wrap)p_mode);
+}
+
+OpenXRCompositionLayer::Wrap OpenXRCompositionLayer::get_vertical_wrap() const {
+	return vertical_wrap;
+}
+
+void OpenXRCompositionLayer::set_red_swizzle(Swizzle p_mode) {
+	if (red_swizzle == p_mode) {
+		return;
+	}
+	red_swizzle = p_mode;
+	composition_layer_extension->composition_layer_set_red_swizzle(composition_layer, (OpenXRCompositionLayerExtension::Swizzle)p_mode);
+}
+
+OpenXRCompositionLayer::Swizzle OpenXRCompositionLayer::get_red_swizzle() const {
+	return red_swizzle;
+}
+
+void OpenXRCompositionLayer::set_green_swizzle(Swizzle p_mode) {
+	if (green_swizzle == p_mode) {
+		return;
+	}
+	green_swizzle = p_mode;
+	composition_layer_extension->composition_layer_set_green_swizzle(composition_layer, (OpenXRCompositionLayerExtension::Swizzle)p_mode);
+}
+
+OpenXRCompositionLayer::Swizzle OpenXRCompositionLayer::get_green_swizzle() const {
+	return green_swizzle;
+}
+
+void OpenXRCompositionLayer::set_blue_swizzle(Swizzle p_mode) {
+	if (blue_swizzle == p_mode) {
+		return;
+	}
+	blue_swizzle = p_mode;
+	composition_layer_extension->composition_layer_set_blue_swizzle(composition_layer, (OpenXRCompositionLayerExtension::Swizzle)p_mode);
+}
+
+OpenXRCompositionLayer::Swizzle OpenXRCompositionLayer::get_blue_swizzle() const {
+	return blue_swizzle;
+}
+
+void OpenXRCompositionLayer::set_alpha_swizzle(Swizzle p_mode) {
+	if (alpha_swizzle == p_mode) {
+		return;
+	}
+	alpha_swizzle = p_mode;
+	composition_layer_extension->composition_layer_set_alpha_swizzle(composition_layer, (OpenXRCompositionLayerExtension::Swizzle)p_mode);
+}
+
+OpenXRCompositionLayer::Swizzle OpenXRCompositionLayer::get_alpha_swizzle() const {
+	return alpha_swizzle;
+}
+
+void OpenXRCompositionLayer::set_max_anisotropy(float p_value) {
+	if (max_anisotropy == p_value) {
+		return;
+	}
+	max_anisotropy = p_value;
+	composition_layer_extension->composition_layer_set_max_anisotropy(composition_layer, p_value);
+}
+
+float OpenXRCompositionLayer::get_max_anisotropy() const {
+	return max_anisotropy;
+}
+
+void OpenXRCompositionLayer::set_border_color(const Color &p_color) {
+	if (border_color == p_color) {
+		return;
+	}
+	border_color = p_color;
+	composition_layer_extension->composition_layer_set_border_color(composition_layer, p_color);
+}
+
+Color OpenXRCompositionLayer::get_border_color() const {
+	return border_color;
 }
 
 Ref<JavaObject> OpenXRCompositionLayer::get_android_surface() {

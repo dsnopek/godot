@@ -92,13 +92,19 @@ private:
 	bool should_update_fallback_mesh = false;
 	bool openxr_session_running = false;
 	bool registered = false;
-
-	/*
-	OpenXRCompositionLayerExtension::SwapchainState *swapchain_render_state = nullptr;
-	OpenXRCompositionLayerExtension::SwapchainState swapchain_local_state;
-	*/
-
 	Dictionary extension_property_values;
+
+	Filter min_filter = FILTER_LINEAR;
+	Filter mag_filter = FILTER_LINEAR;
+	MipmapMode mipmap_mode = MIPMAP_MODE_LINEAR;
+	Wrap horizontal_wrap = WRAP_CLAMP_TO_BORDER;
+	Wrap vertical_wrap = WRAP_CLAMP_TO_BORDER;
+	Swizzle red_swizzle = SWIZZLE_RED;
+	Swizzle green_swizzle = SWIZZLE_GREEN;
+	Swizzle blue_swizzle = SWIZZLE_BLUE;
+	Swizzle alpha_swizzle = SWIZZLE_ALPHA;
+	float max_anisotropy = 1.0;
+	Color border_color = { 0.0, 0.0, 0.0, 0.0 };
 
 	bool _should_use_fallback_node();
 	void _create_fallback_node();
@@ -156,7 +162,6 @@ public:
 	Ref<JavaObject> get_android_surface();
 	bool is_natively_supported() const;
 
-#if 0
 	void set_min_filter(Filter p_mode);
 	Filter get_min_filter() const;
 
@@ -189,7 +194,6 @@ public:
 
 	void set_border_color(const Color &p_color);
 	Color get_border_color() const;
-#endif
 
 	virtual PackedStringArray get_configuration_warnings() const override;
 

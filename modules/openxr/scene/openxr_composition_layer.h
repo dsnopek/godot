@@ -45,21 +45,21 @@ class OpenXRCompositionLayer : public Node3D {
 	GDCLASS(OpenXRCompositionLayer, Node3D);
 
 public:
-	// Must be identical to Filter enum definition in OpenXRViewportCompositionLayerProvider.
+	// Must be identical to Filter enum definition in OpenXRCompositionLayerExtension.
 	enum Filter {
 		FILTER_NEAREST,
 		FILTER_LINEAR,
 		FILTER_CUBIC,
 	};
 
-	// Must be identical to MipmapMode enum definition in OpenXRViewportCompositionLayerProvider.
+	// Must be identical to MipmapMode enum definition in OpenXRCompositionLayerExtension.
 	enum MipmapMode {
 		MIPMAP_MODE_DISABLED,
 		MIPMAP_MODE_NEAREST,
 		MIPMAP_MODE_LINEAR,
 	};
 
-	// Must be identical to Wrap enum definition in OpenXRViewportCompositionLayerProvider.
+	// Must be identical to Wrap enum definition in OpenXRCompositionLayerExtension.
 	enum Wrap {
 		WRAP_CLAMP_TO_BORDER,
 		WRAP_CLAMP_TO_EDGE,
@@ -68,7 +68,7 @@ public:
 		WRAP_MIRROR_CLAMP_TO_EDGE,
 	};
 
-	// Must be identical to Swizzle enum definition in OpenXRViewportCompositionLayerProvider.
+	// Must be identical to Swizzle enum definition in OpenXRCompositionLayerExtension.
 	enum Swizzle {
 		SWIZZLE_RED,
 		SWIZZLE_GREEN,
@@ -94,8 +94,8 @@ private:
 	bool registered = false;
 
 	/*
-	OpenXRViewportCompositionLayerProvider::SwapchainState *swapchain_render_state = nullptr;
-	OpenXRViewportCompositionLayerProvider::SwapchainState swapchain_local_state;
+	OpenXRCompositionLayerExtension::SwapchainState *swapchain_render_state = nullptr;
+	OpenXRCompositionLayerExtension::SwapchainState swapchain_local_state;
 	*/
 
 	Dictionary extension_property_values;

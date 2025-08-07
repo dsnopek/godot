@@ -308,6 +308,61 @@ void OpenXRCompositionLayerExtension::CompositionLayer::set_extension_property_v
 	extension_property_values_changed = true;
 }
 
+void OpenXRCompositionLayerExtension::CompositionLayer::set_min_filter(Filter p_mode) {
+	swapchain_state.min_filter = p_mode;
+	swapchain_state_is_dirty = true;
+}
+
+void OpenXRCompositionLayerExtension::CompositionLayer::set_mag_filter(Filter p_mode) {
+	swapchain_state.mag_filter = p_mode;
+	swapchain_state_is_dirty = true;
+}
+
+void OpenXRCompositionLayerExtension::CompositionLayer::set_mipmap_mode(MipmapMode p_mode) {
+	swapchain_state.mipmap_mode = p_mode;
+	swapchain_state_is_dirty = true;
+}
+
+void OpenXRCompositionLayerExtension::CompositionLayer::set_horizontal_wrap(Wrap p_mode) {
+	swapchain_state.horizontal_wrap = p_mode;
+	swapchain_state_is_dirty = true;
+}
+
+void OpenXRCompositionLayerExtension::CompositionLayer::set_vertical_wrap(Wrap p_mode) {
+	swapchain_state.vertical_wrap = p_mode;
+	swapchain_state_is_dirty = true;
+}
+
+void OpenXRCompositionLayerExtension::CompositionLayer::set_red_swizzle(Swizzle p_mode) {
+	swapchain_state.red_swizzle = p_mode;
+	swapchain_state_is_dirty = true;
+}
+
+void OpenXRCompositionLayerExtension::CompositionLayer::set_green_swizzle(Swizzle p_mode) {
+	swapchain_state.green_swizzle = p_mode;
+	swapchain_state_is_dirty = true;
+}
+
+void OpenXRCompositionLayerExtension::CompositionLayer::set_blue_swizzle(Swizzle p_mode) {
+	swapchain_state.blue_swizzle = p_mode;
+	swapchain_state_is_dirty = true;
+}
+
+void OpenXRCompositionLayerExtension::CompositionLayer::set_alpha_swizzle(Swizzle p_mode) {
+	swapchain_state.alpha_swizzle = p_mode;
+	swapchain_state_is_dirty = true;
+}
+
+void OpenXRCompositionLayerExtension::CompositionLayer::set_max_anisotropy(float p_value) {
+	swapchain_state.max_anisotropy = p_value;
+	swapchain_state_is_dirty = true;
+}
+
+void OpenXRCompositionLayerExtension::CompositionLayer::set_border_color(const Color &p_color) {
+	swapchain_state.border_color = p_color;
+	swapchain_state_is_dirty = true;
+}
+
 void OpenXRCompositionLayerExtension::CompositionLayer::set_quad_size(const Size2 &p_size) {
 	ERR_FAIL_COND(composition_layer.type != XR_TYPE_COMPOSITION_LAYER_QUAD);
 	composition_layer_quad.size = { (float)p_size.x, (float)p_size.y };
@@ -463,7 +518,6 @@ void OpenXRCompositionLayerExtension::CompositionLayer::free() {
 }
 
 void OpenXRCompositionLayerExtension::CompositionLayer::update_swapchain_state() {
-#if 0
 	OpenXRFBUpdateSwapchainExtension *fb_update_swapchain_ext = OpenXRFBUpdateSwapchainExtension::get_singleton();
 	if (!fb_update_swapchain_ext) {
 		return;
@@ -485,7 +539,6 @@ void OpenXRCompositionLayerExtension::CompositionLayer::update_swapchain_state()
 
 		fb_update_swapchain_ext->update_swapchain_state(subviewport.swapchain_info.get_swapchain(), &swapchain_state);
 	}
-#endif
 }
 
 void OpenXRCompositionLayerExtension::CompositionLayer::update_swapchain_sub_image(XrSwapchainSubImage &r_subimage) {
@@ -628,73 +681,4 @@ void OpenXRCompositionLayerExtension::CompositionLayer::create_android_surface()
 		android_surface.surface.instantiate(JavaClassWrapper::get_singleton()->wrap("android.view.Surface"), surface);
 	}
 }
-#endif
-
-#if 0
-void OpenXRViewportCompositionLayerProvider::set_min_filter(Filter p_mode) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_state.min_filter = p_mode;
-	swapchain_state_is_dirty = true;
-}
-
-void OpenXRViewportCompositionLayerProvider::set_mag_filter(Filter p_mode) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_state.mag_filter = p_mode;
-	swapchain_state_is_dirty = true;
-}
-
-void OpenXRViewportCompositionLayerProvider::set_mipmap_mode(MipmapMode p_mode) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_state.mipmap_mode = p_mode;
-	swapchain_state_is_dirty = true;
-}
-
-void OpenXRViewportCompositionLayerProvider::set_horizontal_wrap(Wrap p_mode) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_state.horizontal_wrap = p_mode;
-	swapchain_state_is_dirty = true;
-}
-
-void OpenXRViewportCompositionLayerProvider::set_vertical_wrap(Wrap p_mode) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_state.vertical_wrap = p_mode;
-	swapchain_state_is_dirty = true;
-}
-
-void OpenXRViewportCompositionLayerProvider::set_red_swizzle(Swizzle p_mode) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_state.red_swizzle = p_mode;
-	swapchain_state_is_dirty = true;
-}
-
-void OpenXRViewportCompositionLayerProvider::set_blue_swizzle(Swizzle p_mode) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_state.blue_swizzle = p_mode;
-	swapchain_state_is_dirty = true;
-}
-
-void OpenXRViewportCompositionLayerProvider::set_green_swizzle(Swizzle p_mode) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_state.green_swizzle = p_mode;
-	swapchain_state_is_dirty = true;
-}
-
-void OpenXRViewportCompositionLayerProvider::set_alpha_swizzle(Swizzle p_mode) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_state.alpha_swizzle = p_mode;
-	swapchain_state_is_dirty = true;
-}
-
-void OpenXRViewportCompositionLayerProvider::set_max_anisotropy(float p_value) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_state.max_anisotropy = p_value;
-	swapchain_state_is_dirty = true;
-}
-
-void OpenXRViewportCompositionLayerProvider::set_border_color(const Color &p_color) {
-	ERR_NOT_ON_RENDER_THREAD;
-	swapchain_state.border_color = p_color;
-	swapchain_state_is_dirty = true;
-}
-
 #endif

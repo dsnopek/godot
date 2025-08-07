@@ -74,21 +74,52 @@ protected:
 	static void _bind_methods() {}
 
 public:
-	/*
+	// Must be identical to Filter enum definition in OpenXRCompositionLayer.
+	enum Filter {
+		FILTER_NEAREST,
+		FILTER_LINEAR,
+		FILTER_CUBIC,
+	};
+
+	// Must be identical to MipmapMode enum definition in OpenXRCompositionLayer.
+	enum MipmapMode {
+		MIPMAP_MODE_DISABLED,
+		MIPMAP_MODE_NEAREST,
+		MIPMAP_MODE_LINEAR,
+	};
+
+	// Must be identical to Wrap enum definition in OpenXRCompositionLayer.
+	enum Wrap {
+		WRAP_CLAMP_TO_BORDER,
+		WRAP_CLAMP_TO_EDGE,
+		WRAP_REPEAT,
+		WRAP_MIRRORED_REPEAT,
+		WRAP_MIRROR_CLAMP_TO_EDGE,
+	};
+
+	// Must be identical to Swizzle enum definition in OpenXRCompositionLayer.
+	enum Swizzle {
+		SWIZZLE_RED,
+		SWIZZLE_GREEN,
+		SWIZZLE_BLUE,
+		SWIZZLE_ALPHA,
+		SWIZZLE_ZERO,
+		SWIZZLE_ONE,
+	};
+
 	struct SwapchainState {
-		OpenXRCompositionLayer::Filter min_filter = OpenXRCompositionLayer::FILTER_LINEAR;
-		OpenXRCompositionLayer::Filter mag_filter = OpenXRCompositionLayer::FILTER_LINEAR;
-		OpenXRCompositionLayer::MipmapMode mipmap_mode = OpenXRCompositionLayer::MIPMAP_MODE_LINEAR;
-		OpenXRCompositionLayer::Wrap horizontal_wrap = OpenXRCompositionLayer::WRAP_CLAMP_TO_BORDER;
-		OpenXRCompositionLayer::Wrap vertical_wrap = OpenXRCompositionLayer::WRAP_CLAMP_TO_BORDER;
-		OpenXRCompositionLayer::Swizzle red_swizzle = OpenXRCompositionLayer::SWIZZLE_RED;
-		OpenXRCompositionLayer::Swizzle green_swizzle = OpenXRCompositionLayer::SWIZZLE_GREEN;
-		OpenXRCompositionLayer::Swizzle blue_swizzle = OpenXRCompositionLayer::SWIZZLE_BLUE;
-		OpenXRCompositionLayer::Swizzle alpha_swizzle = OpenXRCompositionLayer::SWIZZLE_ALPHA;
+		Filter min_filter = FILTER_LINEAR;
+		Filter mag_filter = FILTER_LINEAR;
+		MipmapMode mipmap_mode = MIPMAP_MODE_LINEAR;
+		Wrap horizontal_wrap = WRAP_CLAMP_TO_BORDER;
+		Wrap vertical_wrap = WRAP_CLAMP_TO_BORDER;
+		Swizzle red_swizzle = SWIZZLE_RED;
+		Swizzle green_swizzle = SWIZZLE_GREEN;
+		Swizzle blue_swizzle = SWIZZLE_BLUE;
+		Swizzle alpha_swizzle = SWIZZLE_ALPHA;
 		float max_anisotropy = 1.0;
 		Color border_color = { 0.0, 0.0, 0.0, 0.0 };
 	};
-	*/
 
 	static OpenXRCompositionLayerExtension *get_singleton();
 
@@ -119,7 +150,19 @@ public:
 	OPENXR_LAYER_FUNC1(set_alpha_blend, bool);
 	OPENXR_LAYER_FUNC1(set_transform, const Transform3D &);
 	// @todo All the swapchain state stuff
-	OPENXR_LAYER_FUNC1(set_extension_property_values, Dictionary)
+	OPENXR_LAYER_FUNC1(set_extension_property_values, Dictionary);
+
+	OPENXR_LAYER_FUNC1(set_min_filter, Filter);
+	OPENXR_LAYER_FUNC1(set_mag_filter, Filter);
+	OPENXR_LAYER_FUNC1(set_mipmap_mode, MipmapMode);
+	OPENXR_LAYER_FUNC1(set_horizontal_wrap, Wrap);
+	OPENXR_LAYER_FUNC1(set_vertical_wrap, Wrap);
+	OPENXR_LAYER_FUNC1(set_red_swizzle, Swizzle);
+	OPENXR_LAYER_FUNC1(set_blue_swizzle, Swizzle);
+	OPENXR_LAYER_FUNC1(set_green_swizzle, Swizzle);
+	OPENXR_LAYER_FUNC1(set_alpha_swizzle, Swizzle);
+	OPENXR_LAYER_FUNC1(set_max_anisotropy, float);
+	OPENXR_LAYER_FUNC1(set_border_color, const Color &);
 
 	OPENXR_LAYER_FUNC1(set_quad_size, const Size2 &);
 
@@ -185,7 +228,7 @@ private:
 		bool use_android_surface = false;
 		Size2i swapchain_size;
 
-		//SwapchainState swapchain_state;
+		SwapchainState swapchain_state;
 		bool swapchain_state_is_dirty = false;
 
 		void set_viewport(RID p_viewport, const Size2i &p_size);
@@ -195,6 +238,18 @@ private:
 		void set_alpha_blend(bool p_alpha_blend);
 		void set_transform(const Transform3D &p_transform);
 		void set_extension_property_values(const Dictionary &p_extension_property_values);
+
+		void set_min_filter(Filter p_mode);
+		void set_mag_filter(Filter p_mode);
+		void set_mipmap_mode(MipmapMode p_mode);
+		void set_horizontal_wrap(Wrap p_mode);
+		void set_vertical_wrap(Wrap p_mode);
+		void set_red_swizzle(Swizzle p_mode);
+		void set_green_swizzle(Swizzle p_mode);
+		void set_blue_swizzle(Swizzle p_mode);
+		void set_alpha_swizzle(Swizzle p_mode);
+		void set_max_anisotropy(float p_value);
+		void set_border_color(const Color &p_color);
 
 		void set_quad_size(const Size2 &p_size);
 
@@ -228,6 +283,11 @@ private:
 	RID_Owner<CompositionLayer, true> composition_layer_owner;
 	LocalVector<CompositionLayer *> registered_composition_layers;
 };
+
+VARIANT_ENUM_CAST(OpenXRCompositionLayerExtension::Filter);
+VARIANT_ENUM_CAST(OpenXRCompositionLayerExtension::MipmapMode);
+VARIANT_ENUM_CAST(OpenXRCompositionLayerExtension::Wrap);
+VARIANT_ENUM_CAST(OpenXRCompositionLayerExtension::Swizzle);
 
 #undef OPENXR_LAYER_FUNC1
 #undef OPENXR_LAYER_FUNC2

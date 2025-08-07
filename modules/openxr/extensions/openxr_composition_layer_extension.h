@@ -66,7 +66,7 @@ class JavaObject;
 		RenderingServer::get_singleton()->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerExtension::_composition_layer_##m_name##_rt).bind(p1, p2)); \
 	}
 
-// @todo There was a comment here before - bring it back!
+// OpenXRCompositionLayerExtension enables the extensions related to this functionality
 class OpenXRCompositionLayerExtension : public OpenXRExtensionWrapper {
 	GDCLASS(OpenXRCompositionLayerExtension, OpenXRExtensionWrapper);
 

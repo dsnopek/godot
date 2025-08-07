@@ -127,6 +127,11 @@ public:
 	OPENXR_LAYER_FUNC1(set_cylinder_aspect_ratio, float);
 	OPENXR_LAYER_FUNC1(set_cylinder_central_angle, float);
 
+	OPENXR_LAYER_FUNC1(set_equirect_radius, float);
+	OPENXR_LAYER_FUNC1(set_equirect_central_horizontal_angle, float);
+	OPENXR_LAYER_FUNC1(set_equirect_upper_vertical_angle, float);
+	OPENXR_LAYER_FUNC1(set_equirect_lower_vertical_angle, float);
+
 	Ref<JavaObject> composition_layer_get_android_surface(RID p_layer);
 
 	bool is_available(XrStructureType p_which);
@@ -198,6 +203,11 @@ private:
 		void set_cylinder_radius(float p_radius);
 		void set_cylinder_aspect_ratio(float p_aspect_ratio);
 		void set_cylinder_central_angle(float p_central_angle);
+
+		void set_equirect_radius(float p_radius);
+		void set_equirect_central_horizontal_angle(float p_angle);
+		void set_equirect_upper_vertical_angle(float p_angle);
+		void set_equirect_lower_vertical_angle(float p_angle);
 
 		Ref<JavaObject> get_android_surface();
 		void on_pre_render();

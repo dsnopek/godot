@@ -37,29 +37,14 @@
 class OpenXRCompositionLayerEquirect : public OpenXRCompositionLayer {
 	GDCLASS(OpenXRCompositionLayerEquirect, OpenXRCompositionLayer);
 
-#if 0
-	XrCompositionLayerEquirect2KHR *composition_layer = nullptr;
-
 	float radius = 1.0;
 	float central_horizontal_angle = Math::PI / 2.0;
 	float upper_vertical_angle = Math::PI / 4.0;
 	float lower_vertical_angle = Math::PI / 4.0;
 	uint32_t fallback_segments = 10;
 
-	XrCompositionLayerEquirect2KHR *create_openxr_composition_layer();
-
 protected:
 	static void _bind_methods();
-
-	void _notification(int p_what);
-
-	void update_transform();
-
-	void _set_transform_rt(const Transform3D &p_transform);
-	void _set_radius_rt(float p_radius);
-	void _set_central_horizontal_angle(float p_angle);
-	void _set_upper_vertical_angle(float p_angle);
-	void _set_lower_vertical_angle(float p_angle);
 
 	virtual Ref<Mesh> _create_fallback_mesh() override;
 
@@ -83,5 +68,4 @@ public:
 
 	OpenXRCompositionLayerEquirect();
 	~OpenXRCompositionLayerEquirect();
-#endif
 };

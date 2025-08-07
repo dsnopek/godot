@@ -30,24 +30,13 @@
 
 #include "openxr_composition_layer_equirect.h"
 
+#include "../extensions/openxr_composition_layer_extension.h"
 #include "../openxr_interface.h"
 
 #include "scene/resources/mesh.h"
 
-#if 0
-
-OpenXRCompositionLayerEquirect::OpenXRCompositionLayerEquirect() :
-		OpenXRCompositionLayer((XrCompositionLayerBaseHeader *)create_openxr_composition_layer()) {
-	XRServer::get_singleton()->connect("reference_frame_changed", callable_mp(this, &OpenXRCompositionLayerEquirect::update_transform));
-}
-
-OpenXRCompositionLayerEquirect::~OpenXRCompositionLayerEquirect() {
-}
-
-XrCompositionLayerEquirect2KHR *OpenXRCompositionLayerEquirect::create_openxr_composition_layer() {
-	ERR_FAIL_COND_V(composition_layer, composition_layer);
-	composition_layer = (XrCompositionLayerEquirect2KHR *)memalloc(sizeof(XrCompositionLayerEquirect2KHR));
-	*composition_layer = {
+OpenXRCompositionLayerEquirect::OpenXRCompositionLayerEquirect() {
+	XrCompositionLayerEquirect2KHR openxr_composition_layer = {
 		XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR, // type
 		nullptr, // next
 		0, // layerFlags
@@ -55,12 +44,15 @@ XrCompositionLayerEquirect2KHR *OpenXRCompositionLayerEquirect::create_openxr_co
 		XR_EYE_VISIBILITY_BOTH, // eyeVisibility
 		{}, // subImage
 		{ { 0, 0, 0, 0 }, { 0, 0, 0 } }, // pose
-		1.0, // radius
-		Math::PI / 2.0, // centralHorizontalAngle
-		Math::PI / 4.0, // upperVerticalAngle
-		-Math::PI / 4.0, // lowerVerticalAngle
+		radius, // radius
+		central_horizontal_angle, // centralHorizontalAngle
+		upper_vertical_angle, // upperVerticalAngle
+		-lower_vertical_angle, // lowerVerticalAngle
 	};
-	return composition_layer;
+	composition_layer = composition_layer_extension->composition_layer_create((XrCompositionLayerBaseHeader *)&openxr_composition_layer);
+}
+
+OpenXRCompositionLayerEquirect::~OpenXRCompositionLayerEquirect() {
 }
 
 void OpenXRCompositionLayerEquirect::_bind_methods() {
@@ -141,53 +133,11 @@ Ref<Mesh> OpenXRCompositionLayerEquirect::_create_fallback_mesh() {
 	return mesh;
 }
 
-void OpenXRCompositionLayerEquirect::_notification(int p_what) {
-	switch (p_what) {
-		case NOTIFICATION_LOCAL_TRANSFORM_CHANGED: {
-			update_transform();
-		} break;
-	}
-}
-
-void OpenXRCompositionLayerEquirect::update_transform() {
-	RenderingServer *rendering_server = RenderingServer::get_singleton();
-	ERR_FAIL_NULL(rendering_server);
-	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerEquirect::_set_transform_rt).bind(get_transform()));
-}
-
-void OpenXRCompositionLayerEquirect::_set_transform_rt(const Transform3D &p_transform) {
-	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer->pose = get_openxr_pose(p_transform);
-}
-
-void OpenXRCompositionLayerEquirect::_set_radius_rt(float p_radius) {
-	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer->radius = p_radius;
-}
-
-void OpenXRCompositionLayerEquirect::_set_central_horizontal_angle(float p_angle) {
-	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer->centralHorizontalAngle = p_angle;
-}
-
-void OpenXRCompositionLayerEquirect::_set_upper_vertical_angle(float p_angle) {
-	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer->upperVerticalAngle = p_angle;
-}
-
-void OpenXRCompositionLayerEquirect::_set_lower_vertical_angle(float p_angle) {
-	ERR_NOT_ON_RENDER_THREAD;
-	composition_layer->lowerVerticalAngle = p_angle;
-}
-
 void OpenXRCompositionLayerEquirect::set_radius(float p_radius) {
 	ERR_FAIL_COND(p_radius <= 0);
 	radius = p_radius;
+	composition_layer_extension->composition_layer_set_equirect_radius(composition_layer, p_radius);
 	update_fallback_mesh();
-
-	RenderingServer *rendering_server = RenderingServer::get_singleton();
-	ERR_FAIL_NULL(rendering_server);
-	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerEquirect::_set_radius_rt).bind(p_radius));
 }
 
 float OpenXRCompositionLayerEquirect::get_radius() const {
@@ -197,11 +147,8 @@ float OpenXRCompositionLayerEquirect::get_radius() const {
 void OpenXRCompositionLayerEquirect::set_central_horizontal_angle(float p_angle) {
 	ERR_FAIL_COND(p_angle <= 0);
 	central_horizontal_angle = p_angle;
+	composition_layer_extension->composition_layer_set_equirect_central_horizontal_angle(composition_layer, p_angle);
 	update_fallback_mesh();
-
-	RenderingServer *rendering_server = RenderingServer::get_singleton();
-	ERR_FAIL_NULL(rendering_server);
-	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerEquirect::_set_central_horizontal_angle).bind(p_angle));
 }
 
 float OpenXRCompositionLayerEquirect::get_central_horizontal_angle() const {
@@ -211,11 +158,8 @@ float OpenXRCompositionLayerEquirect::get_central_horizontal_angle() const {
 void OpenXRCompositionLayerEquirect::set_upper_vertical_angle(float p_angle) {
 	ERR_FAIL_COND(p_angle <= 0 || p_angle > (Math::PI / 2.0));
 	upper_vertical_angle = p_angle;
+	composition_layer_extension->composition_layer_set_equirect_upper_vertical_angle(composition_layer, p_angle);
 	update_fallback_mesh();
-
-	RenderingServer *rendering_server = RenderingServer::get_singleton();
-	ERR_FAIL_NULL(rendering_server);
-	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerEquirect::_set_upper_vertical_angle).bind(p_angle));
 }
 
 float OpenXRCompositionLayerEquirect::get_upper_vertical_angle() const {
@@ -225,11 +169,8 @@ float OpenXRCompositionLayerEquirect::get_upper_vertical_angle() const {
 void OpenXRCompositionLayerEquirect::set_lower_vertical_angle(float p_angle) {
 	ERR_FAIL_COND(p_angle <= 0 || p_angle > (Math::PI / 2.0));
 	lower_vertical_angle = p_angle;
+	composition_layer_extension->composition_layer_set_equirect_lower_vertical_angle(composition_layer, -p_angle);
 	update_fallback_mesh();
-
-	RenderingServer *rendering_server = RenderingServer::get_singleton();
-	ERR_FAIL_NULL(rendering_server);
-	rendering_server->call_on_render_thread(callable_mp(this, &OpenXRCompositionLayerEquirect::_set_lower_vertical_angle).bind(p_angle));
 }
 
 float OpenXRCompositionLayerEquirect::get_lower_vertical_angle() const {
@@ -296,4 +237,3 @@ Vector2 OpenXRCompositionLayerEquirect::intersects_ray(const Vector3 &p_origin, 
 
 	return Vector2(u, v);
 }
-#endif

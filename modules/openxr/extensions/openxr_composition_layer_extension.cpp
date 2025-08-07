@@ -357,6 +357,26 @@ void OpenXRCompositionLayerExtension::CompositionLayer::set_cylinder_central_ang
 	composition_layer_cylinder.centralAngle = p_central_angle;
 }
 
+void OpenXRCompositionLayerExtension::CompositionLayer::set_equirect_radius(float p_radius) {
+	ERR_FAIL_COND(composition_layer.type != XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR);
+	composition_layer_equirect.radius = p_radius;
+}
+
+void OpenXRCompositionLayerExtension::CompositionLayer::set_equirect_central_horizontal_angle(float p_angle) {
+	ERR_FAIL_COND(composition_layer.type != XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR);
+	composition_layer_equirect.centralHorizontalAngle = p_angle;
+}
+
+void OpenXRCompositionLayerExtension::CompositionLayer::set_equirect_upper_vertical_angle(float p_angle) {
+	ERR_FAIL_COND(composition_layer.type != XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR);
+	composition_layer_equirect.upperVerticalAngle = p_angle;
+}
+
+void OpenXRCompositionLayerExtension::CompositionLayer::set_equirect_lower_vertical_angle(float p_angle) {
+	ERR_FAIL_COND(composition_layer.type != XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR);
+	composition_layer_equirect.lowerVerticalAngle = p_angle;
+}
+
 Ref<JavaObject> OpenXRCompositionLayerExtension::CompositionLayer::get_android_surface() {
 #ifdef ANDROID_ENABLED
 	if (use_android_surface) {

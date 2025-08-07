@@ -402,7 +402,6 @@ bool OpenXRCompositionLayer::get_alpha_blend() const {
 
 bool OpenXRCompositionLayer::is_natively_supported() const {
 	if (composition_layer_extension && openxr_api) {
-		// @todo How to get the OpenXR type?
 		return composition_layer_extension->is_available(_get_openxr_type());
 	}
 	return false;

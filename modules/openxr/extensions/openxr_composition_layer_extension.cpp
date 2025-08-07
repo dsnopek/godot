@@ -112,15 +112,12 @@ RID OpenXRCompositionLayerExtension::composition_layer_create(XrCompositionLayer
 		case XR_TYPE_COMPOSITION_LAYER_QUAD: {
 			layer->composition_layer_quad = *(XrCompositionLayerQuad *)p_openxr_layer;
 		} break;
-
-		case XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR: {
-			layer->composition_layer_equirect = *(XrCompositionLayerEquirect2KHR *)p_openxr_layer;
-		} break;
-
 		case XR_TYPE_COMPOSITION_LAYER_CYLINDER_KHR: {
 			layer->composition_layer_cylinder = *(XrCompositionLayerCylinderKHR *)p_openxr_layer;
 		} break;
-
+		case XR_TYPE_COMPOSITION_LAYER_EQUIRECT2_KHR: {
+			layer->composition_layer_equirect = *(XrCompositionLayerEquirect2KHR *)p_openxr_layer;
+		} break;
 		default: {
 			ERR_PRINT(vformat("Invalid OpenXR composition layer type: %s", p_openxr_layer->type));
 			composition_layer_owner.free(rid);

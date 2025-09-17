@@ -37,6 +37,7 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.*
 import android.preference.PreferenceManager
@@ -148,6 +149,22 @@ abstract class BaseGodotEditor : GodotActivity(), GameMenuFragment.GameMenuListe
 		private const val PREF_KEY_DONT_SHOW_GAME_RESUME_HINT = "pref_key_dont_show_game_resume_hint"
 	}
 
+	private var gradleBuildServiceBound: Boolean = false
+	private var gradleBuildService: Messenger? = null
+	private var gradleBuildConnection = object : ServiceConnection {
+		override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+			gradleBuildService = Messenger(service)
+			gradleBuildServiceBound = true
+			Log.i("DRS", "Service connected")
+		}
+
+		override fun onServiceDisconnected(name: ComponentName?) {
+			gradleBuildService = null
+			gradleBuildServiceBound = false
+			Log.i("DRS", "Service disconnected")
+		}
+	}
+
 	internal val editorMessageDispatcher = EditorMessageDispatcher(this)
 	private val editorLoadingIndicator: View? by lazy { findViewById(R.id.editor_loading_indicator) }
 
@@ -231,8 +248,28 @@ abstract class BaseGodotEditor : GodotActivity(), GameMenuFragment.GameMenuListe
 
 		super.onCreate(savedInstanceState)
 
+		Intent().also { intent ->
+			//intent.setClassName("org.godotengine.godot_gradle_build_environment", "org.godotengine.godot_gradle_build_environment.BuildEnvironmentService")
+			val comp = ComponentName(
+				"org.godotengine.godot_gradle_build_environment",
+				"org.godotengine.godot_gradle_build_environment.BuildEnvironmentService"
+			)
+			intent.setComponent(comp)
+			val info = applicationContext.packageManager.resolveService(intent, 0)
+			Log.d("DRS", "resolveService result: $info")
+			bindService(intent, gradleBuildConnection, Context.BIND_AUTO_CREATE)
+		}
+
 		// Add the game menu bar.
 		setupGameMenuBar()
+	}
+
+	override fun onDestroy() {
+		if (gradleBuildServiceBound) {
+			unbindService(gradleBuildConnection)
+			gradleBuildServiceBound = false;
+		}
+		super.onDestroy()
 	}
 
 	protected open fun shouldShowGameMenuBar() = gameMenuContainer != null
@@ -825,6 +862,18 @@ abstract class BaseGodotEditor : GodotActivity(), GameMenuFragment.GameMenuListe
 	override fun isGameEmbeddingSupported() = !isNativeXRDevice(applicationContext)
 
 	override fun termuxExecute(path: String, arguments: Array<String>, workDir: String, background: Boolean, resultCallback: Callable): Boolean {
+		if (gradleBuildService == null) {
+			return false;
+		}
+
+		val msg: Message = Message.obtain(null, 1, 0,0)
+		try {
+			gradleBuildService?.send(msg)
+		} catch (e: RemoteException) {
+			e.printStackTrace()
+			return false;
+		}
+		/*
 		val termuxIntent = Intent()
 			// @todo These should probably all be in constants.
 			.setClassName("com.termux", "com.termux.app.RunCommandService")
@@ -852,6 +901,7 @@ abstract class BaseGodotEditor : GodotActivity(), GameMenuFragment.GameMenuListe
 			Log.e(TAG, "Failed to execute termux command $path with execution id $executionId", e)
 			return false;
 		}
+		*/
 
 		return true
 	}

@@ -362,6 +362,16 @@ bool OS_Android::main_loop_iterate(bool *r_should_swap_buffers) {
 				current_frames_drawn != Engine::get_singleton()->get_frames_drawn();
 	}
 
+	// DRS: Testing!
+	static bool once = false;
+	if (!once) {
+		once = true;
+		List<String> args;
+		args.push_back("-l");
+		args.push_back("/");
+		godot_java->termux_execute("/bin/ls", args, "/", false, Callable());
+	}
+
 	return exit;
 }
 

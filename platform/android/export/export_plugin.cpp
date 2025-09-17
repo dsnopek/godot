@@ -3275,7 +3275,7 @@ void EditorExportPlatformAndroid::_termux_verify_android_sdk() {
 
 	String search_template = "JAVA_HOME=%s %s %s/cmdline-tools/latest/bin/sdkmanager --sdk_root=%s --list_installed | grep \'%s\'";
 	String shell_command = "";
-	for (int i = 0; i < android_deps.size(); i++) {
+	for (unsigned int i = 0; i < android_deps.size(); i++) {
 		shell_command += vformat(search_template, java_home_path, shell_path, android_home_path, android_home_path, android_deps[i]);
 		if (i < android_deps.size() - 1) {
 			shell_command += " && ";

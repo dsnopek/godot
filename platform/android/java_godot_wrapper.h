@@ -85,6 +85,9 @@ private:
 	jmethodID _enable_immersive_mode = nullptr;
 	jmethodID _is_in_immersive_mode = nullptr;
 	jmethodID _on_editor_workspace_selected = nullptr;
+	jmethodID _gradle_build_env_connect = nullptr;
+	jmethodID _gradle_build_env_disconnect = nullptr;
+	jmethodID _gradle_build_env_execute = nullptr;
 	jmethodID _termux_execute = nullptr;
 
 public:
@@ -141,6 +144,10 @@ public:
 	bool is_in_immersive_mode();
 
 	void on_editor_workspace_selected(const String &p_workspace);
+
+	bool gradle_build_env_connect(const Callable &p_result_callback);
+	void gradle_build_env_disconnect();
+	bool gradle_build_env_execute(const String &p_path, const List<String> &p_arguments, const String p_work_dir, const Callable &p_result_callback);
 
 	bool termux_execute(const String &p_path, const List<String> &p_arguments, const String p_work_dir, bool p_background, const Callable &p_result_callback);
 };

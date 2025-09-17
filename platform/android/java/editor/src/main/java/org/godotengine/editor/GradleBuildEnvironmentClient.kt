@@ -72,9 +72,8 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 	private val connectionCallbacks = mutableListOf<Callable>()
 	private var connecting = false
 
-	//fun connect(callable: Callable): Boolean {
-	//	connectionCallbacks.add(callable)
-	fun connect(): Boolean {
+	fun connect(callable: Callable): Boolean {
+		connectionCallbacks.add(callable)
 		if (connecting) {
 			return true;
 		}

@@ -153,6 +153,35 @@ public interface GodotHost {
 	default void onEditorWorkspaceSelected(String workspace) {}
 
 	/**
+	 * Connects to the Gradle Build Environment.
+	 *
+	 * @param callback The callback to call when connected
+	 * @return Whether or not connecting is possible
+	 */
+	default boolean gradleBuildEnvConnect(@NonNull Callable callback) {
+		return false;
+	}
+
+	/**
+	 * Disconnects from the Gradle Build Environment.
+	 */
+	default void gradleBuildEnvDisconnect() {
+	}
+
+	/**
+	 * Executes a command via the Gradle Build Environment.
+	 *
+	 * @param path Path to the command
+	 * @param arguments The argument for the command
+	 * @param workDir The working directory to use when executing the command
+	 * @param resultCallback The callback to call when the command is finished running
+	 * @return Whether or not the command could be executed
+	 */
+	default boolean gradleBuildEnvExecute(@NonNull String path, @NonNull String[] arguments, @NonNull String workDir, @NonNull Callable resultCallback) {
+		return false;
+	}
+
+	/**
 	 * Invoked to execute a command via Termux.
 	 *
 	 * @param path Path to the command

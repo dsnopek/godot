@@ -233,8 +233,6 @@ abstract class BaseGodotEditor : GodotActivity(), GameMenuFragment.GameMenuListe
 
 		super.onCreate(savedInstanceState)
 
-		gradleBuildEnvironmentClient.connect()
-
 		// Add the game menu bar.
 		setupGameMenuBar()
 	}
@@ -832,6 +830,18 @@ abstract class BaseGodotEditor : GodotActivity(), GameMenuFragment.GameMenuListe
 	}
 
 	override fun isGameEmbeddingSupported() = !isNativeXRDevice(applicationContext)
+
+	override fun gradleBuildEnvConnect(callback: Callable): Boolean {
+		return gradleBuildEnvironmentClient.connect(callback)
+	}
+
+	override fun gradleBuildEnvDisconnect() {
+		gradleBuildEnvironmentClient.disconnect()
+	}
+
+	override fun gradleBuildEnvExecute(path: String, arguments: Array<String>, workDir: String, resultCallback: Callable): Boolean {
+		return gradleBuildEnvironmentClient.execute(path, arguments, workDir, resultCallback)
+	}
 
 	override fun termuxExecute(path: String, arguments: Array<String>, workDir: String, background: Boolean, resultCallback: Callable): Boolean {
 		return gradleBuildEnvironmentClient.execute(path, arguments, workDir, resultCallback)

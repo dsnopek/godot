@@ -366,13 +366,20 @@ bool OS_Android::main_loop_iterate(bool *r_should_swap_buffers) {
 	static bool once = false;
 	if (!once) {
 		once = true;
-		List<String> args;
-		args.push_back("-l");
-		args.push_back("/");
-		godot_java->termux_execute("/bin/ls", args, "/", false, Callable());
+		bool conn_success = godot_java->gradle_build_env_connect(callable_mp_static(&OS_Android::_test_gradle_build_env));
+		print_line("gradle_build_env_connect: ", conn_success);
 	}
 
 	return exit;
+}
+
+void OS_Android::_test_gradle_build_env() {
+	print_line("_test_gradle_build_env()");
+	List<String> args;
+	args.push_back("-l");
+	args.push_back("/");
+	bool exec_success = OS_Android::get_singleton()->get_godot_java()->gradle_build_env_execute("/bin/ls", args, "/", Callable());
+	print_line("gradle_build_env_execute: ", exec_success);
 }
 
 void OS_Android::main_loop_end() {

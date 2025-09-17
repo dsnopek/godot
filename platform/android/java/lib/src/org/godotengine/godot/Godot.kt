@@ -1198,8 +1198,24 @@ class Godot(private val context: Context) {
 	}
 
 	@Keep
+	private fun nativeGradleBuildEnvConnect(callback: Callable): Boolean {
+		return primaryHost?.gradleBuildEnvConnect(callback) ?: false
+	}
+
+	@Keep
+	private fun nativeGradleBuildEnvDisconnect() {
+		primaryHost?.gradleBuildEnvDisconnect()
+	}
+
+	@Keep
+	private fun nativeGradleBuildEnvExecute(path: String, arguments: Array<String>, workDir: String, resultCallback: Callable): Boolean {
+		return primaryHost?.gradleBuildEnvExecute(path, arguments, workDir, resultCallback) ?: false
+	}
+
+	@Keep
 	private fun nativeTermuxExecute(path: String, arguments: Array<String>, workDir: String, background: Boolean, resultCallback: Callable): Boolean {
 		// @todo I don't know if the indirection to primaryHost makes sense, but everyone else was doing it...
 		return primaryHost?.termuxExecute(path, arguments, workDir, background, resultCallback) ?: false
 	}
+
 }

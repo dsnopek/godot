@@ -87,6 +87,8 @@ private:
 	void _load_system_font_config() const;
 	String get_system_property(const char *key) const;
 
+	static void _test_gradle_build_env();
+
 public:
 	static const char *ANDROID_EXEC_PATH;
 	static const int DEFAULT_WINDOW_WIDTH = 800;

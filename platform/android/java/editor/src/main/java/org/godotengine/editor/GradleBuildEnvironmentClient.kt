@@ -34,6 +34,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.os.Bundle
 import android.os.IBinder
 import android.os.Message
 import android.os.Messenger
@@ -106,7 +107,15 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 			return false
 		}
 
+		// @todo We'll want to stash some ID into `arg1` for the result callback
 		val msg: Message = Message.obtain(null, 1, 0,0)
+
+		val data = Bundle()
+		data.putString("path", path)
+		data.putString("workDir", workDir)
+		data.putStringArrayList("args", ArrayList(arguments.toList()))
+		msg.data = data
+
 		try {
 			messenger?.send(msg)
 		} catch (e: RemoteException) {

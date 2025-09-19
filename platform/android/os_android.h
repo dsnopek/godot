@@ -88,6 +88,7 @@ private:
 	String get_system_property(const char *key) const;
 
 	static void _test_gradle_build_env();
+	static void _test_gradle_build_env_result(int p_error_code, const String &p_stdout, const String &p_stderr);
 
 public:
 	static const char *ANDROID_EXEC_PATH;

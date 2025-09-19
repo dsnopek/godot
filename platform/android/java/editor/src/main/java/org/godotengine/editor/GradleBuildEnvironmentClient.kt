@@ -35,12 +35,17 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
 import android.os.Message
 import android.os.Messenger
 import android.os.RemoteException
 import android.util.Log
 import org.godotengine.godot.variant.Callable
+import kotlin.collections.set
+
+private const val MSG_EXECUTE_COMMAND = 1
+private const val MSG_COMMAND_RESULT = 2
 
 internal class GradleBuildEnvironmentClient(private val context: Context) {
 
@@ -49,10 +54,10 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 	}
 
 	private var bound: Boolean = false
-	private var messenger: Messenger? = null
+	private var outgoingMessenger: Messenger? = null
 	private var connection = object : ServiceConnection {
 		override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-			messenger = Messenger(service)
+			outgoingMessenger = Messenger(service)
 			bound = true
 
 			Log.i(TAG, "Service connected")
@@ -64,14 +69,28 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 		}
 
 		override fun onServiceDisconnected(name: ComponentName?) {
-			messenger = null
+			outgoingMessenger = null
 			bound = false
 			Log.i(TAG, "Service disconnected")
 		}
 	}
 
+	private inner class IncomingHandler: Handler() {
+		override fun handleMessage(msg: Message) {
+			when (msg.what) {
+				MSG_COMMAND_RESULT -> {
+					this@GradleBuildEnvironmentClient.receiveCommandResult(msg)
+				}
+				else -> super.handleMessage(msg)
+			}
+		}
+	}
+	private val incomingMessenger = Messenger(IncomingHandler())
+
 	private val connectionCallbacks = mutableListOf<Callable>()
 	private var connecting = false
+	private var executionId = 1000
+	private val executionMap = HashMap<Int, Callable>()
 
 	fun connect(callable: Callable): Boolean {
 		connectionCallbacks.add(callable)
@@ -102,13 +121,19 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 		}
 	}
 
+	private fun getNextExecutionId(resultCallback: Callable): Int {
+		val id = executionId++
+		executionMap[id] = resultCallback
+		return id
+	}
+
 	fun execute(path: String, arguments: Array<String>, workDir: String, resultCallback: Callable): Boolean {
-		if (messenger == null) {
+		if (outgoingMessenger == null) {
 			return false
 		}
 
-		// @todo We'll want to stash some ID into `arg1` for the result callback
-		val msg: Message = Message.obtain(null, 1, 0,0)
+		val msg: Message = Message.obtain(null, MSG_EXECUTE_COMMAND, getNextExecutionId(resultCallback),0)
+		msg.replyTo = incomingMessenger
 
 		val data = Bundle()
 		data.putString("path", path)
@@ -117,7 +142,7 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 		msg.data = data
 
 		try {
-			messenger?.send(msg)
+			outgoingMessenger?.send(msg)
 		} catch (e: RemoteException) {
 			Log.e(TAG, "Unable to execute command: $path $arguments")
 			e.printStackTrace()
@@ -125,6 +150,19 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 		}
 
 		return true
+	}
+
+	private fun receiveCommandResult(msg: Message) {
+		val data = msg.data
+
+		val exitCode = data.getInt("exitCode")
+		val stdout = data.getString("stdout", "")
+		val stderr = data.getString("stderr", "")
+
+		Log.i(TAG, "We received $exitCode and $stdout and $stderr")
+
+		val resultCallback = executionMap.remove(msg.arg1)
+		resultCallback?.call(exitCode, stdout, stderr)
 	}
 
 }

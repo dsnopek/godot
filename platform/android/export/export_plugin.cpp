@@ -3214,6 +3214,7 @@ Error EditorExportPlatformAndroid::export_project(const Ref<EditorExportPreset> 
 	return export_project_helper(p_preset, p_debug, p_path, export_format, should_sign, p_flags);
 }
 
+/*
 void EditorExportPlatformAndroid::_termux_verify_openjdk() {
 	List<String> termux_args;
 	termux_args.push_back("-c");
@@ -3385,26 +3386,50 @@ void EditorExportPlatformAndroid::_termux_install_aapt2_callback(int p_error_cod
 
 	print_line("Termux: AAPT2 installation failed!");
 }
+*/
 
-void EditorExportPlatformAndroid::_termux_begin_gradle_build() {
+void EditorExportPlatformAndroid::_android_gradle_build_connect() {
+	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
+	if (!godot_java->gradle_build_env_connect(callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build))) {
+		// @todo Show a nice error about not being able to connect to the build environment.
+		print_error("Unable to connect to Godot Gradle Build Environment");
+	}
+}
+
+void EditorExportPlatformAndroid::_android_gradle_build_disconnect() {
+	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
+	godot_java->gradle_build_env_disconnect();
+}
+
+void EditorExportPlatformAndroid::_android_gradle_build_build() {
 	print_line("Termux: Begin gradle build");
 
-	gradle_build_args.push_front("updateAAPT2Jars");
+	//gradle_build_args.push_front("updateAAPT2Jars");
 	gradle_build_args.push_front(_build_path + "/gradlew");
-	gradle_build_args.push_front("sh");
-	gradle_build_args.push_front("ANDROID_HOME=" + (String)EDITOR_GET("export/android/android_sdk_path"));
-	gradle_build_args.push_front("JAVA_HOME=" + (String)EDITOR_GET("export/android/java_sdk_path"));
+	//gradle_build_args.push_front("sh");
+	//gradle_build_args.push_front("ANDROID_HOME=" + (String)EDITOR_GET("export/android/android_sdk_path"));
+	//gradle_build_args.push_front("JAVA_HOME=" + (String)EDITOR_GET("export/android/java_sdk_path"));
 	gradle_build_args.push_back("--no-daemon");
 
 	String gradle_build_command = join_list(gradle_build_args, String(" "));
-	List<String> termux_args;
-	termux_args.push_back("-c");
-	termux_args.push_back(gradle_build_command);
+	List<String> args;
+	args.push_back("-c");
+	args.push_back(gradle_build_command);
 
 	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->termux_execute(_termux_sh, termux_args, _termux_home, false, callable_mp(this, &EditorExportPlatformAndroid::_termux_begin_gradle_build_callback));
+	godot_java->gradle_build_env_execute(_build_path + "/gradlew", args, _termux_home, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
 }
 
+void EditorExportPlatformAndroid::_android_gradle_build_build_callback(int p_exit_code, const String &p_stdout, const String &p_stderr) {
+	print_line("Gradle result: ", p_exit_code);
+	print_line("Gradle stdout: ", p_stdout);
+	print_line("Gradle stderr: ", p_stderr);
+
+	// @todo Do in case of error!
+	_android_gradle_build_disconnect();
+}
+
+/*
 void EditorExportPlatformAndroid::_termux_begin_gradle_build_callback(int p_error_code, const String &p_stdout, const String &p_stderr) {
 	print_line("Termux result: ", p_error_code);
 	print_line("Termux stdout: ", p_stdout);
@@ -3476,6 +3501,7 @@ void EditorExportPlatformAndroid::_termux_gradle_copy_and_rename_callback(int p_
 
 	print_line("Termux: Gradle copy and rename failed!");
 }
+*/
 
 Error EditorExportPlatformAndroid::export_project_helper(const Ref<EditorExportPreset> &p_preset, bool p_debug, const String &p_path, int export_format, bool should_sign, BitField<EditorExportPlatform::DebugFlags> p_flags) {
 	ExportNotifier notifier(*this, p_preset, p_debug, p_path, p_flags);
@@ -3823,7 +3849,8 @@ Error EditorExportPlatformAndroid::export_project_helper(const Ref<EditorExportP
 		_build_path = build_path;
 		gradle_copy_args = copy_args;
 
-		_termux_verify_openjdk();
+		//_termux_verify_openjdk();
+		_android_gradle_build_connect();
 #else
 		print_verbose("Copying Android binary using gradle command: " + String("\n") + build_command + " " + join_list(copy_args, String(" ")));
 		String copy_binary_output;

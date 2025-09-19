@@ -33,11 +33,9 @@ package org.godotengine.editor
 import android.Manifest
 import android.app.ActivityManager
 import android.app.ActivityOptions
-import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.*
 import android.preference.PreferenceManager
@@ -839,12 +837,19 @@ abstract class BaseGodotEditor : GodotActivity(), GameMenuFragment.GameMenuListe
 		gradleBuildEnvironmentClient.disconnect()
 	}
 
-	override fun gradleBuildEnvExecute(path: String, arguments: Array<String>, workDir: String, resultCallback: Callable): Boolean {
-		return gradleBuildEnvironmentClient.execute(path, arguments, workDir, resultCallback)
+	override fun gradleBuildEnvExecute(
+		path: String,
+		arguments: Array<String>,
+		binds: Array<String>,
+		workDir: String,
+		resultCallback: Callable
+	): Boolean {
+		return gradleBuildEnvironmentClient.execute(path, arguments, binds, workDir, resultCallback)
 	}
 
 	override fun termuxExecute(path: String, arguments: Array<String>, workDir: String, background: Boolean, resultCallback: Callable): Boolean {
-		return gradleBuildEnvironmentClient.execute(path, arguments, workDir, resultCallback)
+		return false;
+		//return gradleBuildEnvironmentClient.execute(path, arguments, workDir, resultCallback)
 		/*
 		val termuxIntent = Intent()
 			// @todo These should probably all be in constants.

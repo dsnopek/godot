@@ -147,7 +147,7 @@ public:
 
 	bool gradle_build_env_connect(const Callable &p_result_callback);
 	void gradle_build_env_disconnect();
-	bool gradle_build_env_execute(const String &p_path, const List<String> &p_arguments, const String p_work_dir, const Callable &p_result_callback);
+	bool gradle_build_env_execute(const String &p_path, const List<String> &p_arguments, const List<String> &p_binds, const String p_work_dir, const Callable &p_result_callback);
 
 	bool termux_execute(const String &p_path, const List<String> &p_arguments, const String p_work_dir, bool p_background, const Callable &p_result_callback);
 };

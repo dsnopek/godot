@@ -378,7 +378,8 @@ void OS_Android::_test_gradle_build_env() {
 	List<String> args;
 	args.push_back("-l");
 	args.push_back("/");
-	bool exec_success = OS_Android::get_singleton()->get_godot_java()->gradle_build_env_execute("/bin/ls", args, "/", callable_mp_static(&OS_Android::_test_gradle_build_env_result));
+	List<String> binds;
+	bool exec_success = OS_Android::get_singleton()->get_godot_java()->gradle_build_env_execute("/bin/ls", args, binds, "/", callable_mp_static(&OS_Android::_test_gradle_build_env_result));
 	print_line("gradle_build_env_execute: ", exec_success);
 }
 

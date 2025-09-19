@@ -127,7 +127,7 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 		return id
 	}
 
-	fun execute(path: String, arguments: Array<String>, workDir: String, resultCallback: Callable): Boolean {
+	fun execute(path: String, arguments: Array<String>, binds: Array<String>, workDir: String, resultCallback: Callable): Boolean {
 		if (outgoingMessenger == null) {
 			return false
 		}

@@ -3416,8 +3416,11 @@ void EditorExportPlatformAndroid::_android_gradle_build_build() {
 	args.push_back("-c");
 	args.push_back(gradle_build_command);
 
+	List<String> binds;
+	args.push_back(_build_path);
+
 	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->gradle_build_env_execute(_build_path + "/gradlew", args, _termux_home, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
+	godot_java->gradle_build_env_execute(_build_path + "/gradlew", args, binds, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
 }
 
 void EditorExportPlatformAndroid::_android_gradle_build_build_callback(int p_exit_code, const String &p_stdout, const String &p_stderr) {

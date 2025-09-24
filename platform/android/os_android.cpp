@@ -362,31 +362,7 @@ bool OS_Android::main_loop_iterate(bool *r_should_swap_buffers) {
 				current_frames_drawn != Engine::get_singleton()->get_frames_drawn();
 	}
 
-	// DRS: Testing!
-	static bool once = false;
-	if (!once) {
-		once = true;
-		bool conn_success = godot_java->gradle_build_env_connect(callable_mp_static(&OS_Android::_test_gradle_build_env));
-		print_line("gradle_build_env_connect: ", conn_success);
-	}
-
 	return exit;
-}
-
-void OS_Android::_test_gradle_build_env() {
-	print_line("_test_gradle_build_env()");
-	List<String> args;
-	args.push_back("-l");
-	args.push_back("/");
-	List<String> binds;
-	bool exec_success = OS_Android::get_singleton()->get_godot_java()->gradle_build_env_execute("/bin/ls", args, binds, "/", callable_mp_static(&OS_Android::_test_gradle_build_env_result));
-	print_line("gradle_build_env_execute: ", exec_success);
-}
-
-void OS_Android::_test_gradle_build_env_result(int p_error_code, const String &p_stdout, const String &p_stderr) {
-	print_line("Result - error code: ", p_error_code);
-	print_line("Result - stdout: ", p_stdout);
-	print_line("Result - stderr: ", p_stderr);
 }
 
 void OS_Android::main_loop_end() {

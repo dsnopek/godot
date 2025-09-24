@@ -93,6 +93,10 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 	private val executionMap = HashMap<Int, Callable>()
 
 	fun connect(callable: Callable): Boolean {
+		if (bound) {
+			callable.call();
+			return true;
+		}
 		connectionCallbacks.add(callable)
 		if (connecting) {
 			return true;
@@ -138,6 +142,7 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 		val data = Bundle()
 		data.putString("path", path)
 		data.putString("workDir", workDir)
+		data.putStringArrayList("binds", ArrayList(binds.toList()))
 		data.putStringArrayList("args", ArrayList(arguments.toList()))
 		msg.data = data
 

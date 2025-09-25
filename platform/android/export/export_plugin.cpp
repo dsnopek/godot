@@ -3435,7 +3435,7 @@ void EditorExportPlatformAndroid::_android_gradle_build_build() {
 
 	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
 	//godot_java->gradle_build_env_execute("/usr/lib/jvm/jdk-17.0.16-bellsoft-aarch64/bin/java", args, binds, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
-	godot_java->gradle_build_env_execute("/bin/bash", args, binds, "/", callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
+	godot_java->gradle_build_env_execute("/bin/bash", args, binds, "/usr", callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
 }
 
 void EditorExportPlatformAndroid::_android_gradle_build_build_callback(int p_exit_code, const String &p_stdout, const String &p_stderr) {

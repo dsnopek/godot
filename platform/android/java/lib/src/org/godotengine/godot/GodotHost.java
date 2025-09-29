@@ -171,14 +171,13 @@ public interface GodotHost {
 	/**
 	 * Executes a command via the Gradle Build Environment.
 	 *
-	 * @param path           Path to the command
 	 * @param arguments      The argument for the command
-	 * @param binds
-	 * @param workDir        The working directory to use when executing the command
+	 * @param projectPath    The working directory to use when executing the command
+	 * @param gradleBuildDir
 	 * @param resultCallback The callback to call when the command is finished running
 	 * @return Whether or not the command could be executed
 	 */
-	default boolean gradleBuildEnvExecute(@NonNull String path, @NonNull String[] arguments, @NonNull String[] binds, @NonNull String workDir, @NonNull Callable resultCallback) {
+	default boolean gradleBuildEnvExecute(@NonNull String[] arguments, @NonNull String projectPath, @NonNull String gradleBuildDir, @NonNull Callable resultCallback) {
 		return false;
 	}
 

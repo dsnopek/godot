@@ -3404,13 +3404,16 @@ void EditorExportPlatformAndroid::_android_gradle_build_disconnect() {
 void EditorExportPlatformAndroid::_android_gradle_build_build() {
 	print_line("Termux: Begin gradle build");
 
-	/*
-	gradle_build_args.push_front(_build_path + "/gradlew");
+	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
+	godot_java->gradle_build_env_execute(gradle_build_args, _project_path, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
+
+	//gradle_build_args.push_front(_build_path + "/gradlew");
 	//gradle_build_args.push_front("/project/android/build/gradlew");
-	gradle_build_args.push_front("sh");
-	gradle_build_args.push_back("--no-daemon");
+	//gradle_build_args.push_front("/bin/bash");
+	//gradle_build_args.push_back("--no-daemon");
 	//gradle_build_args.push_back("< " + _build_path + "/gradlew");
 
+	/*
 	String gradle_build_command = join_list(gradle_build_args, String(" "));
 	List<String> args;
 	args.push_back("-c");
@@ -3421,21 +3424,50 @@ void EditorExportPlatformAndroid::_android_gradle_build_build() {
 	//binds.push_back(ProjectSettings::get_singleton()->globalize_path("res://") + ":/project");
 
 	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	//godot_java->gradle_build_env_execute("/bin/bash", gradle_build_args, binds, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
-	godot_java->gradle_build_env_execute("/bin/sh", args, binds, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
-	*/
+	godot_java->gradle_build_env_execute("/bin/bash", gradle_build_args, binds, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
+	 */
+	//godot_java->gradle_build_env_execute("/bin/sh", args, binds, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
 
+	/*
 	List<String> args;
-	args.push_back("-l");
+	//args.push_back("-l");
 	args.push_back("-c");
-	args.push_back("LD_LIBRARY_PATH=\"/lib:/usr/lib:$JAVA_HOME/lib\" java -Duser.dir=/");
+	//args.push_back("LD_LIBRARY_PATH=\"/lib:/usr/lib:$JAVA_HOME/lib\" java -Duser.dir=/");
+	//args.push_back("/usr/lib/jvm/jdk-17.0.16-bellsoft-aarch64/bin/java");
+	//args.push_back(". /etc/bash/bashrc; ls -l /");
+	args.push_back("/bin/ls -l /");
 
 	List<String> binds;
 	binds.push_back(ProjectSettings::get_singleton()->globalize_path("res://"));
 
 	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
 	//godot_java->gradle_build_env_execute("/usr/lib/jvm/jdk-17.0.16-bellsoft-aarch64/bin/java", args, binds, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
+	//godot_java->gradle_build_env_execute("/bin/bash", args, binds, "/usr", callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
 	godot_java->gradle_build_env_execute("/bin/bash", args, binds, "/usr", callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
+	*/
+
+	/*
+	List<String> args;
+	args.push_back("-l");
+	args.push_back("/");
+
+	List<String> binds;
+
+	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
+	//godot_java->gradle_build_env_execute("/usr/lib/jvm/jdk-17.0.16-bellsoft-aarch64/bin/java", args, binds, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
+	//godot_java->gradle_build_env_execute("/bin/bash", args, binds, "/usr", callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
+	godot_java->gradle_build_env_execute("/bin/ls", args, binds, "/", callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
+	*/
+
+	/*
+	List<String> args;
+
+	List<String> binds;
+
+	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
+	godot_java->gradle_build_env_execute("/usr/lib/jvm/jdk-17.0.16-bellsoft-aarch64/bin/java", args, binds, "/", callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
+	//godot_java->gradle_build_env_execute("/bin/bash", args, binds, "/usr", callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
+	*/
 }
 
 void EditorExportPlatformAndroid::_android_gradle_build_build_callback(int p_exit_code, const String &p_stdout, const String &p_stderr) {
@@ -3766,8 +3798,10 @@ Error EditorExportPlatformAndroid::export_project_helper(const Ref<EditorExportP
 		String addons_directory = ProjectSettings::get_singleton()->globalize_path("res://addons");
 		String current_renderer = GLOBAL_GET("rendering/renderer/rendering_method.mobile");
 
+#ifndef ANDROID_ENABLED
 		cmdline.push_back("-p"); // argument to specify the start directory.
 		cmdline.push_back(build_path); // start directory.
+#endif
 		cmdline.push_back("-Paddons_directory=" + addons_directory); // path to the addon directory as it may contain jar or aar dependencies
 		cmdline.push_back("-Pexport_package_name=" + package_name); // argument to specify the package name.
 		cmdline.push_back("-Pexport_version_code=" + version_code); // argument to specify the version code.
@@ -3846,8 +3880,10 @@ Error EditorExportPlatformAndroid::export_project_helper(const Ref<EditorExportP
 		String copy_command = "copyAndRenameBinary";
 		copy_args.push_back(copy_command);
 
+#ifndef ANDROID_ENABLED
 		copy_args.push_back("-p"); // argument to specify the start directory.
 		copy_args.push_back(build_path); // start directory.
+#endif
 
 		copy_args.push_back("-Pexport_edition=" + edition.to_lower());
 
@@ -3868,7 +3904,8 @@ Error EditorExportPlatformAndroid::export_project_helper(const Ref<EditorExportP
 
 #ifdef ANDROID_ENABLED
 		gradle_build_args = cmdline;
-		_build_path = build_path;
+		_project_path = ProjectSettings::get_singleton()->globalize_path("res://");
+		_build_path = build_path.substr(_project_path.length());
 		gradle_copy_args = copy_args;
 
 		//_termux_verify_openjdk();

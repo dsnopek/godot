@@ -838,13 +838,12 @@ abstract class BaseGodotEditor : GodotActivity(), GameMenuFragment.GameMenuListe
 	}
 
 	override fun gradleBuildEnvExecute(
-		path: String,
 		arguments: Array<String>,
-		binds: Array<String>,
-		workDir: String,
+		projectPath: String,
+		gradleBuildDir: String,
 		resultCallback: Callable
 	): Boolean {
-		return gradleBuildEnvironmentClient.execute(path, arguments, binds, workDir, resultCallback)
+		return gradleBuildEnvironmentClient.execute(arguments, projectPath, gradleBuildDir, resultCallback)
 	}
 
 	override fun termuxExecute(path: String, arguments: Array<String>, workDir: String, background: Boolean, resultCallback: Callable): Boolean {

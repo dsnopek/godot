@@ -186,6 +186,7 @@ class EditorExportPlatformAndroid : public EditorExportPlatform {
 
 	// Temporary variables for testing.
 	List<String> gradle_build_args;
+	String _project_path;
 	String _build_path;
 	List<String> gradle_copy_args;
 	const String _termux_home = "/data/data/com.termux/files/home";

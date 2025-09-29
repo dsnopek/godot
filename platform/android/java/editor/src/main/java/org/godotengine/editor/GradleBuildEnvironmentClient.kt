@@ -44,7 +44,7 @@ import android.util.Log
 import org.godotengine.godot.variant.Callable
 import kotlin.collections.set
 
-private const val MSG_EXECUTE_COMMAND = 1
+private const val MSG_EXECUTE_GRADLE = 1
 private const val MSG_COMMAND_RESULT = 2
 
 internal class GradleBuildEnvironmentClient(private val context: Context) {
@@ -131,25 +131,24 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 		return id
 	}
 
-	fun execute(path: String, arguments: Array<String>, binds: Array<String>, workDir: String, resultCallback: Callable): Boolean {
+	fun execute(arguments: Array<String>, projectPath: String, gradleBuildDir: String, resultCallback: Callable): Boolean {
 		if (outgoingMessenger == null) {
 			return false
 		}
 
-		val msg: Message = Message.obtain(null, MSG_EXECUTE_COMMAND, getNextExecutionId(resultCallback),0)
+		val msg: Message = Message.obtain(null, MSG_EXECUTE_GRADLE, getNextExecutionId(resultCallback),0)
 		msg.replyTo = incomingMessenger
 
 		val data = Bundle()
-		data.putString("path", path)
-		data.putString("workDir", workDir)
-		data.putStringArrayList("binds", ArrayList(binds.toList()))
-		data.putStringArrayList("args", ArrayList(arguments.toList()))
+		data.putStringArrayList("arguments", ArrayList(arguments.toList()))
+		data.putString("project_path", projectPath)
+		data.putString("gradle_build_directory", gradleBuildDir)
 		msg.data = data
 
 		try {
 			outgoingMessenger?.send(msg)
 		} catch (e: RemoteException) {
-			Log.e(TAG, "Unable to execute command: $path $arguments")
+			Log.e(TAG, "Unable to execute Gradle command: gradlew ${arguments.joinToString(" ")}")
 			e.printStackTrace()
 			return false;
 		}

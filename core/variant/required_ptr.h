@@ -40,17 +40,30 @@ class RequiredPtr {
 	static_assert(!std::is_reference_v<T>, "T may not be a reference type");
 	static_assert(!std::is_const_v<T> && !std::is_volatile_v<T>, "T may not be cv-qualified");
 
-	T *_value = nullptr;
-
-	RequiredPtr() = default;
-
 public:
 	using element_type = T;
+	using value_type = std::conditional_t<std::is_base_of_v<RefCounted, T>, Ref<T>, T *>;
 
+private:
+	value_type _value;
+
+	RequiredPtr() {
+		if constexpr (!std::is_base_of_v<RefCounted, T>) {
+			_value = nullptr;
+		}
+	}
+
+public:
 	[[nodiscard, deprecated("Should not be called directly; only used in EXTRACT_REQUIRED_PTR_OR_FAIL* macros.")]]
-	_FORCE_INLINE_ T *_internal_ptr() const { return _value; }
+	_FORCE_INLINE_ value_type _internal_ptr() const { return _value; }
 	[[nodiscard, deprecated("Should not be called directly; only used in EXTRACT_REQUIRED_PTR_OR_FAIL* macros.")]]
-	_FORCE_INLINE_ bool _is_null() const { return _value == nullptr; }
+	_FORCE_INLINE_ bool _is_null() const {
+		if constexpr (std::is_base_of_v<RefCounted, T>) {
+			return _value.is_null();
+		} else {
+			return _value == nullptr;
+		}
+	}
 
 	// Allow null construction if and only if returning from an error macro.
 	[[nodiscard, deprecated("Should not be called directly; must be used as return argument in error macro.")]]
@@ -87,11 +100,20 @@ public:
 
 	template <typename T_Other, std::enable_if_t<std::is_base_of_v<T, T_Other>, int> = 0>
 	_FORCE_INLINE_ RequiredPtr(const Ref<T_Other> &p_ref) :
-			_value(p_ref.ptr()) {}
+			_value(p_ref) {}
 	template <typename T_Other, std::enable_if_t<std::is_base_of_v<T, T_Other>, int> = 0>
 	_FORCE_INLINE_ RequiredPtr &operator=(const Ref<T_Other> &p_ref) {
-		_value = p_ref.ptr();
+		_value = p_ref;
 		return *this;
+	}
+
+	template <typename T_Other, std::enable_if_t<std::is_base_of_v<T, T_Other>, int> = 0>
+	_FORCE_INLINE_ RequiredPtr(Ref<T_Other> &&p_ref) :
+			_value(std::move(p_ref)) {}
+	template <typename T_Other, std::enable_if_t<std::is_base_of_v<T, T_Other>, int> = 0>
+	_FORCE_INLINE_ RequiredPtr &operator=(Ref<T_Other> &&p_ref) {
+		_value = std::move(p_ref);
+		return &this;
 	}
 
 	_FORCE_INLINE_ RequiredPtr(const Variant &p_variant) :

@@ -3406,68 +3406,6 @@ void EditorExportPlatformAndroid::_android_gradle_build_build() {
 
 	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
 	godot_java->gradle_build_env_execute(gradle_build_args, _project_path, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
-
-	//gradle_build_args.push_front(_build_path + "/gradlew");
-	//gradle_build_args.push_front("/project/android/build/gradlew");
-	//gradle_build_args.push_front("/bin/bash");
-	//gradle_build_args.push_back("--no-daemon");
-	//gradle_build_args.push_back("< " + _build_path + "/gradlew");
-
-	/*
-	String gradle_build_command = join_list(gradle_build_args, String(" "));
-	List<String> args;
-	args.push_back("-c");
-	args.push_back(gradle_build_command);
-
-	List<String> binds;
-	binds.push_back(ProjectSettings::get_singleton()->globalize_path("res://"));
-	//binds.push_back(ProjectSettings::get_singleton()->globalize_path("res://") + ":/project");
-
-	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->gradle_build_env_execute("/bin/bash", gradle_build_args, binds, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
-	 */
-	//godot_java->gradle_build_env_execute("/bin/sh", args, binds, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
-
-	/*
-	List<String> args;
-	//args.push_back("-l");
-	args.push_back("-c");
-	//args.push_back("LD_LIBRARY_PATH=\"/lib:/usr/lib:$JAVA_HOME/lib\" java -Duser.dir=/");
-	//args.push_back("/usr/lib/jvm/jdk-17.0.16-bellsoft-aarch64/bin/java");
-	//args.push_back(". /etc/bash/bashrc; ls -l /");
-	args.push_back("/bin/ls -l /");
-
-	List<String> binds;
-	binds.push_back(ProjectSettings::get_singleton()->globalize_path("res://"));
-
-	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	//godot_java->gradle_build_env_execute("/usr/lib/jvm/jdk-17.0.16-bellsoft-aarch64/bin/java", args, binds, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
-	//godot_java->gradle_build_env_execute("/bin/bash", args, binds, "/usr", callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
-	godot_java->gradle_build_env_execute("/bin/bash", args, binds, "/usr", callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
-	*/
-
-	/*
-	List<String> args;
-	args.push_back("-l");
-	args.push_back("/");
-
-	List<String> binds;
-
-	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	//godot_java->gradle_build_env_execute("/usr/lib/jvm/jdk-17.0.16-bellsoft-aarch64/bin/java", args, binds, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
-	//godot_java->gradle_build_env_execute("/bin/bash", args, binds, "/usr", callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
-	godot_java->gradle_build_env_execute("/bin/ls", args, binds, "/", callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
-	*/
-
-	/*
-	List<String> args;
-
-	List<String> binds;
-
-	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->gradle_build_env_execute("/usr/lib/jvm/jdk-17.0.16-bellsoft-aarch64/bin/java", args, binds, "/", callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
-	//godot_java->gradle_build_env_execute("/bin/bash", args, binds, "/usr", callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
-	*/
 }
 
 void EditorExportPlatformAndroid::_android_gradle_build_build_callback(int p_exit_code, const String &p_stdout, const String &p_stderr) {
@@ -3476,6 +3414,22 @@ void EditorExportPlatformAndroid::_android_gradle_build_build_callback(int p_exi
 	print_line("Gradle stderr: ", p_stderr);
 
 	// @todo Do in case of error!
+
+	_android_gradle_build_copy();
+}
+
+void EditorExportPlatformAndroid::_android_gradle_build_copy() {
+	print_line("Termux: Gradle copy and rename");
+
+	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
+	godot_java->gradle_build_env_execute(gradle_copy_args, _project_path, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_copy_callback));
+}
+
+void EditorExportPlatformAndroid::_android_gradle_build_copy_callback(int p_exit_code, const String &p_stdout, const String &p_stderr) {
+	print_line("Gradle result: ", p_exit_code);
+	print_line("Gradle stdout: ", p_stdout);
+	print_line("Gradle stderr: ", p_stderr);
+
 	_android_gradle_build_disconnect();
 }
 

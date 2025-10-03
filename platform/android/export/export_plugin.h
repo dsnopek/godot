@@ -196,7 +196,8 @@ class EditorExportPlatformAndroid : public EditorExportPlatform {
 	void _android_gradle_build_disconnect();
 	void _android_gradle_build_build();
 	void _android_gradle_build_build_callback(int p_exit_code, const String &p_stdout, const String &p_stderr);
-	//void _android_gradle_build_copy();
+	void _android_gradle_build_copy();
+	void _android_gradle_build_copy_callback(int p_exit_code, const String &p_stdout, const String &p_stderr);
 
 	/*
 	void _termux_verify_openjdk();

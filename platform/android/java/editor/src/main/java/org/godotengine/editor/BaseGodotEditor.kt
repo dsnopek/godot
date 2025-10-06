@@ -841,44 +841,10 @@ abstract class BaseGodotEditor : GodotActivity(), GameMenuFragment.GameMenuListe
 		arguments: Array<String>,
 		projectPath: String,
 		gradleBuildDir: String,
+		outputCallback: Callable,
 		resultCallback: Callable
 	): Boolean {
-		return gradleBuildEnvironmentClient.execute(arguments, projectPath, gradleBuildDir, resultCallback)
+		return gradleBuildEnvironmentClient.execute(arguments, projectPath, gradleBuildDir, outputCallback, resultCallback)
 	}
 
-	override fun termuxExecute(path: String, arguments: Array<String>, workDir: String, background: Boolean, resultCallback: Callable): Boolean {
-		return false;
-		//return gradleBuildEnvironmentClient.execute(path, arguments, workDir, resultCallback)
-		/*
-		val termuxIntent = Intent()
-			// @todo These should probably all be in constants.
-			.setClassName("com.termux", "com.termux.app.RunCommandService")
-			.setAction("com.termux.RUN_COMMAND")
-			.putExtra("com.termux.RUN_COMMAND_PATH", path)
-			.putExtra("com.termux.RUN_COMMAND_ARGUMENTS", arguments)
-			.putExtra("com.termux.RUN_COMMAND_WORKDIR", workDir)
-			.putExtra("com.termux.RUN_COMMAND_BACKGROUND", background)
-			.putExtra("com.termux.RUN_COMMAND_SESSION_ACTION", "0")
-
-		val resultIntent = Intent(this, TermuxResultService::class.java)
-		val executionId = TermuxResultService.getNextExecutionId(resultCallback)
-		resultIntent.putExtra(TermuxResultService.EXTRA_EXECUTION_ID, executionId)
-
-		val pendingIntent = PendingIntent.getService(
-			this, executionId, resultIntent,
-			PendingIntent.FLAG_ONE_SHOT or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0)
-		)
-		termuxIntent.putExtra("com.termux.RUN_COMMAND_PENDING_INTENT", pendingIntent)
-
-		try {
-			Log.v(TAG, "Running termux command $path with execution id $executionId");
-			startService(termuxIntent)
-		} catch (e: Exception) {
-			Log.e(TAG, "Failed to execute termux command $path with execution id $executionId", e)
-			return false;
-		}
-
-		return true
-		*/
-	}
 }

@@ -88,7 +88,6 @@ private:
 	jmethodID _gradle_build_env_connect = nullptr;
 	jmethodID _gradle_build_env_disconnect = nullptr;
 	jmethodID _gradle_build_env_execute = nullptr;
-	jmethodID _termux_execute = nullptr;
 
 public:
 	GodotJavaWrapper(JNIEnv *p_env, jobject p_activity, jobject p_godot_instance);
@@ -147,9 +146,7 @@ public:
 
 	bool gradle_build_env_connect(const Callable &p_result_callback);
 	void gradle_build_env_disconnect();
-	bool gradle_build_env_execute(const List<String> &p_arguments, const String &p_project_path, const String &p_gradle_build_directory, const Callable &p_result_callback);
-
-	bool termux_execute(const String &p_path, const List<String> &p_arguments, const String p_work_dir, bool p_background, const Callable &p_result_callback);
+	bool gradle_build_env_execute(const List<String> &p_arguments, const String &p_project_path, const String &p_gradle_build_directory, const Callable &p_output_callback, const Callable &p_result_callback);
 };
 
 #endif // JAVA_GODOT_WRAPPER_H

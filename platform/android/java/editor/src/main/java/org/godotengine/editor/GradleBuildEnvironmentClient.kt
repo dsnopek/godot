@@ -46,6 +46,9 @@ import kotlin.collections.set
 
 private const val MSG_EXECUTE_GRADLE = 1
 private const val MSG_COMMAND_RESULT = 2
+private const val MSG_COMMAND_OUTPUT = 3
+private const val MSG_CANCEL_COMMAND = 4
+private const val MSG_CLEAN_PROJECT = 5
 
 internal class GradleBuildEnvironmentClient(private val context: Context) {
 
@@ -81,6 +84,9 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 				MSG_COMMAND_RESULT -> {
 					this@GradleBuildEnvironmentClient.receiveCommandResult(msg)
 				}
+				MSG_COMMAND_OUTPUT -> {
+					this@GradleBuildEnvironmentClient.receiveCommandOutput(msg)
+				}
 				else -> super.handleMessage(msg)
 			}
 		}
@@ -90,7 +96,9 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 	private val connectionCallbacks = mutableListOf<Callable>()
 	private var connecting = false
 	private var executionId = 1000
-	private val executionMap = HashMap<Int, Callable>()
+
+	private class ExecutionInfo(public val outputCallback: Callable, public val resultCallback: Callable)
+	private val executionMap = HashMap<Int, ExecutionInfo>()
 
 	fun connect(callable: Callable): Boolean {
 		if (bound) {
@@ -125,18 +133,18 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 		}
 	}
 
-	private fun getNextExecutionId(resultCallback: Callable): Int {
+	private fun getNextExecutionId(outputCallback: Callable, resultCallback: Callable): Int {
 		val id = executionId++
-		executionMap[id] = resultCallback
+		executionMap[id] = ExecutionInfo(outputCallback, resultCallback)
 		return id
 	}
 
-	fun execute(arguments: Array<String>, projectPath: String, gradleBuildDir: String, resultCallback: Callable): Boolean {
+	fun execute(arguments: Array<String>, projectPath: String, gradleBuildDir: String, outputCallback: Callable, resultCallback: Callable): Boolean {
 		if (outgoingMessenger == null) {
 			return false
 		}
 
-		val msg: Message = Message.obtain(null, MSG_EXECUTE_GRADLE, getNextExecutionId(resultCallback),0)
+		val msg: Message = Message.obtain(null, MSG_EXECUTE_GRADLE, getNextExecutionId(outputCallback, resultCallback),0)
 		msg.replyTo = incomingMessenger
 
 		val data = Bundle()
@@ -157,16 +165,18 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 	}
 
 	private fun receiveCommandResult(msg: Message) {
+		val executionInfo = executionMap.remove(msg.arg1)
+		executionInfo?.resultCallback?.call(msg.arg2)
+	}
+
+	private fun receiveCommandOutput(msg: Message) {
 		val data = msg.data
+		val line = data.getString("line")
 
-		val exitCode = data.getInt("exitCode")
-		val stdout = data.getString("stdout", "")
-		val stderr = data.getString("stderr", "")
-
-		Log.i(TAG, "We received $exitCode and $stdout and $stderr")
-
-		val resultCallback = executionMap.remove(msg.arg1)
-		resultCallback?.call(exitCode, stdout, stderr)
+		if (line != null) {
+			val executionInfo = executionMap.get(msg.arg1)
+			executionInfo?.outputCallback?.call(msg.arg2, line)
+		}
 	}
 
 }

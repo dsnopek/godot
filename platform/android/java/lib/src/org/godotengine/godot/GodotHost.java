@@ -173,24 +173,12 @@ public interface GodotHost {
 	 *
 	 * @param arguments      The argument for the command
 	 * @param projectPath    The working directory to use when executing the command
-	 * @param gradleBuildDir
+	 * @param gradleBuildDir The gradle build directory within the project
+	 * @param outputCallback The callback to call for each line of output from the command
 	 * @param resultCallback The callback to call when the command is finished running
 	 * @return Whether or not the command could be executed
 	 */
-	default boolean gradleBuildEnvExecute(@NonNull String[] arguments, @NonNull String projectPath, @NonNull String gradleBuildDir, @NonNull Callable resultCallback) {
-		return false;
-	}
-
-	/**
-	 * Invoked to execute a command via Termux.
-	 *
-	 * @param path Path to the command
-	 * @param arguments The argument for the command
-	 * @param workDir The working directory to use when executing the command
-	 * @param background Whether or not to run in the background
-	 * @return The exit code from the command
-	 */
-	default boolean termuxExecute(@NonNull String path, @NonNull String[] arguments, @NonNull String workDir, boolean background, Callable resultCallback) {
+	default boolean gradleBuildEnvExecute(@NonNull String[] arguments, @NonNull String projectPath, @NonNull String gradleBuildDir, @NonNull Callable outputCallback, @NonNull Callable resultCallback) {
 		return false;
 	}
 }

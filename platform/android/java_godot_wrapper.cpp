@@ -98,8 +98,7 @@ GodotJavaWrapper::GodotJavaWrapper(JNIEnv *p_env, jobject p_activity, jobject p_
 	_on_editor_workspace_selected = p_env->GetMethodID(godot_class, "nativeOnEditorWorkspaceSelected", "(Ljava/lang/String;)V");
 	_gradle_build_env_connect = p_env->GetMethodID(godot_class, "nativeGradleBuildEnvConnect", "(Lorg/godotengine/godot/variant/Callable;)Z");
 	_gradle_build_env_disconnect = p_env->GetMethodID(godot_class, "nativeGradleBuildEnvDisconnect", "()V");
-	_gradle_build_env_execute = p_env->GetMethodID(godot_class, "nativeGradleBuildEnvExecute", "([Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/godotengine/godot/variant/Callable;)Z");
-	_termux_execute = p_env->GetMethodID(godot_class, "nativeTermuxExecute", "(Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;ZLorg/godotengine/godot/variant/Callable;)Z");
+	_gradle_build_env_execute = p_env->GetMethodID(godot_class, "nativeGradleBuildEnvExecute", "([Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/godotengine/godot/variant/Callable;Lorg/godotengine/godot/variant/Callable;)Z");
 }
 
 GodotJavaWrapper::~GodotJavaWrapper() {
@@ -630,7 +629,7 @@ void GodotJavaWrapper::gradle_build_env_disconnect() {
 	}
 }
 
-bool GodotJavaWrapper::gradle_build_env_execute(const List<String> &p_arguments, const String &p_project_path, const String &p_gradle_build_directory, const Callable &p_result_callback) {
+bool GodotJavaWrapper::gradle_build_env_execute(const List<String> &p_arguments, const String &p_project_path, const String &p_gradle_build_directory, const Callable &p_output_callback, const Callable &p_result_callback) {
 	if (_gradle_build_env_execute) {
 		JNIEnv *env = get_jni_env();
 		ERR_FAIL_NULL_V(env, false);
@@ -643,44 +642,15 @@ bool GodotJavaWrapper::gradle_build_env_execute(const List<String> &p_arguments,
 		}
 		jstring j_project_path = env->NewStringUTF(p_project_path.utf8().get_data());
 		jstring j_gradle_build_directory = env->NewStringUTF(p_gradle_build_directory.utf8().get_data());
+		jobject j_output_callback = callable_to_jcallable(env, p_output_callback);
 		jobject j_result_callback = callable_to_jcallable(env, p_result_callback);
 
-		jboolean result = env->CallBooleanMethod(godot_instance, _gradle_build_env_execute, j_args, j_project_path, j_gradle_build_directory, j_result_callback);
+		jboolean result = env->CallBooleanMethod(godot_instance, _gradle_build_env_execute, j_args, j_project_path, j_gradle_build_directory, j_output_callback, j_result_callback);
 
 		env->DeleteLocalRef(j_args);
 		env->DeleteLocalRef(j_project_path);
 		env->DeleteLocalRef(j_gradle_build_directory);
-		env->DeleteLocalRef(j_result_callback);
-
-		return result;
-	}
-
-	return false;
-}
-
-bool GodotJavaWrapper::termux_execute(const String &p_path, const List<String> &p_arguments, const String p_work_dir, bool p_background, const Callable &p_result_callback) {
-	if (_termux_execute) {
-		JNIEnv *env = get_jni_env();
-
-		jstring j_path = env->NewStringUTF(p_path.utf8().get_data());
-		jobjectArray j_args = env->NewObjectArray(p_arguments.size(), env->FindClass("java/lang/String"), nullptr);
-		print_line(p_work_dir);
-		print_line(p_path);
-		for (int i = 0; i < p_arguments.size(); i++) {
-			print_line(p_arguments.get(i));
-			jstring j_arg = env->NewStringUTF(p_arguments.get(i).utf8().get_data());
-			env->SetObjectArrayElement(j_args, i, j_arg);
-			env->DeleteLocalRef(j_arg);
-		}
-		jstring j_work_dir = env->NewStringUTF(p_work_dir.utf8().get_data());
-		jboolean j_background = p_background;
-		jobject j_result_callback = callable_to_jcallable(env, p_result_callback);
-
-		jboolean result = env->CallBooleanMethod(godot_instance, _termux_execute, j_path, j_args, j_work_dir, j_background, j_result_callback);
-
-		env->DeleteLocalRef(j_path);
-		env->DeleteLocalRef(j_args);
-		env->DeleteLocalRef(j_work_dir);
+		env->DeleteLocalRef(j_output_callback);
 		env->DeleteLocalRef(j_result_callback);
 
 		return result;

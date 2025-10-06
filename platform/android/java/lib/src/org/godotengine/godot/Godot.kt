@@ -1208,14 +1208,8 @@ class Godot(private val context: Context) {
 	}
 
 	@Keep
-	private fun nativeGradleBuildEnvExecute(arguments: Array<String>, projectPath: String, gradleBuildDir: String, resultCallback: Callable): Boolean {
-		return primaryHost?.gradleBuildEnvExecute(arguments, projectPath, gradleBuildDir, resultCallback) ?: false
-	}
-
-	@Keep
-	private fun nativeTermuxExecute(path: String, arguments: Array<String>, workDir: String, background: Boolean, resultCallback: Callable): Boolean {
-		// @todo I don't know if the indirection to primaryHost makes sense, but everyone else was doing it...
-		return primaryHost?.termuxExecute(path, arguments, workDir, background, resultCallback) ?: false
+	private fun nativeGradleBuildEnvExecute(arguments: Array<String>, projectPath: String, gradleBuildDir: String, outputCallback: Callable, resultCallback: Callable): Boolean {
+		return primaryHost?.gradleBuildEnvExecute(arguments, projectPath, gradleBuildDir, outputCallback, resultCallback) ?: false
 	}
 
 }

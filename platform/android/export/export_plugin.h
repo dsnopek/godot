@@ -189,44 +189,14 @@ class EditorExportPlatformAndroid : public EditorExportPlatform {
 	String _project_path;
 	String _build_path;
 	List<String> gradle_copy_args;
-	const String _termux_home = "/data/data/com.termux/files/home";
-	const String _termux_sh = "/data/data/com.termux/files/usr/bin/sh";
 
 	void _android_gradle_build_connect();
 	void _android_gradle_build_disconnect();
+	void _android_gradle_build_output_callback(int p_type, const String &p_line);
 	void _android_gradle_build_build();
-	void _android_gradle_build_build_callback(int p_exit_code, const String &p_stdout, const String &p_stderr);
+	void _android_gradle_build_build_callback(int p_exit_code);
 	void _android_gradle_build_copy();
-	void _android_gradle_build_copy_callback(int p_exit_code, const String &p_stdout, const String &p_stderr);
-
-	/*
-	void _termux_verify_openjdk();
-	void _termux_verify_openjdk_callback(int p_error_code, const String &p_stdout, const String &p_stderr);
-
-	void _termux_install_openjdk();
-	void _termux_install_openjdk_callback(int p_error_code, const String &p_stdout, const String &p_stderr);
-
-	void _termux_verify_android_sdk();
-	void _termux_verify_android_sdk_callback(int p_error_code, const String &p_stdout, const String &p_stderr);
-
-	void _termux_install_android_sdk();
-	void _termux_install_android_sdk_callback(int p_error_code, const String &p_stdout, const String &p_stderr);
-
-	void _termux_verify_aapt2();
-	void _termux_verify_aapt2_callback(int p_error_code, const String &p_stdout, const String &p_stderr);
-
-	void _termux_install_aapt2();
-	void _termux_install_aapt2_callback(int p_error_code, const String &p_stdout, const String &p_stderr);
-
-	void _termux_begin_gradle_build();
-	void _termux_begin_gradle_build_callback(int p_error_code, const String &p_stdout, const String &p_stderr);
-
-	void _termux_redo_gradle_build();
-	void _termux_redo_gradle_build_callback(int p_error_code, const String &p_stdout, const String &p_stderr);
-
-	void _termux_gradle_copy_and_rename();
-	void _termux_gradle_copy_and_rename_callback(int p_error_code, const String &p_stdout, const String &p_stderr);
-	*/
+	void _android_gradle_build_copy_callback(int p_exit_code);
 
 protected:
 	void _notification(int p_what);

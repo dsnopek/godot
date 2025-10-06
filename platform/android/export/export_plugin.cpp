@@ -3214,180 +3214,6 @@ Error EditorExportPlatformAndroid::export_project(const Ref<EditorExportPreset> 
 	return export_project_helper(p_preset, p_debug, p_path, export_format, should_sign, p_flags);
 }
 
-/*
-void EditorExportPlatformAndroid::_termux_verify_openjdk() {
-	List<String> termux_args;
-	termux_args.push_back("-c");
-	termux_args.push_back("java -version 2>&1 | grep -q 'version \"17'");
-
-	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->termux_execute(_termux_sh, termux_args, _termux_home, false, callable_mp(this, &EditorExportPlatformAndroid::_termux_verify_openjdk_callback));
-}
-
-void EditorExportPlatformAndroid::_termux_verify_openjdk_callback(int p_error_code, const String &p_stdout, const String &p_stderr) {
-	print_line("Termux: Verify OpenJDK callback.");
-	print_line("Termux result: ", p_error_code);
-	print_line("Termux stdout: ", p_stdout);
-	print_line("Termux stderr: ", p_stderr);
-
-	if (p_error_code == 0) {
-		print_line("Termux: OpenJDK found.");
-		_termux_verify_android_sdk();
-		return;
-	}
-
-	print_line("Termux: OpenJDK not found.");
-	_termux_install_openjdk();
-}
-
-void EditorExportPlatformAndroid::_termux_install_openjdk() {
-	List<String> termux_args;
-	termux_args.push_back("install");
-	termux_args.push_back("openjdk-17");
-	termux_args.push_back("-y");
-
-	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->termux_execute("/data/data/com.termux/files/usr/bin/pkg", termux_args, _termux_home, false, callable_mp(this, &EditorExportPlatformAndroid::_termux_install_openjdk_callback));
-}
-
-void EditorExportPlatformAndroid::_termux_install_openjdk_callback(int p_error_code, const String &p_stdout, const String &p_stderr) {
-	print_line("Termux result: ", p_error_code);
-	print_line("Termux stdout: ", p_stdout);
-	print_line("Termux stderr: ", p_stderr);
-
-	if (p_error_code == 0) {
-		print_line("Termux: OpenJDK installation success.");
-		_termux_verify_android_sdk();
-	}
-
-	print_line("Termux: OpenJDK installation failed!");
-}
-
-void EditorExportPlatformAndroid::_termux_verify_android_sdk() {
-	String java_home_path = EDITOR_GET("export/android/java_sdk_path");
-	String android_home_path = EDITOR_GET("export/android/android_sdk_path");
-	String shell_path = _termux_sh;
-
-	LocalVector<String> android_deps;
-	android_deps.push_back("platform-tools");
-	android_deps.push_back("build-tools;34.0.0");
-	android_deps.push_back("platforms;android-34");
-	android_deps.push_back("ndk;23.2.8568313");
-
-	String search_template = "JAVA_HOME=%s %s %s/cmdline-tools/latest/bin/sdkmanager --sdk_root=%s --list_installed | grep \'%s\'";
-	String shell_command = "";
-	for (unsigned int i = 0; i < android_deps.size(); i++) {
-		shell_command += vformat(search_template, java_home_path, shell_path, android_home_path, android_home_path, android_deps[i]);
-		if (i < android_deps.size() - 1) {
-			shell_command += " && ";
-		}
-	}
-
-	List<String> termux_args;
-	termux_args.push_back("-c");
-	termux_args.push_back(shell_command);
-
-	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->termux_execute(_termux_sh, termux_args, _termux_home, false, callable_mp(this, &EditorExportPlatformAndroid::_termux_verify_android_sdk_callback));
-}
-
-void EditorExportPlatformAndroid::_termux_verify_android_sdk_callback(int p_error_code, const String &p_stdout, const String &p_stderr) {
-	print_line("Termux result: ", p_error_code);
-	print_line("Termux stdout: ", p_stdout);
-	print_line("Termux stderr: ", p_stderr);
-
-	if (p_error_code == 0) {
-		print_line("Termux: Android SDK dependencies found.");
-		_termux_verify_aapt2();
-		return;
-	}
-
-	print_line("Termux: Android SDK dependencies not found.");
-	_termux_install_android_sdk();
-}
-
-void EditorExportPlatformAndroid::_termux_install_android_sdk() {
-	List<String> gradle_args;
-	gradle_args.push_back("JAVA_HOME=" + (String)EDITOR_GET("export/android/java_sdk_path"));
-	gradle_args.push_back("sh");
-	gradle_args.push_back(_build_path + "/gradlew");
-	gradle_args.push_back("installTermuxDependencies");
-	gradle_args.push_back("-p");
-	gradle_args.push_back(_build_path);
-	gradle_args.push_back("--no-daemon");
-
-	String shell_command = join_list(gradle_args, String(" "));
-	List<String> termux_args;
-	termux_args.push_back("-c");
-	termux_args.push_back(shell_command);
-
-	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->termux_execute(_termux_sh, termux_args, _termux_home, false, callable_mp(this, &EditorExportPlatformAndroid::_termux_install_android_sdk_callback));
-}
-
-void EditorExportPlatformAndroid::_termux_install_android_sdk_callback(int p_error_code, const String &p_stdout, const String &p_stderr) {
-	print_line("Termux result: ", p_error_code);
-	print_line("Termux stdout: ", p_stdout);
-	print_line("Termux stderr: ", p_stderr);
-
-	if (p_error_code == 0) {
-		print_line("Termux: Android SDK installation success.");
-		_termux_verify_aapt2();
-		return;
-	}
-
-	print_line("Termux: Android SDK installation failed!");
-}
-
-void EditorExportPlatformAndroid::_termux_verify_aapt2() {
-	List<String> termux_args;
-	termux_args.push_back("-c");
-	termux_args.push_back("pkg list-installed | grep -q aapt2");
-
-	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->termux_execute(_termux_sh, termux_args, _termux_home, false, callable_mp(this, &EditorExportPlatformAndroid::_termux_verify_aapt2_callback));
-}
-
-void EditorExportPlatformAndroid::_termux_verify_aapt2_callback(int p_error_code, const String &p_stdout, const String &p_stderr) {
-	print_line("Termux result: ", p_error_code);
-	print_line("Termux stdout: ", p_stdout);
-	print_line("Termux stderr: ", p_stderr);
-
-	if (p_error_code == 0) {
-		print_line("Termux: AAPT2 found.");
-		_termux_begin_gradle_build();
-		return;
-	}
-
-	print_line("Termux: AAPT2 not found!");
-	_termux_install_aapt2();
-}
-
-void EditorExportPlatformAndroid::_termux_install_aapt2() {
-	List<String> termux_args;
-	termux_args.push_back("install");
-	termux_args.push_back("aapt2");
-	termux_args.push_back("-y");
-
-	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->termux_execute("/data/data/com.termux/files/usr/bin/pkg", termux_args, _termux_home, false, callable_mp(this, &EditorExportPlatformAndroid::_termux_install_aapt2_callback));
-}
-
-void EditorExportPlatformAndroid::_termux_install_aapt2_callback(int p_error_code, const String &p_stdout, const String &p_stderr) {
-	print_line("Termux result: ", p_error_code);
-	print_line("Termux stdout: ", p_stdout);
-	print_line("Termux stderr: ", p_stderr);
-
-	if (p_error_code == 0) {
-		print_line("Termux: AAPT2 Installation success.");
-		_termux_begin_gradle_build();
-		return;
-	}
-
-	print_line("Termux: AAPT2 installation failed!");
-}
-*/
-
 void EditorExportPlatformAndroid::_android_gradle_build_connect() {
 	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
 	if (!godot_java->gradle_build_env_connect(callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build))) {
@@ -3401,17 +3227,20 @@ void EditorExportPlatformAndroid::_android_gradle_build_disconnect() {
 	godot_java->gradle_build_env_disconnect();
 }
 
+void EditorExportPlatformAndroid::_android_gradle_build_output_callback(int p_type, const String &p_line) {
+	String type_string = (p_type == 1) ? "[STDOUT]" : "[STDERR]";
+	print_line("Gradle: " + type_string + " " + p_line);
+}
+
 void EditorExportPlatformAndroid::_android_gradle_build_build() {
 	print_line("Termux: Begin gradle build");
 
 	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->gradle_build_env_execute(gradle_build_args, _project_path, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
+	godot_java->gradle_build_env_execute(gradle_build_args, _project_path, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_output_callback), callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
 }
 
-void EditorExportPlatformAndroid::_android_gradle_build_build_callback(int p_exit_code, const String &p_stdout, const String &p_stderr) {
+void EditorExportPlatformAndroid::_android_gradle_build_build_callback(int p_exit_code) {
 	print_line("Gradle result: ", p_exit_code);
-	print_line("Gradle stdout: ", p_stdout);
-	print_line("Gradle stderr: ", p_stderr);
 
 	// @todo Do in case of error!
 
@@ -3422,90 +3251,14 @@ void EditorExportPlatformAndroid::_android_gradle_build_copy() {
 	print_line("Termux: Gradle copy and rename");
 
 	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->gradle_build_env_execute(gradle_copy_args, _project_path, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_copy_callback));
+	godot_java->gradle_build_env_execute(gradle_copy_args, _project_path, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_output_callback), callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_copy_callback));
 }
 
-void EditorExportPlatformAndroid::_android_gradle_build_copy_callback(int p_exit_code, const String &p_stdout, const String &p_stderr) {
+void EditorExportPlatformAndroid::_android_gradle_build_copy_callback(int p_exit_code) {
 	print_line("Gradle result: ", p_exit_code);
-	print_line("Gradle stdout: ", p_stdout);
-	print_line("Gradle stderr: ", p_stderr);
 
 	_android_gradle_build_disconnect();
 }
-
-/*
-void EditorExportPlatformAndroid::_termux_begin_gradle_build_callback(int p_error_code, const String &p_stdout, const String &p_stderr) {
-	print_line("Termux result: ", p_error_code);
-	print_line("Termux stdout: ", p_stdout);
-	print_line("Termux stderr: ", p_stderr);
-
-	if (p_error_code == 0) {
-		print_line("Termux: Begin gradle build success.");
-		_termux_gradle_copy_and_rename();
-		return;
-	}
-
-	print_line("Termux: Begin gradle build failed!");
-	_termux_redo_gradle_build();
-}
-
-void EditorExportPlatformAndroid::_termux_redo_gradle_build() {
-	print_line("Termux: Redo gradle build");
-
-	String gradle_build_command = join_list(gradle_build_args, String(" "));
-	List<String> termux_args;
-	termux_args.push_back("-c");
-	termux_args.push_back(gradle_build_command);
-
-	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->termux_execute(_termux_sh, termux_args, _termux_home, false, callable_mp(this, &EditorExportPlatformAndroid::_termux_redo_gradle_build_callback));
-}
-
-void EditorExportPlatformAndroid::_termux_redo_gradle_build_callback(int p_error_code, const String &p_stdout, const String &p_stderr) {
-	print_line("Termux result: ", p_error_code);
-	print_line("Termux stdout: ", p_stdout);
-	print_line("Termux stderr: ", p_stderr);
-
-	if (p_error_code == 0) {
-		print_line("Termux: Redo gradle build success.");
-		_termux_gradle_copy_and_rename();
-		return;
-	}
-
-	print_line("Termux: Redo gradle build failed!");
-}
-
-void EditorExportPlatformAndroid::_termux_gradle_copy_and_rename() {
-	print_line("Termux: Gradle copy and rename");
-
-	gradle_copy_args.push_front(_build_path + "/gradlew");
-	gradle_copy_args.push_front("sh");
-	gradle_copy_args.push_front("ANDROID_HOME=" + (String)EDITOR_GET("export/android/android_sdk_path"));
-	gradle_copy_args.push_front("JAVA_HOME=" + (String)EDITOR_GET("export/android/java_sdk_path"));
-	gradle_copy_args.push_back("--no-daemon");
-	String gradle_copy_and_rename_command = join_list(gradle_copy_args, String(" "));
-
-	List<String> termux_args;
-	termux_args.push_back("-c");
-	termux_args.push_back(gradle_copy_and_rename_command);
-
-	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->termux_execute(_termux_sh, termux_args, _termux_home, false, callable_mp(this, &EditorExportPlatformAndroid::_termux_gradle_copy_and_rename_callback));
-}
-
-void EditorExportPlatformAndroid::_termux_gradle_copy_and_rename_callback(int p_error_code, const String &p_stdout, const String &p_stderr) {
-	print_line("Termux result: ", p_error_code);
-	print_line("Termux stdout: ", p_stdout);
-	print_line("Termux stderr: ", p_stderr);
-
-	if (p_error_code == 0) {
-		print_line("Termux: Gradle copy and rename success");
-		return;
-	}
-
-	print_line("Termux: Gradle copy and rename failed!");
-}
-*/
 
 Error EditorExportPlatformAndroid::export_project_helper(const Ref<EditorExportPreset> &p_preset, bool p_debug, const String &p_path, int export_format, bool should_sign, BitField<EditorExportPlatform::DebugFlags> p_flags) {
 	ExportNotifier notifier(*this, p_preset, p_debug, p_path, p_flags);

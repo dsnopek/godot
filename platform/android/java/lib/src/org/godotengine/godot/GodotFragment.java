@@ -549,9 +549,9 @@ public class GodotFragment extends Fragment implements IDownloaderClient, GodotH
 	}
 
 	@Override
-	public void gradleBuildEnvCleanProject(@NonNull String projectPath, @NonNull String gradleBuildDir) {
+	public void gradleBuildEnvCleanProject(@NonNull String projectPath, @NonNull String gradleBuildDir, @NonNull Callable callback) {
 		if (parentHost != null) {
-			parentHost.gradleBuildEnvCleanProject(projectPath, gradleBuildDir);
+			parentHost.gradleBuildEnvCleanProject(projectPath, gradleBuildDir, callback);
 		}
 	}
 }

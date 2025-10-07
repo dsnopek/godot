@@ -487,6 +487,13 @@ class AndroidEditorGradleRunner : public Object {
 	RichTextLabel *output_label = nullptr;
 	ConfirmationDialog *output_dialog = nullptr;
 
+	enum State {
+		STATE_IDLE,
+		STATE_BUILDING,
+		STATE_CLEANING,
+	};
+	State state = STATE_IDLE;
+
 	String project_path;
 	String build_path;
 	List<String> gradle_build_args;
@@ -500,10 +507,11 @@ class AndroidEditorGradleRunner : public Object {
 	void _android_gradle_build_build_callback(int p_exit_code);
 	void _android_gradle_build_copy();
 	void _android_gradle_build_copy_callback(int p_exit_code);
+	void _android_gradle_build_clean_project(bool p_was_successful);
+	void _android_gradle_build_clean_project_callback(bool p_was_successful);
 
 	void _android_gradle_build_failed(const String &p_msg = String(""));
 	void _android_gradle_build_cancel();
-	void _android_gradle_build_clean_project();
 
 public:
 	void run_gradle(const String &p_project_path, const String &p_build_path, const List<String> &p_gradle_build_args, const List<String> &p_gradle_copy_args) {
@@ -531,6 +539,7 @@ public:
 
 		EditorInterface::get_singleton()->popup_dialog_centered_ratio(output_dialog);
 
+		state = STATE_BUILDING;
 		_android_gradle_build_connect();
 	}
 };
@@ -573,6 +582,7 @@ void AndroidEditorGradleRunner::_android_gradle_build_build() {
 }
 
 void AndroidEditorGradleRunner::_android_gradle_build_build_callback(int p_exit_code) {
+	job_id = -1;
 	if (p_exit_code != 0) {
 		_android_gradle_build_failed();
 		return;
@@ -592,34 +602,58 @@ void AndroidEditorGradleRunner::_android_gradle_build_copy() {
 }
 
 void AndroidEditorGradleRunner::_android_gradle_build_copy_callback(int p_exit_code) {
+	job_id = -1;
 	if (p_exit_code != 0) {
 		_android_gradle_build_failed();
 	} else {
+		_android_gradle_build_clean_project(true);
+	}
+}
+
+void AndroidEditorGradleRunner::_android_gradle_build_clean_project(bool p_was_successful) {
+	if (state != STATE_CLEANING) {
+		state = STATE_CLEANING;
+		/*
+		GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
+		godot_java->gradle_build_env_clean_project(
+				project_path,
+				build_path,
+				callable_mp(this, &AndroidEditorGradleRunner::_android_gradle_build_clean_project_callback).bind(p_was_successful));
+		*/
+		_android_gradle_build_clean_project_callback(p_was_successful);
+	}
+}
+
+void AndroidEditorGradleRunner::_android_gradle_build_clean_project_callback(bool p_was_successful) {
+	// Ensure we haven't switched back to STATE_BUILDING in the meantime.
+	if (state == STATE_CLEANING) {
+		if (p_was_successful) {
+			output_dialog->hide();
+		} else {
+			output_dialog->get_ok_button()->set_disabled(false);
+		}
+
 		_android_gradle_build_disconnect();
-		output_dialog->hide();
+		state = STATE_IDLE;
 	}
 }
 
 void AndroidEditorGradleRunner::_android_gradle_build_failed(const String &p_msg) {
-	_android_gradle_build_disconnect();
+	job_id = -1;
 
 	if (p_msg != "") {
 		_android_gradle_build_output(1, p_msg);
 	}
 
-	output_dialog->get_ok_button()->set_disabled(false);
+	_android_gradle_build_clean_project(false);
 }
 
 void AndroidEditorGradleRunner::_android_gradle_build_cancel() {
 	if (job_id > 0) {
 		GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
 		godot_java->gradle_build_env_cancel(job_id);
+		_android_gradle_build_clean_project(false);
 	}
-}
-
-void AndroidEditorGradleRunner::_android_gradle_build_clean_project() {
-	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->gradle_build_env_clean_project(project_path, build_path);
 }
 #endif
 

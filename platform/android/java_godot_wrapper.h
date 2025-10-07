@@ -146,11 +146,11 @@ public:
 
 	void on_editor_workspace_selected(const String &p_workspace);
 
-	bool gradle_build_env_connect(const Callable &p_result_callback);
+	bool gradle_build_env_connect(const Callable &p_callback);
 	void gradle_build_env_disconnect();
 	int gradle_build_env_execute(const List<String> &p_arguments, const String &p_project_path, const String &p_gradle_build_directory, const Callable &p_output_callback, const Callable &p_result_callback);
 	void gradle_build_env_cancel(int p_job_id);
-	void gradle_build_env_clean_project(const String &p_project_path, const String &p_gradle_build_directory);
+	void gradle_build_env_clean_project(const String &p_project_path, const String &p_gradle_build_directory, const Callable &p_callback);
 };
 
 #endif // JAVA_GODOT_WRAPPER_H

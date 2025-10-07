@@ -196,6 +196,6 @@ public interface GodotHost {
 	 * @param projectPath    The working directory to use when executing the command
 	 * @param gradleBuildDir The gradle build directory within the project
 	 */
-	default void gradleBuildEnvCleanProject(@NonNull String projectPath, @NonNull String gradleBuildDir) {
+	default void gradleBuildEnvCleanProject(@NonNull String projectPath, @NonNull String gradleBuildDir, @NonNull Callable callback) {
 	}
 }

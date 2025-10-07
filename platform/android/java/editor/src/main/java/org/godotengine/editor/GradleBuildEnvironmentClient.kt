@@ -194,12 +194,13 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 		}
 	}
 
-	fun cleanProject(projectPath: String, gradleBuildDir: String) {
+	fun cleanProject(projectPath: String, gradleBuildDir: String, resultCallback: (Int) -> Unit) {
 		if (outgoingMessenger == null) {
 			return
 		}
 
-		val msg: Message = Message.obtain(null, MSG_CLEAN_PROJECT)
+		val msg: Message = Message.obtain(null, MSG_CLEAN_PROJECT, getNextExecutionId({ type, line -> Unit }, resultCallback))
+		msg.replyTo = incomingMessenger
 
 		val data = Bundle()
 		data.putString("project_path", projectPath)
@@ -210,6 +211,8 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 			outgoingMessenger?.send(msg)
 		} catch (e: RemoteException) {
 			Log.e(TAG, "Unable to clean Gradle project")
+			executionMap.remove(msg.arg1)
+			resultCallback(0)
 			e.printStackTrace()
 		}
 	}

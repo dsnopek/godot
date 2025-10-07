@@ -1218,8 +1218,8 @@ class Godot(private val context: Context) {
 	}
 
 	@Keep
-	private fun nativeGradleBuildEnvCleanProject(projectPath: String, gradleBuildDir: String) {
-		primaryHost?.gradleBuildEnvCleanProject(projectPath, gradleBuildDir)
+	private fun nativeGradleBuildEnvCleanProject(projectPath: String, gradleBuildDir: String, callback: Callable) {
+		primaryHost?.gradleBuildEnvCleanProject(projectPath, gradleBuildDir, callback)
 	}
 
 }

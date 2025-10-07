@@ -854,7 +854,7 @@ abstract class BaseGodotEditor : GodotActivity(), GameMenuFragment.GameMenuListe
 				outputCallback.call(outputType, line)
 			}
 		}
-		val resultCb : (Int) -> Unit = { exitCode ->
+		val resultCb: (Int) -> Unit = { exitCode ->
 			godot?.runOnRenderThread {
 				resultCallback.call(exitCode)
 			}
@@ -866,8 +866,13 @@ abstract class BaseGodotEditor : GodotActivity(), GameMenuFragment.GameMenuListe
 		gradleBuildEnvironmentClient.cancel(jobId)
 	}
 
-	override fun gradleBuildEnvCleanProject(projectPath: String, gradleBuildDir: String) {
-		gradleBuildEnvironmentClient.cleanProject(projectPath, gradleBuildDir)
+	override fun gradleBuildEnvCleanProject(projectPath: String, gradleBuildDir: String, callback: Callable) {
+		val cb: (Int) -> Unit = { exitCode ->
+			godot?.runOnRenderThread {
+				callback.call()
+			}
+		}
+		gradleBuildEnvironmentClient.cleanProject(projectPath, gradleBuildDir, cb)
 	}
 
 }

@@ -41,7 +41,6 @@ import android.os.Message
 import android.os.Messenger
 import android.os.RemoteException
 import android.util.Log
-import org.godotengine.godot.variant.Callable
 import kotlin.collections.set
 
 private const val MSG_EXECUTE_GRADLE = 1
@@ -65,7 +64,7 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 
 			Log.i(TAG, "Service connected")
 			for (callable in connectionCallbacks) {
-				callable.call()
+				callable()
 			}
 			connectionCallbacks.clear()
 			connecting = false
@@ -93,19 +92,19 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 	}
 	private val incomingMessenger = Messenger(IncomingHandler())
 
-	private val connectionCallbacks = mutableListOf<Callable>()
+	private val connectionCallbacks = mutableListOf<() -> Unit>()
 	private var connecting = false
 	private var executionId = 1000
 
-	private class ExecutionInfo(public val outputCallback: Callable, public val resultCallback: Callable)
+	private class ExecutionInfo(public val outputCallback: (Int, String) -> Unit, public val resultCallback: (Int) -> Unit)
 	private val executionMap = HashMap<Int, ExecutionInfo>()
 
-	fun connect(callable: Callable): Boolean {
+	fun connect(callback: () -> Unit): Boolean {
 		if (bound) {
-			callable.call();
+			callback()
 			return true;
 		}
-		connectionCallbacks.add(callable)
+		connectionCallbacks.add(callback)
 		if (connecting) {
 			return true;
 		}
@@ -133,13 +132,13 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 		}
 	}
 
-	private fun getNextExecutionId(outputCallback: Callable, resultCallback: Callable): Int {
+	private fun getNextExecutionId(outputCallback: (Int, String) -> Unit, resultCallback: (Int) -> Unit): Int {
 		val id = executionId++
 		executionMap[id] = ExecutionInfo(outputCallback, resultCallback)
 		return id
 	}
 
-	fun execute(arguments: Array<String>, projectPath: String, gradleBuildDir: String, outputCallback: Callable, resultCallback: Callable): Boolean {
+	fun execute(arguments: Array<String>, projectPath: String, gradleBuildDir: String, outputCallback: (Int, String) -> Unit, resultCallback: (Int) -> Unit): Boolean {
 		if (outgoingMessenger == null) {
 			return false
 		}
@@ -158,6 +157,7 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 		} catch (e: RemoteException) {
 			Log.e(TAG, "Unable to execute Gradle command: gradlew ${arguments.joinToString(" ")}")
 			e.printStackTrace()
+			resultCallback(255)
 			return false;
 		}
 
@@ -166,7 +166,7 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 
 	private fun receiveCommandResult(msg: Message) {
 		val executionInfo = executionMap.remove(msg.arg1)
-		executionInfo?.resultCallback?.call(msg.arg2)
+		executionInfo?.resultCallback?.invoke(msg.arg2)
 	}
 
 	private fun receiveCommandOutput(msg: Message) {
@@ -175,7 +175,7 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 
 		if (line != null) {
 			val executionInfo = executionMap.get(msg.arg1)
-			executionInfo?.outputCallback?.call(msg.arg2, line)
+			executionInfo?.outputCallback?.invoke(msg.arg2, line)
 		}
 	}
 

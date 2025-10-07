@@ -830,7 +830,12 @@ abstract class BaseGodotEditor : GodotActivity(), GameMenuFragment.GameMenuListe
 	override fun isGameEmbeddingSupported() = !isNativeXRDevice(applicationContext)
 
 	override fun gradleBuildEnvConnect(callback: Callable): Boolean {
-		return gradleBuildEnvironmentClient.connect(callback)
+		val cb: () -> Unit = {
+			godot?.runOnRenderThread {
+				callback.call()
+			}
+		}
+		return gradleBuildEnvironmentClient.connect(cb)
 	}
 
 	override fun gradleBuildEnvDisconnect() {
@@ -844,7 +849,17 @@ abstract class BaseGodotEditor : GodotActivity(), GameMenuFragment.GameMenuListe
 		outputCallback: Callable,
 		resultCallback: Callable
 	): Boolean {
-		return gradleBuildEnvironmentClient.execute(arguments, projectPath, gradleBuildDir, outputCallback, resultCallback)
+		val outputCb: (Int, String) -> Unit = { outputType, line ->
+			godot?.runOnRenderThread {
+				outputCallback.call(outputType, line)
+			}
+		}
+		val resultCb : (Int) -> Unit = { exitCode ->
+			godot?.runOnRenderThread {
+				resultCallback.call(exitCode)
+			}
+		}
+		return gradleBuildEnvironmentClient.execute(arguments, projectPath, gradleBuildDir, outputCb, resultCb)
 	}
 
 }

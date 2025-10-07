@@ -57,6 +57,8 @@ struct LauncherIcon {
 	int dimensions = 0;
 };
 
+class AndroidEditorGradleRunner;
+
 class EditorExportPlatformAndroid : public EditorExportPlatform {
 	GDCLASS(EditorExportPlatformAndroid, EditorExportPlatform);
 
@@ -95,6 +97,8 @@ class EditorExportPlatformAndroid : public EditorExportPlatform {
 
 	static void _check_for_changes_poll_thread(void *ud);
 	void _update_preset_status();
+#else
+	AndroidEditorGradleRunner *android_editor_gradle_runner = nullptr;
 #endif
 
 	String get_project_name(const String &p_name) const;
@@ -183,20 +187,6 @@ class EditorExportPlatformAndroid : public EditorExportPlatform {
 	static Vector<ABI> get_enabled_abis(const Ref<EditorExportPreset> &p_preset);
 
 	static bool _uses_vulkan();
-
-	// Temporary variables for testing.
-	List<String> gradle_build_args;
-	String _project_path;
-	String _build_path;
-	List<String> gradle_copy_args;
-
-	void _android_gradle_build_connect();
-	void _android_gradle_build_disconnect();
-	void _android_gradle_build_output_callback(int p_type, const String &p_line);
-	void _android_gradle_build_build();
-	void _android_gradle_build_build_callback(int p_exit_code);
-	void _android_gradle_build_copy();
-	void _android_gradle_build_copy_callback(int p_exit_code);
 
 protected:
 	void _notification(int p_what);

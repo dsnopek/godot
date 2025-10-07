@@ -42,6 +42,7 @@
 #include "core/io/marshalls.h"
 #include "core/version.h"
 #include "drivers/png/png_driver_common.h"
+#include "editor/editor_interface.h"
 #include "editor/editor_log.h"
 #include "editor/editor_node.h"
 #include "editor/editor_paths.h"
@@ -478,6 +479,121 @@ void EditorExportPlatformAndroid::_update_preset_status() {
 		has_runnable_preset.clear();
 	}
 	devices_changed.set();
+}
+#else
+class AndroidEditorGradleRunner : public Object {
+	GDCLASS(AndroidEditorGradleRunner, Object);
+
+	RichTextLabel *output_label = nullptr;
+	AcceptDialog *output_dialog = nullptr;
+
+	String project_path;
+	String build_path;
+	List<String> gradle_build_args;
+	List<String> gradle_copy_args;
+
+	void _android_gradle_build_connect();
+	void _android_gradle_build_disconnect();
+	void _android_gradle_build_output_callback(int p_type, const String &p_line);
+	void _android_gradle_build_build();
+	void _android_gradle_build_build_callback(int p_exit_code);
+	void _android_gradle_build_copy();
+	void _android_gradle_build_copy_callback(int p_exit_code);
+
+	void _android_gradle_build_failed(const String &p_msg = String(""));
+
+public:
+	void run_gradle(const String &p_project_path, const String &p_build_path, const List<String> &p_gradle_build_args, const List<String> &p_gradle_copy_args) {
+		project_path = p_project_path;
+		build_path = p_build_path;
+		gradle_build_args = p_gradle_build_args;
+		gradle_copy_args = p_gradle_copy_args;
+
+		if (output_dialog == nullptr) {
+			output_label = memnew(RichTextLabel);
+			output_label->set_selection_enabled(true);
+			output_label->set_context_menu_enabled(true);
+			output_label->set_scroll_follow(true);
+
+			output_dialog = memnew(AcceptDialog);
+			output_dialog->set_unparent_when_invisible(true);
+			output_dialog->set_title(TTR("Building Android Project (gradle)"));
+			output_dialog->add_child(output_label);
+		}
+
+		output_label->clear();
+		output_dialog->get_ok_button()->set_disabled(true);
+
+		EditorInterface::get_singleton()->popup_dialog_centered_ratio(output_dialog);
+
+		_android_gradle_build_connect();
+	}
+};
+
+void AndroidEditorGradleRunner::_android_gradle_build_connect() {
+	output_label->add_text(TTR("> Connecting to Gradle Build Environment...") + "\n");
+
+	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
+	if (!godot_java->gradle_build_env_connect(callable_mp(this, &AndroidEditorGradleRunner::_android_gradle_build_build))) {
+		_android_gradle_build_failed(TTR("Unable to connect to Gradle Build Environment service"));
+	}
+}
+
+void AndroidEditorGradleRunner::_android_gradle_build_disconnect() {
+	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
+	godot_java->gradle_build_env_disconnect();
+}
+
+void AndroidEditorGradleRunner::_android_gradle_build_output_callback(int p_type, const String &p_line) {
+	if (p_type == 1) {
+		print_line(p_line);
+		output_label->add_text(p_line + "\n");
+	} else {
+		print_error(p_line);
+		output_label->append_text("[color=red]" + p_line + "[/color]\n");
+	}
+}
+
+void AndroidEditorGradleRunner::_android_gradle_build_build() {
+	output_label->add_text(TTR("> Starting Gradle build...") + "\n");
+
+	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
+	godot_java->gradle_build_env_execute(gradle_build_args, project_path, build_path, callable_mp(this, &AndroidEditorGradleRunner::_android_gradle_build_output_callback), callable_mp(this, &AndroidEditorGradleRunner::_android_gradle_build_build_callback));
+}
+
+void AndroidEditorGradleRunner::_android_gradle_build_build_callback(int p_exit_code) {
+	if (p_exit_code != 0) {
+		_android_gradle_build_failed();
+		return;
+	}
+
+	_android_gradle_build_copy();
+}
+
+void AndroidEditorGradleRunner::_android_gradle_build_copy() {
+	output_label->add_text(TTR("> Copying Gradle artifacts...") + "\n");
+
+	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
+	godot_java->gradle_build_env_execute(gradle_copy_args, project_path, build_path, callable_mp(this, &AndroidEditorGradleRunner::_android_gradle_build_output_callback), callable_mp(this, &AndroidEditorGradleRunner::_android_gradle_build_copy_callback));
+}
+
+void AndroidEditorGradleRunner::_android_gradle_build_copy_callback(int p_exit_code) {
+	if (p_exit_code != 0) {
+		_android_gradle_build_failed();
+	} else {
+		_android_gradle_build_disconnect();
+		output_dialog->hide();
+	}
+}
+
+void AndroidEditorGradleRunner::_android_gradle_build_failed(const String &p_msg) {
+	_android_gradle_build_disconnect();
+
+	if (p_msg != "") {
+		_android_gradle_build_output_callback(1, p_msg);
+	}
+
+	output_dialog->get_ok_button()->set_disabled(false);
 }
 #endif
 
@@ -3214,52 +3330,6 @@ Error EditorExportPlatformAndroid::export_project(const Ref<EditorExportPreset> 
 	return export_project_helper(p_preset, p_debug, p_path, export_format, should_sign, p_flags);
 }
 
-void EditorExportPlatformAndroid::_android_gradle_build_connect() {
-	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	if (!godot_java->gradle_build_env_connect(callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build))) {
-		// @todo Show a nice error about not being able to connect to the build environment.
-		print_error("Unable to connect to Godot Gradle Build Environment");
-	}
-}
-
-void EditorExportPlatformAndroid::_android_gradle_build_disconnect() {
-	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->gradle_build_env_disconnect();
-}
-
-void EditorExportPlatformAndroid::_android_gradle_build_output_callback(int p_type, const String &p_line) {
-	String type_string = (p_type == 1) ? "[STDOUT]" : "[STDERR]";
-	print_line("Gradle: " + type_string + " " + p_line);
-}
-
-void EditorExportPlatformAndroid::_android_gradle_build_build() {
-	print_line("Termux: Begin gradle build");
-
-	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->gradle_build_env_execute(gradle_build_args, _project_path, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_output_callback), callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_build_callback));
-}
-
-void EditorExportPlatformAndroid::_android_gradle_build_build_callback(int p_exit_code) {
-	print_line("Gradle result: ", p_exit_code);
-
-	// @todo Do in case of error!
-
-	_android_gradle_build_copy();
-}
-
-void EditorExportPlatformAndroid::_android_gradle_build_copy() {
-	print_line("Termux: Gradle copy and rename");
-
-	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->gradle_build_env_execute(gradle_copy_args, _project_path, _build_path, callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_output_callback), callable_mp(this, &EditorExportPlatformAndroid::_android_gradle_build_copy_callback));
-}
-
-void EditorExportPlatformAndroid::_android_gradle_build_copy_callback(int p_exit_code) {
-	print_line("Gradle result: ", p_exit_code);
-
-	_android_gradle_build_disconnect();
-}
-
 Error EditorExportPlatformAndroid::export_project_helper(const Ref<EditorExportPreset> &p_preset, bool p_debug, const String &p_path, int export_format, bool should_sign, BitField<EditorExportPlatform::DebugFlags> p_flags) {
 	ExportNotifier notifier(*this, p_preset, p_debug, p_path, p_flags);
 
@@ -3610,13 +3680,12 @@ Error EditorExportPlatformAndroid::export_project_helper(const Ref<EditorExportP
 		copy_args.push_back("-Pexport_filename=" + export_filename);
 
 #ifdef ANDROID_ENABLED
-		gradle_build_args = cmdline;
-		_project_path = ProjectSettings::get_singleton()->globalize_path("res://");
-		_build_path = build_path.substr(_project_path.length());
-		gradle_copy_args = copy_args;
-
-		//_termux_verify_openjdk();
-		_android_gradle_build_connect();
+		String project_path = ProjectSettings::get_singleton()->globalize_path("res://");
+		android_editor_gradle_runner->run_gradle(
+				project_path,
+				build_path.substr(project_path.length()),
+				cmdline,
+				copy_args);
 #else
 		print_verbose("Copying Android binary using gradle command: " + String("\n") + build_command + " " + join_list(copy_args, String(" ")));
 		String copy_binary_output;
@@ -4001,6 +4070,8 @@ EditorExportPlatformAndroid::EditorExportPlatformAndroid() {
 		_create_editor_debug_keystore_if_needed();
 		_update_preset_status();
 		check_for_changes_thread.start(_check_for_changes_poll_thread, this);
+#else
+		android_editor_gradle_runner = memnew(AndroidEditorGradleRunner);
 #endif
 	}
 }
@@ -4010,6 +4081,10 @@ EditorExportPlatformAndroid::~EditorExportPlatformAndroid() {
 	quit_request.set();
 	if (check_for_changes_thread.is_started()) {
 		check_for_changes_thread.wait_to_finish();
+	}
+#else
+	if (android_editor_gradle_runner) {
+		memdelete(android_editor_gradle_runner);
 	}
 #endif
 }

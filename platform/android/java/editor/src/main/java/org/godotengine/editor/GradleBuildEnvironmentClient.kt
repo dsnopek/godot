@@ -199,7 +199,9 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 			return
 		}
 
-		val msg: Message = Message.obtain(null, MSG_CLEAN_PROJECT, getNextExecutionId({ type, line -> Unit }, resultCallback))
+		val emptyOutputCallback: (Int, String) -> Unit = { outputType, line -> }
+
+		val msg: Message = Message.obtain(null, MSG_CLEAN_PROJECT, getNextExecutionId(emptyOutputCallback, resultCallback), 0)
 		msg.replyTo = incomingMessenger
 
 		val data = Bundle()

@@ -613,14 +613,11 @@ void AndroidEditorGradleRunner::_android_gradle_build_copy_callback(int p_exit_c
 void AndroidEditorGradleRunner::_android_gradle_build_clean_project(bool p_was_successful) {
 	if (state != STATE_CLEANING) {
 		state = STATE_CLEANING;
-		/*
 		GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
 		godot_java->gradle_build_env_clean_project(
 				project_path,
 				build_path,
 				callable_mp(this, &AndroidEditorGradleRunner::_android_gradle_build_clean_project_callback).bind(p_was_successful));
-		*/
-		_android_gradle_build_clean_project_callback(p_was_successful);
 	}
 }
 

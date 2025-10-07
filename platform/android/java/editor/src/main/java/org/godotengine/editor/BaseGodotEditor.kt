@@ -848,7 +848,7 @@ abstract class BaseGodotEditor : GodotActivity(), GameMenuFragment.GameMenuListe
 		gradleBuildDir: String,
 		outputCallback: Callable,
 		resultCallback: Callable
-	): Boolean {
+	): Int {
 		val outputCb: (Int, String) -> Unit = { outputType, line ->
 			godot?.runOnRenderThread {
 				outputCallback.call(outputType, line)
@@ -860,6 +860,14 @@ abstract class BaseGodotEditor : GodotActivity(), GameMenuFragment.GameMenuListe
 			}
 		}
 		return gradleBuildEnvironmentClient.execute(arguments, projectPath, gradleBuildDir, outputCb, resultCb)
+	}
+
+	override fun gradleBuildEnvCancel(jobId: Int) {
+		gradleBuildEnvironmentClient.cancel(jobId)
+	}
+
+	override fun gradleBuildEnvCleanProject(projectPath: String, gradleBuildDir: String) {
+		gradleBuildEnvironmentClient.cleanProject(projectPath, gradleBuildDir)
 	}
 
 }

@@ -1208,8 +1208,18 @@ class Godot(private val context: Context) {
 	}
 
 	@Keep
-	private fun nativeGradleBuildEnvExecute(arguments: Array<String>, projectPath: String, gradleBuildDir: String, outputCallback: Callable, resultCallback: Callable): Boolean {
-		return primaryHost?.gradleBuildEnvExecute(arguments, projectPath, gradleBuildDir, outputCallback, resultCallback) ?: false
+	private fun nativeGradleBuildEnvExecute(arguments: Array<String>, projectPath: String, gradleBuildDir: String, outputCallback: Callable, resultCallback: Callable): Int {
+		return primaryHost?.gradleBuildEnvExecute(arguments, projectPath, gradleBuildDir, outputCallback, resultCallback) ?: -1
+	}
+
+	@Keep
+	private fun nativeGradleBuildEnvCancel(jobId: Int) {
+		primaryHost?.gradleBuildEnvCancel(jobId)
+	}
+
+	@Keep
+	private fun nativeGradleBuildEnvCleanProject(projectPath: String, gradleBuildDir: String) {
+		primaryHost?.gradleBuildEnvCleanProject(projectPath, gradleBuildDir)
 	}
 
 }

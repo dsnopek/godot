@@ -88,6 +88,8 @@ private:
 	jmethodID _gradle_build_env_connect = nullptr;
 	jmethodID _gradle_build_env_disconnect = nullptr;
 	jmethodID _gradle_build_env_execute = nullptr;
+	jmethodID _gradle_build_env_cancel = nullptr;
+	jmethodID _gradle_build_env_clean_project = nullptr;
 
 public:
 	GodotJavaWrapper(JNIEnv *p_env, jobject p_activity, jobject p_godot_instance);
@@ -146,7 +148,9 @@ public:
 
 	bool gradle_build_env_connect(const Callable &p_result_callback);
 	void gradle_build_env_disconnect();
-	bool gradle_build_env_execute(const List<String> &p_arguments, const String &p_project_path, const String &p_gradle_build_directory, const Callable &p_output_callback, const Callable &p_result_callback);
+	int gradle_build_env_execute(const List<String> &p_arguments, const String &p_project_path, const String &p_gradle_build_directory, const Callable &p_output_callback, const Callable &p_result_callback);
+	void gradle_build_env_cancel(int p_job_id);
+	void gradle_build_env_clean_project(const String &p_project_path, const String &p_gradle_build_directory);
 };
 
 #endif // JAVA_GODOT_WRAPPER_H

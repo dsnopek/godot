@@ -534,10 +534,24 @@ public class GodotFragment extends Fragment implements IDownloaderClient, GodotH
 	}
 
 	@Override
-	public boolean gradleBuildEnvExecute(@NonNull String[] arguments, @NonNull String projectPath, @NonNull String gradleBuildDir, @NonNull Callable outputCallback, @NonNull Callable resultCallback) {
+	public int gradleBuildEnvExecute(@NonNull String[] arguments, @NonNull String projectPath, @NonNull String gradleBuildDir, @NonNull Callable outputCallback, @NonNull Callable resultCallback) {
 		if (parentHost != null) {
 			return parentHost.gradleBuildEnvExecute(arguments, projectPath, gradleBuildDir, outputCallback, resultCallback);
 		}
-		return false;
+		return -1;
+	}
+
+	@Override
+	public void gradleBuildEnvCancel(int jobId) {
+		if (parentHost != null) {
+			parentHost.gradleBuildEnvCancel(jobId);
+		}
+	}
+
+	@Override
+	public void gradleBuildEnvCleanProject(@NonNull String projectPath, @NonNull String gradleBuildDir) {
+		if (parentHost != null) {
+			parentHost.gradleBuildEnvCleanProject(projectPath, gradleBuildDir);
+		}
 	}
 }

@@ -138,9 +138,9 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 		return id
 	}
 
-	fun execute(arguments: Array<String>, projectPath: String, gradleBuildDir: String, outputCallback: (Int, String) -> Unit, resultCallback: (Int) -> Unit): Boolean {
+	fun execute(arguments: Array<String>, projectPath: String, gradleBuildDir: String, outputCallback: (Int, String) -> Unit, resultCallback: (Int) -> Unit): Int {
 		if (outgoingMessenger == null) {
-			return false
+			return -1
 		}
 
 		val msg: Message = Message.obtain(null, MSG_EXECUTE_GRADLE, getNextExecutionId(outputCallback, resultCallback),0)
@@ -157,11 +157,12 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 		} catch (e: RemoteException) {
 			Log.e(TAG, "Unable to execute Gradle command: gradlew ${arguments.joinToString(" ")}")
 			e.printStackTrace()
+			executionMap.remove(msg.arg1)
 			resultCallback(255)
-			return false;
+			return -1
 		}
 
-		return true
+		return msg.arg1
 	}
 
 	private fun receiveCommandResult(msg: Message) {
@@ -176,6 +177,40 @@ internal class GradleBuildEnvironmentClient(private val context: Context) {
 		if (line != null) {
 			val executionInfo = executionMap.get(msg.arg1)
 			executionInfo?.outputCallback?.invoke(msg.arg2, line)
+		}
+	}
+
+	fun cancel(jobId: Int) {
+		if (outgoingMessenger == null) {
+			return
+		}
+
+		val msg: Message = Message.obtain(null, MSG_CANCEL_COMMAND, jobId, 0)
+		try {
+			outgoingMessenger?.send(msg)
+		} catch (e: RemoteException) {
+			Log.e(TAG, "Unable to cancel Gradle command: ${jobId}")
+			e.printStackTrace()
+		}
+	}
+
+	fun cleanProject(projectPath: String, gradleBuildDir: String) {
+		if (outgoingMessenger == null) {
+			return
+		}
+
+		val msg: Message = Message.obtain(null, MSG_CLEAN_PROJECT)
+
+		val data = Bundle()
+		data.putString("project_path", projectPath)
+		data.putString("gradle_build_directory", gradleBuildDir)
+		msg.data = data
+
+		try {
+			outgoingMessenger?.send(msg)
+		} catch (e: RemoteException) {
+			Log.e(TAG, "Unable to clean Gradle project")
+			e.printStackTrace()
 		}
 	}
 

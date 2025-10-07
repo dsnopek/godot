@@ -176,9 +176,26 @@ public interface GodotHost {
 	 * @param gradleBuildDir The gradle build directory within the project
 	 * @param outputCallback The callback to call for each line of output from the command
 	 * @param resultCallback The callback to call when the command is finished running
-	 * @return Whether or not the command could be executed
+	 * @return A positive job id, if successful; otherwise, a negative number
 	 */
-	default boolean gradleBuildEnvExecute(@NonNull String[] arguments, @NonNull String projectPath, @NonNull String gradleBuildDir, @NonNull Callable outputCallback, @NonNull Callable resultCallback) {
-		return false;
+	default int gradleBuildEnvExecute(@NonNull String[] arguments, @NonNull String projectPath, @NonNull String gradleBuildDir, @NonNull Callable outputCallback, @NonNull Callable resultCallback) {
+		return -1;
+	}
+
+	/**
+	 * Cancels a command executed via the Gradle Build Environment.
+	 *
+	 * @param jobId The job id returned from gradleBuildEnvExecute()
+	 */
+	default void gradleBuildEnvCancel(int jobId) {
+	}
+
+	/**
+	 * Requests that a project be cleaned up via the Gradle Build Environment.
+	 *
+	 * @param projectPath    The working directory to use when executing the command
+	 * @param gradleBuildDir The gradle build directory within the project
+	 */
+	default void gradleBuildEnvCleanProject(@NonNull String projectPath, @NonNull String gradleBuildDir) {
 	}
 }

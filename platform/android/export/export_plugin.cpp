@@ -494,7 +494,7 @@ class AndroidEditorGradleRunner : public Object {
 
 	void _android_gradle_build_connect();
 	void _android_gradle_build_disconnect();
-	void _android_gradle_build_output_callback(int p_type, const String &p_line);
+	void _android_gradle_build_output(int p_type, const String &p_line);
 	void _android_gradle_build_build();
 	void _android_gradle_build_build_callback(int p_exit_code);
 	void _android_gradle_build_copy();
@@ -531,7 +531,7 @@ public:
 };
 
 void AndroidEditorGradleRunner::_android_gradle_build_connect() {
-	output_label->add_text(TTR("> Connecting to Gradle Build Environment...") + "\n");
+	_android_gradle_build_output(0, TTR("> Connecting to Gradle Build Environment..."));
 
 	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
 	if (!godot_java->gradle_build_env_connect(callable_mp(this, &AndroidEditorGradleRunner::_android_gradle_build_build))) {
@@ -544,8 +544,11 @@ void AndroidEditorGradleRunner::_android_gradle_build_disconnect() {
 	godot_java->gradle_build_env_disconnect();
 }
 
-void AndroidEditorGradleRunner::_android_gradle_build_output_callback(int p_type, const String &p_line) {
-	if (p_type == 1) {
+void AndroidEditorGradleRunner::_android_gradle_build_output(int p_type, const String &p_line) {
+	if (p_type == 0) {
+		print_line(p_line);
+		output_label->append_text("[color=green]" + p_line + "[/color]\n");
+	} else if (p_type == 1) {
 		print_line(p_line);
 		output_label->add_text(p_line + "\n");
 	} else {
@@ -555,10 +558,10 @@ void AndroidEditorGradleRunner::_android_gradle_build_output_callback(int p_type
 }
 
 void AndroidEditorGradleRunner::_android_gradle_build_build() {
-	output_label->add_text(TTR("> Starting Gradle build...") + "\n");
+	_android_gradle_build_output(0, TTR("> Starting Gradle build..."));
 
 	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->gradle_build_env_execute(gradle_build_args, project_path, build_path, callable_mp(this, &AndroidEditorGradleRunner::_android_gradle_build_output_callback), callable_mp(this, &AndroidEditorGradleRunner::_android_gradle_build_build_callback));
+	godot_java->gradle_build_env_execute(gradle_build_args, project_path, build_path, callable_mp(this, &AndroidEditorGradleRunner::_android_gradle_build_output), callable_mp(this, &AndroidEditorGradleRunner::_android_gradle_build_build_callback));
 }
 
 void AndroidEditorGradleRunner::_android_gradle_build_build_callback(int p_exit_code) {
@@ -571,10 +574,10 @@ void AndroidEditorGradleRunner::_android_gradle_build_build_callback(int p_exit_
 }
 
 void AndroidEditorGradleRunner::_android_gradle_build_copy() {
-	output_label->add_text(TTR("> Copying Gradle artifacts...") + "\n");
+	_android_gradle_build_output(0, TTR("> Copying Gradle artifacts..."));
 
 	GodotJavaWrapper *godot_java = OS_Android::get_singleton()->get_godot_java();
-	godot_java->gradle_build_env_execute(gradle_copy_args, project_path, build_path, callable_mp(this, &AndroidEditorGradleRunner::_android_gradle_build_output_callback), callable_mp(this, &AndroidEditorGradleRunner::_android_gradle_build_copy_callback));
+	godot_java->gradle_build_env_execute(gradle_copy_args, project_path, build_path, callable_mp(this, &AndroidEditorGradleRunner::_android_gradle_build_output), callable_mp(this, &AndroidEditorGradleRunner::_android_gradle_build_copy_callback));
 }
 
 void AndroidEditorGradleRunner::_android_gradle_build_copy_callback(int p_exit_code) {
@@ -590,7 +593,7 @@ void AndroidEditorGradleRunner::_android_gradle_build_failed(const String &p_msg
 	_android_gradle_build_disconnect();
 
 	if (p_msg != "") {
-		_android_gradle_build_output_callback(1, p_msg);
+		_android_gradle_build_output(1, p_msg);
 	}
 
 	output_dialog->get_ok_button()->set_disabled(false);

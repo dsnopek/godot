@@ -44,6 +44,7 @@
 #include "editor/editor_log.h"
 #include "editor/editor_node.h"
 #include "editor/editor_string_names.h"
+#include "editor/editor_undo_redo_manager.h"
 #include "editor/file_system/editor_file_system.h"
 #include "editor/gui/editor_file_dialog.h"
 #include "editor/gui/editor_toaster.h"
@@ -455,7 +456,11 @@ void ScriptEditorDebugger::_msg_scene_select_path(uint64_t p_thread_id, const Ar
 	String node_path = p_data[1];
 	if (EditorNode::get_singleton()->get_edited_scene()->get_scene_file_path() == scene_path) {
 		Node *n = EditorNode::get_singleton()->get_edited_scene()->get_node_or_null(node_path);
-		// @todo Select the node in the scene in the editor.
+		if (n) {
+			EditorSelection *selection = EditorNode::get_singleton()->get_editor_selection();
+			selection->clear();
+			selection->add_node(n);
+		}
 	}
 }
 
@@ -467,7 +472,13 @@ void ScriptEditorDebugger::_msg_scene_set_object_property(uint64_t p_thread_id, 
 	Variant value = p_data[3];
 	if (EditorNode::get_singleton()->get_edited_scene()->get_scene_file_path() == scene_path) {
 		Node *n = EditorNode::get_singleton()->get_edited_scene()->get_node_or_null(node_path);
-		// @todo Use undo/redo to set the given property on the scene.
+		if (n) {
+			EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
+			undo_redo->create_action("Update property remotely");
+			undo_redo->add_do_property(n, property_path, value);
+			undo_redo->add_undo_property(n, property_path, n->get(property_path));
+			undo_redo->commit_action();
+		}
 	}
 }
 

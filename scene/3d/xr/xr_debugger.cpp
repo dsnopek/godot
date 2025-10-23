@@ -87,6 +87,23 @@ void XRDebuggerRuntimeEditor::_on_controller_button_pressed(const String &p_name
 		set_enabled(!enabled);
 	} else if (p_controller == xr_controller_right && p_name == "trigger_click") {
 		select_pressed = true;
+	} else if (p_controller == xr_controller_right && p_name == "grip_click") {
+		grab_pressed = true;
+		if (selected_node != ObjectID()) {
+			Node3D *n = Object::cast_to<Node3D>(ObjectDB::get_instance(selected_node));
+			if (n) {
+				selected_node_orig_gt = n->get_global_transform();
+				grab_orig_t = xr_controller_right->get_transform();
+			}
+		}
+	}
+}
+
+void XRDebuggerRuntimeEditor::_on_controller_button_released(const String &p_name, XRController3D *p_controller) {
+	// @todo We need to have an action set for OpenXR, and it needs to know to switch to it - not sure how to handle that yet.
+
+	if (p_controller == xr_controller_right && p_name == "grip_click") {
+		grab_pressed = false;
 	}
 }
 
@@ -148,15 +165,17 @@ void XRDebuggerRuntimeEditor::_select_with_ray() {
 
 	Array message;
 	if (closest_node) {
+		selected_node = closest_node->get_instance_id();
 		selected_nodes.push_back(closest_node);
 
-		SceneDebuggerObject obj(closest_node->get_instance_id());
+		SceneDebuggerObject obj(selected_node);
 		Array arr;
 		obj.serialize(arr);
 		message.append(arr);
 
 		EngineDebugger::get_singleton()->send_message("remote_objects_selected", message);
 	} else {
+		selected_node = ObjectID();
 		EngineDebugger::get_singleton()->send_message("remote_nothing_selected", message);
 	}
 
@@ -265,9 +284,18 @@ void XRDebuggerRuntimeEditor::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_PHYSICS_PROCESS: {
-			if (select_pressed) {
-				select_pressed = false;
-				if (enabled) {
+			if (enabled) {
+				if (grab_pressed) {
+					if (selected_node != ObjectID()) {
+						Node3D *n = Object::cast_to<Node3D>(ObjectDB::get_instance(selected_node));
+						if (n) {
+							//Transform3D t = (grab_orig_t.affine_inverse() * xr_controller_right->get_transform()) * selected_node_orig_t;
+							Transform3D gt = (xr_controller_right->get_transform() * grab_orig_t.affine_inverse()) * selected_node_orig_gt;
+							n->set_global_transform(gt);
+						}
+					}
+				} else if (select_pressed) {
+					select_pressed = false;
 					_select_with_ray();
 				}
 			}
@@ -288,6 +316,7 @@ XRDebuggerRuntimeEditor::XRDebuggerRuntimeEditor() {
 	xr_controller_left->set_tracker("left_hand");
 	xr_controller_left->set_visible(false);
 	xr_controller_left->connect("button_pressed", callable_mp(this, &XRDebuggerRuntimeEditor::_on_controller_button_pressed).bind(xr_controller_left));
+	xr_controller_left->connect("button_released", callable_mp(this, &XRDebuggerRuntimeEditor::_on_controller_button_released).bind(xr_controller_left));
 	add_child(xr_controller_left);
 
 	Ref<BoxMesh> box_mesh;
@@ -302,6 +331,7 @@ XRDebuggerRuntimeEditor::XRDebuggerRuntimeEditor() {
 	xr_controller_right->set_tracker("right_hand");
 	xr_controller_right->set_visible(false);
 	xr_controller_right->connect("button_pressed", callable_mp(this, &XRDebuggerRuntimeEditor::_on_controller_button_pressed).bind(xr_controller_right));
+	xr_controller_right->connect("button_released", callable_mp(this, &XRDebuggerRuntimeEditor::_on_controller_button_released).bind(xr_controller_right));
 	add_child(xr_controller_right);
 
 	Ref<BoxMesh> ray_mesh;

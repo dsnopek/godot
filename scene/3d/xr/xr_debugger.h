@@ -78,8 +78,13 @@ class XRDebuggerRuntimeEditor : public XROrigin3D {
 	XRController3D *xr_controller_right = nullptr;
 
 	bool select_pressed = false;
+	bool grab_pressed = false;
+	ObjectID selected_node;
+	Transform3D selected_node_orig_gt;
+	Transform3D grab_orig_t;
 
 	void _on_controller_button_pressed(const String &p_name, XRController3D *p_controller);
+	void _on_controller_button_released(const String &p_name, XRController3D *p_controller);
 	bool _is_descendent(Node *p_node);
 	void _select_with_ray();
 

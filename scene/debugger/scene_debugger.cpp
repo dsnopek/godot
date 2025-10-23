@@ -288,6 +288,7 @@ Error SceneDebugger::_msg_setup_embedded_shortcuts(const Array &p_args) {
 Error SceneDebugger::_msg_live_set_root(const Array &p_args) {
 	ERR_FAIL_COND_V(p_args.size() < 2, ERR_INVALID_DATA);
 	LiveEditor::get_singleton()->_root_func(p_args[0], p_args[1]);
+	print_line("live_set_root: ", p_args);
 	return OK;
 }
 

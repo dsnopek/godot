@@ -174,6 +174,7 @@ void XRDebuggerRuntimeEditor::_select_with_ray() {
 		message.append(arr);
 
 		EngineDebugger::get_singleton()->send_message("remote_objects_selected", message);
+		//EngineDebugger::get_singleton()->send_message("scene:inspect_objects", message);
 	} else {
 		selected_node = ObjectID();
 		EngineDebugger::get_singleton()->send_message("remote_nothing_selected", message);
@@ -293,6 +294,15 @@ void XRDebuggerRuntimeEditor::_notification(int p_what) {
 							Transform3D gt = (xr_controller_right->get_transform() * grab_orig_t.affine_inverse()) * selected_node_orig_gt;
 							n->set_global_transform(gt);
 						}
+
+						/*
+						Transform3D gt = (xr_controller_right->get_transform() * grab_orig_t.affine_inverse()) * selected_node_orig_gt;
+						Array message;
+						message.push_back(selected_node);
+						message.push_back("global_transform");
+						message.push_back(gt);
+						EngineDebugger::get_singleton()->send_message("scene:set_object_property", message);
+						*/
 					}
 				} else if (select_pressed) {
 					select_pressed = false;

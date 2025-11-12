@@ -2305,9 +2305,9 @@ void main() {
 	// https://registry.khronos.org/OpenXR/specs/1.0/html/xrspec.html#XR_FB_space_warp
 
 	vec3 ndc = screen_position.xyz / screen_position.w;
-	ndc.y = -ndc.y;
+	//ndc.y = -ndc.y;
 	vec3 prev_ndc = prev_screen_position.xyz / prev_screen_position.w;
-	prev_ndc.y = -prev_ndc.y;
+	//prev_ndc.y = -prev_ndc.y;
 	frag_color = vec4(ndc - prev_ndc, 0.0);
 #endif
 }

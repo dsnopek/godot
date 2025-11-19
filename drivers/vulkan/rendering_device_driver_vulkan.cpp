@@ -5013,17 +5013,20 @@ void RenderingDeviceDriverVulkan::command_end_render_pass(CommandBufferID p_cmd_
 		if (VulkanHooks::get_singleton() != nullptr) {
 			fragment_density_offsets = VulkanHooks::get_singleton()->get_fragment_density_offsets();
 		}
+		if (fragment_density_offsets.size() > 0) {
+			VkSubpassFragmentDensityMapOffsetEndInfoQCOM offset_info = {};
+			offset_info.sType = VK_STRUCTURE_TYPE_SUBPASS_FRAGMENT_DENSITY_MAP_OFFSET_END_INFO_QCOM;
+			offset_info.pFragmentDensityOffsets = fragment_density_offsets.ptr();
+			offset_info.fragmentDensityOffsetCount = fragment_density_offsets.size();
 
-		VkSubpassFragmentDensityMapOffsetEndInfoQCOM offset_info = {};
-		offset_info.sType = VK_STRUCTURE_TYPE_SUBPASS_FRAGMENT_DENSITY_MAP_OFFSET_END_INFO_QCOM;
-		offset_info.pFragmentDensityOffsets = fragment_density_offsets.is_empty() ? nullptr : fragment_density_offsets.ptr();
-		offset_info.fragmentDensityOffsetCount = fragment_density_offsets.size();
+			VkSubpassEndInfo subpass_end_info = {};
+			subpass_end_info.sType = VK_STRUCTURE_TYPE_SUBPASS_END_INFO;
+			subpass_end_info.pNext = &offset_info;
 
-		VkSubpassEndInfo subpass_end_info = {};
-		subpass_end_info.sType = VK_STRUCTURE_TYPE_SUBPASS_END_INFO;
-		subpass_end_info.pNext = &offset_info;
-
-		device_functions.EndRenderPass2KHR(command_buffer->vk_command_buffer, &subpass_end_info);
+			device_functions.EndRenderPass2KHR(command_buffer->vk_command_buffer, &subpass_end_info);
+		} else {
+			vkCmdEndRenderPass(command_buffer->vk_command_buffer);
+		}
 	} else {
 		vkCmdEndRenderPass(command_buffer->vk_command_buffer);
 	}

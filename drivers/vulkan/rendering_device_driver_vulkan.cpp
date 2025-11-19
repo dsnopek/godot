@@ -5014,6 +5014,10 @@ void RenderingDeviceDriverVulkan::command_end_render_pass(CommandBufferID p_cmd_
 			fragment_density_offsets = VulkanHooks::get_singleton()->get_fragment_density_offsets();
 		}
 		if (fragment_density_offsets.size() > 0) {
+			print_line("DRS Offsets");
+			for (const VkOffset2D offset : fragment_density_offsets) {
+				print_line("DRS: ", offset.x, " - ", offset.y);
+			}
 			VkSubpassFragmentDensityMapOffsetEndInfoQCOM offset_info = {};
 			offset_info.sType = VK_STRUCTURE_TYPE_SUBPASS_FRAGMENT_DENSITY_MAP_OFFSET_END_INFO_QCOM;
 			offset_info.pFragmentDensityOffsets = fragment_density_offsets.ptr();

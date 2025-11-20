@@ -188,11 +188,15 @@ LocalVector<Vector2i> OpenXRFBFoveationExtension::get_fragment_density_offsets()
 		return ret;
 	}
 
-	ret.reserve(XR_FOVEATION_CENTER_SIZE_META);
-	Size2 dims = openxr_api->get_recommended_target_size() * 0.5 / openxr_api->get_render_target_size_multiplier();
-	for (uint32_t i = 0; i < XR_FOVEATION_CENTER_SIZE_META; ++i) {
-		const XrVector2f &xr_offset = state.foveationCenter[i];
-		ret.push_back(Vector2i((int)(xr_offset.x * dims.x), (int)(xr_offset.y * dims.y)));
+	if (state.flags & XR_FOVEATION_EYE_TRACKED_STATE_VALID_BIT_META) {
+		print_line("DRS valid eye t");
+		ret.reserve(XR_FOVEATION_CENTER_SIZE_META);
+		Size2 dims = openxr_api->get_recommended_target_size() * 0.5 / openxr_api->get_render_target_size_multiplier();
+		for (uint32_t i = 0; i < XR_FOVEATION_CENTER_SIZE_META; ++i) {
+			const XrVector2f &xr_offset = state.foveationCenter[i];
+			print_line("DRS ndc ", xr_offset.x, " - ", xr_offset.y);
+			ret.push_back(Vector2i((int)(xr_offset.x * dims.x), (int)(xr_offset.y * dims.y)));
+		}
 	}
 
 	return ret;

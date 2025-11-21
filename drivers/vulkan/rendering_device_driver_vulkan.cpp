@@ -2008,6 +2008,10 @@ RDD::TextureID RenderingDeviceDriverVulkan::texture_create(const TextureFormat &
 	create_info.samples = _ensure_supported_sample_count(p_format.samples);
 	create_info.tiling = (p_format.usage_bits & TEXTURE_USAGE_CPU_READ_BIT) ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
 
+	if (fdm_capabilities.offset_supported) {
+		create_info.flags |= VK_IMAGE_CREATE_FRAGMENT_DENSITY_MAP_OFFSET_BIT_QCOM;
+	}
+
 	// Usage.
 	if ((p_format.usage_bits & TEXTURE_USAGE_SAMPLING_BIT)) {
 		create_info.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;

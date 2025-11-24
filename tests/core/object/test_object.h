@@ -609,7 +609,7 @@ TEST_CASE("[Object] RequiredParam Ref<T>") {
 	RequiredParam<RefCounted> required = ref;
 	EXTRACT_PARAM_OR_FAIL(extract, required);
 
-	static_assert(std::is_same_v<decltype(ref), decltype(extract)>);
+	static_assert(std::is_same_v<decltype(ref), std::decay_t<decltype(extract)>>);
 
 	CHECK_EQ(ref->get_reference_count(), extract->get_reference_count());
 

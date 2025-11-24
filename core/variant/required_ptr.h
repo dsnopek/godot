@@ -146,7 +146,7 @@ class RequiredParam {
 
 public:
 	using element_type = T;
-	using ptr_type = std::conditional_t<std::is_base_of_v<RefCounted, T>, Ref<T>, T *>;
+	using ptr_type = std::conditional_t<std::is_base_of_v<RefCounted, T>, const Ref<T> &, T *>;
 
 private:
 	ptr_type _value = ptr_type();

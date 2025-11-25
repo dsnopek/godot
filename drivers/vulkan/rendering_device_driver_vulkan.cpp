@@ -750,6 +750,11 @@ Error RenderingDeviceDriverVulkan::_check_device_capabilities() {
 	// Cache extension availability we query often.
 	framebuffer_depth_resolve = enabled_device_extension_names.has(VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME);
 
+	bool use_fdm_offsets = false;
+	if (VulkanHooks::get_singleton() != nullptr) {
+		use_fdm_offsets = VulkanHooks::get_singleton()->use_fragment_density_offsets();
+	}
+
 	// References:
 	// https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VK_KHR_multiview.html
 	// https://www.khronos.org/blog/vulkan-subgroup-tutorial
@@ -805,7 +810,7 @@ Error RenderingDeviceDriverVulkan::_check_device_capabilities() {
 			next_features = &fdm_features;
 		}
 
-		if (enabled_device_extension_names.has(VK_QCOM_FRAGMENT_DENSITY_MAP_OFFSET_EXTENSION_NAME)) {
+		if (use_fdm_offsets && enabled_device_extension_names.has(VK_QCOM_FRAGMENT_DENSITY_MAP_OFFSET_EXTENSION_NAME)) {
 			fdmo_features_qcom.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_OFFSET_FEATURES_QCOM;
 			fdmo_features_qcom.pNext = next_features;
 			next_features = &fdmo_features_qcom;
@@ -1034,7 +1039,7 @@ Error RenderingDeviceDriverVulkan::_check_device_capabilities() {
 			fdm_capabilities.offset_granularity.y = fdmo_properties.fragmentDensityOffsetGranularity.height;
 
 			print_verbose(vformat("  Offset granularity: (%d, %d)", fdm_capabilities.offset_granularity.x, fdm_capabilities.offset_granularity.y));
-		} else {
+		} else if (use_fdm_offsets) {
 			print_verbose("- Vulkan Fragment Density Map Offset not supported");
 		}
 
@@ -1156,6 +1161,14 @@ Error RenderingDeviceDriverVulkan::_initialize_device(const LocalVector<VkDevice
 		fdm_features.fragmentDensityMapDynamic = fdm_capabilities.dynamic_attachment_supported;
 		fdm_features.fragmentDensityMapNonSubsampledImages = fdm_capabilities.non_subsampled_images_supported;
 		create_info_next = &fdm_features;
+	}
+
+	VkPhysicalDeviceFragmentDensityMapOffsetFeaturesQCOM fdm_offset_features = {};
+	if (fdm_capabilities.offset_supported) {
+		fdm_offset_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_OFFSET_FEATURES_QCOM;
+		fdm_offset_features.pNext = create_info_next;
+		fdm_offset_features.fragmentDensityMapOffset = VK_TRUE;
+		create_info_next = &fdm_offset_features;
 	}
 
 	VkPhysicalDevicePipelineCreationCacheControlFeatures pipeline_cache_control_features = {};
@@ -1994,6 +2007,10 @@ RDD::TextureID RenderingDeviceDriverVulkan::texture_create(const TextureFormat &
 		create_info.flags |= VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
 	}*/
 
+	if (fdm_capabilities.offset_supported && (p_format.usage_bits & (TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | TEXTURE_USAGE_INPUT_ATTACHMENT_BIT))) {
+		create_info.flags |= VK_IMAGE_CREATE_FRAGMENT_DENSITY_MAP_OFFSET_BIT_QCOM;
+	}
+
 	create_info.imageType = RD_TEX_TYPE_TO_VK_IMG_TYPE[p_format.texture_type];
 
 	create_info.format = RD_TO_VK_FORMAT[p_format.format];
@@ -2007,10 +2024,6 @@ RDD::TextureID RenderingDeviceDriverVulkan::texture_create(const TextureFormat &
 
 	create_info.samples = _ensure_supported_sample_count(p_format.samples);
 	create_info.tiling = (p_format.usage_bits & TEXTURE_USAGE_CPU_READ_BIT) ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
-
-	if (fdm_capabilities.offset_supported) {
-		create_info.flags |= VK_IMAGE_CREATE_FRAGMENT_DENSITY_MAP_OFFSET_BIT_QCOM;
-	}
 
 	// Usage.
 	if ((p_format.usage_bits & TEXTURE_USAGE_SAMPLING_BIT)) {

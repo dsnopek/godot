@@ -203,6 +203,15 @@ void OpenXRVulkanExtension::set_direct_queue_family_and_index(uint32_t p_queue_f
 	vulkan_queue_index = p_queue_index;
 }
 
+bool OpenXRVulkanExtension::use_fragment_density_offsets() {
+	OpenXRFBFoveationExtension *fb_foveation = OpenXRFBFoveationExtension::get_singleton();
+	if (fb_foveation == nullptr) {
+		return false;
+	}
+
+	return fb_foveation->is_foveation_eye_tracked_enabled();
+}
+
 void OpenXRVulkanExtension::get_fragment_density_offsets(LocalVector<VkOffset2D> &r_vk_offsets, Vector2i p_granularity) {
 	OpenXRFBFoveationExtension *fb_foveation = OpenXRFBFoveationExtension::get_singleton();
 	if (fb_foveation == nullptr) {

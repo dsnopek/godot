@@ -179,6 +179,10 @@ void OpenXRFBFoveationExtension::set_foveation_dynamic(XrFoveationDynamicFB p_fo
 	update_profile();
 }
 
+bool OpenXRFBFoveationExtension::is_foveation_eye_tracked_enabled() const {
+	return is_enabled() && meta_foveation_eye_tracked_ext && meta_vulkan_swapchain_create_info_ext;
+}
+
 void OpenXRFBFoveationExtension::get_fragment_density_offsets(LocalVector<Vector2i> &r_offsets) {
 	// Must be called from rendering thread!
 	ERR_NOT_ON_RENDER_THREAD;

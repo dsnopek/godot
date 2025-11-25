@@ -72,6 +72,7 @@ public:
 	XrFoveationDynamicFB get_foveation_dynamic() const;
 	void set_foveation_dynamic(XrFoveationDynamicFB p_foveation_dynamic);
 
+	bool is_foveation_eye_tracked_enabled() const;
 	void get_fragment_density_offsets(LocalVector<Vector2i> &r_offsets);
 
 private:

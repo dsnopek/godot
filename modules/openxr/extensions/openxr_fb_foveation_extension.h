@@ -40,6 +40,8 @@
 #include "openxr_extension_wrapper.h"
 #include "openxr_fb_update_swapchain_extension.h"
 
+#include "../openxr_platform_inc.h"
+
 class OpenXRFBFoveationExtension : public OpenXRExtensionWrapper {
 	GDCLASS(OpenXRFBFoveationExtension, OpenXRExtensionWrapper);
 

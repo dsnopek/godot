@@ -90,7 +90,7 @@ HashMap<String, bool *> OpenXRFBFoveationExtension::get_requested_extensions() {
 	if (rendering_driver == "vulkan") {
 		request_extensions[XR_FB_FOVEATION_VULKAN_EXTENSION_NAME] = &fb_foveation_vulkan_ext;
 		request_extensions[XR_META_FOVEATION_EYE_TRACKED_EXTENSION_NAME] = &meta_foveation_eye_tracked_ext;
-		request_extensions[XR_META_VULKAN_SWAPCHAIN_CREATE_INFO_EXTENSION_NAME] = &meta_vulkan_sawpchain_create_info_ext;
+		request_extensions[XR_META_VULKAN_SWAPCHAIN_CREATE_INFO_EXTENSION_NAME] = &meta_vulkan_swapchain_create_info_ext;
 	}
 #endif // XR_USE_GRAPHICS_API_VULKAN
 
@@ -144,7 +144,7 @@ void *OpenXRFBFoveationExtension::set_swapchain_create_info_and_get_next_pointer
 		swapchain_create_info_foveation_fb.next = next;
 		next = &swapchain_create_info_foveation_fb;
 
-		if (meta_foveation_eye_tracked_ext && meta_vulkan_sawpchain_create_info_ext) {
+		if (meta_foveation_eye_tracked_ext && meta_vulkan_swapchain_create_info_ext) {
 			meta_vulkan_swapchain_create_info.next = next;
 			next = &meta_vulkan_swapchain_create_info;
 		}

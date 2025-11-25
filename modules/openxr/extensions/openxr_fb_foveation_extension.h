@@ -80,7 +80,8 @@ private:
 	bool fb_foveation_ext = false;
 	bool fb_foveation_configuration_ext = false;
 	bool fb_foveation_vulkan_ext = false;
-	bool meta_foveation_eye_tracked = false;
+	bool meta_foveation_eye_tracked_ext = false;
+	bool meta_vulkan_swapchain_create_info_ext = false;
 
 	// Configuration
 	XrFoveationLevelFB foveation_level = XR_FOVEATION_LEVEL_NONE_FB;
@@ -103,6 +104,7 @@ private:
 	// Enable eye tracked foveation
 	XrSystemFoveationEyeTrackedPropertiesMETA meta_foveation_eye_tracked_properties;
 	XrFoveationEyeTrackedProfileCreateInfoMETA meta_foveation_eye_tracked_create_info;
+	XrVulkanSwapchainCreateInfoMETA meta_vulkan_swapchain_create_info;
 
 	// OpenXR API call wrappers
 	EXT_PROTO_XRRESULT_FUNC3(xrCreateFoveationProfileFB, (XrSession), session, (const XrFoveationProfileCreateInfoFB *), create_info, (XrFoveationProfileFB *), profile);

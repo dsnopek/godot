@@ -63,6 +63,11 @@ OpenXRFBFoveationExtension::OpenXRFBFoveationExtension(const String &p_rendering
 	meta_foveation_eye_tracked_properties.next = nullptr;
 	meta_foveation_eye_tracked_properties.supportsFoveationEyeTracked = XR_FALSE;
 
+	meta_vulkan_swapchain_create_info.type = XR_TYPE_VULKAN_SWAPCHAIN_CREATE_INFO_META;
+	meta_vulkan_swapchain_create_info.next = nullptr;
+	meta_vulkan_swapchain_create_info.additionalCreateFlags = VK_IMAGE_CREATE_FRAGMENT_DENSITY_MAP_OFFSET_BIT_QCOM;
+	meta_vulkan_swapchain_create_info.additionalUsageFlags = 0;
+
 	if (rendering_driver == "opengl3") {
 		swapchain_create_info_foveation_fb.flags = XR_SWAPCHAIN_CREATE_FOVEATION_SCALED_BIN_BIT_FB;
 	} else if (rendering_driver == "vulkan") {
@@ -84,7 +89,8 @@ HashMap<String, bool *> OpenXRFBFoveationExtension::get_requested_extensions() {
 #ifdef XR_USE_GRAPHICS_API_VULKAN
 	if (rendering_driver == "vulkan") {
 		request_extensions[XR_FB_FOVEATION_VULKAN_EXTENSION_NAME] = &fb_foveation_vulkan_ext;
-		request_extensions[XR_META_FOVEATION_EYE_TRACKED_EXTENSION_NAME] = &meta_foveation_eye_tracked;
+		request_extensions[XR_META_FOVEATION_EYE_TRACKED_EXTENSION_NAME] = &meta_foveation_eye_tracked_ext;
+		request_extensions[XR_META_VULKAN_SWAPCHAIN_CREATE_INFO_EXTENSION_NAME] = &meta_vulkan_sawpchain_create_info_ext;
 	}
 #endif // XR_USE_GRAPHICS_API_VULKAN
 
@@ -101,7 +107,7 @@ void OpenXRFBFoveationExtension::on_instance_created(const XrInstance p_instance
 		// nothing to register here...
 	}
 
-	if (meta_foveation_eye_tracked) {
+	if (meta_foveation_eye_tracked_ext) {
 		EXT_INIT_XR_FUNC(xrGetFoveationEyeTrackedStateMETA);
 	}
 }
@@ -109,7 +115,7 @@ void OpenXRFBFoveationExtension::on_instance_created(const XrInstance p_instance
 void OpenXRFBFoveationExtension::on_instance_destroyed() {
 	fb_foveation_ext = false;
 	fb_foveation_configuration_ext = false;
-	meta_foveation_eye_tracked = false;
+	meta_foveation_eye_tracked_ext = false;
 }
 
 bool OpenXRFBFoveationExtension::is_enabled() const {
@@ -133,12 +139,18 @@ void *OpenXRFBFoveationExtension::set_system_properties_and_get_next_pointer(voi
 }
 
 void *OpenXRFBFoveationExtension::set_swapchain_create_info_and_get_next_pointer(void *p_next_pointer) {
+	void *next = p_next_pointer;
 	if (is_enabled()) {
-		swapchain_create_info_foveation_fb.next = p_next_pointer;
-		return &swapchain_create_info_foveation_fb;
-	} else {
-		return p_next_pointer;
+		swapchain_create_info_foveation_fb.next = next;
+		next = &swapchain_create_info_foveation_fb;
+
+		if (meta_foveation_eye_tracked_ext && meta_vulkan_sawpchain_create_info_ext) {
+			meta_vulkan_swapchain_create_info.next = next;
+			next = &meta_vulkan_swapchain_create_info;
+		}
 	}
+
+	return next;
 }
 
 void OpenXRFBFoveationExtension::on_main_swapchains_created() {
@@ -171,7 +183,7 @@ void OpenXRFBFoveationExtension::get_fragment_density_offsets(LocalVector<Vector
 	// Must be called from rendering thread!
 	ERR_NOT_ON_RENDER_THREAD;
 
-	if (!is_enabled() || !meta_foveation_eye_tracked || !meta_foveation_eye_tracked_properties.supportsFoveationEyeTracked || !OpenXREyeGazeInteractionExtension::get_singleton()->is_available()) {
+	if (!is_enabled() || !meta_foveation_eye_tracked_ext || !meta_foveation_eye_tracked_properties.supportsFoveationEyeTracked || !OpenXREyeGazeInteractionExtension::get_singleton()->is_available()) {
 		return;
 	}
 
@@ -221,7 +233,7 @@ void OpenXRFBFoveationExtension::_update_profile_rt() {
 	}
 
 	void *next = nullptr;
-	if (meta_foveation_eye_tracked && meta_foveation_eye_tracked_properties.supportsFoveationEyeTracked) {
+	if (meta_foveation_eye_tracked_ext && meta_foveation_eye_tracked_properties.supportsFoveationEyeTracked) {
 		meta_foveation_eye_tracked_create_info.next = next;
 		next = &meta_foveation_eye_tracked_create_info;
 	}

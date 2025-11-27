@@ -43,9 +43,9 @@ public:
 private:
 	ptr_type _value = ptr_type();
 
+public:
 	_FORCE_INLINE_ RequiredResult() = default;
 
-public:
 	RequiredResult(const RequiredResult &p_other) = default;
 	RequiredResult(RequiredResult &&p_other) = default;
 	RequiredResult &operator=(const RequiredResult &p_other) = default;
@@ -123,12 +123,8 @@ public:
 		return _value;
 	}
 
-	_FORCE_INLINE_ operator ptr_type() {
+	_FORCE_INLINE_ operator ptr_type() const {
 		return _value;
-	}
-
-	_FORCE_INLINE_ operator Variant() const {
-		return Variant(_value);
 	}
 
 	_FORCE_INLINE_ element_type *operator*() const {

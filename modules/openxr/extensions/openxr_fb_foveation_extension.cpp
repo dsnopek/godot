@@ -66,7 +66,7 @@ OpenXRFBFoveationExtension::OpenXRFBFoveationExtension(const String &p_rendering
 #ifdef VULKAN_ENABLED
 	meta_vulkan_swapchain_create_info.type = XR_TYPE_VULKAN_SWAPCHAIN_CREATE_INFO_META;
 	meta_vulkan_swapchain_create_info.next = nullptr;
-	meta_vulkan_swapchain_create_info.additionalCreateFlags = VK_IMAGE_CREATE_FRAGMENT_DENSITY_MAP_OFFSET_BIT_QCOM;
+	meta_vulkan_swapchain_create_info.additionalCreateFlags = VK_IMAGE_CREATE_FRAGMENT_DENSITY_MAP_OFFSET_BIT_QCOM | VK_IMAGE_CREATE_SUBSAMPLED_BIT_EXT;
 	meta_vulkan_swapchain_create_info.additionalUsageFlags = 0;
 #endif
 

@@ -130,7 +130,7 @@ static uint32_t _get_device_type_score(const RenderingContextDriver::Device &p_d
 // between the synchronization levels. This setting will have a very negative impact on performance when enabled, so it's only intended for
 // debugging purposes.
 
-#define RENDER_GRAPH_FULL_BARRIERS 0
+#define RENDER_GRAPH_FULL_BARRIERS 1
 
 // The command graph can automatically issue secondary command buffers and record them on background threads when they reach an arbitrary
 // size threshold. This can be very beneficial towards reducing the time the main thread takes to record all the rendering commands. However,

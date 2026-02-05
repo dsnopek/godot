@@ -2046,25 +2046,12 @@ RDD::TextureID RenderingDeviceDriverVulkan::texture_create(const TextureFormat &
 		create_info.flags |= VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
 	}*/
 
-	// DRS: Hack in subsampled images.
-	/*
-	if (fdm_capabilities.attachment_supported) {
+	if (fdm_capabilities.dynamic_attachment_supported && (p_format.usage_bits & (TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_RESOLVE_ATTACHMENT_BIT))) {
 		create_info.flags |= VK_IMAGE_CREATE_SUBSAMPLED_BIT_EXT;
 	}
-	*/
 
 	if (fdm_capabilities.offset_supported && (p_format.usage_bits & (TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_RESOLVE_ATTACHMENT_BIT | TEXTURE_USAGE_VRS_ATTACHMENT_BIT))) {
 		create_info.flags |= VK_IMAGE_CREATE_FRAGMENT_DENSITY_MAP_OFFSET_BIT_QCOM;
-	}
-
-	if (fdm_capabilities.offset_supported && (p_format.usage_bits & (TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_RESOLVE_ATTACHMENT_BIT | TEXTURE_USAGE_VRS_ATTACHMENT_BIT))) {
-		//if (fdm_capabilities.offset_supported && (p_format.usage_bits & (TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_RESOLVE_ATTACHMENT_BIT))) {
-		// DRS: Hack in subsampled images.
-		if (p_format.mipmaps == 1) {
-			create_info.flags |= VK_IMAGE_CREATE_SUBSAMPLED_BIT_EXT;
-		} else {
-			print_line("Too many mips on usage: ", p_format.usage_bits);
-		}
 	}
 
 	create_info.imageType = RD_TEX_TYPE_TO_VK_IMG_TYPE[p_format.texture_type];
@@ -4778,7 +4765,7 @@ void RenderingDeviceDriverVulkan::command_copy_buffer_to_texture(CommandBufferID
 		ERR_PRINT("TEXTURE_USAGE_TRANSIENT_BIT p_dst_texture must not be used in command_copy_buffer_to_texture.");
 	}
 #endif
-	//vkCmdCopyBufferToImage(command_buffer->vk_command_buffer, buf_info->vk_buffer, tex_info->vk_view_create_info.image, RD_TO_VK_LAYOUT[p_dst_texture_layout], p_regions.size(), vk_copy_regions);
+	vkCmdCopyBufferToImage(command_buffer->vk_command_buffer, buf_info->vk_buffer, tex_info->vk_view_create_info.image, RD_TO_VK_LAYOUT[p_dst_texture_layout], p_regions.size(), vk_copy_regions);
 }
 
 void RenderingDeviceDriverVulkan::command_copy_texture_to_buffer(CommandBufferID p_cmd_buffer, TextureID p_src_texture, TextureLayout p_src_texture_layout, BufferID p_dst_buffer, VectorView<BufferTextureCopyRegion> p_regions) {

@@ -1174,14 +1174,14 @@ Error RenderingDeviceDriverVulkan::_initialize_device(const LocalVector<VkDevice
 		create_info_next = &fsr_features;
 	}
 
-	/*
 	VkPhysicalDeviceFragmentDensityMapFeaturesEXT fdm_features = {};
 	if (fdm_capabilities.attachment_supported || fdm_capabilities.dynamic_attachment_supported || fdm_capabilities.non_subsampled_images_supported) {
 		fdm_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_FEATURES_EXT;
 		fdm_features.pNext = create_info_next;
 		fdm_features.fragmentDensityMap = fdm_capabilities.attachment_supported;
 		fdm_features.fragmentDensityMapDynamic = fdm_capabilities.dynamic_attachment_supported;
-		fdm_features.fragmentDensityMapNonSubsampledImages = fdm_capabilities.non_subsampled_images_supported;
+		//fdm_features.fragmentDensityMapNonSubsampledImages = fdm_capabilities.non_subsampled_images_supported;
+		fdm_features.fragmentDensityMapNonSubsampledImages = VK_FALSE;
 		create_info_next = &fdm_features;
 	}
 
@@ -1192,7 +1192,6 @@ Error RenderingDeviceDriverVulkan::_initialize_device(const LocalVector<VkDevice
 		fdm_offset_features.fragmentDensityMapOffset = VK_TRUE;
 		create_info_next = &fdm_offset_features;
 	}
-	*/
 
 	VkPhysicalDevicePipelineCreationCacheControlFeatures pipeline_cache_control_features = {};
 	if (pipeline_cache_control_support) {
@@ -2559,13 +2558,6 @@ RDD::SamplerID RenderingDeviceDriverVulkan::sampler_create(const SamplerState &p
 	sampler_create_info.maxLod = p_state.max_lod;
 	sampler_create_info.borderColor = (VkBorderColor)p_state.border_color;
 	sampler_create_info.unnormalizedCoordinates = p_state.unnormalized_uvw;
-
-	// DRS: Hack in subsampled images.
-	/*
-	if (fdm_capabilities.attachment_supported) {
-		sampler_create_info.flags |= VK_SAMPLER_CREATE_SUBSAMPLED_BIT_EXT;
-	}
-	*/
 
 	VkSampler vk_sampler = VK_NULL_HANDLE;
 	VkResult res = vkCreateSampler(vk_device, &sampler_create_info, VKC::get_allocation_callbacks(VK_OBJECT_TYPE_SAMPLER), &vk_sampler);

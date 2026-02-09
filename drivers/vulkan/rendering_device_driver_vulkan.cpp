@@ -1407,6 +1407,8 @@ Error RenderingDeviceDriverVulkan::_initialize_device(const LocalVector<VkDevice
 	create_info.ppEnabledExtensionNames = enabled_extension_names.ptr();
 	create_info.pEnabledFeatures = &requested_device_features;
 
+	print_line("DRS: About to create");
+	print_line("DRS: VulkanHooks - ", (uint64_t)VulkanHooks::get_singleton());
 	if (VulkanHooks::get_singleton() != nullptr) {
 		bool device_created = VulkanHooks::get_singleton()->create_vulkan_device(&create_info, &vk_device);
 		ERR_FAIL_COND_V(!device_created, ERR_CANT_CREATE);

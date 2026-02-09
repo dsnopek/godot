@@ -146,9 +146,9 @@ void initialize_openxr_module(ModuleInitializationLevel p_level) {
 
 		// Note, we're not registering all wrapper classes here, there is no point in exposing them
 		// if there isn't specific logic to expose.
-	}
+		//}
 
-	if (p_level == MODULE_INITIALIZATION_LEVEL_SERVERS) {
+		//if (p_level == MODULE_INITIALIZATION_LEVEL_SERVERS) {
 		if (OpenXRAPI::openxr_is_enabled(false)) {
 			// Always register our extension wrappers even if we don't initialize OpenXR.
 			// Some of these wrappers will add functionality to our editor.

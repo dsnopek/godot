@@ -812,6 +812,8 @@ Error RenderingContextDriverVulkan::_initialize_instance() {
 }
 
 Error RenderingContextDriverVulkan::_initialize_devices() {
+	print_line("DRS: _initialize_devices()");
+	print_line("DRS: VulkanHooks = ", VulkanHooks::get_singleton());
 	if (VulkanHooks::get_singleton() != nullptr) {
 		VkPhysicalDevice physical_device;
 		bool device_retrieved = VulkanHooks::get_singleton()->get_physical_device(&physical_device);

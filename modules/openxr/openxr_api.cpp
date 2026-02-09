@@ -659,6 +659,8 @@ XrResult OpenXRAPI::attempt_create_instance(XrVersion p_version) {
 bool OpenXRAPI::create_instance() {
 	// Create our OpenXR instance, this will query any registered extension wrappers for extensions we need to enable.
 
+	print_line("DRS: Create instance\n");
+
 	XrVersion init_version = XR_API_VERSION_1_1;
 
 	String custom_version = GLOBAL_GET("xr/openxr/target_api_version");

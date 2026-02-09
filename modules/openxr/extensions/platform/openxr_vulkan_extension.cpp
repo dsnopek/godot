@@ -148,6 +148,8 @@ bool OpenXRVulkanExtension::create_vulkan_instance(const VkInstanceCreateInfo *p
 }
 
 bool OpenXRVulkanExtension::get_physical_device(VkPhysicalDevice *r_device) {
+	print_line("DRS: get_physical_device()");
+
 	ERR_FAIL_NULL_V(OpenXRAPI::get_singleton(), false);
 
 	XrVulkanGraphicsDeviceGetInfoKHR get_info = {
@@ -181,6 +183,8 @@ bool OpenXRVulkanExtension::create_vulkan_device(const VkDeviceCreateInfo *p_dev
 		p_device_create_info, // vulkanCreateInfo
 		nullptr // vulkanAllocator
 	};
+
+	print_line("DRS: create_vulkan_device() - VulkanPhysicalDevice: ", (uint64_t)vulkan_physical_device);
 
 	VkResult vk_result = VK_SUCCESS;
 	XrResult result = xrCreateVulkanDeviceKHR(OpenXRAPI::get_singleton()->get_instance(), &create_info, &vulkan_device, &vk_result);

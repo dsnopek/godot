@@ -2047,8 +2047,12 @@ RDD::TextureID RenderingDeviceDriverVulkan::texture_create(const TextureFormat &
 	}*/
 
 	// We only use this with 2D texture arrays with 2 layers to attempt limit it to stereoscopic rendering.
-	if (fdm_capabilities.attachment_supported && !fdm_capabilities.non_subsampled_images_supported && p_format.texture_type == TEXTURE_TYPE_2D_ARRAY && p_format.array_layers > 1 && (p_format.usage_bits & (TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_RESOLVE_ATTACHMENT_BIT))) {
+	//if (fdm_capabilities.attachment_supported && !fdm_capabilities.non_subsampled_images_supported && p_format.texture_type == TEXTURE_TYPE_2D_ARRAY && p_format.array_layers > 1 && (p_format.usage_bits & (TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_RESOLVE_ATTACHMENT_BIT))) {
+	if (fdm_capabilities.attachment_supported && p_format.texture_type == TEXTURE_TYPE_2D_ARRAY && p_format.array_layers > 1 && (p_format.usage_bits & (TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_RESOLVE_ATTACHMENT_BIT))) {
+		print_line("DRS: subsampled bit enabled");
 		create_info.flags |= VK_IMAGE_CREATE_SUBSAMPLED_BIT_EXT;
+	} else {
+		print_line("DRS: subsampled bit NOT enabled");
 	}
 
 	if (fdm_capabilities.offset_supported && (p_format.usage_bits & (TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_RESOLVE_ATTACHMENT_BIT | TEXTURE_USAGE_VRS_ATTACHMENT_BIT))) {

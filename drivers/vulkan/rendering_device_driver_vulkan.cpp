@@ -2210,6 +2210,7 @@ RDD::TextureID RenderingDeviceDriverVulkan::texture_create(const TextureFormat &
 	tex_info->vk_create_info = create_info;
 	tex_info->vk_view_create_info = image_view_create_info;
 	tex_info->allocation.handle = allocation;
+	tex_info->is_subsampled = (create_info.flags & VK_IMAGE_CREATE_SUBSAMPLED_BIT_EXT) != 0;
 #ifdef DEBUG_ENABLED
 	tex_info->transient = (p_format.usage_bits & TEXTURE_USAGE_TRANSIENT_BIT) != 0;
 #endif
@@ -4741,6 +4742,11 @@ void RenderingDeviceDriverVulkan::command_clear_depth_stencil_texture(CommandBuf
 
 void RenderingDeviceDriverVulkan::command_copy_buffer_to_texture(CommandBufferID p_cmd_buffer, BufferID p_src_buffer, TextureID p_dst_texture, TextureLayout p_dst_texture_layout, VectorView<BufferTextureCopyRegion> p_regions) {
 	const TextureInfo *tex_info = (const TextureInfo *)p_dst_texture.id;
+
+	if (tex_info->is_subsampled) {
+		// Subsampled images can't be copied into, only used as attachments to a framebuffer.
+		return;
+	}
 
 	uint32_t pixel_size = get_image_format_pixel_size(tex_info->rd_format);
 	uint32_t block_size = get_compressed_image_format_block_byte_size(tex_info->rd_format);

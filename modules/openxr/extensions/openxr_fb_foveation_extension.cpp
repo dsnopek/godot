@@ -156,7 +156,8 @@ void *OpenXRFBFoveationExtension::set_swapchain_create_info_and_get_next_pointer
 				meta_vulkan_swapchain_create_info.additionalCreateFlags |= VK_IMAGE_CREATE_FRAGMENT_DENSITY_MAP_OFFSET_BIT_QCOM;
 			}
 			if (foveation_with_subsampled_images_enabled) {
-				meta_vulkan_swapchain_create_info.additionalCreateFlags |= VK_IMAGE_CREATE_SUBSAMPLED_BIT_EXT;
+				// @todo This works on Android XR, but fails on Meta Quest.
+				//meta_vulkan_swapchain_create_info.additionalCreateFlags |= VK_IMAGE_CREATE_SUBSAMPLED_BIT_EXT;
 			}
 
 			meta_vulkan_swapchain_create_info.next = next;

@@ -900,7 +900,9 @@ Error RenderingDeviceDriverVulkan::_check_device_capabilities() {
 		if (enabled_device_extension_names.has(VK_EXT_FRAGMENT_DENSITY_MAP_EXTENSION_NAME)) {
 			fdm_capabilities.attachment_supported = fdm_features.fragmentDensityMap;
 			fdm_capabilities.dynamic_attachment_supported = fdm_features.fragmentDensityMapDynamic;
-			fdm_capabilities.non_subsampled_images_supported = fdm_features.fragmentDensityMapNonSubsampledImages && !use_subsampled_images;
+			// @todo This works on Android XR, but fails on Meta Quest.
+			//fdm_capabilities.non_subsampled_images_supported = fdm_features.fragmentDensityMapNonSubsampledImages && !use_subsampled_images;
+			fdm_capabilities.non_subsampled_images_supported = fdm_features.fragmentDensityMapNonSubsampledImages;
 		}
 
 		if (enabled_device_extension_names.has(VK_QCOM_FRAGMENT_DENSITY_MAP_OFFSET_EXTENSION_NAME)) {

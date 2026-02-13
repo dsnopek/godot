@@ -119,13 +119,13 @@ public:
 	};
 
 	struct Samplers {
-		RID rids[RS::CANVAS_ITEM_TEXTURE_FILTER_MAX][RS::CANVAS_ITEM_TEXTURE_REPEAT_MAX];
+		RID rids[RS::CANVAS_ITEM_TEXTURE_FILTER_MAX][RS::CANVAS_ITEM_TEXTURE_REPEAT_MAX][2];
 		float mipmap_bias = 0.0f;
 		bool use_nearest_mipmap_filter = false;
 		int anisotropic_filtering_level = 2;
 
-		_FORCE_INLINE_ RID get_sampler(RS::CanvasItemTextureFilter p_filter, RS::CanvasItemTextureRepeat p_repeat) const {
-			return rids[p_filter][p_repeat];
+		_FORCE_INLINE_ RID get_sampler(RS::CanvasItemTextureFilter p_filter, RS::CanvasItemTextureRepeat p_repeat, bool p_use_subsampling = false) const {
+			return rids[p_filter][p_repeat][p_use_subsampling ? 1 : 0];
 		}
 
 		template <typename Collection>
@@ -370,8 +370,8 @@ public:
 	Samplers samplers_rd_allocate(float p_mipmap_bias = 0.0f, RS::ViewportAnisotropicFiltering anisotropic_filtering_level = RS::ViewportAnisotropicFiltering::VIEWPORT_ANISOTROPY_4X) const;
 	void samplers_rd_free(Samplers &p_samplers) const;
 
-	_FORCE_INLINE_ RID sampler_rd_get_default(RS::CanvasItemTextureFilter p_filter, RS::CanvasItemTextureRepeat p_repeat) {
-		return default_samplers.get_sampler(p_filter, p_repeat);
+	_FORCE_INLINE_ RID sampler_rd_get_default(RS::CanvasItemTextureFilter p_filter, RS::CanvasItemTextureRepeat p_repeat, bool p_uses_subsampling = false) {
+		return default_samplers.get_sampler(p_filter, p_repeat, p_uses_subsampling);
 	}
 
 	_FORCE_INLINE_ const Samplers &samplers_rd_get_default() const {

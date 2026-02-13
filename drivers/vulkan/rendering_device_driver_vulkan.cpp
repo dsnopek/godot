@@ -2561,6 +2561,21 @@ RDD::SamplerID RenderingDeviceDriverVulkan::sampler_create(const SamplerState &p
 	sampler_create_info.borderColor = (VkBorderColor)p_state.border_color;
 	sampler_create_info.unnormalizedCoordinates = p_state.unnormalized_uvw;
 
+	if (p_state.use_subsampling) {
+		print_line("DRS: created with subsampled bit");
+		sampler_create_info.flags |= VK_SAMPLER_CREATE_SUBSAMPLED_BIT_EXT;
+		sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+		sampler_create_info.magFilter = sampler_create_info.minFilter;
+		sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+		sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+		sampler_create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+		sampler_create_info.anisotropyEnable = VK_FALSE;
+		sampler_create_info.compareEnable = VK_FALSE;
+		sampler_create_info.unnormalizedCoordinates = VK_FALSE;
+		sampler_create_info.minLod = 0;
+		sampler_create_info.maxLod = 0;
+	}
+
 	VkSampler vk_sampler = VK_NULL_HANDLE;
 	VkResult res = vkCreateSampler(vk_device, &sampler_create_info, VKC::get_allocation_callbacks(VK_OBJECT_TYPE_SAMPLER), &vk_sampler);
 	ERR_FAIL_COND_V_MSG(res, SamplerID(), "vkCreateSampler failed with error " + itos(res) + ".");
@@ -4271,6 +4286,9 @@ RDD::UniformSetID RenderingDeviceDriverVulkan::uniform_set_create(VectorView<Bou
 						ERR_PRINT("TEXTURE_USAGE_TRANSIENT_BIT texture must not be used for sampling in a shader.");
 					}
 #endif
+					if (((const TextureInfo *)uniform.ids[j * 2 + 1].id)->is_subsampled) {
+					}
+
 					vk_img_infos[j] = {};
 					vk_img_infos[j].sampler = (VkSampler)uniform.ids[j * 2 + 0].id;
 					vk_img_infos[j].imageView = ((const TextureInfo *)uniform.ids[j * 2 + 1].id)->vk_view;

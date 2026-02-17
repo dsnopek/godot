@@ -172,6 +172,13 @@ void RenderSceneBuffersRD::configure(const RenderSceneBuffersConfiguration *p_co
 
 	vrs_mode = texture_storage->render_target_get_vrs_mode(render_target);
 
+	use_subsampled_images = false;
+	// @todo Should we check if `use_xr` is enabled on the viewport? Or, is `view_count > 1` enough?
+	if (vrs_mode != RS::VIEWPORT_VRS_DISABLED && view_count > 1) {
+		// @todo There are many other things that can break subsampled images - add the rest!
+		use_subsampled_images = !screen_space_aa;
+	}
+
 	update_samplers();
 
 	// cleanout any old buffers we had.
@@ -306,6 +313,10 @@ RID RenderSceneBuffersRD::create_texture(const StringName &p_context, const Stri
 	tf.usage_bits = p_usage_bits;
 	tf.samples = p_texture_samples;
 	tf.is_discardable = p_discardable;
+
+	if (use_subsampled_images && (p_texture_name == RB_TEX_COLOR || p_texture_name == RB_TEX_DEPTH || p_texture_name == RB_TEX_COLOR_MSAA || p_texture_name == RB_TEX_DEPTH_MSAA)) {
+		tf.is_subsampled = true;
+	}
 
 	return create_texture_from_format(p_context, p_texture_name, tf, RD::TextureView(), p_unique);
 }

@@ -75,6 +75,7 @@ private:
 	RID render_target;
 	Size2i target_size = Size2i(0, 0);
 	uint32_t view_count = 1;
+	bool use_subsampled_images = false;
 
 	// The internal size of the textures we render 3D to in case we render at a lower resolution and upscale
 	Size2i internal_size = Size2i(0, 0);

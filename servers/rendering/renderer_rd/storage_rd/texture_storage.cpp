@@ -3498,12 +3498,18 @@ RID TextureStorage::RenderTarget::get_framebuffer() {
 
 	if (msaa != RS::VIEWPORT_MSAA_DISABLED && overridden.color.is_null()) {
 		// Render into our MSAA buffer and resolve into our color buffer.
+		if (vrs_mode != RS::VIEWPORT_VRS_DISABLED) {
+			return FramebufferCacheRD::get_singleton()->get_cache_multiview(view_count, color_multisample, color, vrs_texture);
+		}
 		return FramebufferCacheRD::get_singleton()->get_cache_multiview(view_count, color_multisample, color);
 	} else {
 		// Note that if we're using an overridden color buffer, we're likely cycling through a texture chain.
 		// this is where our framebuffer cache comes in clutch..
-
-		return FramebufferCacheRD::get_singleton()->get_cache_multiview(view_count, overridden.color.is_valid() ? overridden.color : color);
+		RID c = overridden.color.is_valid() ? overridden.color : color;
+		if (vrs_mode != RS::VIEWPORT_VRS_DISABLED) {
+			return FramebufferCacheRD::get_singleton()->get_cache_multiview(view_count, c, vrs_texture);
+		}
+		return FramebufferCacheRD::get_singleton()->get_cache_multiview(view_count, c);
 	}
 }
 

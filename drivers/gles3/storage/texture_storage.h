@@ -718,7 +718,7 @@ public:
 	virtual Rect2i render_target_get_render_region(RID p_render_target) const override;
 
 	virtual void render_target_set_subsampled_allowed(RID p_render_target, bool p_allowed) override {}
-	virtual bool render_target_is_subsampled_allowed(RID p_render_target) const { return false; }
+	virtual bool render_target_is_subsampled_allowed(RID p_render_target) const override { return false; }
 
 	virtual RID render_target_get_texture(RID p_render_target) override;
 

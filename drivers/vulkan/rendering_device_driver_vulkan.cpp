@@ -773,10 +773,8 @@ Error RenderingDeviceDriverVulkan::_check_device_capabilities() {
 	framebuffer_depth_resolve = enabled_device_extension_names.has(VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME);
 
 	bool use_fdm_offsets = false;
-	bool use_subsampled_images = false;
 	if (VulkanHooks::get_singleton() != nullptr) {
 		use_fdm_offsets = VulkanHooks::get_singleton()->use_fragment_density_offsets();
-		use_subsampled_images = VulkanHooks::get_singleton()->use_subsampled_images();
 	}
 
 	// References:
@@ -901,7 +899,7 @@ Error RenderingDeviceDriverVulkan::_check_device_capabilities() {
 		if (enabled_device_extension_names.has(VK_EXT_FRAGMENT_DENSITY_MAP_EXTENSION_NAME)) {
 			fdm_capabilities.attachment_supported = fdm_features.fragmentDensityMap;
 			fdm_capabilities.dynamic_attachment_supported = fdm_features.fragmentDensityMapDynamic;
-			fdm_capabilities.non_subsampled_images_supported = fdm_features.fragmentDensityMapNonSubsampledImages && !use_subsampled_images;
+			fdm_capabilities.non_subsampled_images_supported = fdm_features.fragmentDensityMapNonSubsampledImages;
 		}
 
 		if (enabled_device_extension_names.has(VK_QCOM_FRAGMENT_DENSITY_MAP_OFFSET_EXTENSION_NAME)) {
@@ -2047,9 +2045,12 @@ RDD::TextureID RenderingDeviceDriverVulkan::texture_create(const TextureFormat &
 		create_info.flags |= VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
 	}*/
 
-	if (fdm_capabilities.attachment_supported && !fdm_capabilities.non_subsampled_images_supported && p_format.is_subsampled && (p_format.usage_bits & (TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_RESOLVE_ATTACHMENT_BIT))) {
+	bool use_subsampled_images = VulkanHooks::get_singleton() && VulkanHooks::get_singleton()->use_subsampled_images();
+	if (fdm_capabilities.attachment_supported && use_subsampled_images && p_format.is_subsampled && (p_format.usage_bits & (TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_RESOLVE_ATTACHMENT_BIT))) {
 		create_info.flags |= VK_IMAGE_CREATE_SUBSAMPLED_BIT_EXT;
 		print_line("DRS: using subsampled flag");
+	} else {
+		print_line("DRS: NOT using subsampled flag");
 	}
 
 	if (fdm_capabilities.offset_supported && (p_format.usage_bits & (TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | TEXTURE_USAGE_DEPTH_RESOLVE_ATTACHMENT_BIT | TEXTURE_USAGE_VRS_ATTACHMENT_BIT))) {

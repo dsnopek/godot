@@ -156,7 +156,9 @@ void *OpenXRFBFoveationExtension::set_swapchain_create_info_and_get_next_pointer
 			if (meta_foveation_eye_tracked_ext && meta_foveation_eye_tracked_properties.supportsFoveationEyeTracked) {
 				meta_vulkan_swapchain_create_info.additionalCreateFlags |= VK_IMAGE_CREATE_FRAGMENT_DENSITY_MAP_OFFSET_BIT_QCOM;
 			}
+			print_line("DRS: OpenXRFBFoveationExtension - swapchain create subsampled: ", (foveation_with_subsampled_images_enabled && foveation_with_subsampled_images_active));
 			if (foveation_with_subsampled_images_enabled && foveation_with_subsampled_images_active) {
+				print_line("DRS: Actually setting the flag on the swapchain create info to subsampled");
 				meta_vulkan_swapchain_create_info.additionalCreateFlags |= VK_IMAGE_CREATE_SUBSAMPLED_BIT_EXT;
 			}
 
@@ -240,7 +242,7 @@ bool OpenXRFBFoveationExtension::is_foveation_with_subsampled_images_enabled() c
 }
 
 void OpenXRFBFoveationExtension::set_foveation_with_subsampled_images_active(bool p_active) {
-	foveation_with_subsampled_images_active = true;
+	foveation_with_subsampled_images_active = p_active;
 }
 
 bool OpenXRFBFoveationExtension::is_foveation_with_subsampled_images_active() const {

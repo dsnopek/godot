@@ -2478,16 +2478,19 @@ bool OpenXRAPI::pre_draw_viewport(RID p_render_target) {
 	OpenXRFBFoveationExtension *fov_ext = OpenXRFBFoveationExtension::get_singleton();
 	if (fov_ext && fov_ext->is_foveation_with_subsampled_images_enabled()) {
 		bool rt_subsampled_allowed = RSG::texture_storage->render_target_is_subsampled_allowed(p_render_target);
+		print_line("DRS: OpenXRAPI - rt_subsampled_allowed: ", rt_subsampled_allowed);
 
 		// Activate/deactivate subsampled images if whether or not they are allowed on the render target has changed.
 		if (render_state.use_subsampled_images != rt_subsampled_allowed) {
 			render_state.use_subsampled_images = rt_subsampled_allowed;
+			print_line("DRS: setting subsampled active: ", rt_subsampled_allowed);
 			fov_ext->set_foveation_with_subsampled_images_active(rt_subsampled_allowed);
 			should_recreate_swapchain = true;
 		}
 	}
 
 	if (should_recreate_swapchain) {
+		print_line("DRS: recreating the swapchain");
 		// Out with the old.
 		free_main_swapchains();
 

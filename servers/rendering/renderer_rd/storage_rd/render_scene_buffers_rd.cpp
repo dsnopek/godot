@@ -174,7 +174,7 @@ void RenderSceneBuffersRD::configure(const RenderSceneBuffersConfiguration *p_co
 
 	use_subsampled_images = false;
 	// @todo Should we check if `use_xr` is enabled on the viewport? Or, is `view_count > 1` enough?
-	if (vrs_mode != RS::VIEWPORT_VRS_DISABLED && view_count > 1) {
+	if (view_count > 1) {
 		// @todo There are many other things that can break subsampled images - add the rest!
 		use_subsampled_images = vrs_mode == RS::VIEWPORT_VRS_DISABLED || !screen_space_aa;
 	}

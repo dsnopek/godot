@@ -178,6 +178,7 @@ void RenderSceneBuffersRD::configure(const RenderSceneBuffersConfiguration *p_co
 		// @todo There are many other things that can break subsampled images - add the rest!
 		use_subsampled_images = !screen_space_aa;
 	}
+	texture_storage->render_target_set_subsampled_allowed(render_target, use_subsampled_images);
 
 	update_samplers();
 

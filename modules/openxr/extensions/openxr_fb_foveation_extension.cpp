@@ -53,6 +53,7 @@ OpenXRFBFoveationExtension::OpenXRFBFoveationExtension(const String &p_rendering
 	foveation_dynamic = fov_dyn ? XR_FOVEATION_DYNAMIC_LEVEL_ENABLED_FB : XR_FOVEATION_DYNAMIC_DISABLED_FB;
 
 	foveation_with_subsampled_images_enabled = GLOBAL_GET("xr/openxr/foveation_with_subsampled_images");
+	foveation_with_subsampled_images_active = foveation_with_subsampled_images_enabled;
 
 	swapchain_create_info_foveation_fb.type = XR_TYPE_SWAPCHAIN_CREATE_INFO_FOVEATION_FB;
 	swapchain_create_info_foveation_fb.next = nullptr;
@@ -155,7 +156,7 @@ void *OpenXRFBFoveationExtension::set_swapchain_create_info_and_get_next_pointer
 			if (meta_foveation_eye_tracked_ext && meta_foveation_eye_tracked_properties.supportsFoveationEyeTracked) {
 				meta_vulkan_swapchain_create_info.additionalCreateFlags |= VK_IMAGE_CREATE_FRAGMENT_DENSITY_MAP_OFFSET_BIT_QCOM;
 			}
-			if (foveation_with_subsampled_images_enabled) {
+			if (foveation_with_subsampled_images_enabled && foveation_with_subsampled_images_active) {
 				meta_vulkan_swapchain_create_info.additionalCreateFlags |= VK_IMAGE_CREATE_SUBSAMPLED_BIT_EXT;
 			}
 
@@ -236,6 +237,14 @@ void OpenXRFBFoveationExtension::get_fragment_density_offsets(LocalVector<Vector
 
 bool OpenXRFBFoveationExtension::is_foveation_with_subsampled_images_enabled() const {
 	return is_enabled() && meta_vulkan_swapchain_create_info_ext && foveation_with_subsampled_images_enabled;
+}
+
+void OpenXRFBFoveationExtension::set_foveation_with_subsampled_images_active(bool p_active) {
+	foveation_with_subsampled_images_active = true;
+}
+
+bool OpenXRFBFoveationExtension::is_foveation_with_subsampled_images_active() const {
+	return foveation_with_subsampled_images_active;
 }
 
 void OpenXRFBFoveationExtension::_update_profile_rt() {

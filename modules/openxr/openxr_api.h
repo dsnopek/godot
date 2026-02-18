@@ -362,6 +362,7 @@ private:
 		LocalVector<XrCompositionLayerProjectionView> projection_views;
 		LocalVector<XrCompositionLayerDepthInfoKHR> depth_views; // Only used by Composition Layer Depth Extension if available
 		bool submit_depth_buffer = false; // if set to true we submit depth buffers to OpenXR if a suitable extension is enabled.
+		bool use_subsampled_images = false;
 		bool view_pose_valid = false;
 
 		double z_near = 0.0;

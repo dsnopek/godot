@@ -3848,6 +3848,20 @@ Rect2i RendererRD::TextureStorage::render_target_get_render_region(RID p_render_
 	return rt->render_region;
 }
 
+void RendererRD::TextureStorage::render_target_set_subsampled_allowed(RID p_render_target, bool p_allowed) {
+	RenderTarget *rt = render_target_owner.get_or_null(p_render_target);
+	ERR_FAIL_NULL(rt);
+
+	rt->subsampling_allowed = p_allowed;
+}
+
+bool RendererRD::TextureStorage::render_target_is_subsampled_allowed(RID p_render_target) const {
+	RenderTarget *rt = render_target_owner.get_or_null(p_render_target);
+	ERR_FAIL_NULL_V(rt, false);
+
+	return rt->subsampling_allowed;
+}
+
 void TextureStorage::render_target_set_transparent(RID p_render_target, bool p_is_transparent) {
 	RenderTarget *rt = render_target_owner.get_or_null(p_render_target);
 	ERR_FAIL_NULL(rt);

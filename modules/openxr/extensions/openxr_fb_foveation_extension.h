@@ -77,12 +77,16 @@ public:
 
 	bool is_foveation_with_subsampled_images_enabled() const;
 
+	void set_foveation_with_subsampled_images_active(bool p_active);
+	bool is_foveation_with_subsampled_images_active() const;
+
 private:
 	static OpenXRFBFoveationExtension *singleton;
 
 	// Setup
 	String rendering_driver;
 	bool foveation_with_subsampled_images_enabled = false;
+	bool foveation_with_subsampled_images_active = false;
 	bool fb_foveation_ext = false;
 	bool fb_foveation_configuration_ext = false;
 	bool fb_foveation_vulkan_ext = false;

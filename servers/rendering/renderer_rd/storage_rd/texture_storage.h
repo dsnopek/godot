@@ -398,6 +398,7 @@ private:
 		RID vrs_texture;
 
 		Rect2i render_region;
+		bool subsampling_allowed = true;
 
 		// overridden textures
 		struct RTOverridden {
@@ -803,6 +804,9 @@ public:
 
 	virtual void render_target_set_render_region(RID p_render_target, const Rect2i &p_render_region) override;
 	virtual Rect2i render_target_get_render_region(RID p_render_target) const override;
+
+	virtual void render_target_set_subsampled_allowed(RID p_render_target, bool p_allowed) override;
+	virtual bool render_target_is_subsampled_allowed(RID p_render_target) const override;
 
 	virtual RID render_target_get_texture(RID p_render_target) override;
 

@@ -38,6 +38,7 @@
 #include "core/os/memory.h"
 #include "core/profiling/profiling.h"
 #include "core/version.h"
+#include "servers/rendering/rendering_server_globals.h"
 
 #include "openxr_platform_inc.h"
 
@@ -2384,15 +2385,6 @@ void OpenXRAPI::pre_render() {
 	// Process any swapchains that were queued to be freed
 	OpenXRSwapChainInfo::free_queued();
 
-	Size2i swapchain_size = get_recommended_target_size();
-	if (swapchain_size != render_state.main_swapchain_size) {
-		// Out with the old.
-		free_main_swapchains();
-
-		// In with the new.
-		create_main_swapchains(swapchain_size);
-	}
-
 	void *view_locate_info_next_pointer = nullptr;
 	for (OpenXRExtensionWrapper *extension : frame_info_extensions) {
 		void *np = extension->set_view_locate_info_and_get_next_pointer(view_locate_info_next_pointer);
@@ -2478,6 +2470,29 @@ bool OpenXRAPI::pre_draw_viewport(RID p_render_target) {
 
 	if (instance == XR_NULL_HANDLE || session == XR_NULL_HANDLE || !render_state.running || !render_state.view_pose_valid || !render_state.should_render) {
 		return false;
+	}
+
+	Size2i swapchain_size = get_recommended_target_size();
+	bool should_recreate_swapchain = (swapchain_size != render_state.main_swapchain_size);
+
+	OpenXRFBFoveationExtension *fov_ext = OpenXRFBFoveationExtension::get_singleton();
+	if (fov_ext && fov_ext->is_foveation_with_subsampled_images_enabled()) {
+		bool rt_subsampled_allowed = RSG::texture_storage->render_target_is_subsampled_allowed(p_render_target);
+
+		// Activate/deactivate subsampled images if whether or not they are allowed on the render target has changed.
+		if (render_state.use_subsampled_images != rt_subsampled_allowed) {
+			render_state.use_subsampled_images = rt_subsampled_allowed;
+			fov_ext->set_foveation_with_subsampled_images_active(rt_subsampled_allowed);
+			should_recreate_swapchain = true;
+		}
+	}
+
+	if (should_recreate_swapchain) {
+		// Out with the old.
+		free_main_swapchains();
+
+		// In with the new.
+		create_main_swapchains(swapchain_size);
 	}
 
 	// Acquire our images

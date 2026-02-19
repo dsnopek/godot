@@ -191,8 +191,8 @@ public:
 	virtual void render_target_set_subsampled_enabled(RID p_render_target, bool p_enabled) = 0;
 	virtual bool render_target_is_subsampled_enabled(RID p_render_target) const = 0;
 
-	virtual void render_target_set_subsampled_active(RID p_render_target, bool p_active) = 0;
-	virtual bool render_target_is_subsampled_active(RID p_render_target) const = 0;
+	virtual void render_target_set_subsampled_allowed(RID p_render_target, bool p_active) = 0;
+	virtual bool render_target_is_subsampled_allowed(RID p_render_target) const = 0;
 
 	// get textures
 	virtual RID render_target_get_texture(RID p_render_target) = 0;

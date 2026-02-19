@@ -212,8 +212,8 @@ public:
 	virtual void render_target_set_subsampled_enabled(RID p_render_target, bool p_enabled) override {}
 	virtual bool render_target_is_subsampled_enabled(RID p_render_target) const override { return false; }
 
-	virtual void render_target_set_subsampled_active(RID p_render_target, bool p_active) override {}
-	virtual bool render_target_is_subsampled_active(RID p_render_target) const override { return false; }
+	virtual void render_target_set_subsampled_allowed(RID p_render_target, bool p_active) override {}
+	virtual bool render_target_is_subsampled_allowed(RID p_render_target) const override { return false; }
 
 	virtual RID render_target_get_texture(RID p_render_target) override { return RID(); }
 

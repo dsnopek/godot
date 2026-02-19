@@ -2484,7 +2484,7 @@ bool OpenXRAPI::pre_draw_viewport(RID p_render_target) {
 
 		// But check if they are "active", because they may get disabled if we are using
 		// any incompatible rendering features.
-		bool subsampled_images_allowed = RSG::texture_storage->render_target_is_subsampled_active(p_render_target);
+		bool subsampled_images_allowed = RSG::texture_storage->render_target_is_subsampled_allowed(p_render_target);
 		fov_ext->set_foveation_with_subsampled_images_active(subsampled_images_allowed);
 
 		bool use_subsampled_images = subsampled_images_enabled && subsampled_images_allowed;

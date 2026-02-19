@@ -2498,7 +2498,6 @@ bool OpenXRAPI::pre_draw_viewport(RID p_render_target) {
 	}
 
 	if (should_recreate_swapchain) {
-		print_line("DRS: recreating the swapchain");
 		// Out with the old.
 		free_main_swapchains();
 

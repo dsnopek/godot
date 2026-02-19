@@ -171,7 +171,6 @@ void RenderSceneBuffersRD::configure(const RenderSceneBuffersConfiguration *p_co
 	ERR_FAIL_COND_MSG(view_count == 0, "Must have at least 1 view");
 
 	vrs_mode = texture_storage->render_target_get_vrs_mode(render_target);
-	use_subsampled_images = texture_storage->render_target_is_subsampled_allowed(render_target);
 
 	update_samplers();
 
@@ -307,10 +306,6 @@ RID RenderSceneBuffersRD::create_texture(const StringName &p_context, const Stri
 	tf.usage_bits = p_usage_bits;
 	tf.samples = p_texture_samples;
 	tf.is_discardable = p_discardable;
-
-	if (use_subsampled_images && (p_texture_name == RB_TEX_COLOR || p_texture_name == RB_TEX_DEPTH || p_texture_name == RB_TEX_COLOR_MSAA || p_texture_name == RB_TEX_DEPTH_MSAA)) {
-		tf.is_subsampled = true;
-	}
 
 	return create_texture_from_format(p_context, p_texture_name, tf, RD::TextureView(), p_unique);
 }
@@ -640,6 +635,80 @@ RID RenderSceneBuffersRD::get_depth_texture(const uint32_t p_layer) {
 	} else {
 		return get_texture_slice(RB_SCOPE_BUFFERS, RB_TEX_DEPTH, p_layer, 0);
 	}
+}
+
+// Subsampled textures.
+
+RID RenderSceneBuffersRD::get_color_subsampled() {
+	const bool use_msaa = (msaa_3d != RS::VIEWPORT_MSAA_DISABLED);
+
+	RD::TextureFormat tf;
+	tf.format = get_base_data_format();
+	if (view_count > 1) {
+		tf.texture_type = RD::TEXTURE_TYPE_2D_ARRAY;
+	}
+	tf.width = internal_size.x;
+	tf.height = internal_size.y;
+	tf.array_layers = view_count;
+	tf.usage_bits = get_color_usage_bits(use_msaa, false, can_be_storage);
+	tf.is_subsampled = true;
+
+	return create_texture_from_format(RB_SCOPE_BUFFERS, RB_TEX_COLOR_SUBSAMPLED, tf);
+}
+
+RID RenderSceneBuffersRD::get_color_msaa_subsampled() {
+	ERR_FAIL_COND_V(msaa_3d == RS::VIEWPORT_MSAA_DISABLED, RID());
+
+	RD::TextureFormat tf;
+	tf.format = get_base_data_format();
+	if (view_count > 1) {
+		tf.texture_type = RD::TEXTURE_TYPE_2D_ARRAY;
+	}
+	tf.width = internal_size.x;
+	tf.height = internal_size.y;
+	tf.array_layers = view_count;
+	tf.samples = msaa_to_samples(msaa_3d);
+	tf.usage_bits = get_color_usage_bits(false, true, can_be_storage);
+	tf.is_discardable = true;
+	tf.is_subsampled = true;
+
+	return create_texture_from_format(RB_SCOPE_BUFFERS, RB_TEX_COLOR_MSAA_SUBSAMPLED, tf);
+}
+
+RID RenderSceneBuffersRD::get_depth_subsampled() {
+	const bool use_msaa = (msaa_3d != RS::VIEWPORT_MSAA_DISABLED);
+
+	RD::TextureFormat tf;
+	tf.format = get_depth_format(use_msaa, false, can_be_storage);
+	if (view_count > 1) {
+		tf.texture_type = RD::TEXTURE_TYPE_2D_ARRAY;
+	}
+	tf.width = internal_size.x;
+	tf.height = internal_size.y;
+	tf.array_layers = view_count;
+	tf.usage_bits = get_depth_usage_bits(use_msaa, false, can_be_storage);
+	tf.is_subsampled = true;
+
+	return create_texture_from_format(RB_SCOPE_BUFFERS, RB_TEX_DEPTH_SUBSAMPLED, tf);
+}
+
+RID RenderSceneBuffersRD::get_depth_msaa_subsampled() {
+	ERR_FAIL_COND_V(msaa_3d == RS::VIEWPORT_MSAA_DISABLED, RID());
+
+	RD::TextureFormat tf;
+	tf.format = get_depth_format(false, true, can_be_storage);
+	if (view_count > 1) {
+		tf.texture_type = RD::TEXTURE_TYPE_2D_ARRAY;
+	}
+	tf.width = internal_size.x;
+	tf.height = internal_size.y;
+	tf.array_layers = view_count;
+	tf.samples = msaa_to_samples(msaa_3d);
+	tf.usage_bits = get_depth_usage_bits(false, true, can_be_storage);
+	tf.is_discardable = true;
+	tf.is_subsampled = true;
+
+	return create_texture_from_format(RB_SCOPE_BUFFERS, RB_TEX_DEPTH_MSAA_SUBSAMPLED, tf);
 }
 
 // Upscaled texture.

@@ -48,8 +48,12 @@
 #define RB_TEX_COLOR SNAME("color")
 #define RB_TEX_COLOR_MSAA SNAME("color_msaa")
 #define RB_TEX_COLOR_UPSCALED SNAME("color_upscaled")
+#define RB_TEX_COLOR_SUBSAMPLED SNAME("color_subsampled")
+#define RB_TEX_COLOR_MSAA_SUBSAMPLED SNAME("color_msaa_subsampled")
 #define RB_TEX_DEPTH SNAME("depth")
 #define RB_TEX_DEPTH_MSAA SNAME("depth_msaa")
+#define RB_TEX_DEPTH_SUBSAMPLED SNAME("depth_subsampled")
+#define RB_TEX_DEPTH_MSAA_SUBSAMPLED SNAME("depth_msaa_subsampled")
 #define RB_TEX_VELOCITY SNAME("velocity")
 #define RB_TEX_VELOCITY_MSAA SNAME("velocity_msaa")
 
@@ -75,7 +79,6 @@ private:
 	RID render_target;
 	Size2i target_size = Size2i(0, 0);
 	uint32_t view_count = 1;
-	bool use_subsampled_images = false;
 
 	// The internal size of the textures we render 3D to in case we render at a lower resolution and upscale
 	Size2i internal_size = Size2i(0, 0);
@@ -282,6 +285,11 @@ public:
 	RID get_depth_msaa(uint32_t p_layer) {
 		return get_texture_slice(RB_SCOPE_BUFFERS, RB_TEX_DEPTH_MSAA, p_layer, 0);
 	}
+
+	RID get_color_subsampled();
+	RID get_color_msaa_subsampled();
+	RID get_depth_subsampled();
+	RID get_depth_msaa_subsampled();
 
 	// back buffer (color)
 	RID get_back_buffer_texture() const {

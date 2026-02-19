@@ -2476,15 +2476,23 @@ bool OpenXRAPI::pre_draw_viewport(RID p_render_target) {
 	bool should_recreate_swapchain = (swapchain_size != render_state.main_swapchain_size);
 
 	OpenXRFBFoveationExtension *fov_ext = OpenXRFBFoveationExtension::get_singleton();
-	if (fov_ext && fov_ext->is_foveation_with_subsampled_images_enabled()) {
-		bool rt_subsampled_allowed = RSG::texture_storage->render_target_is_subsampled_allowed(p_render_target);
-		print_line("DRS: OpenXRAPI - rt_subsampled_allowed: ", rt_subsampled_allowed);
+	if (fov_ext) {
+		bool use_subsampled_images = fov_ext->get_foveation_with_subsampled_images();
 
-		// Activate/deactivate subsampled images if whether or not they are allowed on the render target has changed.
-		if (render_state.use_subsampled_images != rt_subsampled_allowed) {
-			render_state.use_subsampled_images = rt_subsampled_allowed;
-			print_line("DRS: setting subsampled active: ", rt_subsampled_allowed);
-			fov_ext->set_foveation_with_subsampled_images_active(rt_subsampled_allowed);
+		// Mark subsampled images as enabled on the render target (so we try to use them).
+		RSG::texture_storage->render_target_set_subsampled_enabled(p_render_target, use_subsampled_images);
+
+		// But check if they are "active", because they may get disabled if we are using
+		// any incompatible rendering features.
+		if (!RSG::texture_storage->render_target_is_subsampled_active(p_render_target)) {
+			use_subsampled_images = false;
+		}
+
+		if (render_state.use_subsampled_images != use_subsampled_images) {
+			render_state.use_subsampled_images = use_subsampled_images;
+			if (!use_subsampled_images) {
+				WARN_PRINT("Foveation with subsampled images was enabled, but rendering features are in use that have forced it to be disabled.");
+			}
 			should_recreate_swapchain = true;
 		}
 	}
@@ -2839,6 +2847,21 @@ void OpenXRAPI::set_foveation_dynamic(bool p_foveation_dynamic) {
 	OpenXRFBFoveationExtension *fov_ext = OpenXRFBFoveationExtension::get_singleton();
 	if (fov_ext != nullptr && fov_ext->is_enabled()) {
 		fov_ext->set_foveation_dynamic(p_foveation_dynamic ? XR_FOVEATION_DYNAMIC_LEVEL_ENABLED_FB : XR_FOVEATION_DYNAMIC_DISABLED_FB);
+	}
+}
+
+bool OpenXRAPI::get_foveation_with_subsampled_images() const {
+	OpenXRFBFoveationExtension *fov_ext = OpenXRFBFoveationExtension::get_singleton();
+	if (fov_ext != nullptr) {
+		return fov_ext->get_foveation_with_subsampled_images();
+	}
+	return false;
+}
+
+void OpenXRAPI::set_foveation_with_subsampled_images(bool p_enabled) {
+	OpenXRFBFoveationExtension *fov_ext = OpenXRFBFoveationExtension::get_singleton();
+	if (fov_ext != nullptr) {
+		fov_ext->set_foveation_with_subsampled_images(p_enabled);
 	}
 }
 

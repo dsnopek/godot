@@ -3848,18 +3848,32 @@ Rect2i RendererRD::TextureStorage::render_target_get_render_region(RID p_render_
 	return rt->render_region;
 }
 
-void RendererRD::TextureStorage::render_target_set_subsampled_allowed(RID p_render_target, bool p_allowed) {
+void RendererRD::TextureStorage::render_target_set_subsampled_enabled(RID p_render_target, bool p_enabled) {
 	RenderTarget *rt = render_target_owner.get_or_null(p_render_target);
 	ERR_FAIL_NULL(rt);
 
-	rt->subsampling_allowed = p_allowed;
+	rt->subsampled_enabled = p_enabled;
 }
 
-bool RendererRD::TextureStorage::render_target_is_subsampled_allowed(RID p_render_target) const {
+bool RendererRD::TextureStorage::render_target_is_subsampled_enabled(RID p_render_target) const {
 	RenderTarget *rt = render_target_owner.get_or_null(p_render_target);
 	ERR_FAIL_NULL_V(rt, false);
 
-	return rt->subsampling_allowed;
+	return rt->subsampled_enabled;
+}
+
+void RendererRD::TextureStorage::render_target_set_subsampled_active(RID p_render_target, bool p_active) {
+	RenderTarget *rt = render_target_owner.get_or_null(p_render_target);
+	ERR_FAIL_NULL(rt);
+
+	rt->subsampled_active = p_active;
+}
+
+bool RendererRD::TextureStorage::render_target_is_subsampled_active(RID p_render_target) const {
+	RenderTarget *rt = render_target_owner.get_or_null(p_render_target);
+	ERR_FAIL_NULL_V(rt, false);
+
+	return rt->subsampled_active;
 }
 
 void TextureStorage::render_target_set_transparent(RID p_render_target, bool p_is_transparent) {

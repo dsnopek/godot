@@ -75,18 +75,14 @@ public:
 	bool is_foveation_eye_tracked_enabled() const;
 	void get_fragment_density_offsets(LocalVector<Vector2i> &r_offsets);
 
-	bool is_foveation_with_subsampled_images_enabled() const;
-
-	void set_foveation_with_subsampled_images_active(bool p_active);
-	bool is_foveation_with_subsampled_images_active() const;
+	void set_foveation_with_subsampled_images(bool p_active);
+	bool get_foveation_with_subsampled_images() const;
 
 private:
 	static OpenXRFBFoveationExtension *singleton;
 
 	// Setup
 	String rendering_driver;
-	bool foveation_with_subsampled_images_enabled = false;
-	bool foveation_with_subsampled_images_active = false;
 	bool fb_foveation_ext = false;
 	bool fb_foveation_configuration_ext = false;
 	bool fb_foveation_vulkan_ext = false;
@@ -96,6 +92,7 @@ private:
 	// Configuration
 	XrFoveationLevelFB foveation_level = XR_FOVEATION_LEVEL_NONE_FB;
 	XrFoveationDynamicFB foveation_dynamic = XR_FOVEATION_DYNAMIC_DISABLED_FB;
+	bool foveation_with_subsampled_images = false;
 
 	void _update_profile_rt();
 

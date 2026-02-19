@@ -269,14 +269,6 @@ void RendererViewport::_configure_3d_render_buffers(Viewport *p_viewport) {
 			// to compensate for the loss of sharpness.
 			const float texture_mipmap_bias = std::log2(MIN(scaling_3d_scale, 1.0)) + p_viewport->texture_mipmap_bias;
 
-			bool subsampled_allowed = false;
-			if (p_viewport->use_xr) {
-				// @todo This also needs to ensure that glow isn't enabled somehow...
-				RS::ViewportVRSMode vrs_mode = RSG::texture_storage->render_target_get_vrs_mode(p_viewport->render_target);
-				subsampled_allowed = (vrs_mode != RS::VIEWPORT_VRS_DISABLED && p_viewport->screen_space_aa == RS::VIEWPORT_SCREEN_SPACE_AA_DISABLED && scaling_3d_mode == RS::VIEWPORT_SCALING_3D_MODE_OFF);
-			}
-			RSG::texture_storage->render_target_set_subsampled_allowed(p_viewport->render_target, subsampled_allowed);
-
 			RenderSceneBuffersConfiguration rb_config;
 			rb_config.set_render_target(p_viewport->render_target);
 			rb_config.set_internal_size(Size2i(render_width, render_height));

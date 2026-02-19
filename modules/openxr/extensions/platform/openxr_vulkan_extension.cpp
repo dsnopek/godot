@@ -235,7 +235,7 @@ bool OpenXRVulkanExtension::use_subsampled_images() {
 		return false;
 	}
 
-	return fb_foveation->get_foveation_with_subsampled_images();
+	return fb_foveation->is_foveation_with_subsampled_images_enabled();
 }
 
 XrGraphicsBindingVulkanKHR OpenXRVulkanExtension::graphics_binding_vulkan;

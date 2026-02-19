@@ -2477,17 +2477,17 @@ bool OpenXRAPI::pre_draw_viewport(RID p_render_target) {
 
 	OpenXRFBFoveationExtension *fov_ext = OpenXRFBFoveationExtension::get_singleton();
 	if (fov_ext) {
-		bool use_subsampled_images = fov_ext->get_foveation_with_subsampled_images();
+		bool subsampled_images_enabled = fov_ext->is_foveation_with_subsampled_images_enabled();
 
 		// Mark subsampled images as enabled on the render target (so we try to use them).
-		RSG::texture_storage->render_target_set_subsampled_enabled(p_render_target, use_subsampled_images);
+		RSG::texture_storage->render_target_set_subsampled_enabled(p_render_target, subsampled_images_enabled);
 
 		// But check if they are "active", because they may get disabled if we are using
 		// any incompatible rendering features.
-		if (!RSG::texture_storage->render_target_is_subsampled_active(p_render_target)) {
-			use_subsampled_images = false;
-		}
+		bool subsampled_images_allowed = RSG::texture_storage->render_target_is_subsampled_active(p_render_target);
+		fov_ext->set_foveation_with_subsampled_images_active(subsampled_images_allowed);
 
+		bool use_subsampled_images = subsampled_images_enabled && subsampled_images_allowed;
 		if (render_state.use_subsampled_images != use_subsampled_images) {
 			render_state.use_subsampled_images = use_subsampled_images;
 			if (!use_subsampled_images) {
@@ -2853,7 +2853,7 @@ void OpenXRAPI::set_foveation_dynamic(bool p_foveation_dynamic) {
 bool OpenXRAPI::get_foveation_with_subsampled_images() const {
 	OpenXRFBFoveationExtension *fov_ext = OpenXRFBFoveationExtension::get_singleton();
 	if (fov_ext != nullptr) {
-		return fov_ext->get_foveation_with_subsampled_images();
+		return fov_ext->is_foveation_with_subsampled_images_enabled();
 	}
 	return false;
 }
@@ -2861,7 +2861,7 @@ bool OpenXRAPI::get_foveation_with_subsampled_images() const {
 void OpenXRAPI::set_foveation_with_subsampled_images(bool p_enabled) {
 	OpenXRFBFoveationExtension *fov_ext = OpenXRFBFoveationExtension::get_singleton();
 	if (fov_ext != nullptr) {
-		fov_ext->set_foveation_with_subsampled_images(p_enabled);
+		fov_ext->set_foveation_with_subsampled_images_enabled(p_enabled);
 	}
 }
 

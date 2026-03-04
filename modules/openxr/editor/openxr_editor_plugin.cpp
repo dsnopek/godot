@@ -154,10 +154,11 @@ String OpenXRExportPlugin::get_android_manifest_activity_element_contents(const 
                 <action android:name="android.intent.action.MAIN" />
 
 				<category android:name="android.intent.category.DEFAULT" />
-
-                <category android:name="org.khronos.openxr.intent.category.IMMERSIVE_HMD" />
             </intent-filter>
 )n";
+
+	// Removed:
+	//<category android:name="org.khronos.openxr.intent.category.IMMERSIVE_HMD" />
 
 	return contents;
 }

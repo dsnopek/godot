@@ -2435,6 +2435,15 @@ void OpenXRAPI::pre_render() {
 	// Process any swapchains that were queued to be freed
 	OpenXRSwapChainInfo::free_queued();
 
+	Size2i swapchain_size = get_recommended_target_size();
+	if (swapchain_size != render_state.main_swapchain_size) {
+		// Out with the old.
+		free_main_swapchains();
+
+		// In with the new.
+		create_main_swapchains(swapchain_size);
+	}
+
 	void *view_locate_info_next_pointer = nullptr;
 	for (OpenXRExtensionWrapper *extension : frame_info_extensions) {
 		void *np = extension->set_view_locate_info_and_get_next_pointer(view_locate_info_next_pointer);
@@ -2522,9 +2531,6 @@ bool OpenXRAPI::pre_draw_viewport(RID p_render_target) {
 		return false;
 	}
 
-	Size2i swapchain_size = get_recommended_target_size();
-	bool should_recreate_swapchain = (swapchain_size != render_state.main_swapchain_size);
-
 	OpenXRFBFoveationExtension *fov_ext = OpenXRFBFoveationExtension::get_singleton();
 	if (fov_ext) {
 		bool subsampled_images_enabled = fov_ext->is_foveation_with_subsampled_images_enabled();
@@ -2543,16 +2549,11 @@ bool OpenXRAPI::pre_draw_viewport(RID p_render_target) {
 			if (!subsampled_images_allowed) {
 				WARN_PRINT("Foveation with subsampled images was enabled, but rendering features are in use that have forced it to be disabled.");
 			}
-			should_recreate_swapchain = true;
+
+			// Recreate the swapchains with or without the subsampled flag.
+			free_main_swapchains();
+			create_main_swapchains(get_recommended_target_size());
 		}
-	}
-
-	if (should_recreate_swapchain) {
-		// Out with the old.
-		free_main_swapchains();
-
-		// In with the new.
-		create_main_swapchains(swapchain_size);
 	}
 
 	// Acquire our images

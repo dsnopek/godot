@@ -173,14 +173,14 @@ void RenderSceneBuffersGLES3::configure(const RenderSceneBuffersConfiguration *p
 	if (msaa3d.mode != RSE::VIEWPORT_MSAA_DISABLED && internal_size.x == 0 && internal_size.y == 0) {
 		// Disable, no size set.
 		msaa3d.mode = RSE::VIEWPORT_MSAA_DISABLED;
+	} else if (emulate_multiview && msaa3d.mode != RSE::VIEWPORT_MSAA_DISABLED && !config->msaa_supported && !config->rt_msaa_supported) {
+		WARN_PRINT_ONCE("MSAA is not supported on this device.");
+		msaa3d.mode = RSE::VIEWPORT_MSAA_DISABLED;
 	} else if (!use_multiview && msaa3d.mode != RSE::VIEWPORT_MSAA_DISABLED && !config->msaa_supported && !config->rt_msaa_supported) {
 		WARN_PRINT_ONCE("MSAA is not supported on this device.");
 		msaa3d.mode = RSE::VIEWPORT_MSAA_DISABLED;
-	} else if (use_multiview && msaa3d.mode != RSE::VIEWPORT_MSAA_DISABLED && !config->msaa_multiview_supported && !config->rt_msaa_multiview_supported) {
+	} else if (use_multiview && !emulate_multiview && msaa3d.mode != RSE::VIEWPORT_MSAA_DISABLED && !config->msaa_multiview_supported && !config->rt_msaa_multiview_supported) {
 		WARN_PRINT_ONCE("Multiview MSAA is not supported on this device.");
-		msaa3d.mode = RSE::VIEWPORT_MSAA_DISABLED;
-	} else if (emulate_multiview && msaa3d.mode != RSE::VIEWPORT_MSAA_DISABLED) {
-		WARN_PRINT_ONCE("MSAA is not supported when emulating multiview.");
 		msaa3d.mode = RSE::VIEWPORT_MSAA_DISABLED;
 	}
 
@@ -287,7 +287,7 @@ void RenderSceneBuffersGLES3::_check_render_buffers() {
 			msaa3d.samples = config->msaa_max_samples;
 		}
 
-		if (!use_multiview && !config->rt_msaa_supported) {
+		if (emulate_multiview || (!use_multiview && !config->rt_msaa_supported)) {
 			// Render to texture extensions not supported? fall back to MSAA framebuffer through GL_EXT_framebuffer_multisample.
 			// Note, if 2D MSAA matches 3D MSAA and we're not scaling, it would be ideal if we reuse our 2D MSAA buffer here.
 			// We can't however because we don't trigger a change in configuration if 2D MSAA changes.
@@ -433,8 +433,10 @@ void RenderSceneBuffersGLES3::_clear_msaa3d_buffers() {
 		msaa3d.fbo = 0;
 	}
 
+	bool is_render_buffer = (view_count == 1 || emulate_multiview);
+
 	if (msaa3d.color != 0) {
-		if (view_count == 1) {
+		if (is_render_buffer) {
 			GLES3::Utilities::get_singleton()->render_buffer_free_data(msaa3d.color);
 		} else {
 			GLES3::Utilities::get_singleton()->texture_free_data(msaa3d.color);
@@ -443,7 +445,7 @@ void RenderSceneBuffersGLES3::_clear_msaa3d_buffers() {
 	}
 
 	if (msaa3d.depth != 0) {
-		if (view_count == 1) {
+		if (is_render_buffer) {
 			GLES3::Utilities::get_singleton()->render_buffer_free_data(msaa3d.depth);
 		} else {
 			GLES3::Utilities::get_singleton()->texture_free_data(msaa3d.depth);
@@ -666,6 +668,13 @@ GLuint RenderSceneBuffersGLES3::get_render_fbo(int p_view) {
 	_check_render_buffers();
 
 	if (emulate_multiview && p_view >= 0) {
+		// Emulated multiview renders one view at a time.
+		if (msaa3d.fbo != 0) {
+			// With MSAA we render into the shared 2D multisample buffer.
+			glBindFramebuffer(GL_FRAMEBUFFER, msaa3d.fbo);
+			return msaa3d.fbo;
+		}
+
 		GLuint color = 0;
 		GLuint depth = 0;
 		bool depth_has_stencil = true;
@@ -717,6 +726,39 @@ GLuint RenderSceneBuffersGLES3::get_render_fbo(int p_view) {
 	}
 
 	return rt_fbo;
+}
+
+void RenderSceneBuffersGLES3::resolve_emulated_msaa(uint32_t p_view) {
+	if (msaa3d.fbo == 0) {
+		// No MSAA, nothing to resolve.
+		return;
+	}
+
+	GLES3::TextureStorage *texture_storage = GLES3::TextureStorage::get_singleton();
+
+	GLuint dst_fbo = 0;
+	GLuint dst_color = 0;
+	GLuint dst_depth = 0;
+	bool depth_has_stencil = true;
+	if (internal3d.fbo != 0) {
+		dst_fbo = internal3d.fbo;
+		dst_color = internal3d.color;
+		dst_depth = internal3d.depth;
+	} else {
+		dst_fbo = texture_storage->render_target_get_fbo(render_target);
+		dst_color = texture_storage->render_target_get_color(render_target);
+		dst_depth = texture_storage->render_target_get_depth(render_target);
+		depth_has_stencil = texture_storage->render_target_get_depth_has_stencil(render_target);
+	}
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dst_fbo);
+	glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, dst_color, 0, p_view);
+	glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER, depth_has_stencil ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT, dst_depth, 0, p_view);
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, msaa3d.fbo);
+	glBlitFramebuffer(0, 0, internal_size.x, internal_size.y, 0, 0, internal_size.x, internal_size.y, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, GLES3::TextureStorage::system_fbo);
 }
 
 #endif // GLES3_ENABLED

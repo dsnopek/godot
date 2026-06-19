@@ -2951,6 +2951,11 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 		if (!is_reflection_probe && rb.is_valid()) {
 			_render_buffers_debug_draw(rb, p_shadow_atlas, fbo);
 		}
+
+		if (rb->emulate_multiview) {
+			// With MSAA this resolves the 2D multisample buffer into this view's layer.
+			rb->resolve_emulated_msaa(eye);
+		}
 	}
 
 	// Reset stuff that may trip up the next process.
@@ -2980,7 +2985,7 @@ void RasterizerSceneGLES3::_render_post_processing(const RenderDataGLES3 *p_rend
 	uint32_t view_count = rb->get_view_count();
 
 	// bool msaa2d_needs_resolve = texture_storage->render_target_get_msaa(render_target) != RSE::VIEWPORT_MSAA_DISABLED && !GLES3::Config::get_singleton()->rt_msaa_supported;
-	bool msaa3d_needs_resolve = rb->get_msaa_needs_resolve();
+	bool msaa3d_needs_resolve = rb->get_msaa_needs_resolve() && !rb->emulate_multiview;
 	GLuint fbo_msaa_3d = rb->get_msaa3d_fbo();
 	GLuint fbo_int = rb->get_internal_fbo();
 	GLuint fbo_rt = texture_storage->render_target_get_fbo(render_target); // TODO if MSAA 2D is enabled and we're not using rt_msaa, get 2D render target here.

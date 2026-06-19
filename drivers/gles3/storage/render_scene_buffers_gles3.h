@@ -118,6 +118,7 @@ public:
 
 	GLuint get_render_fbo(int p_view = -1);
 	void attach_backbuffer_layer(uint32_t p_view);
+	void resolve_emulated_msaa(uint32_t p_view);
 
 	GLuint get_msaa3d_fbo() {
 		_check_render_buffers();

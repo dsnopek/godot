@@ -30,6 +30,8 @@
 
 #include "web_tools_editor_plugin.h"
 
+#include "../godot_editor.h"
+
 #include "core/config/engine.h"
 #include "core/io/dir_access.h"
 #include "core/io/file_access.h"
@@ -54,6 +56,13 @@ void WebToolsEditorPlugin::initialize() {
 
 WebToolsEditorPlugin::WebToolsEditorPlugin() {
 	add_tool_menu_item("Download Project Source", callable_mp(this, &WebToolsEditorPlugin::_download_zip));
+	// @todo Just for testing - remove me!
+	add_tool_menu_item("Test Me!", callable_mp(this, &WebToolsEditorPlugin::_test_me));
+}
+
+// @todo Just for testing - remove me!
+void WebToolsEditorPlugin::_test_me() {
+	godot_editor_test();
 }
 
 void WebToolsEditorPlugin::_download_zip() {

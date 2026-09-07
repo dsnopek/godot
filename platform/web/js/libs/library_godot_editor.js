@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  web_tools_editor_plugin.h                                             */
+/*  library_godot_editor.js                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,21 +28,16 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
+const GodotEditor = {
+	$GodotEditor__deps: ['$GodotRuntime'],
+	$GodotEditor: {},
 
-#include "editor/plugins/editor_plugin.h"
-
-class WebToolsEditorPlugin : public EditorPlugin {
-	GDCLASS(WebToolsEditorPlugin, EditorPlugin);
-
-private:
-	void _download_zip();
-
-	// @todo Just for testing - remove me!
-	void _test_me();
-
-public:
-	static void initialize();
-
-	WebToolsEditorPlugin();
+	godot_editor_test__proxy: 'sync',
+	godot_editor_test__sig: 'v',
+	godot_editor_test: function () {
+		alert('hello from JS');
+	},
 };
+
+autoAddDeps(GodotEditor, '$GodotEditor');
+mergeInto(LibraryManager.library, GodotEditor);

@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  web_tools_editor_plugin.h                                             */
+/*  godot_editor.h                                                        */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -30,19 +30,17 @@
 
 #pragma once
 
-#include "editor/plugins/editor_plugin.h"
+#ifdef TOOLS_ENABLED
 
-class WebToolsEditorPlugin : public EditorPlugin {
-	GDCLASS(WebToolsEditorPlugin, EditorPlugin);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-private:
-	void _download_zip();
+// Editor-only support functions written in JavaScript.
+extern void godot_editor_test();
 
-	// @todo Just for testing - remove me!
-	void _test_me();
+#ifdef __cplusplus
+}
+#endif
 
-public:
-	static void initialize();
-
-	WebToolsEditorPlugin();
-};
+#endif // TOOLS_ENABLED

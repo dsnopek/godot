@@ -32,6 +32,7 @@ const GodotWebXR = {
 	$GodotWebXR__deps: ['$MainLoop', '$GL', '$GodotRuntime', '$runtimeKeepalivePush', '$runtimeKeepalivePop'],
 	$GodotWebXR: {
 		gl: null,
+		disable_webxr_layers: false,
 
 		session: null,
 		gl_binding: null,
@@ -234,8 +235,8 @@ const GodotWebXR = {
 
 	godot_webxr_initialize__deps: ['emscripten_webgl_get_current_context'],
 	godot_webxr_initialize__proxy: 'sync',
-	godot_webxr_initialize__sig: 'viiiiiiiii',
-	godot_webxr_initialize: function (p_session_mode, p_required_features, p_optional_features, p_requested_reference_spaces, p_on_session_started, p_on_session_ended, p_on_session_failed, p_on_input_event, p_on_simple_event) {
+	godot_webxr_initialize__sig: 'viiiiiiiiii',
+	godot_webxr_initialize: function (p_session_mode, p_required_features, p_optional_features, p_requested_reference_spaces, p_disable_webxr_layers, p_on_session_started, p_on_session_ended, p_on_session_failed, p_on_input_event, p_on_simple_event) {
 		GodotWebXR.monkeyPatchRequestAnimationFrame(true);
 
 		const session_mode = GodotRuntime.parseString(p_session_mode);
@@ -247,6 +248,8 @@ const GodotWebXR = {
 		const onfailed = GodotRuntime.get_func(p_on_session_failed);
 		const oninputevent = GodotRuntime.get_func(p_on_input_event);
 		const onsimpleevent = GodotRuntime.get_func(p_on_simple_event);
+
+		let disable_webxr_layers = p_disable_webxr_layers || typeof XRWebGLBinding == 'undefined';
 
 		const session_init = {};
 		if (required_features.length > 0) {
@@ -293,29 +296,29 @@ const GodotWebXR = {
 			GodotWebXR.gl = gl;
 
 			gl.makeXRCompatible().then(function () {
-				const throwNoWebXRLayersError = () => {
-					throw new Error('This browser doesn\'t support WebXR Layers (which Godot requires) nor is the polyfill in use. If you are the developer of this application, please consider including the polyfill.');
-				};
-
-				try {
-					GodotWebXR.gl_binding = new XRWebGLBinding(session, gl);
-				} catch (error) {
-					// We'll end up here for browsers that don't have XRWebGLBinding at all, or if the browser does support WebXR Layers,
-					// but is using the WebXR polyfill, so calling native XRWebGLBinding with the polyfilled XRSession won't work.
-					throwNoWebXRLayersError();
+				if (!disable_webxr_layers) {
+					try {
+						GodotWebXR.gl_binding = new XRWebGLBinding(session, gl);
+					} catch (error) {
+						console.log('WebXR: Unable to create XRWebGLBinding (disabling WebXR Layers): ', error); // eslint-disable-line no-console
+						disable_webxr_layers = true;
+					}
 				}
 
-				if (!GodotWebXR.gl_binding.createProjectionLayer) {
-					// On other browsers, XRWebGLBinding exists and works, but it doesn't support creating projection layers (which is
-					// contrary to the spec, which says this MUST be supported) and so the polyfill is required.
-					throwNoWebXRLayersError();
+				if (!disable_webxr_layers && !GodotWebXR.gl_binding.createProjectionLayer) {
+					console.log('WebXR: XRWebGLBinding.createProjectionLayer is missing (disabling WebXR Layers)'); // eslint-disable-line no-console
+					disable_webxr_layers = true;
+					GodotWebXR.gl_binding = null;
 				}
 
-				// This will trigger the layer to get created.
-				const layer = GodotWebXR.getLayer();
-				if (!layer) {
-					throw new Error('Unable to create WebXR Layer.');
+				if (!disable_webxr_layers) {
+					// This will trigger the layer to get created.
+					const layer = GodotWebXR.getLayer();
+					if (!layer) {
+						throw new Error('Unable to create WebXR Layer.');
+					}
 				}
+				GodotWebXR.disable_webxr_layers = disable_webxr_layers;
 
 				function onReferenceSpaceSuccess(reference_space, reference_space_type) {
 					GodotWebXR.space = reference_space;

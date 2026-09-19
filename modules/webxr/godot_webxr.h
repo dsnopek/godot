@@ -56,6 +56,7 @@ extern void godot_webxr_initialize(
 		const char *p_required_features,
 		const char *p_optional_features,
 		const char *p_requested_reference_space_types,
+		bool p_disable_webxr_layers,
 		GodotWebXRStartedCallback p_on_session_started,
 		GodotWebXREndedCallback p_on_session_ended,
 		GodotWebXRFailedCallback p_on_session_failed,

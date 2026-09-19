@@ -161,6 +161,14 @@ String WebXRInterfaceJS::get_enabled_features() const {
 	return enabled_features;
 }
 
+void WebXRInterfaceJS::set_disable_webxr_layers(bool p_disable_webxr_layers) {
+	disable_webxr_layers = p_disable_webxr_layers;
+}
+
+bool WebXRInterfaceJS::get_disable_webxr_layers() const {
+	return disable_webxr_layers;
+}
+
 bool WebXRInterfaceJS::is_input_source_active(int p_input_source_id) const {
 	ERR_FAIL_INDEX_V(p_input_source_id, input_source_count, false);
 	return input_sources[p_input_source_id].active;
@@ -332,6 +340,7 @@ bool WebXRInterfaceJS::initialize() {
 				required_features.utf8().get_data(),
 				optional_features.utf8().get_data(),
 				requested_reference_space_types.utf8().get_data(),
+				disable_webxr_layers,
 				&_emwebxr_on_session_started,
 				&_emwebxr_on_session_ended,
 				&_emwebxr_on_session_failed,

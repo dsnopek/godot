@@ -95,17 +95,26 @@ const GodotWebXR = {
 				return layer;
 			}
 
-			if (!GodotWebXR.session || !GodotWebXR.gl_binding || !GodotWebXR.gl_binding.createProjectionLayer) {
+			if (!GodotWebXR.session) {
 				return null;
 			}
 
 			const gl = GodotWebXR.gl;
 
-			layer = GodotWebXR.gl_binding.createProjectionLayer({
-				textureType: new_view_count > 1 ? 'texture-array' : 'texture',
-				colorFormat: gl.RGBA8,
-				depthFormat: gl.DEPTH_COMPONENT24,
-			});
+			if (GodotWebXR.disable_webxr_layers) {
+				layer = XRWebGLLayer(GodotWebXR.session, gl);
+			} else {
+				if (!GodotWebXR.gl_binding || !GodotWebXR.gl_binding.createProjectionLayer) {
+					return null;
+				}
+
+				layer = GodotWebXR.gl_binding.createProjectionLayer({
+					textureType: new_view_count > 1 ? 'texture-array' : 'texture',
+					colorFormat: gl.RGBA8,
+					depthFormat: gl.DEPTH_COMPONENT24,
+				});
+			}
+
 			GodotWebXR.session.updateRenderState({ layers: [layer] });
 
 			GodotWebXR.layer = layer;
@@ -311,14 +320,13 @@ const GodotWebXR = {
 					GodotWebXR.gl_binding = null;
 				}
 
-				if (!disable_webxr_layers) {
-					// This will trigger the layer to get created.
-					const layer = GodotWebXR.getLayer();
-					if (!layer) {
-						throw new Error('Unable to create WebXR Layer.');
-					}
-				}
 				GodotWebXR.disable_webxr_layers = disable_webxr_layers;
+
+				// This will trigger the layer to get created.
+				const layer = GodotWebXR.getLayer();
+				if (!layer) {
+					throw new Error('Unable to create WebXR Layer.');
+				}
 
 				function onReferenceSpaceSuccess(reference_space, reference_space_type) {
 					GodotWebXR.space = reference_space;

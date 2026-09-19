@@ -624,6 +624,12 @@ Vector<RenderingServerTypes::BlitToScreen> WebXRInterfaceJS::post_draw_viewport(
 
 	texture_storage->render_target_set_reattach_textures(p_render_target, false);
 
+	GLES3::Texture *texture = texture_storage->get_texture(texture_storage->render_target_get_texture(p_render_target));
+	if (texture != nullptr) {
+		int layer_count = texture->target == GL_TEXTURE_2D_ARRAY ? texture->layers : 1;
+		godot_webxr_commit_render_target(texture->tex_id, texture->width, texture->height, layer_count);
+	}
+
 	return blit_to_screen;
 }
 

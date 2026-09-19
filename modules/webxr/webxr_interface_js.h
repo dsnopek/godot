@@ -107,8 +107,8 @@ public:
 	virtual String get_requested_reference_space_types() const override;
 	virtual String get_reference_space_type() const override;
 	virtual String get_enabled_features() const override;
-	virtual void set_disable_webxr_layers(bool p_disable_webxr_layers);
-	virtual bool get_disable_webxr_layers() const;
+	virtual void set_disable_webxr_layers(bool p_disable_webxr_layers) override;
+	virtual bool get_disable_webxr_layers() const override;
 	virtual bool is_input_source_active(int p_input_source_id) const override;
 	virtual Ref<XRControllerTracker> get_input_source_tracker(int p_input_source_id) const override;
 	virtual TargetRayMode get_input_source_target_ray_mode(int p_input_source_id) const override;

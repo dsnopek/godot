@@ -71,6 +71,7 @@ extern bool godot_webxr_get_projection_for_view(int p_view, float *r_transform);
 extern unsigned int godot_webxr_get_color_texture();
 extern unsigned int godot_webxr_get_depth_texture();
 extern unsigned int godot_webxr_get_velocity_texture();
+extern void godot_webxr_commit_render_target(unsigned int p_texture_id, int p_width, int p_height, int p_layer_count);
 
 extern bool godot_webxr_update_input_source(
 		int p_input_source_id,

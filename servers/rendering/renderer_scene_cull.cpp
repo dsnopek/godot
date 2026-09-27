@@ -2212,11 +2212,22 @@ void RendererSceneCull::_light_instance_setup_directional_shadow(int p_shadow_in
 			camera_matrix.set_perspective(fov, aspect, distances[(i == 0 || !overlap) ? i : i - 1], distances[i + 1], true);
 		}
 
-		//obtain the frustum endpoints
-
-		Vector3 endpoints[8]; // frustum plane endpoints
-		bool res = camera_matrix.get_endpoints(p_cam_transform, endpoints);
+		// Obtain frustom endpoints in camera space, to avoid floating point precision issues
+		// that compound the further the camera is from the world origin.
+		Vector3 local_endpoints[8];
+		bool res = camera_matrix.get_endpoints(Transform3D(), local_endpoints);
 		ERR_CONTINUE(!res);
+
+		Vector3 local_center;
+		for (int j = 0; j < 8; j++) {
+			local_center += local_endpoints[j];
+		}
+		local_center /= 8.0;
+
+		Vector3 endpoints[8];
+		for (int j = 0; j < 8; j++) {
+			endpoints[j] = p_cam_transform.xform(local_endpoints[j]);
+		}
 
 		// obtain the light frustum ranges (given endpoints)
 
@@ -2272,20 +2283,13 @@ void RendererSceneCull::_light_instance_setup_directional_shadow(int p_shadow_in
 
 		real_t radius = 0;
 		real_t soft_shadow_expand = 0;
-		Vector3 center;
+		Vector3 center = p_cam_transform.xform(local_center);
 
 		{
 			//camera viewport stuff
 
 			for (int j = 0; j < 8; j++) {
-				center += endpoints[j];
-			}
-			center /= 8.0;
-
-			//center=x_vec*(x_max-x_min)*0.5 + y_vec*(y_max-y_min)*0.5 + z_vec*(z_max-z_min)*0.5;
-
-			for (int j = 0; j < 8; j++) {
-				real_t d = center.distance_to(endpoints[j]);
+				real_t d = local_center.distance_to(local_endpoints[j]);
 				if (d > radius) {
 					radius = d;
 				}

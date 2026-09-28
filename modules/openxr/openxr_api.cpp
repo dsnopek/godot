@@ -2018,6 +2018,30 @@ void OpenXRAPI::update_head_transform(XrTime p_display_time) {
 	}
 }
 
+static bool _is_view_offset_stable(const Transform3D &p_current, const Transform3D &p_new) {
+	const real_t max_position_delta = 0.0005;
+	const real_t max_axis_delta = 0.001;
+
+	if (p_current.origin.distance_squared_to(p_new.origin) > max_position_delta * max_position_delta) {
+		return false;
+	}
+	for (int i = 0; i < 3; i++) {
+		if (p_current.basis.get_column(i).distance_squared_to(p_new.basis.get_column(i)) > max_axis_delta * max_axis_delta) {
+			return false;
+		}
+	}
+	return true;
+}
+
+static bool _is_view_fov_stable(const XrFovf &p_current, const XrFovf &p_new) {
+	const float max_angle_delta = 0.001;
+
+	return Math::abs(p_current.angleLeft - p_new.angleLeft) <= max_angle_delta &&
+			Math::abs(p_current.angleRight - p_new.angleRight) <= max_angle_delta &&
+			Math::abs(p_current.angleUp - p_new.angleUp) <= max_angle_delta &&
+			Math::abs(p_current.angleDown - p_new.angleDown) <= max_angle_delta;
+}
+
 void OpenXRAPI::update_head_tracking() {
 	XrResult result;
 
@@ -2033,6 +2057,7 @@ void OpenXRAPI::update_head_tracking() {
 
 	// Make sure we can store the data we're keeping for the main thread.
 	uint32_t view_count = view_configuration_views.size();
+	bool reset_views = view_offsets.size() != view_count || view_fovs.size() != view_count;
 	view_offsets.resize(view_count);
 	view_fovs.resize(view_count);
 
@@ -2124,9 +2149,14 @@ void OpenXRAPI::update_head_tracking() {
 
 		XrPosef local_view_pose;
 		XrPosef_Multiply(&local_view_pose, &inv_head_pose, view_pose);
-		view_offsets[v] = transform_from_pose(local_view_pose);
+		Transform3D view_offset = transform_from_pose(local_view_pose);
+		if (reset_views || !_is_view_offset_stable(view_offsets[v], view_offset)) {
+			view_offsets[v] = view_offset;
+		}
 
-		view_fovs[v] = views[v].fov;
+		if (reset_views || !_is_view_fov_stable(view_fovs[v], views[v].fov)) {
+			view_fovs[v] = views[v].fov;
+		}
 
 		// We use Vector3 and Vector4 as a go between as we can't use XrPosef and XrFovf directly.
 		o[v].x = view_pose->orientation.x;

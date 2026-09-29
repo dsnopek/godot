@@ -687,7 +687,7 @@ GLuint RenderSceneBuffersGLES3::get_render_fbo(int p_view) {
 		return rt_fbo;
 	}
 
-	if (msaa3d.check_fbo_cache) {
+	if (msaa3d.mode != RSE::VIEWPORT_MSAA_DISABLED && msaa3d.check_fbo_cache) {
 		GLuint color = texture_storage->render_target_get_color(render_target);
 		GLuint depth = texture_storage->render_target_get_depth(render_target);
 

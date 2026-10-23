@@ -88,6 +88,8 @@ private:
 		};
 
 		RID get_vrs_texture();
+		RID get_color_texture(FramebufferConfigType p_config_type);
+		RID get_depth_texture(FramebufferConfigType p_config_type);
 		RID get_color_fbs(FramebufferConfigType p_config_type, bool p_resolve_depth = false);
 		virtual void free_data() override;
 		virtual void configure(RenderSceneBuffersRD *p_render_buffers) override;
@@ -96,6 +98,8 @@ private:
 
 	private:
 		RenderSceneBuffersRD *render_buffers = nullptr;
+
+		bool _uses_subsampled_textures(FramebufferConfigType p_config_type);
 	};
 
 	virtual void setup_render_buffer_data(Ref<RenderSceneBuffersRD> p_render_buffers) override;

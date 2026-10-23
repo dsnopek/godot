@@ -45,7 +45,9 @@ layout(location = 0) in vec2 uv_interp;
 #endif
 
 // All uniforms must be on set 0 to prevent MSAA from crashing Mali GPUs. See GH-114785.
-#ifdef SUBPASS
+#ifdef SUBPASS_MSAA
+layout(input_attachment_index = 0, set = 0, binding = 0) uniform subpassInputMS input_color;
+#elif defined(SUBPASS)
 layout(input_attachment_index = 0, set = 0, binding = 0) uniform subpassInput input_color;
 #else
 layout(set = 0, binding = 0) uniform SAMPLER_FORMAT source_color;
@@ -78,6 +80,9 @@ layout(constant_id = 14) const bool glow_mode_screen = false;
 layout(constant_id = 15) const bool glow_mode_softlight = false;
 layout(constant_id = 16) const bool glow_mode_replace = false;
 layout(constant_id = 17) const bool glow_mode_mix = false;
+layout(constant_id = 18) const bool msaa_2x = false;
+layout(constant_id = 19) const bool msaa_4x = false;
+layout(constant_id = 20) const bool msaa_8x = false;
 
 layout(push_constant, std430) uniform Params {
 	vec3 bcs;
@@ -731,7 +736,16 @@ void main() {
 	// be read in the shader. Without this, transpilation to Metal fails to include the multi-view variant.
 	uint vi = ViewIndex;
 #endif
+#ifdef SUBPASS_MSAA
+	int sample_count = msaa_8x ? 8 : (msaa_4x ? 4 : 2);
+	vec4 color = vec4(0.0);
+	for (int i = 0; i < sample_count; i++) {
+		color += subpassLoad(input_color, i);
+	}
+	color /= float(sample_count);
+#else
 	vec4 color = subpassLoad(input_color);
+#endif
 #elif defined(USE_MULTIVIEW)
 	vec4 color = textureLod(source_color, vec3(uv_interp, ViewIndex), 0.0f);
 #else

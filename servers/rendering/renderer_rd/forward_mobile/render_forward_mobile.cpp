@@ -245,6 +245,39 @@ RID RenderForwardMobile::RenderBufferDataForwardMobile::get_vrs_texture() {
 	return vrs_texture;
 }
 
+bool RenderForwardMobile::RenderBufferDataForwardMobile::_uses_subsampled_textures(FramebufferConfigType p_config_type) {
+	ERR_FAIL_NULL_V(render_buffers, false);
+
+	if (p_config_type != FB_CONFIG_RENDER_AND_POST_PASS || get_vrs_texture().is_null()) {
+		return false;
+	}
+
+	RendererRD::TextureStorage *texture_storage = RendererRD::TextureStorage::get_singleton();
+	ERR_FAIL_NULL_V(texture_storage, false);
+
+	return texture_storage->render_target_is_subsampled_enabled(render_buffers->get_render_target());
+}
+
+RID RenderForwardMobile::RenderBufferDataForwardMobile::get_color_texture(FramebufferConfigType p_config_type) {
+	ERR_FAIL_NULL_V(render_buffers, RID());
+
+	bool use_msaa = render_buffers->get_msaa_3d() != RSE::VIEWPORT_MSAA_DISABLED;
+	if (_uses_subsampled_textures(p_config_type)) {
+		return use_msaa ? render_buffers->get_color_msaa_subsampled() : render_buffers->get_color_subsampled();
+	}
+	return use_msaa ? render_buffers->get_color_msaa() : render_buffers->get_internal_texture();
+}
+
+RID RenderForwardMobile::RenderBufferDataForwardMobile::get_depth_texture(FramebufferConfigType p_config_type) {
+	ERR_FAIL_NULL_V(render_buffers, RID());
+
+	bool use_msaa = render_buffers->get_msaa_3d() != RSE::VIEWPORT_MSAA_DISABLED;
+	if (_uses_subsampled_textures(p_config_type)) {
+		return use_msaa ? render_buffers->get_depth_msaa_subsampled() : render_buffers->get_depth_subsampled();
+	}
+	return use_msaa ? render_buffers->get_depth_msaa() : render_buffers->get_depth_texture();
+}
+
 RID RenderForwardMobile::RenderBufferDataForwardMobile::get_color_fbs(FramebufferConfigType p_config_type, bool p_resolve_depth) {
 	ERR_FAIL_NULL_V(render_buffers, RID());
 
@@ -266,17 +299,12 @@ RID RenderForwardMobile::RenderBufferDataForwardMobile::get_color_fbs(Framebuffe
 	Vector<RID> textures;
 	int color_buffer_id = 0;
 	int depth_buffer_id = 1;
-	if (p_config_type == FB_CONFIG_RENDER_AND_POST_PASS && vrs_texture.is_valid() && texture_storage->render_target_is_subsampled_enabled(render_buffers->get_render_target())) {
-		textures.push_back(use_msaa ? render_buffers->get_color_msaa_subsampled() : render_buffers->get_color_subsampled()); // 0 - color buffer.
-		textures.push_back(use_msaa ? render_buffers->get_depth_msaa_subsampled() : render_buffers->get_depth_subsampled()); // 1 - depth buffer.
-	} else {
-		textures.push_back(use_msaa ? render_buffers->get_color_msaa() : render_buffers->get_internal_texture()); // 0 - color buffer.
-		textures.push_back(use_msaa ? render_buffers->get_depth_msaa() : render_buffers->get_depth_texture()); // 1 - depth buffer.
-	}
+	textures.push_back(get_color_texture(p_config_type)); // 0 - color buffer.
+	textures.push_back(get_depth_texture(p_config_type)); // 1 - depth buffer.
 	if (vrs_texture.is_valid()) {
 		textures.push_back(vrs_texture); // 2 - vrs texture.
 	}
-	if (use_msaa) {
+	if (use_msaa && p_config_type == FB_CONFIG_RENDER_PASS) {
 		color_buffer_id = textures.size();
 		textures.push_back(render_buffers->get_internal_texture()); // Color buffer for resolve.
 	}
@@ -319,14 +347,9 @@ RID RenderForwardMobile::RenderBufferDataForwardMobile::get_color_fbs(Framebuffe
 			pass.color_attachments.push_back(0);
 			pass.depth_attachment = 1;
 
-			if (use_msaa) {
-				// Add color resolve.
-				pass.resolve_attachments.push_back(color_buffer_id);
-
-				if (p_resolve_depth) {
-					// Add depth resolve.
-					pass.depth_resolve_attachment = depth_buffer_id;
-				}
+			if (use_msaa && p_resolve_depth) {
+				// Add depth resolve.
+				pass.depth_resolve_attachment = depth_buffer_id;
 			}
 
 			passes.push_back(pass);
@@ -347,7 +370,9 @@ RID RenderForwardMobile::RenderBufferDataForwardMobile::get_color_fbs(Framebuffe
 			textures.push_back(target_buffer); // Target buffer.
 
 			RD::FramebufferPass blit_pass;
-			blit_pass.input_attachments.push_back(color_buffer_id); // Read from our (resolved) color buffer.
+			// The tonemap shader resolves MSAA itself; a resolve attachment on the previous
+			// subpass would force a store to RAM and split the render pass on tiled GPUs.
+			blit_pass.input_attachments.push_back(0); // Read from our (multisampled) color buffer.
 			blit_pass.color_attachments.push_back(target_buffer_id); // Write into our target buffer.
 			// This doesn't need VRS or depth.
 			passes.push_back(blit_pass);
@@ -1295,6 +1320,14 @@ void RenderForwardMobile::_render_scene(RenderDataRD *p_render_data, const Color
 			}
 		}
 
+		if (rb_data.is_valid() && !use_msaa) {
+			RenderBufferDataForwardMobile::FramebufferConfigType fb_config = using_subpass_post_process ? RenderBufferDataForwardMobile::FB_CONFIG_RENDER_AND_POST_PASS : RenderBufferDataForwardMobile::FB_CONFIG_RENDER_PASS;
+			RD::get_singleton()->texture_set_discardable(rb_data->get_color_texture(fb_config), !load_color);
+			if (!has_depth_texture_override) {
+				RD::get_singleton()->texture_set_discardable(rb_data->get_depth_texture(fb_config), true);
+			}
+		}
+
 		RD::DrawListID draw_list = RD::get_singleton()->draw_list_begin(framebuffer, load_color ? RD::DRAW_CLEAR_DEPTH : (RD::DRAW_CLEAR_COLOR_0 | RD::DRAW_CLEAR_DEPTH), c, 0.0f, 0, p_render_data->render_region, breadcrumb);
 		RD::FramebufferFormatID fb_format = RD::get_singleton()->framebuffer_get_format(framebuffer);
 
@@ -1348,7 +1381,7 @@ void RenderForwardMobile::_render_scene(RenderDataRD *p_render_data, const Color
 
 			// blit to tonemap
 			if (rb_data.is_valid() && using_subpass_post_process) {
-				_post_process_subpass(p_render_data->render_buffers->get_internal_texture(), framebuffer, p_render_data);
+				_post_process_subpass(rb_data->get_color_texture(RenderBufferDataForwardMobile::FB_CONFIG_RENDER_AND_POST_PASS), framebuffer, p_render_data);
 			}
 
 			RD::get_singleton()->draw_command_end_label(); // Render 3D Pass / Render Reflection Probe Pass
@@ -3275,6 +3308,7 @@ void RenderForwardMobile::_geometry_instance_update(RenderGeometryInstance *p_ge
 
 static RD::FramebufferFormatID _get_color_framebuffer_format_for_pipeline(RD::DataFormat p_color_format, bool p_can_be_storage, RD::TextureSamples p_samples, RD::TextureSamples p_target_samples, bool p_vrs, bool p_post_pass, bool p_hdr, uint32_t p_view_count) {
 	const bool multisampling = p_samples > RD::TEXTURE_SAMPLES_1;
+	const bool resolve_color = multisampling && !p_post_pass;
 	RD::AttachmentFormat attachment;
 
 	RD::AttachmentFormat unused_attachment;
@@ -3303,7 +3337,7 @@ static RD::FramebufferFormatID _get_color_framebuffer_format_for_pipeline(RD::Da
 		attachments.push_back(attachment);
 	}
 
-	if (multisampling) {
+	if (resolve_color) {
 		// Resolve attachment.
 		attachment.samples = RD::TEXTURE_SAMPLES_1;
 		attachment.format = p_color_format;
@@ -3318,7 +3352,7 @@ static RD::FramebufferFormatID _get_color_framebuffer_format_for_pipeline(RD::Da
 	pass.color_attachments.push_back(0);
 	pass.depth_attachment = 1;
 
-	if (multisampling) {
+	if (resolve_color) {
 		pass.resolve_attachments.push_back(attachments.size() - 1);
 	}
 
@@ -3338,7 +3372,7 @@ static RD::FramebufferFormatID _get_color_framebuffer_format_for_pipeline(RD::Da
 		attachments.push_back(attachment);
 
 		RD::FramebufferPass blit_pass;
-		blit_pass.input_attachments.push_back(multisampling ? (attachments.size() - 2) : 0);
+		blit_pass.input_attachments.push_back(0);
 		blit_pass.color_attachments.push_back(attachments.size() - 1);
 		passes.push_back(blit_pass);
 	}

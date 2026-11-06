@@ -45,25 +45,107 @@ const GodotWebXR = {
 		touches: new Array(5),
 		onsimpleevent: null,
 
+		// Some browsers (ex. Chrome on desktop with SteamVR) allow creating a
+		// projection layer, but then never deliver any frames. So, if we don't get
+		// a frame within this amount of (visible) time, we fallback on XRWebGLLayer.
+		LAYERS_FRAME_TIMEOUT_MS: 2000,
+		layers_watchdog: null,
+		received_frame: false,
+
+		startLayersWatchdog: () => {
+			GodotWebXR.stopLayersWatchdog();
+			GodotWebXR.received_frame = false;
+
+			let visible_time = 0;
+			let last_time = performance.now();
+			GodotWebXR.layers_watchdog = window.setInterval(function () {
+				const now = performance.now();
+				const session = GodotWebXR.session;
+				if (!session || GodotWebXR.received_frame || GodotWebXR.disable_webxr_layers) {
+					GodotWebXR.stopLayersWatchdog();
+					return;
+				}
+
+				// No frames are expected while the session is hidden, so don't count that time.
+				if (session.visibilityState !== 'hidden') {
+					visible_time += now - last_time;
+				}
+				last_time = now;
+
+				if (visible_time >= GodotWebXR.LAYERS_FRAME_TIMEOUT_MS) {
+					GodotWebXR.stopLayersWatchdog();
+					GodotWebXR.fallbackToWebGLLayer();
+				}
+			}, 100);
+		},
+
+		stopLayersWatchdog: () => {
+			if (GodotWebXR.layers_watchdog !== null) {
+				window.clearInterval(GodotWebXR.layers_watchdog);
+				GodotWebXR.layers_watchdog = null;
+			}
+		},
+
+		fallbackToWebGLLayer: () => {
+			GodotRuntime.print(`WebXR: No frames received within ${GodotWebXR.LAYERS_FRAME_TIMEOUT_MS}ms using a WebXR Layers projection layer (disabling WebXR Layers)`);
+
+			// Remove the projection layer, so that we can switch to using a base layer.
+			try {
+				GodotWebXR.session.updateRenderState({ layers: [] });
+			} catch (error) {
+				console.log('WebXR DEBUG: fallbackToWebGLLayer(): clearing layers failed:', error); // eslint-disable-line no-console
+			}
+
+			GodotWebXR.disable_webxr_layers = true;
+			GodotWebXR.gl_binding = null;
+			GodotWebXR.layer = null;
+
+			// This will trigger the XRWebGLLayer to get created.
+			try {
+				if (!GodotWebXR.getLayer()) {
+					GodotRuntime.error('WebXR: Unable to create fallback XRWebGLLayer.');
+				}
+			} catch (error) {
+				GodotRuntime.error(`WebXR: Unable to create fallback XRWebGLLayer: ${error}`);
+			}
+		},
+
 		// Monkey-patch the requestAnimationFrame() used by Emscripten for the main
 		// loop, so that we can swap it out for XRSession.requestAnimationFrame()
 		// when an XR session is started.
 		orig_requestAnimationFrame: null,
+		// DEBUG: Frame counter used to limit per-frame logging.
+		debug_frame_count: 0,
+		debugFrameLog: (...args) => {
+			// Log the first 10 frames, then every 300th frame.
+			if (GodotWebXR.debug_frame_count < 10 || GodotWebXR.debug_frame_count % 300 === 0) {
+				console.log(`WebXR DEBUG [frame ${GodotWebXR.debug_frame_count}]:`, ...args); // eslint-disable-line no-console
+			}
+		},
+
 		requestAnimationFrame: (callback) => {
 			if (GodotWebXR.session && GodotWebXR.space) {
+				GodotWebXR.debugFrameLog('requestAnimationFrame(): using XRSession.requestAnimationFrame()');
 				const onFrame = function (time, frame) {
+					GodotWebXR.debugFrameLog('onFrame(): start, time =', time);
+					GodotWebXR.received_frame = true;
 					GodotWebXR.frame = frame;
 					GodotWebXR.pose = frame.getViewerPose(GodotWebXR.space);
+					GodotWebXR.debugFrameLog('onFrame(): pose =', GodotWebXR.pose, 'views =', GodotWebXR.pose ? GodotWebXR.pose.views.length : 'n/a');
 					callback(time);
+					GodotWebXR.debugFrameLog('onFrame(): callback returned');
 					GodotWebXR.frame = null;
 					GodotWebXR.pose = null;
+					GodotWebXR.debug_frame_count++;
 				};
 				GodotWebXR.session.requestAnimationFrame(onFrame);
 			} else {
+				GodotWebXR.debugFrameLog('requestAnimationFrame(): using original requestAnimationFrame() (session =', !!GodotWebXR.session, ', space =', !!GodotWebXR.space, ')');
 				GodotWebXR.orig_requestAnimationFrame(callback);
 			}
 		},
 		monkeyPatchRequestAnimationFrame: (enable) => {
+			console.log('WebXR DEBUG: monkeyPatchRequestAnimationFrame(', enable, ')'); // eslint-disable-line no-console
 			if (GodotWebXR.orig_requestAnimationFrame === null) {
 				GodotWebXR.orig_requestAnimationFrame = MainLoop.requestAnimationFrame;
 			}
@@ -77,11 +159,14 @@ const GodotWebXR = {
 			// enabled or disabled. When using the WebXR API Emulator, this
 			// gets picked up automatically, however, in the Oculus Browser
 			// on the Quest, we need to pause and resume the main loop.
+			console.log('WebXR DEBUG: pauseResumeMainLoop(): pausing main loop'); // eslint-disable-line no-console
 			MainLoop.pause();
 			runtimeKeepalivePush();
 			window.setTimeout(function () {
+				console.log('WebXR DEBUG: pauseResumeMainLoop(): resuming main loop'); // eslint-disable-line no-console
 				runtimeKeepalivePop();
 				MainLoop.resume();
+				console.log('WebXR DEBUG: pauseResumeMainLoop(): main loop resumed'); // eslint-disable-line no-console
 			}, 0);
 		},
 
@@ -93,28 +178,39 @@ const GodotWebXR = {
 				return layer;
 			}
 
+			console.log('WebXR DEBUG: getLayer(): need new layer, old view_count =', GodotWebXR.view_count, ', new_view_count =', new_view_count, ', had layer =', !!layer, ', disable_webxr_layers =', GodotWebXR.disable_webxr_layers); // eslint-disable-line no-console
+
 			if (!GodotWebXR.session) {
+				console.log('WebXR DEBUG: getLayer(): no session, returning null'); // eslint-disable-line no-console
 				return null;
 			}
 
 			const gl = GodotWebXR.gl;
 
 			if (GodotWebXR.disable_webxr_layers) {
+				console.log('WebXR DEBUG: getLayer(): creating XRWebGLLayer'); // eslint-disable-line no-console
 				layer = new XRWebGLLayer(GodotWebXR.session, gl, {
 					antialias: false,
 				});
+				console.log('WebXR DEBUG: getLayer(): XRWebGLLayer created, calling updateRenderState()', layer); // eslint-disable-line no-console
 				GodotWebXR.session.updateRenderState({ baseLayer: layer });
+				console.log('WebXR DEBUG: getLayer(): updateRenderState() done'); // eslint-disable-line no-console
 			} else {
 				if (!GodotWebXR.gl_binding || !GodotWebXR.gl_binding.createProjectionLayer) {
+					console.log('WebXR DEBUG: getLayer(): no gl_binding or createProjectionLayer, returning null'); // eslint-disable-line no-console
 					return null;
 				}
 
-				layer = GodotWebXR.gl_binding.createProjectionLayer({
+				const projection_layer_init = {
 					textureType: new_view_count > 1 ? 'texture-array' : 'texture',
 					colorFormat: gl.RGBA8,
 					depthFormat: gl.DEPTH_COMPONENT24,
-				});
+				};
+				console.log('WebXR DEBUG: getLayer(): calling createProjectionLayer()', projection_layer_init); // eslint-disable-line no-console
+				layer = GodotWebXR.gl_binding.createProjectionLayer(projection_layer_init);
+				console.log('WebXR DEBUG: getLayer(): createProjectionLayer() returned, calling updateRenderState()', layer); // eslint-disable-line no-console
 				GodotWebXR.session.updateRenderState({ layers: [layer] });
+				console.log('WebXR DEBUG: getLayer(): updateRenderState() done'); // eslint-disable-line no-console
 			}
 
 			GodotWebXR.layer = layer;
@@ -128,13 +224,17 @@ const GodotWebXR = {
 			}
 			const layer = GodotWebXR.getLayer();
 			if (layer === null) {
+				GodotWebXR.debugFrameLog('getSubImage(): getLayer() returned null');
 				return null;
 			}
 
 			// Because we always use "texture-array" for multiview and "texture"
 			// when there is only 1 view, it should be safe to only grab the
 			// subimage for the first view.
-			return GodotWebXR.gl_binding.getViewSubImage(layer, GodotWebXR.pose.views[0]);
+			GodotWebXR.debugFrameLog('getSubImage(): calling getViewSubImage()');
+			const subimage = GodotWebXR.gl_binding.getViewSubImage(layer, GodotWebXR.pose.views[0]);
+			GodotWebXR.debugFrameLog('getSubImage(): getViewSubImage() returned', subimage);
+			return subimage;
 		},
 
 		getViewport: () => {
@@ -455,6 +555,8 @@ const GodotWebXR = {
 	godot_webxr_initialize__proxy: 'sync',
 	godot_webxr_initialize__sig: 'viiiiiiiiii',
 	godot_webxr_initialize: function (p_session_mode, p_required_features, p_optional_features, p_requested_reference_spaces, p_disable_webxr_layers, p_on_session_started, p_on_session_ended, p_on_session_failed, p_on_input_event, p_on_simple_event) {
+		console.log('WebXR DEBUG: godot_webxr_initialize(): start'); // eslint-disable-line no-console
+		GodotWebXR.debug_frame_count = 0;
 		GodotWebXR.monkeyPatchRequestAnimationFrame(true);
 
 		const session_mode = GodotRuntime.parseString(p_session_mode);
@@ -477,14 +579,21 @@ const GodotWebXR = {
 			session_init['optionalFeatures'] = optional_features;
 		}
 
+		console.log('WebXR DEBUG: godot_webxr_initialize(): session_mode =', session_mode, ', session_init =', JSON.stringify(session_init), ', requested_reference_space_types =', requested_reference_space_types, ', p_disable_webxr_layers =', p_disable_webxr_layers, ', XRWebGLBinding defined =', typeof XRWebGLBinding !== 'undefined', ', disable_webxr_layers =', disable_webxr_layers); // eslint-disable-line no-console
+		console.log('WebXR DEBUG: godot_webxr_initialize(): calling navigator.xr.requestSession()'); // eslint-disable-line no-console
+
 		navigator.xr.requestSession(session_mode, session_init).then(function (session) {
+			console.log('WebXR DEBUG: requestSession() resolved', session, ', enabledFeatures =', 'enabledFeatures' in session ? Array.from(session.enabledFeatures) : 'n/a'); // eslint-disable-line no-console
 			GodotWebXR.session = session;
 
 			session.addEventListener('end', function (evt) {
+				console.log('WebXR DEBUG: session "end" event'); // eslint-disable-line no-console
+				GodotWebXR.stopLayersWatchdog();
 				onended();
 			});
 
 			session.addEventListener('inputsourceschange', function (evt) {
+				console.log('WebXR DEBUG: session "inputsourceschange" event, added =', evt.added.length, ', removed =', evt.removed.length); // eslint-disable-line no-console
 				evt.added.forEach(GodotWebXR.addInputSource);
 				evt.removed.forEach(GodotWebXR.removeInputSource);
 			});
@@ -501,6 +610,7 @@ const GodotWebXR = {
 			});
 
 			session.addEventListener('visibilitychange', function (evt) {
+				console.log('WebXR DEBUG: session "visibilitychange" event, visibilityState =', session.visibilityState); // eslint-disable-line no-console
 				const c_str = GodotRuntime.allocString('visibility_state_changed');
 				onsimpleevent(c_str);
 				GodotRuntime.free(c_str);
@@ -509,14 +619,20 @@ const GodotWebXR = {
 			// Store onsimpleevent so we can use it later.
 			GodotWebXR.onsimpleevent = onsimpleevent;
 
+			console.log('WebXR DEBUG: getting WebGL context'); // eslint-disable-line no-console
 			const gl_context_handle = _emscripten_webgl_get_current_context();
+			console.log('WebXR DEBUG: gl_context_handle =', gl_context_handle); // eslint-disable-line no-console
 			const gl = GL.getContext(gl_context_handle).GLctx;
 			GodotWebXR.gl = gl;
+			console.log('WebXR DEBUG: got WebGL context', gl, ', calling gl.makeXRCompatible()'); // eslint-disable-line no-console
 
 			gl.makeXRCompatible().then(function () {
+				console.log('WebXR DEBUG: gl.makeXRCompatible() resolved'); // eslint-disable-line no-console
 				if (!disable_webxr_layers) {
 					try {
+						console.log('WebXR DEBUG: creating XRWebGLBinding'); // eslint-disable-line no-console
 						GodotWebXR.gl_binding = new XRWebGLBinding(session, gl);
+						console.log('WebXR DEBUG: XRWebGLBinding created', GodotWebXR.gl_binding); // eslint-disable-line no-console
 					} catch (error) {
 						console.log('WebXR: Unable to create XRWebGLBinding (disabling WebXR Layers): ', error); // eslint-disable-line no-console
 						disable_webxr_layers = true;
@@ -530,14 +646,17 @@ const GodotWebXR = {
 				}
 
 				GodotWebXR.disable_webxr_layers = disable_webxr_layers;
+				console.log('WebXR DEBUG: final disable_webxr_layers =', disable_webxr_layers, ', calling getLayer()'); // eslint-disable-line no-console
 
 				// This will trigger the layer to get created.
 				const layer = GodotWebXR.getLayer();
+				console.log('WebXR DEBUG: getLayer() returned', layer); // eslint-disable-line no-console
 				if (!layer) {
 					throw new Error('Unable to create WebXR Layer.');
 				}
 
 				function onReferenceSpaceSuccess(reference_space, reference_space_type) {
+					console.log('WebXR DEBUG: onReferenceSpaceSuccess(): reference_space_type =', reference_space_type, reference_space); // eslint-disable-line no-console
 					GodotWebXR.space = reference_space;
 
 					// Using reference_space.addEventListener() crashes when
@@ -552,12 +671,20 @@ const GodotWebXR = {
 					// Now that both GodotWebXR.session and GodotWebXR.space are
 					// set, we need to pause and resume the main loop for the XR
 					// main loop to kick in.
+					console.log('WebXR DEBUG: onReferenceSpaceSuccess(): calling pauseResumeMainLoop()'); // eslint-disable-line no-console
 					GodotWebXR.pauseResumeMainLoop();
+
+					// Make sure we actually get frames with the projection layer.
+					if (!GodotWebXR.disable_webxr_layers) {
+						console.log('WebXR DEBUG: starting layers watchdog'); // eslint-disable-line no-console
+						GodotWebXR.startLayersWatchdog();
+					}
 
 					// Call in setTimeout() so that errors in the onstarted()
 					// callback don't bubble up here and cause Godot to try the
 					// next reference space.
 					window.setTimeout(function () {
+						console.log('WebXR DEBUG: calling onstarted() callback'); // eslint-disable-line no-console
 						const reference_space_c_str = GodotRuntime.allocString(reference_space_type);
 						const enabled_features = 'enabledFeatures' in session ? Array.from(session.enabledFeatures) : [];
 						const enabled_features_c_str = GodotRuntime.allocString(enabled_features.join(','));
@@ -567,16 +694,20 @@ const GodotWebXR = {
 						GodotRuntime.free(reference_space_c_str);
 						GodotRuntime.free(enabled_features_c_str);
 						GodotRuntime.free(environment_blend_mode_c_str);
+						console.log('WebXR DEBUG: onstarted() callback returned'); // eslint-disable-line no-console
 					}, 0);
 				}
 
 				function requestReferenceSpace() {
 					const reference_space_type = requested_reference_space_types.shift();
+					console.log('WebXR DEBUG: requestReferenceSpace(', reference_space_type, ')'); // eslint-disable-line no-console
 					session.requestReferenceSpace(reference_space_type)
 						.then((refSpace) => {
+							console.log('WebXR DEBUG: requestReferenceSpace(', reference_space_type, ') resolved'); // eslint-disable-line no-console
 							onReferenceSpaceSuccess(refSpace, reference_space_type);
 						})
-						.catch(() => {
+						.catch((error) => {
+							console.log('WebXR DEBUG: requestReferenceSpace(', reference_space_type, ') failed:', error); // eslint-disable-line no-console
 							if (requested_reference_space_types.length === 0) {
 								const c_str = GodotRuntime.allocString('Unable to get any of the requested reference space types');
 								onfailed(c_str);
@@ -589,26 +720,32 @@ const GodotWebXR = {
 
 				requestReferenceSpace();
 			}).catch(function (error) {
+				console.log('WebXR DEBUG: error after gl.makeXRCompatible():', error); // eslint-disable-line no-console
 				const c_str = GodotRuntime.allocString(`Unable to make WebGL context compatible with WebXR: ${error}`);
 				onfailed(c_str);
 				GodotRuntime.free(c_str);
 			});
 		}).catch(function (error) {
+			console.log('WebXR DEBUG: requestSession() (or session setup) failed:', error); // eslint-disable-line no-console
 			const c_str = GodotRuntime.allocString(`Unable to start session: ${error}`);
 			onfailed(c_str);
 			GodotRuntime.free(c_str);
 		});
+		console.log('WebXR DEBUG: godot_webxr_initialize(): end (async work pending)'); // eslint-disable-line no-console
 	},
 
 	godot_webxr_uninitialize__proxy: 'sync',
 	godot_webxr_uninitialize__sig: 'v',
 	godot_webxr_uninitialize: function () {
+		console.log('WebXR DEBUG: godot_webxr_uninitialize()'); // eslint-disable-line no-console
 		if (GodotWebXR.session) {
 			GodotWebXR.session.end()
 				// Prevent exception when session has already ended.
 				.catch((e) => { });
 		}
 
+		GodotWebXR.stopLayersWatchdog();
+		GodotWebXR.received_frame = false;
 		GodotWebXR.disable_webxr_layers = false;
 
 		GodotWebXR.session = null;
@@ -642,6 +779,7 @@ const GodotWebXR = {
 	godot_webxr_get_render_target_size__sig: 'ii',
 	godot_webxr_get_render_target_size: function (r_size) {
 		const viewport = GodotWebXR.getViewport();
+		GodotWebXR.debugFrameLog('godot_webxr_get_render_target_size(): viewport =', viewport);
 		if (viewport === null) {
 			return false;
 		}
@@ -693,11 +831,15 @@ const GodotWebXR = {
 	godot_webxr_get_color_texture__proxy: 'sync',
 	godot_webxr_get_color_texture__sig: 'i',
 	godot_webxr_get_color_texture: function () {
+		GodotWebXR.debugFrameLog('godot_webxr_get_color_texture(): start');
 		const subimage = GodotWebXR.getSubImage();
 		if (subimage === null) {
+			GodotWebXR.debugFrameLog('godot_webxr_get_color_texture(): no subimage');
 			return 0;
 		}
-		return GodotWebXR.getTextureId(subimage.colorTexture);
+		const color_texture_id = GodotWebXR.getTextureId(subimage.colorTexture);
+		GodotWebXR.debugFrameLog('godot_webxr_get_color_texture(): texture id =', color_texture_id);
+		return color_texture_id;
 	},
 
 	godot_webxr_get_depth_texture__proxy: 'sync',
@@ -733,6 +875,7 @@ const GodotWebXR = {
 			return;
 		}
 
+		GodotWebXR.debugFrameLog('godot_webxr_commit_render_target(): texture id =', p_texture_id, ', layer count =', p_layer_count);
 		const glLayer = GodotWebXR.getLayer();
 		const texture = GL.textures[p_texture_id];
 		if (glLayer === null || !texture) {

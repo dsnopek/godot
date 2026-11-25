@@ -740,6 +740,11 @@ const GodotDisplay = {
 	godot_js_display_setup_canvas__sig: 'viiii',
 	godot_js_display_setup_canvas: function (p_width, p_height, p_fullscreen, p_hidpi) {
 		const canvas = GodotConfig.canvas;
+		// Hack to force the initial GL context to be xrCompatible.
+		const canvas_get_context = canvas.getContext;
+		canvas.getContext = function (p_type, p_attributes) {
+			return canvas_get_context.call(canvas, p_type, { ...p_attributes, 'xrCompatible': true });
+		};
 		GodotEventListeners.add(canvas, 'contextmenu', function (ev) {
 			ev.preventDefault();
 		}, false);
